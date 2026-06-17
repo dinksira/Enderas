@@ -1,5 +1,6 @@
 export const ROUTES = Object.freeze({
   HOME: '/',
+  LOGIN: '/',
 
   // Legacy aliases (mapped to domain modules)
   MARKETPLACE: '/auctions',
@@ -16,7 +17,6 @@ export const ROUTES = Object.freeze({
   BID_MANAGEMENT: '/bid-management',
   ANALYTICS_REPORT: '/analytics-report',
   SETTING: '/setting',
-  LOGIN: '/login',
 });
 
 export default ROUTES;

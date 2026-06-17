@@ -1,0 +1,47 @@
+.auth-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--component-login-shell-bg);
+}
+
+.auth-layout__skip-link {
+  position: absolute;
+  top: calc(-1 * var(--core-space-7));
+  left: var(--core-space-4);
+  z-index: calc(var(--component-navbar-z-index) + 1);
+  padding: var(--core-space-2) var(--core-space-4);
+  background-color: var(--semantic-color-brand-primary);
+  color: var(--semantic-color-text-inverse);
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-ui);
+  text-decoration: none;
+  border-radius: var(--semantic-radius-default);
+  transition: top 0.2s ease;
+}
+
+.auth-layout__skip-link:focus {
+  top: var(--core-space-4);
+  outline: none;
+  box-shadow: var(--semantic-focus-ring);
+}
+
+.auth-layout__main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--core-space-6) var(--core-layout-gutter);
+}
+
+.auth-layout__container {
+  width: 100%;
+  max-width: var(--component-login-card-max-width);
+}
+
+@media (min-width: 576px) {
+  .auth-layout__main {
+    padding: var(--core-space-7) var(--core-layout-gutter);
+  }
+}

@@ -1,19 +1,17 @@
 import { NavLink } from 'react-router-dom';
 import { Button } from '../components/Button.jsx';
-import { ROUTES } from '../routes/index.js';
+import { NAVIGATION_BRAND, NAVIGATION_LINKS } from '../config/navigation.js';
 import './Navbar.css';
-
-const NAV_ITEMS = [
-  { label: 'Marketplace', path: ROUTES.MARKETPLACE },
-  { label: 'My Bids', path: ROUTES.BIDDER_DASHBOARD },
-  { label: 'Operations', path: ROUTES.OPERATIONAL_PANEL },
-];
 
 export function Navbar() {
   return (
     <header className="navbar">
       <div className="navbar__inner">
-        <a href={ROUTES.HOME} className="navbar__brand" aria-label="Enderas Auction Management">
+        <a
+          href={NAVIGATION_BRAND.homePath}
+          className="navbar__brand"
+          aria-label={NAVIGATION_BRAND.label}
+        >
           <span className="navbar__brand-mark" aria-hidden="true">
             E
           </span>
@@ -21,15 +19,15 @@ export function Navbar() {
         </a>
 
         <nav className="navbar__nav" aria-label="Primary navigation">
-          {NAV_ITEMS.map((item) => (
+          {NAVIGATION_LINKS.map(({ label, path }) => (
             <NavLink
-              key={item.path}
-              to={item.path}
+              key={path}
+              to={path}
               className={({ isActive }) =>
                 ['navbar__link', isActive ? 'navbar__link--active' : ''].filter(Boolean).join(' ')
               }
             >
-              {item.label}
+              {label}
             </NavLink>
           ))}
         </nav>
