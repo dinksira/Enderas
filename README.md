@@ -114,202 +114,132 @@ General Development Rules
 * Ensure deployment flexibility across different servers and database names
 
 backend/
-│
-├── src/
-│   │
-│   ├── config/
-│   │   ├── db.config.js
-│   │   ├── env.config.js
-│   │   ├── redis.config.js
-│   │   ├── mail.config.js
-│   │   └── sms.config.js
-│   │
-│   ├
-│   ├
-│   │
-│   ├── routes/
-│   │   ├── index.routes.js
-│   │   ├── auth.routes.js
-│   │   ├── user.routes.js
-│   │   ├── kyc.routes.js
-│   │   ├── asset.routes.js
-│   │   ├── evaluation.routes.js
-│   │   ├── auction.routes.js
-│   │   ├── document.routes.js
-│   │   ├── payment.routes.js
-│   │   ├── cpo.routes.js
-│   │   ├── bid.routes.js
-│   │   ├── winner.routes.js
-│   │   ├── notification.routes.js
-│   │   ├── staff.routes.js
-│   │   ├── report.routes.js
-│   │   └── rbac.routes.js
-│   │
-│   ├── modules/
-│   │   │
-│   │   ├── auth/
-│   │   │   ├── auth.controller.js
-│   │   │   ├── auth.service.js
-│   │   │   ├── auth.repository.js
-│   │   │   ├── auth.validation.js
-│   │   │   └── auth.model.js
-│   │   │
-│   │   ├── user/
-│   │   │   ├── user.controller.js
-│   │   │   ├── user.service.js
-│   │   │   ├── user.repository.js
-│   │   │   ├── user.model.js
-│   │   │   └── user.validation.js
-│   │   │
-│   │   ├── kyc/
-│   │   │   ├── kyc.controller.js
-│   │   │   ├── kyc.service.js
-│   │   │   ├── kyc.repository.js
-│   │   │   ├── kyc.model.js
-│   │   │   └── kyc.validation.js
-│   │   │
-│   │   ├── asset/
-│   │   │   ├── asset.controller.js
-│   │   │   ├── asset.service.js
-│   │   │   ├── asset.repository.js
-│   │   │   ├── asset.model.js
-│   │   │   └── asset.validation.js
-│   │   │
-│   │   ├── evaluation/
-│   │   │   ├── evaluation.controller.js
-│   │   │   ├── evaluation.service.js
-│   │   │   ├── evaluation.repository.js
-│   │   │   ├── evaluation.model.js
-│   │   │   └── evaluation.validation.js
-│   │   │
-│   │   ├── auction/
-│   │   │   ├── auction.controller.js
-│   │   │   ├── auction.service.js
-│   │   │   ├── auction.repository.js
-│   │   │   ├── auction.model.js
-│   │   │   └── auction.validation.js
-│   │   │
-│   │   ├── document/
-│   │   │   ├── document.controller.js
-│   │   │   ├── document.service.js
-│   │   │   ├── document.repository.js
-│   │   │   ├── document.model.js
-│   │   │   └── document.validation.js
-│   │   │
-│   │   ├── payment/
-│   │   │   ├── payment.controller.js
-│   │   │   ├── payment.service.js
-│   │   │   ├── payment.repository.js
-│   │   │   ├── payment.model.js
-│   │   │   └── payment.validation.js
-│   │   │
-│   │   ├── cpo/
-│   │   │   ├── cpo.controller.js
-│   │   │   ├── cpo.service.js
-│   │   │   ├── cpo.repository.js
-│   │   │   ├── cpo.model.js
-│   │   │   └── cpo.validation.js
-│   │   │
-│   │   ├── bid/
-│   │   │   ├── bid.controller.js
-│   │   │   ├── bid.service.js
-│   │   │   ├── bid.repository.js
-│   │   │   ├── bid.model.js
-│   │   │   └── bid.validation.js
-│   │   │
-│   │   ├── winner/
-│   │   │   ├── winner.controller.js
-│   │   │   ├── winner.service.js
-│   │   │   ├── winner.repository.js
-│   │   │   └── winner.model.js
-│   │   │
-│   │   ├── notification/
-│   │   │   ├── notification.controller.js
-│   │   │   ├── notification.service.js
-│   │   │   ├── notification.repository.js
-│   │   │   ├── notification.model.js
-│   │   │   └── notification.provider.js
-│   │   │
-│   │   ├── staff/
-│   │   │   ├── staff.controller.js
-│   │   │   ├── staff.service.js
-│   │   │   ├── staff.repository.js
-│   │   │   ├── staff.model.js
-│   │   │   └── staff.validation.js
-│   │   │
-│   │   ├── report/
-│   │   │   ├── report.controller.js
-│   │   │   ├── report.service.js
-│   │   │   ├── report.repository.js
-│   │   │   └── report.generator.js
-│   │   │
-│   │   └── rbac/
-│   │       ├── rbac.middleware.js
-│   │       ├── role.model.js
-│   │       ├── permission.model.js
-│   │       └── rbac.service.js
-│   │
-│   ├── middlewares/
-│   │   ├── auth.middleware.js
-│   │   ├── error.middleware.js
-│   │   ├── validation.middleware.js
-│   │   ├── role.middleware.js
-│   │   ├── upload.middleware.js
-│   │   └── rateLimit.middleware.js
-│   │
-│   ├── integrations/
-│   │   ├── addisPay.integration.js
-│   │   ├── sms.gateway.js
-│   │   ├── email.service.js
-│   │   └── storage.service.js
-│   │
-│   ├── utils/
-│   │   ├── logger.js
-│   │   ├── response.helper.js
-│   │   ├── otp.helper.js
-│   │   ├── date.helper.js
-│   │   ├── file.helper.js
-│   │   └── encryption.helper.js
-│   │
-│   ├── jobs/
-│   │   ├── auction.scheduler.js
-│   │   ├── notification.job.js
-│   │   ├── payment.verification.job.js
-│   │   └── cpo.expiry.job.js
-│   │
-│   ├── constants/
-│   │   ├── roles.constant.js
-│   │   ├── status.constant.js
-│   │   ├── messages.constant.js
-│   │   └── system.constant.js
-│   │
-│   ├── database/
-│   │   ├── connection.js
-│   │   ├── migrations/
-│   │   └── seeders/
-│   │
-│   └── tests/
-│       ├── auth.test.js
-│       ├── auction.test.js
-│       ├── payment.test.js
-│       └── bid.test.js
-│
-├── uploads/
-│   ├── kyc/
-│   ├── assets/
-│   ├── evaluations/
-│   ├── documents/
-│   ├── payments/
-│   └── cpo/
-│
-├── logs/
-│   ├── app.log
-│   ├── error.log
-│   └── audit.log
-│── server.js
-|── app.js
-├── .env
-├── .gitignore
-├── package.json
-├── README.md
-└── nodemon.json
+    ├── src/
+    │   ├── config/
+    │   │   ├── db.config.js
+    │   │   ├── env.config.js
+    │   │   ├── redis.config.js
+    │   │   └── logger.config.js
+    │   │
+    │   ├── models/
+    │   │   ├── user.model.js
+    │   │   ├── role.model.js
+    │   │   ├── kyc.model.js
+    │   │   ├── asset.model.js
+    │   │   ├── assetOwner.model.js
+    │   │   ├── evaluation.model.js
+    │   │   ├── auction.model.js
+    │   │   ├── auctionDocument.model.js
+    │   │   ├── payment.model.js
+    │   │   ├── cpo.model.js
+    │   │   ├── bid.model.js
+    │   │   ├── winner.model.js
+    │   │   ├── notification.model.js
+    │   │   ├── staff.model.js
+    │   │   └── auditLog.model.js
+    │   │
+    │   ├── controllers/
+    │   │   ├── auth.controller.js
+    │   │   ├── user.controller.js
+    │   │   ├── kyc.controller.js
+    │   │   ├── asset.controller.js
+    │   │   ├── evaluation.controller.js
+    │   │   ├── auction.controller.js
+    │   │   ├── document.controller.js
+    │   │   ├── payment.controller.js
+    │   │   ├── cpo.controller.js
+    │   │   ├── bid.controller.js
+    │   │   ├── winner.controller.js
+    │   │   ├── notification.controller.js
+    │   │   ├── staff.controller.js
+    │   │   └── dashboard.controller.js
+    │   │
+    │   ├── services/
+    │   │   ├── auth.service.js
+    │   │   ├── user.service.js
+    │   │   ├── otp.service.js
+    │   │   ├── kyc.service.js
+    │   │   ├── asset.service.js
+    │   │   ├── evaluation.service.js
+    │   │   ├── auction.service.js
+    │   │   ├── document.service.js
+    │   │   ├── payment.service.js
+    │   │   ├── addisPay.service.js
+    │   │   ├── cpo.service.js
+    │   │   ├── bid.service.js
+    │   │   ├── winner.service.js
+    │   │   ├── notification.service.js
+    │   │   ├── sms.service.js
+    │   │   ├── email.service.js
+    │   │   ├── fileStorage.service.js
+    │   │   └── auditLog.service.js
+    │   │
+    │   ├── routes/
+    │   │   ├── index.js
+    │   │   ├── auth.routes.js
+    │   │   ├── user.routes.js
+    │   │   ├── kyc.routes.js
+    │   │   ├── asset.routes.js
+    │   │   ├── evaluation.routes.js
+    │   │   ├── auction.routes.js
+    │   │   ├── document.routes.js
+    │   │   ├── payment.routes.js
+    │   │   ├── cpo.routes.js
+    │   │   ├── bid.routes.js
+    │   │   ├── winner.routes.js
+    │   │   ├── notification.routes.js
+    │   │   ├── staff.routes.js
+    │   │   └── dashboard.routes.js
+    │   │
+    │   ├── middlewares/
+    │   │   ├── auth.middleware.js
+    │   │   ├── role.middleware.js
+    │   │   ├── error.middleware.js
+    │   │   ├── validation.middleware.js
+    │   │   ├── upload.middleware.js
+    │   │   ├── rateLimit.middleware.js
+    │   │   └── audit.middleware.js
+    │   │
+    │   ├── validations/
+    │   │   ├── auth.validation.js
+    │   │   ├── user.validation.js
+    │   │   ├── asset.validation.js
+    │   │   ├── auction.validation.js
+    │   │   ├── payment.validation.js
+    │   │   ├── bid.validation.js
+    │   │   └── cpo.validation.js
+    │   │
+    │   ├── utils/
+    │   │   ├── response.util.js
+    │   │   ├── error.util.js
+    │   │   ├── jwt.util.js
+    │   │   ├── otp.util.js
+    │   │   ├── date.util.js
+    │   │   └── constants.util.js
+    │   │
+    │   ├── jobs/
+    │   │   ├── auctionCloser.job.js
+    │   │   ├── notification.job.js
+    │   │   ├── paymentSync.job.js
+    │   │   └── reportGenerator.job.js
+    │   │
+    │   ├── integrations/
+    │      ├── addisPay.integration.js
+    │      ├── sms.integration.js
+    │      ├── email.integration.js
+    │      └── fileStorage.integration.js
+    │   
+    │   
+    │   
+    │
+    ├── tests/
+    │   ├── auth.test.js
+    │   ├── auction.test.js
+    │   ├── bid.test.js
+    │   └── payment.test.js
+    │-── server.js
+    ├── app.js
+    ├── package.json
+    ├── .env
+    ├── .gitignore
+    └── README.md
