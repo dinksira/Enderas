@@ -1,0 +1,93 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--component-navbar-z-index);
+  height: var(--component-navbar-height);
+  background-color: var(--component-navbar-bg);
+  box-shadow: var(--component-navbar-shadow);
+  transition: var(--core-transition-shadow);
+}
+
+.navbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  max-width: var(--core-layout-max-width);
+  margin: 0 auto;
+  padding: 0 var(--core-layout-gutter);
+  gap: var(--core-space-5);
+}
+
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--core-space-3);
+  min-width: 120px;
+  text-decoration: none;
+  color: var(--component-navbar-text);
+}
+
+.navbar__brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--core-space-6);
+  height: var(--core-space-6);
+  background-color: var(--semantic-color-brand-primary);
+  color: var(--semantic-color-text-inverse);
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-ui);
+  font-weight: var(--core-font-weight-bold);
+  border-radius: var(--semantic-radius-default);
+}
+
+.navbar__brand-text {
+  font-family: var(--semantic-font-display);
+  font-size: var(--core-font-size-subheading);
+  font-weight: var(--core-font-weight-regular);
+  color: var(--semantic-color-brand-primary);
+  line-height: var(--core-line-height-tight);
+}
+
+.navbar__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--core-space-5);
+  flex: 1;
+  justify-content: center;
+}
+
+.navbar__link {
+  font-family: var(--component-navbar-font-family);
+  font-size: var(--component-navbar-font-size);
+  font-weight: var(--component-navbar-font-weight);
+  letter-spacing: var(--component-navbar-letter-spacing);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--component-navbar-text);
+  transition: var(--core-transition-bg);
+  padding: var(--core-space-2) 0;
+  border-bottom: 2px solid transparent;
+}
+
+.navbar__link:hover {
+  color: var(--component-navbar-text-hover);
+}
+
+.navbar__link--active {
+  color: var(--component-navbar-text-active);
+  border-bottom-color: var(--component-navbar-text-active);
+}
+
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--core-space-3);
+}
+
+@media (max-width: 991px) {
+  .navbar__nav {
+    display: none;
+  }
+}
