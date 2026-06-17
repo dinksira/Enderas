@@ -1,0 +1,27 @@
+.login-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: calc(100vh - var(--component-navbar-height) - var(--core-space-10));
+  margin: calc(-1 * var(--core-space-6)) calc(-1 * var(--core-layout-gutter));
+  padding: var(--core-space-6) var(--core-layout-gutter);
+  background-color: var(--component-login-shell-bg);
+}
+
+.login-view__container {
+  width: 100%;
+  max-width: var(--component-login-card-max-width);
+}
+
+@media (min-width: 576px) {
+  .login-view {
+    padding: var(--core-space-7) var(--core-layout-gutter);
+  }
+}
+
+@media (min-width: 992px) {
+  .login-view {
+    min-height: calc(100vh - var(--component-navbar-height) - var(--core-space-8));
+  }
+}

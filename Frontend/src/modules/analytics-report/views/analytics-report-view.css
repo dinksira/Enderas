@@ -1,0 +1,21 @@
+.analytics-report-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--core-space-5);
+}
+
+.analytics-report-view__title {
+  font-family: var(--semantic-font-display);
+  font-size: var(--core-font-size-page-title);
+  font-weight: var(--core-font-weight-regular);
+  line-height: var(--core-line-height-snug);
+  color: var(--semantic-color-text-primary);
+}
+
+.analytics-report-view__lead {
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-body);
+  line-height: var(--core-line-height-relaxed);
+  color: var(--semantic-color-text-secondary);
+  max-width: var(--core-layout-max-width);
+}

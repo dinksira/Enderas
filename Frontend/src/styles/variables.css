@@ -243,4 +243,13 @@
   --component-footer-padding-y: var(--core-space-6);
   --component-footer-font-family: var(--semantic-font-body);
   --component-footer-font-size: var(--core-font-size-body-sm);
+
+  /* Login */
+  --component-login-shell-bg: var(--semantic-color-background-secondary);
+  --component-login-card-max-width: 480px;
+  --component-login-display-color: var(--semantic-color-text-primary);
+  --component-login-helper-color: var(--semantic-color-text-secondary);
+  --component-login-alert-bg: rgba(220, 53, 69, 0.08);
+  --component-login-alert-border: var(--semantic-color-status-danger);
+  --component-login-alert-text: var(--semantic-color-status-danger);
 }

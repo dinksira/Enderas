@@ -1,0 +1,58 @@
+.login-form .card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--core-space-5);
+  width: 100%;
+}
+
+.login-form__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--core-space-2);
+  text-align: center;
+}
+
+.login-form__display-title {
+  font-family: var(--semantic-font-display);
+  font-size: var(--core-font-size-section);
+  font-weight: var(--core-font-weight-regular);
+  line-height: var(--core-line-height-snug);
+  color: var(--component-login-display-color);
+}
+
+.login-form__helper {
+  font-family: var(--semantic-font-body);
+  font-size: var(--core-font-size-body);
+  line-height: var(--core-line-height-relaxed);
+  color: var(--component-login-helper-color);
+}
+
+.login-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--core-space-4);
+}
+
+.login-form__alert {
+  padding: var(--core-space-3) var(--core-space-4);
+  background-color: var(--component-login-alert-bg);
+  border-left: var(--core-space-1) solid var(--component-login-alert-border);
+  border-radius: var(--semantic-radius-default);
+  font-family: var(--semantic-font-body);
+  font-size: var(--core-font-size-body-sm);
+  color: var(--component-login-alert-text);
+}
+
+.login-form__submit {
+  width: 100%;
+}
+
+.login-form__submit .btn {
+  width: 100%;
+}
+
+@media (min-width: 576px) {
+  .login-form__display-title {
+    font-size: var(--core-font-size-page-title);
+  }
+}
