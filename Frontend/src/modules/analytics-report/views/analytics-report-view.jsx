@@ -1,5 +1,4 @@
 import { MetricsDashboardPanel } from '../components/metrics-dashboard-panel.jsx';
-import './analytics-report-view.css';
 
 export function AnalyticsReportView() {
   return (

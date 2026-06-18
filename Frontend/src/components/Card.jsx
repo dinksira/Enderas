@@ -1,4 +1,3 @@
-import './Card.css';
 
 export function Card({ title, interactive = false, className = '', children, ...rest }) {
   const classes = ['card', interactive ? 'card--interactive' : '', className]

@@ -1,5 +1,4 @@
 import { LocalizationConfigForm } from '../components/localization-config-form.jsx';
-import './setting-view.css';
 
 export function SettingView() {
   return (

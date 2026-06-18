@@ -1,5 +1,4 @@
 import { RolePermissionTable } from '../components/role-permission-table.jsx';
-import './staff-roles-view.css';
 
 export function StaffRolesView() {
   return (

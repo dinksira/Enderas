@@ -1,5 +1,4 @@
 import { CpoUploadForm } from '../components/cpo-upload-form.jsx';
-import './cpo-management-view.css';
 
 export function CpoManagementView() {
   return (

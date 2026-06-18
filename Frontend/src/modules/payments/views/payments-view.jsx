@@ -1,5 +1,4 @@
 import { PaymentReceiptCard } from '../components/payment-receipt-card.jsx';
-import './payments-view.css';
 
 export function PaymentsView() {
   return (

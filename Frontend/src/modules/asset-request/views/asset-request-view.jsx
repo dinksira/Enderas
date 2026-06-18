@@ -1,5 +1,4 @@
 import { AssetRequestForm } from '../components/asset-request-form.jsx';
-import './asset-request-view.css';
 
 export function AssetRequestView() {
   return (

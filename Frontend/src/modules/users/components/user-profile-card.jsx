@@ -1,5 +1,4 @@
 import { useUserProfile } from '../hooks/use-user-profile.js';
-import './user-profile-card.css';
 
 export function UserProfileCard() {
   const { records, loading, error } = useUserProfile();

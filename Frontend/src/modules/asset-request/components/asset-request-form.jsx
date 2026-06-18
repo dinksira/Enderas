@@ -1,5 +1,4 @@
 import { useAssetRequests } from '../hooks/use-asset-requests.js';
-import './asset-request-form.css';
 
 export function AssetRequestForm() {
   const { records, loading, error } = useAssetRequests();

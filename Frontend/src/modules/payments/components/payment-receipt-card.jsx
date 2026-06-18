@@ -1,5 +1,4 @@
 import { usePayments } from '../hooks/use-payments.js';
-import './payment-receipt-card.css';
 
 export function PaymentReceiptCard() {
   const { records, loading, error } = usePayments();

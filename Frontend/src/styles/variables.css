@@ -252,4 +252,39 @@
   --component-login-alert-bg: rgba(220, 53, 69, 0.08);
   --component-login-alert-border: var(--semantic-color-status-danger);
   --component-login-alert-text: var(--semantic-color-status-danger);
+
+  /* Auth flow — documented rounded-geometry exception (login & OTP screens) */
+  --component-auth-card-radius: 16px;
+  --component-auth-input-radius: 8px;
+  --component-auth-button-radius: 8px;
+  --component-auth-card-border-width: 2px;
+  --component-auth-card-border-color: var(--semantic-color-brand-primary);
+  --component-auth-card-bg: var(--semantic-color-background-primary);
+  --component-auth-card-shadow: var(--core-shadow-medium);
+  --component-auth-card-padding: var(--core-space-6);
+  --component-auth-card-min-height: 520px;
+  --component-auth-otp-size: var(--core-space-7);
+  --component-auth-otp-radius: var(--core-radius-circle);
+  --component-auth-otp-gap: var(--core-space-3);
+  --component-auth-otp-border: var(--semantic-color-border-default);
+  --component-auth-otp-border-focus: var(--semantic-color-border-focus);
+  --component-auth-otp-font-size: var(--core-font-size-subheading);
+  --component-auth-title-font-family: var(--semantic-font-ui);
+  --component-auth-title-font-size: var(--core-font-size-subheading);
+  --component-auth-title-font-weight: var(--core-font-weight-bold);
+  --component-auth-title-letter-spacing: var(--core-letter-spacing-label);
+  --component-auth-instruction-font-family: var(--semantic-font-body);
+  --component-auth-instruction-font-size: var(--core-font-size-body-sm);
+  --component-auth-instruction-color: var(--semantic-color-text-secondary);
+  --component-auth-brand-font-family: var(--semantic-font-display);
+  --component-auth-brand-font-size: var(--core-font-size-card-title);
+  --component-auth-brand-color: var(--semantic-color-brand-primary);
+  --component-auth-resend-color: var(--semantic-color-brand-primary);
+  --component-auth-resend-hover: var(--semantic-color-brand-primary-hover);
+  --component-auth-timer-color: var(--semantic-color-text-secondary);
+  --component-auth-locale-color: var(--semantic-color-text-primary);
+  --component-auth-locale-active: var(--semantic-color-brand-primary);
+  --component-auth-locale-font-size: var(--core-font-size-ui);
+  --component-auth-locale-font-size-am: calc(var(--core-font-size-ui) + 1px);
+  --component-auth-locale-divider: var(--semantic-color-border-default);
 }

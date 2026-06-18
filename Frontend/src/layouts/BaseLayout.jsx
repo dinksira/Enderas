@@ -1,6 +1,5 @@
 import { Navbar } from './Navbar.jsx';
 import { Footer } from './Footer.jsx';
-import './BaseLayout.css';
 
 export function BaseLayout({ children }) {
   return (

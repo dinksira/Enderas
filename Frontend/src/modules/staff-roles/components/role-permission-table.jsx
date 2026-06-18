@@ -1,5 +1,4 @@
 import { useStaffRoles } from '../hooks/use-staff-roles.js';
-import './role-permission-table.css';
 
 export function RolePermissionTable() {
   const { records, loading, error } = useStaffRoles();

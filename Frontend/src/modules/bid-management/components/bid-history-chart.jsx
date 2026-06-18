@@ -1,5 +1,4 @@
 import { useBidSession } from '../hooks/use-bid-session.js';
-import './bid-history-chart.css';
 
 export function BidHistoryChart() {
   const { records, loading, error } = useBidSession();

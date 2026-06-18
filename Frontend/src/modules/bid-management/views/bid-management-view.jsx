@@ -1,5 +1,4 @@
 import { BidHistoryChart } from '../components/bid-history-chart.jsx';
-import './bid-management-view.css';
 
 export function BidManagementView() {
   return (

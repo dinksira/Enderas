@@ -23,8 +23,9 @@ export function AppRoutes() {
         <Route path="/login" element={<Navigate to={ROUTES.HOME} replace />} />
       </Route>
 
+      <Route path={ROUTES.AUCTIONS} element={<AuctionCatalogView />} />
+
       <Route element={<BaseLayout />}>
-        <Route path={ROUTES.AUCTIONS} element={<AuctionCatalogView />} />
         <Route path={ROUTES.ASSET_REQUEST} element={<AssetRequestView />} />
         <Route path={ROUTES.USERS} element={<UserProfileView />} />
         <Route path={ROUTES.STAFF_ROLES} element={<StaffRolesView />} />

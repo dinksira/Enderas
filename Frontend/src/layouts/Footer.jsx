@@ -1,5 +1,4 @@
 import { APP_CONFIG } from '../config/app.js';
-import './Footer.css';
 
 export function Footer() {
   const year = new Date().getFullYear();

@@ -1,5 +1,4 @@
 import { useAnalyticsMetrics } from '../hooks/use-analytics-metrics.js';
-import './metrics-dashboard-panel.css';
 
 export function MetricsDashboardPanel() {
   const { records, loading, error } = useAnalyticsMetrics();

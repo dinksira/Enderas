@@ -1,4 +1,3 @@
-import './Input.css';
 
 export function Input({
   label,

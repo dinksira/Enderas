@@ -1,5 +1,4 @@
 import { useSettings } from '../hooks/use-settings.js';
-import './localization-config-form.css';
 
 export function LocalizationConfigForm() {
   const { records, loading, error } = useSettings();

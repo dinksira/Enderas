@@ -1,5 +1,4 @@
 import { UserProfileCard } from '../components/user-profile-card.jsx';
-import './user-profile-view.css';
 
 export function UserProfileView() {
   return (

@@ -1,5 +1,7 @@
 @import './variables.css';
 
+/* ─── RESET & BASE ─────────────────────────────────────────────────────────── */
+
 *,
 *::before,
 *::after {
@@ -87,4 +89,771 @@ select {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ─── GLOBAL ATOMS: BUTTON ─────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--component-button-min-height);
+  padding: var(--component-button-padding-y) var(--component-button-padding-x);
+  font-family: var(--component-button-font-family);
+  font-size: var(--component-button-font-size);
+  font-weight: var(--component-button-font-weight);
+  letter-spacing: var(--component-button-letter-spacing);
+  text-transform: uppercase;
+  border-radius: var(--component-button-radius);
+  border-width: 1px;
+  border-style: solid;
+  cursor: pointer;
+  transition: var(--component-button-transition);
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: var(--core-opacity-disabled);
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background-color: var(--component-button-primary-bg);
+  color: var(--component-button-primary-text);
+  border-color: var(--component-button-primary-border);
+}
+
+.btn--primary:not(:disabled):hover {
+  background-color: var(--component-button-primary-bg-hover);
+}
+
+.btn--primary:focus-visible {
+  box-shadow: var(--semantic-focus-ring);
+}
+
+.btn--secondary {
+  background-color: var(--component-button-secondary-bg);
+  color: var(--component-button-secondary-text);
+  border-color: var(--component-button-secondary-border);
+  padding: var(--component-button-padding-y-secondary) var(--component-button-padding-x-secondary);
+}
+
+.btn--secondary:not(:disabled):hover {
+  background-color: var(--component-button-secondary-bg-hover);
+  color: var(--component-button-secondary-text-hover);
+}
+
+.btn--secondary:focus-visible {
+  box-shadow: var(--semantic-focus-ring);
+}
+
+/* ─── GLOBAL ATOMS: INPUT ──────────────────────────────────────────────────── */
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--component-input-label-gap);
+  width: 100%;
+}
+
+.input-field__label {
+  font-family: var(--component-input-label-font-family);
+  font-size: var(--component-input-label-font-size);
+  font-weight: var(--component-input-label-font-weight);
+  letter-spacing: var(--component-input-label-letter-spacing);
+  text-transform: uppercase;
+  color: var(--component-input-label-color);
+}
+
+.input-field__control {
+  height: var(--component-input-height);
+  padding: 0 var(--component-input-padding-x);
+  font-family: var(--component-input-font-family);
+  font-size: var(--component-input-font-size);
+  font-weight: var(--component-input-font-weight);
+  color: var(--component-input-text);
+  background-color: var(--component-input-bg);
+  border: 1px solid var(--component-input-border);
+  border-radius: var(--component-input-radius);
+  transition: var(--core-transition-border), var(--core-transition-shadow);
+  width: 100%;
+}
+
+.input-field__control::placeholder {
+  color: var(--component-input-placeholder);
+}
+
+.input-field__control:focus {
+  outline: none;
+  border-color: var(--component-input-border-focus);
+  box-shadow: var(--component-input-focus-ring);
+}
+
+.input-field__control--error {
+  border-color: var(--component-input-border-error);
+}
+
+.input-field__control--error:focus {
+  border-color: var(--component-input-border-error);
+  box-shadow: var(--component-input-error-focus-ring);
+}
+
+.input-field__error {
+  font-family: var(--component-input-error-font-family);
+  font-size: var(--component-input-error-font-size);
+  color: var(--component-input-error-color);
+}
+
+/* ─── GLOBAL ATOMS: CARD ─────────────────────────────────────────────────────── */
+
+.card {
+  background-color: var(--component-card-bg);
+  border: 1px solid var(--component-card-border);
+  border-radius: var(--component-card-radius);
+  padding: var(--component-card-padding);
+  box-shadow: var(--component-card-shadow);
+  transition: var(--component-card-transition);
+}
+
+.card--interactive {
+  cursor: pointer;
+}
+
+.card--interactive:hover {
+  border-color: var(--component-card-border-hover);
+  box-shadow: var(--component-card-shadow-hover);
+}
+
+.card__title {
+  font-family: var(--component-card-title-font-family);
+  font-size: var(--component-card-title-font-size);
+  font-weight: var(--component-card-title-font-weight);
+  color: var(--component-card-title-color);
+  margin-bottom: var(--core-space-2);
+}
+
+.card__body {
+  font-family: var(--component-card-body-font-family);
+  font-size: var(--component-card-body-font-size);
+  color: var(--component-card-body-color);
+}
+
+/* ─── LAYOUTS: AUTH ──────────────────────────────────────────────────────────── */
+
+.auth-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--component-login-shell-bg);
+}
+
+.auth-layout__skip-link {
+  position: absolute;
+  top: calc(-1 * var(--core-space-7));
+  left: var(--core-space-4);
+  z-index: calc(var(--component-navbar-z-index) + 1);
+  padding: var(--core-space-2) var(--core-space-4);
+  background-color: var(--semantic-color-brand-primary);
+  color: var(--semantic-color-text-inverse);
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-ui);
+  text-decoration: none;
+  border-radius: var(--semantic-radius-default);
+  transition: var(--core-transition-default);
+}
+
+.auth-layout__skip-link:focus {
+  top: var(--core-space-4);
+  outline: none;
+  box-shadow: var(--semantic-focus-ring);
+}
+
+.auth-layout__main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--core-space-6) var(--core-layout-gutter);
+}
+
+.auth-layout__container {
+  width: 100%;
+  max-width: var(--component-login-card-max-width);
+}
+
+@media (min-width: 576px) {
+  .auth-layout__main {
+    padding: var(--core-space-7) var(--core-layout-gutter);
+  }
+}
+
+/* ─── LAYOUTS: BASE ────────────────────────────────────────────────────────── */
+
+.base-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.base-layout__main {
+  flex: 1;
+  width: 100%;
+}
+
+.base-layout__container {
+  max-width: var(--core-layout-max-width);
+  margin: 0 auto;
+  padding: var(--core-space-6) var(--core-layout-gutter);
+}
+
+.base-layout__skip-link {
+  position: absolute;
+  top: calc(-1 * var(--core-space-7));
+  left: var(--core-space-4);
+  z-index: calc(var(--component-navbar-z-index) + 1);
+  padding: var(--core-space-2) var(--core-space-4);
+  background-color: var(--semantic-color-brand-primary);
+  color: var(--semantic-color-text-inverse);
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-ui);
+  text-decoration: none;
+  border-radius: var(--semantic-radius-default);
+  transition: var(--core-transition-default);
+}
+
+.base-layout__skip-link:focus {
+  top: var(--core-space-4);
+  outline: none;
+  box-shadow: var(--semantic-focus-ring);
+}
+
+/* ─── LAYOUTS: NAVBAR ──────────────────────────────────────────────────────── */
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--component-navbar-z-index);
+  height: var(--component-navbar-height);
+  background-color: var(--component-navbar-bg);
+  box-shadow: var(--component-navbar-shadow);
+  transition: var(--core-transition-shadow);
+}
+
+.navbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  max-width: var(--core-layout-max-width);
+  margin: 0 auto;
+  padding: 0 var(--core-layout-gutter);
+  gap: var(--core-space-5);
+}
+
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--core-space-3);
+  min-width: var(--core-space-10);
+  text-decoration: none;
+  color: var(--component-navbar-text);
+}
+
+.navbar__brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--core-space-6);
+  height: var(--core-space-6);
+  background-color: var(--semantic-color-brand-primary);
+  color: var(--semantic-color-text-inverse);
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-ui);
+  font-weight: var(--core-font-weight-bold);
+  border-radius: var(--semantic-radius-default);
+}
+
+.navbar__brand-text {
+  font-family: var(--semantic-font-display);
+  font-size: var(--core-font-size-subheading);
+  font-weight: var(--core-font-weight-regular);
+  color: var(--semantic-color-brand-primary);
+  line-height: var(--core-line-height-tight);
+}
+
+.navbar__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--core-space-5);
+  flex: 1;
+  justify-content: center;
+}
+
+.navbar__link {
+  font-family: var(--component-navbar-font-family);
+  font-size: var(--component-navbar-font-size);
+  font-weight: var(--component-navbar-font-weight);
+  letter-spacing: var(--component-navbar-letter-spacing);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--component-navbar-text);
+  transition: var(--core-transition-bg);
+  padding: var(--core-space-2) 0;
+  border-bottom: 2px solid transparent;
+}
+
+.navbar__link:hover {
+  color: var(--component-navbar-text-hover);
+}
+
+.navbar__link--active {
+  color: var(--component-navbar-text-active);
+  border-bottom-color: var(--component-navbar-text-active);
+}
+
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--core-space-3);
+}
+
+@media (max-width: 991px) {
+  .navbar__nav {
+    display: none;
+  }
+}
+
+/* ─── LAYOUTS: FOOTER ──────────────────────────────────────────────────────── */
+
+.footer {
+  background-color: var(--component-footer-bg);
+  color: var(--component-footer-text);
+  padding: var(--component-footer-padding-y) 0;
+  margin-top: auto;
+}
+
+.footer__inner {
+  max-width: var(--core-layout-max-width);
+  margin: 0 auto;
+  padding: 0 var(--core-layout-gutter);
+  display: flex;
+  flex-direction: column;
+  gap: var(--core-space-2);
+}
+
+.footer__title {
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-subheading);
+  font-weight: var(--core-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--core-letter-spacing-nav);
+}
+
+.footer__text {
+  font-family: var(--component-footer-font-family);
+  font-size: var(--component-footer-font-size);
+  opacity: var(--core-opacity-disabled);
+}
+
+/* ─── AUTH: LOGIN VIEW ─────────────────────────────────────────────────────── */
+
+.login-view {
+  width: 100%;
+}
+
+.login-view__container {
+  width: 100%;
+}
+
+.login-view__step {
+  width: 100%;
+  animation: login-step-enter 0.3s ease;
+}
+
+@keyframes login-step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--core-space-2));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-view__step {
+    animation: none;
+  }
+}
+
+/* ─── AUTH: LOGIN CARD (rounded-geometry exception) ──────────────────────────── */
+
+.auth-login-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: var(--component-auth-card-min-height);
+  background-color: var(--component-auth-card-bg);
+  border: var(--component-auth-card-border-width) solid var(--component-auth-card-border-color);
+  border-radius: var(--component-auth-card-radius);
+  box-shadow: var(--component-auth-card-shadow);
+  padding: var(--component-auth-card-padding);
+}
+
+.auth-login-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--core-space-5);
+  flex: 1;
+}
+
+.auth-login-card__title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--component-auth-title-font-family);
+  font-size: var(--component-auth-title-font-size);
+  font-weight: var(--component-auth-title-font-weight);
+  letter-spacing: var(--component-auth-title-letter-spacing);
+  text-transform: uppercase;
+  color: var(--semantic-color-text-primary);
+}
+
+.auth-login-card__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--core-space-4);
+}
+
+.auth-login-card__alert {
+  padding: var(--core-space-3) var(--core-space-4);
+  background-color: var(--component-login-alert-bg);
+  border-left: var(--core-space-1) solid var(--component-login-alert-border);
+  border-radius: var(--component-auth-input-radius);
+  font-family: var(--semantic-font-body);
+  font-size: var(--core-font-size-body-sm);
+  color: var(--component-login-alert-text);
+}
+
+.auth-login-card__submit {
+  width: 100%;
+}
+
+.auth-login-card__submit .auth-login-card__button {
+  width: 100%;
+  border-radius: var(--component-auth-button-radius);
+}
+
+.auth-login-card .input-field__control.auth-login-card__input {
+  border-radius: var(--component-auth-input-radius);
+}
+
+.auth-login-card__instruction {
+  margin: 0;
+  text-align: center;
+  font-family: var(--component-auth-instruction-font-family);
+  font-size: var(--component-auth-instruction-font-size);
+  font-weight: var(--core-font-weight-regular);
+  line-height: var(--core-line-height-relaxed);
+  letter-spacing: var(--core-letter-spacing-caption);
+  text-transform: uppercase;
+  color: var(--component-auth-instruction-color);
+}
+
+.auth-login-card__resend {
+  display: flex;
+  justify-content: center;
+  min-height: var(--core-space-5);
+}
+
+.auth-login-card__timer {
+  margin: 0;
+  font-family: var(--semantic-font-body);
+  font-size: var(--core-font-size-body-sm);
+  color: var(--component-auth-timer-color);
+}
+
+.auth-login-card__resend-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-ui);
+  font-weight: var(--core-font-weight-semibold);
+  letter-spacing: var(--core-letter-spacing-nav);
+  text-transform: uppercase;
+  color: var(--component-auth-resend-color);
+  transition: var(--core-transition-bg);
+}
+
+.auth-login-card__resend-button:hover {
+  color: var(--component-auth-resend-hover);
+}
+
+.auth-login-card__resend-button:focus-visible {
+  outline: none;
+  box-shadow: var(--semantic-focus-ring);
+  border-radius: var(--semantic-radius-default);
+}
+
+.auth-login-card__resend-button:disabled {
+  opacity: var(--core-opacity-disabled);
+  cursor: not-allowed;
+}
+
+/* ─── AUTH: BRAND HEADER ───────────────────────────────────────────────────── */
+
+.login-brand-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--core-space-3);
+  text-align: center;
+}
+
+.login-brand-header__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--core-space-8);
+  height: var(--core-space-8);
+  background-color: var(--semantic-color-brand-primary);
+  border-radius: var(--semantic-radius-default);
+}
+
+.login-brand-header__icon {
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-section);
+  font-weight: var(--core-font-weight-bold);
+  color: var(--semantic-color-text-inverse);
+  line-height: var(--core-line-height-tight);
+}
+
+.login-brand-header__title {
+  margin: 0;
+  font-family: var(--component-auth-brand-font-family);
+  font-size: var(--component-auth-brand-font-size);
+  font-weight: var(--core-font-weight-regular);
+  line-height: var(--core-line-height-snug);
+  color: var(--component-auth-brand-color);
+}
+
+/* ─── AUTH: LOCALE SWITCHER ──────────────────────────────────────────────────── */
+
+.login-locale-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--core-space-2);
+  margin-top: auto;
+  padding-top: var(--core-space-5);
+}
+
+.login-locale-switcher__option {
+  background: none;
+  border: none;
+  padding: var(--core-space-1) var(--core-space-2);
+  cursor: pointer;
+  color: var(--component-auth-locale-color);
+  transition: var(--core-transition-bg);
+}
+
+.login-locale-switcher__option--en {
+  font-family: var(--semantic-font-ui);
+  font-size: var(--component-auth-locale-font-size);
+  font-weight: var(--core-font-weight-semibold);
+  letter-spacing: var(--core-letter-spacing-nav);
+  text-transform: uppercase;
+}
+
+.login-locale-switcher__option--am {
+  font-family: var(--semantic-font-amharic);
+  font-size: var(--component-auth-locale-font-size-am);
+  font-weight: var(--core-font-weight-medium);
+}
+
+.login-locale-switcher__option--active {
+  color: var(--component-auth-locale-active);
+}
+
+.login-locale-switcher__option:hover {
+  color: var(--component-auth-locale-active);
+}
+
+.login-locale-switcher__option:focus-visible {
+  outline: none;
+  box-shadow: var(--semantic-focus-ring);
+  border-radius: var(--semantic-radius-default);
+}
+
+.login-locale-switcher__divider {
+  font-family: var(--semantic-font-ui);
+  font-size: var(--component-auth-locale-font-size);
+  color: var(--component-auth-locale-divider);
+  user-select: none;
+}
+
+/* ─── AUTH: OTP INPUT GRID ───────────────────────────────────────────────────── */
+
+.otp-input-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--component-auth-otp-gap);
+  width: 100%;
+}
+
+.otp-input-grid__cell {
+  width: var(--component-auth-otp-size);
+  height: var(--component-auth-otp-size);
+  padding: 0;
+  text-align: center;
+  font-family: var(--semantic-font-ui);
+  font-size: var(--component-auth-otp-font-size);
+  font-weight: var(--core-font-weight-semibold);
+  color: var(--semantic-color-text-primary);
+  background-color: var(--semantic-color-background-primary);
+  border: 1px solid var(--component-auth-otp-border);
+  border-radius: var(--component-auth-otp-radius);
+  transition: var(--core-transition-border), var(--core-transition-shadow);
+}
+
+.otp-input-grid__cell:focus {
+  outline: none;
+  border-color: var(--component-auth-otp-border-focus);
+  box-shadow: var(--semantic-focus-ring);
+}
+
+.otp-input-grid__cell:disabled {
+  opacity: var(--core-opacity-disabled);
+  cursor: not-allowed;
+}
+
+@media (max-width: 575px) {
+  .otp-input-grid {
+    gap: var(--core-space-2);
+  }
+
+  .otp-input-grid__cell {
+    width: var(--core-space-6);
+    height: var(--core-space-6);
+    font-size: var(--core-font-size-ui);
+  }
+}
+
+/* ─── MODULE: SHARED VIEW PAGE ─────────────────────────────────────────────── */
+
+.auctions-view,
+.asset-request-view,
+.users-view,
+.staff-roles-view,
+.payments-view,
+.cpo-management-view,
+.bid-management-view,
+.analytics-report-view,
+.setting-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--core-space-5);
+}
+
+.auctions-view__title,
+.asset-request-view__title,
+.users-view__title,
+.staff-roles-view__title,
+.payments-view__title,
+.cpo-management-view__title,
+.bid-management-view__title,
+.analytics-report-view__title,
+.setting-view__title {
+  font-family: var(--semantic-font-display);
+  font-size: var(--core-font-size-page-title);
+  font-weight: var(--core-font-weight-regular);
+  line-height: var(--core-line-height-snug);
+  color: var(--semantic-color-text-primary);
+}
+
+.auctions-view__lead,
+.asset-request-view__lead,
+.users-view__lead,
+.staff-roles-view__lead,
+.payments-view__lead,
+.cpo-management-view__lead,
+.bid-management-view__lead,
+.analytics-report-view__lead,
+.setting-view__lead {
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-body);
+  line-height: var(--core-line-height-relaxed);
+  color: var(--semantic-color-text-secondary);
+  max-width: var(--core-layout-max-width);
+}
+
+/* ─── MODULE: SHARED PANEL CARD ────────────────────────────────────────────── */
+
+.auction-list,
+.asset-request-form,
+.user-profile-card,
+.role-permission-table,
+.payment-receipt-card,
+.cpo-upload-form,
+.bid-history-chart,
+.metrics-dashboard-panel,
+.localization-config-form {
+  background-color: var(--component-card-bg);
+  border: 1px solid var(--component-card-border);
+  border-radius: var(--component-card-radius);
+  padding: var(--component-card-padding);
+  box-shadow: var(--component-card-shadow);
+}
+
+.auction-list__title,
+.asset-request-form__title,
+.user-profile-card__title,
+.role-permission-table__title,
+.payment-receipt-card__title,
+.cpo-upload-form__title,
+.bid-history-chart__title,
+.metrics-dashboard-panel__title,
+.localization-config-form__title {
+  font-family: var(--component-card-title-font-family);
+  font-size: var(--component-card-title-font-size);
+  font-weight: var(--component-card-title-font-weight);
+  color: var(--component-card-title-color);
+  margin-bottom: var(--core-space-2);
+}
+
+.auction-list__body,
+.asset-request-form__body,
+.user-profile-card__body,
+.role-permission-table__body,
+.payment-receipt-card__body,
+.cpo-upload-form__body,
+.bid-history-chart__body,
+.metrics-dashboard-panel__body,
+.localization-config-form__body {
+  font-family: var(--component-card-body-font-family);
+  font-size: var(--component-card-body-font-size);
+  color: var(--component-card-body-color);
+}
+
+.auction-list__status,
+.asset-request-form__status,
+.user-profile-card__status,
+.role-permission-table__status,
+.payment-receipt-card__status,
+.cpo-upload-form__status,
+.bid-history-chart__status,
+.metrics-dashboard-panel__status,
+.localization-config-form__status {
+  margin-top: var(--core-space-3);
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-caption);
+  font-weight: var(--core-font-weight-semibold);
+  letter-spacing: var(--core-letter-spacing-label);
+  text-transform: uppercase;
+  color: var(--semantic-color-text-secondary);
 }

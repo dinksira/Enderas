@@ -1,4 +1,3 @@
-import './Button.css';
 
 export function Button({ variant = 'primary', className = '', children, ...rest }) {
   const classes = ['btn', `btn--${variant}`, className].filter(Boolean).join(' ');

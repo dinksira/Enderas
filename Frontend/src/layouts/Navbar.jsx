@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { Button } from '../components/Button.jsx';
 import { NAVIGATION_BRAND, NAVIGATION_LINKS } from '../config/navigation.js';
-import './Navbar.css';
 
 export function Navbar() {
   return (

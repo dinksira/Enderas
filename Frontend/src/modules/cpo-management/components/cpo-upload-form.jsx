@@ -1,5 +1,4 @@
 import { useCpoRecords } from '../hooks/use-cpo-records.js';
-import './cpo-upload-form.css';
 
 export function CpoUploadForm() {
   const { records, loading, error } = useCpoRecords();
