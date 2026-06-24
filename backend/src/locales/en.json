@@ -1,0 +1,9 @@
+{
+  "auth": {
+    "invalid_credentials": "Invalid mobile number or password.",
+    "access_denied": "Access Denied: You do not have permission to perform this action."
+  },
+  "generic": {
+    "server_error": "An internal server error occurred."
+  }
+}

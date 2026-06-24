@@ -141,3 +141,15 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Documentation files
+docs/DevelopmentRules.txt
+docs/Front-End coding standard.md
+docs/Frontend Rule.md
+docs/KYC-IMPLEMENTATION-PROMPT.md
+docs/KYC-VERIFICATION-IMPLEMENTATION.md
+docs/RBAC-IMPLEMENTATION.md
+Frontend/DEVELOPMENT_RULES.md
+Frontend/FRONTEND_DOCUMENTATION.md
+backend/DEVELOPMENT_RULES.md
+backend/BACKEND_DOCUMENTATION.md

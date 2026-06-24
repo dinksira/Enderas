@@ -1,0 +1,279 @@
+{
+  "dashboard": {
+    "brand": {
+      "name": "Enderas",
+      "subtitle": "Auction Management"
+    },
+    "header": {
+      "title": "Auctions",
+      "subtitle": "Manage all auction listings across categories",
+      "search_placeholder": "Search auctions, users, assets"
+    },
+    "filters": {
+      "all": "All",
+      "active": "ACTIVE",
+      "pending": "PENDING",
+      "closed": "CLOSED",
+      "suspended": "SUSPENDED"
+    },
+    "buttons": {
+      "create_auction": "+ Create Auction",
+      "logout": "LOGOUT"
+    },
+    "table": {
+      "headers": {
+        "id": "ID",
+        "auction_title": "Auction Title",
+        "category": "Category",
+        "status": "Status",
+        "starting_date": "Starting Date",
+        "ending_date": "Ending Date",
+        "bids": "Bids",
+        "reserve_etb": "Reserve(ETB)",
+        "actions": "Actions"
+      },
+      "loading": "Loading records...",
+      "error": "Error: {{message}}",
+      "no_results": "No auction records match the current filters.",
+      "footer_displayed": "{{count}} record(s) displayed",
+      "footer_total_loaded": " · {{count}} total loaded",
+      "footer_preview": " · showing preview data"
+    },
+    "nav": {
+      "kyc": "KYC Verification",
+      "auctions": "Auctions",
+      "asset_request": "Asset Request",
+      "users": "Users",
+      "staff_roles": "Staff & Roles",
+      "payments": "Payments",
+      "cpo_management": "CPO Management",
+      "bid_management": "Bid Management",
+      "analytics_report": "Analytics & Report",
+      "setting": "Setting"
+    },
+    "profile": {
+      "super_admin": "Super Admin",
+      "full_access": "Full Access"
+    },
+    "actions": {
+      "pause": "Pause {{title}}",
+      "cancel": "Cancel {{title}}"
+    },
+    "a11y": {
+      "admin_navigation": "Admin navigation",
+      "main_navigation": "Main navigation",
+      "language_selection": "Language selection",
+      "notifications": "Notifications",
+      "auction_filters": "Auction filters",
+      "status_filters": "Status filters"
+    }
+  },
+  "category": {
+    "vehicles": "Vehicles",
+    "real_estate": "Real Estate",
+    "equipment": "Equipment",
+    "assets": "Assets",
+    "general": "General"
+  },
+  "status": {
+    "active": "Active",
+    "pending": "Pending",
+    "suspended": "Suspended",
+    "closed": "Closed"
+  },
+  "common": {
+    "loading": "LOADING...",
+    "selectFile": "SELECT FILE",
+    "uploading": "UPLOADING...",
+    "uploadedFile": "UPLOADED FILE",
+    "viewFile": "VIEW FILE",
+    "uploadFailed": "UPLOAD FAILED",
+    "close": "CLOSE"
+  },
+  "auth": {
+    "registerTitle": "Create Account",
+    "registerSubtitle": "Register to participate in Enderas auctions",
+    "register": "REGISTER",
+    "registering": "Registering...",
+    "userType": "Account type",
+    "individual": "INDIVIDUAL",
+    "organization": "ORGANIZATION",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "organizationName": "Organization Name",
+    "mobileNumber": "Mobile Number",
+    "emailOptional": "Email (optional)",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "passwordMismatch": "Passwords do not match",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "firstNameRequired": "First name is required",
+    "organizationNameRequired": "Organization name is required",
+    "invalidPhone": "Enter a valid phone number (e.g. 0912345678)",
+    "registrationFailed": "Registration failed. Please try again.",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "enterValidOtp": "Enter the complete 6-digit verification code",
+    "invalidOtp": "Invalid or expired verification code",
+    "resendOtpFailed": "Unable to resend verification code",
+    "otpPageSubtitle": "AUCTION MANAGEMENT SYSTEM",
+    "fullName": "Full Name",
+    "companyName": "Company Name",
+    "tinNumber": "TIN Number",
+    "phoneNumber": "Phone Number",
+    "fullNameRequired": "Full name is required",
+    "companyNameRequired": "Company name is required",
+    "tinRequired": "TIN number is required",
+    "duplicatePhone": "This phone number is already registered",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create one",
+    "genericError": "Something went wrong. Please try again.",
+    "invalidCredentials": "Invalid credentials. Please check your phone number and password.",
+    "networkError": "Unable to reach the server. Please try again.",
+    "validationError": "Please check your input and try again."
+  },
+  "kyc": {
+    "pendingBanner": "Complete your KYC verification to access all auction features.",
+    "underReviewBanner": "Your KYC documents are under review. You will be notified once approved.",
+    "rejectedBanner": "Your KYC was rejected. Please review the feedback and resubmit your documents.",
+    "completeProfile": "COMPLETE PROFILE",
+    "resubmit": "RESUBMIT DOCUMENTS",
+    "verificationTitle": "Complete Your Profile",
+    "verificationSubtitle": "Upload your identification documents for verification",
+    "submit": "SUBMIT FOR REVIEW",
+    "managementTitle": "KYC Verification Queue",
+    "underReviewTitle": "Verification Under Review",
+    "goToDashboard": "Go to Dashboard",
+    "underReviewNotificationInfo": "You will receive an SMS and email notification once your KYC is reviewed.",
+    "rejectedTitle": "KYC Rejected",
+    "rejectionReasonLabel": "Reason for Rejection:",
+    "uploadFile": "UPLOAD FILE",
+    "changeFile": "CHANGE FILE",
+    "fileReady": "File ready",
+    "resubmitTitle": "Resubmit KYC Documents",
+    "nationalIdNumber": "National ID Number",
+    "nationalIdFront": "National ID (Front)",
+    "nationalIdBack": "National ID (Back)",
+    "tinNumber": "TIN Number",
+    "tradeLicense": "Trade License",
+    "tinCertificate": "TIN Certificate",
+    "businessRegistration": "Business Registration",
+    "submitting": "Submitting...",
+    "submissionFailed": "KYC submission failed. Please try again.",
+    "managementSubtitle": "Review and verify user KYC documents",
+    "statusFilters": "Status Filters",
+    "selectSubmission": "Select a Submission",
+    "selectSubmissionHint": "Click a submission from the list to review it",
+    "mobile": "Mobile Number",
+    "userType": "User Type",
+    "documentType": "Document Type",
+    "documentNumber": "Document Number",
+    "documents": "Documents",
+    "reviewNotes": "Review Notes",
+    "rejectionReason": "Rejection Reason",
+    "approve": "APPROVE",
+    "approving": "Approving...",
+    "reject": "REJECT",
+    "rejecting": "Rejecting...",
+    "approveFailed": "Failed to approve KYC. Please try again.",
+    "rejectFailed": "Failed to reject KYC. Please try again.",
+    "loadFailed": "Failed to load KYC submissions. Please try again.",
+    "rejectionReasonRequired": "Please provide a rejection reason",
+    "unknownUser": "Unknown User",
+    "noSubmissions": "No KYC submissions found",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "management": {
+      "pageTitle": "KYC Management",
+      "statsLabel": "KYC submission statistics",
+      "stats": {
+        "all": "All",
+        "pending": "Pending",
+        "under_review": "Under Review",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "tabs": {
+        "all": "ALL",
+        "pending": "PENDING",
+        "under_review": "UNDER REVIEW",
+        "approved": "APPROVED",
+        "rejected": "REJECTED"
+      },
+      "displayStatus": {
+        "pending": "Pending",
+        "under_review": "Under Review",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "tableToolbar": "KYC table filters",
+      "searchPlaceholder": "Search by name, mobile, or email...",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "table": {
+        "loading": "Loading KYC submissions...",
+        "footer": "Showing {{from}}–{{to}} of {{total}} submissions",
+        "headers": {
+          "applicant_name": "Applicant Name",
+          "user_type": "User Type",
+          "mobile_number": "Mobile Number",
+          "submission_date": "Submission Date",
+          "documents_count": "Documents",
+          "status": "Status",
+          "actions": "Actions"
+        }
+      },
+      "pagination": {
+        "prev": "Previous",
+        "next": "Next",
+        "page": "Page {{page}} of {{pages}}"
+      },
+      "userTypes": {
+        "individual": "Individual",
+        "organization": "Organization"
+      },
+      "openDetail": "Open KYC details for {{name}}",
+      "viewAction": "View details",
+      "applicantInfo": "Applicant Information",
+      "applicantName": "Applicant Name",
+      "email": "Email",
+      "registrationDate": "Registration Date",
+      "submissionDate": "Submission Date",
+      "timelineTitle": "Verification Timeline",
+      "timeline": {
+        "submitted": "Submitted",
+        "underReview": "Under Review",
+        "decision": "Decision"
+      },
+      "reviewInfo": "Review Information",
+      "reviewedBy": "Reviewed By",
+      "reviewedAt": "Review Date",
+      "auditTrail": "Audit Trail",
+      "noAuditTrail": "No audit entries for this submission.",
+      "noDocuments": "No documents uploaded.",
+      "detailLoadFailed": "Failed to load KYC details.",
+      "markUnderReview": "MARK AS UNDER REVIEW",
+      "markUnderReviewFailed": "Failed to mark submission as under review.",
+      "close": "CLOSE",
+      "cancel": "CANCEL",
+      "confirmApprove": "CONFIRM APPROVE",
+      "confirmReject": "CONFIRM REJECT",
+      "approveModalTitle": "Approve KYC Submission",
+      "approveModalBody": "Are you sure you want to approve the KYC submission for {{name}}?",
+      "rejectModalTitle": "Reject KYC Submission",
+      "rejectModalBody": "Provide a reason for rejecting this KYC submission.",
+      "quickReasons": "Quick rejection reasons",
+      "charCount": "{{count}} / {{max}} characters",
+      "documentPreview": "Document preview",
+      "rejectionReasons": {
+        "documentUnclear": "Document unclear",
+        "expiredDocument": "Expired document",
+        "informationMismatch": "Information mismatch",
+        "incompleteSubmission": "Incomplete submission"
+      }
+    }
+  }
+}

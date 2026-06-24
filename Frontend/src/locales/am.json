@@ -1,0 +1,279 @@
+{
+  "dashboard": {
+    "brand": {
+      "name": "እንደራስ",
+      "subtitle": "የጨረታ አስተዳደር"
+    },
+    "header": {
+      "title": "ጨረታዎች",
+      "subtitle": "በሁሉም ምድቦች ውስጥ ያሉ የጨረታ ዝርዝሮችን ያስተዳድሩ",
+      "search_placeholder": "ጨረታዎች፣ ተጠቃሚዎች፣ ንብረቶችን ይፈልጉ"
+    },
+    "filters": {
+      "all": "ሁሉም",
+      "active": "ንቁ",
+      "pending": "በመጠባበቅ ላይ",
+      "closed": "ዝግ",
+      "suspended": "ታግዷል"
+    },
+    "buttons": {
+      "create_auction": "+ ጨረታ ፍጠር",
+      "logout": "ውጣ"
+    },
+    "table": {
+      "headers": {
+        "id": "መለያ",
+        "auction_title": "የጨረታ ርዕስ",
+        "category": "ምድብ",
+        "status": "ሁኔታ",
+        "starting_date": "የመጀመሪያ ቀን",
+        "ending_date": "የመጨረሻ ቀን",
+        "bids": "ጨረታዎች",
+        "reserve_etb": "ዝቅተኛ ዋጋ (ብር)",
+        "actions": "ድርጊቶች"
+      },
+      "loading": "መዝገቦች በመጫን ላይ...",
+      "error": "ስህተት፡ {{message}}",
+      "no_results": "ከአሁኑ ማጣሪያዎች ጋር የሚዛመዱ የጨረታ መዝገቦች የሉም።",
+      "footer_displayed": "{{count}} መዝገብ(ዎች) ታይተዋል",
+      "footer_total_loaded": " · {{count}} ጠቅላላ ተጭኗል",
+      "footer_preview": " · የቅድመ እይታ ውሂብ በማሳየት ላይ"
+    },
+    "nav": {
+      "kyc": "KYC ማረጋገጫ",
+      "auctions": "ጨረታዎች",
+      "asset_request": "የንብረት ጥያቄ",
+      "users": "ተጠቃሚዎች",
+      "staff_roles": "ሰራተኞች እና ሚናዎች",
+      "payments": "ክፍያዎች",
+      "cpo_management": "የ CPO አስተዳደር",
+      "bid_management": "የጨረታ አስተዳደር",
+      "analytics_report": "ትንታኔ እና ሪፖርት",
+      "setting": "ቅንብር"
+    },
+    "profile": {
+      "super_admin": "ሱፐር አስተዳዳሪ",
+      "full_access": "ሙሉ መዳረሻ"
+    },
+    "actions": {
+      "pause": "{{title}} አቁም",
+      "cancel": "{{title}} ሰርዝ"
+    },
+    "a11y": {
+      "admin_navigation": "የአስተዳዳሪ አሰሳ",
+      "main_navigation": "ዋና አሰሳ",
+      "language_selection": "ቋንቋ ምርጫ",
+      "notifications": "ማሳወቂያዎች",
+      "auction_filters": "የጨረታ ማጣሪያዎች",
+      "status_filters": "የሁኔታ ማጣሪያዎች"
+    }
+  },
+  "category": {
+    "vehicles": "ተሽከርካሪዎች",
+    "real_estate": "ሪል እስቴት",
+    "equipment": "መሳሪያዎች",
+    "assets": "ንብረቶች",
+    "general": "አጠቃላይ"
+  },
+  "status": {
+    "active": "ንቁ",
+    "pending": "በመጠባበቅ ላይ",
+    "suspended": "ታግዷል",
+    "closed": "ዝግ"
+  },
+  "common": {
+    "loading": "በመጫን ላይ...",
+    "selectFile": "ፋይል ይምረጡ",
+    "uploading": "በመስቀል ላይ...",
+    "uploadedFile": "የተሰቀለ ፋይል",
+    "viewFile": "ፋይል ይመልከቱ",
+    "uploadFailed": "መስቀል አልተሳካም",
+    "close": "ዝጋ"
+  },
+  "auth": {
+    "registerTitle": "መለያ ፍጠር",
+    "registerSubtitle": "በእንደራስ ጨረታዎች ለመሳተፍ ይመዝገቡ",
+    "register": "ተመዝገብ",
+    "registering": "በመመዝገብ ላይ...",
+    "userType": "የመለያ አይነት",
+    "individual": "ግለሰብ",
+    "organization": "ድርጅት",
+    "firstName": "ስም",
+    "lastName": "የአባት ስም",
+    "organizationName": "የድርጅት ስም",
+    "mobileNumber": "የሞባይል ቁጥር",
+    "emailOptional": "ኢሜይል (አማራጭ)",
+    "password": "የይለፍ ቃል",
+    "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+    "passwordMismatch": "የይለፍ ቃሎች አይዛመዱም",
+    "passwordMinLength": "የይለፍ ቃል ቢያንስ 6 ቁምፊ መሆን አለበት",
+    "firstNameRequired": "ስም ያስፈልጋል",
+    "organizationNameRequired": "የድርጅት ስም ያስፈልጋል",
+    "invalidPhone": "ትክክለኛ የሞባይል ቁጥር ያስገቡ (ለምሳሌ 0912345678)",
+    "registrationFailed": "ምዝገባ አልተሳካም። እንደገና ይሞክሩ።",
+    "haveAccount": "መለያ አለዎት?",
+    "signIn": "ግባ",
+    "enterValidOtp": "ሙሉ የ 6-አሃዝ የማረጋገጫ ኮድ ያስገቡ",
+    "invalidOtp": "ልክ ያልሆነ ወይም ጊዜው ያለፈ የማረጋገጫ ኮድ",
+    "resendOtpFailed": "የማረጋገጫ ኮድ እንደገና መላክ አልተቻለም",
+    "otpPageSubtitle": "የጨረታ አስተዳደር ስርዓት",
+    "fullName": "ሙሉ ስም",
+    "companyName": "የኩባንያ ስም",
+    "tinNumber": "TIN ቁጥር",
+    "phoneNumber": "ስልክ ቁጥር",
+    "fullNameRequired": "ሙሉ ስም ያስፈልጋል",
+    "companyNameRequired": "የኩባንያ ስም ያስፈልጋል",
+    "tinRequired": "TIN ቁጥር ያስፈልጋል",
+    "duplicatePhone": "ይህ ስልክ ቁጥር ቀድሞውኑ ተመዝግቧል",
+    "noAccount": "መለያ የለዎት?",
+    "createAccount": "መለያ ፍጠር",
+    "genericError": "አንድ ስህተት ተከስቷል። እንደገና ይሞክሩ።",
+    "invalidCredentials": "ልክ ያልሆኑ የመግቢያ መረጃዎች። ስልክ ቁጥርዎን እና የይለፍ ቃልዎን ያረጋግጡ።",
+    "networkError": "አገልጋዩን ማግኘት አልተቻለም። እንደገና ይሞክሩ።",
+    "validationError": "ግቤትዎን ያረጋግጡ እና እንደገና ይሞክሩ።"
+  },
+  "kyc": {
+    "pendingBanner": "ሁሉንም የጨረታ ባህሪዎች ለመጠቀም KYC ማረጋገጫዎን ያጠናቅቁ።",
+    "underReviewBanner": "KYC ሰነዶችዎ በማረጋገጥ ላይ ናቸው። በተረጋገጠበት ወቅት ማሳወቂያ ይደርስዎታል።",
+    "rejectedBanner": "KYCዎ ተተርፏል። ግምገማውን ይመልከቱ እና ሰነዶችዎን እንደገና ይስቀሉ።",
+    "completeProfile": "መገለጫ ያጠናቅቁ",
+    "resubmit": "ሰነዶችን እንደገና ይስቀሉ",
+    "verificationTitle": "መገለጫዎን ያጠናቅቁ",
+    "verificationSubtitle": "ለማረጋገጫ መታወቂያ ሰነዶችዎን ይስቀሉ",
+    "submit": "ለማረጋገጥ ይስቀሉ",
+    "managementTitle": "የ KYC ማረጋገጫ ወረፋ",
+    "underReviewTitle": "ማረጋገጫ በማጣራት ላይ",
+    "goToDashboard": "ወደ ዳሽቦርድ ይሂዱ",
+    "underReviewNotificationInfo": "KYCዎ ከተገነጸለ በኋላ በኤስኤምኤስ እና በኢሜይል ማሳወቂያ ይደርስዎታል።",
+    "rejectedTitle": "KYC ተተርፏል",
+    "rejectionReasonLabel": "የመተራ ምክንያት፡",
+    "uploadFile": "ፋይል ይስቀሉ",
+    "changeFile": "ፋይል ይቀይሩ",
+    "fileReady": "ፋይል ዝግጁ ነው",
+    "resubmitTitle": "KYC ሰነዶችን እንደገና ይስቀሉ",
+    "nationalIdNumber": "የብሄራዊ መታወቂያ ቁጥር",
+    "nationalIdFront": "ብሄራዊ መታወቂያ (ፊት)",
+    "nationalIdBack": "ብሄራዊ መታወቂያ (ጀርባ)",
+    "tinNumber": "የትን ቁጥር",
+    "tradeLicense": "የንግድ ፈቃድ",
+    "tinCertificate": "የትን ሰርተፊኬት",
+    "businessRegistration": "የንግድ ምዝገባ",
+    "submitting": "በመስቀል ላይ...",
+    "submissionFailed": "KYC ስርጭት አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+    "managementSubtitle": "የተጠቃሚ KYC ሰነዶችን ይመልከቱ እና ያረጋግጡ",
+    "statusFilters": "የሁኔታ ማጣሪያዎች",
+    "selectSubmission": "ስርጭት ይምረጡ",
+    "selectSubmissionHint": "ለማረጋገጥ ከዝርዝሩ ስርጭትን ይጫኑ",
+    "mobile": "የሞባይል ቁጥር",
+    "userType": "የተጠቃሚ አይነት",
+    "documentType": "የሰነድ አይነት",
+    "documentNumber": "የሰነድ ቁጥር",
+    "documents": "ሰነዶች",
+    "reviewNotes": "የግምገማ ማስታወሻዎች",
+    "rejectionReason": "የመተራ ምክንያት",
+    "approve": "ታረጋገጠ",
+    "approving": "በማረጋገጥ ላይ...",
+    "reject": "ተተርፏል",
+    "rejecting": "በመተራ ላይ...",
+    "approveFailed": "KYC ማረጋገጥ አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+    "rejectFailed": "KYC መተራ አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+    "loadFailed": "የ KYC ስርጭቶችን ማጫን አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+    "rejectionReasonRequired": "እባክዎ የመተራ ምክንያት ይስጡ",
+    "unknownUser": "ያልታወቀ ተጠቃሚ",
+    "noSubmissions": "የ KYC ስርጭቶች አልተገኙም",
+    "status": {
+      "pending": "በመጠባበቅ ላይ",
+      "approved": "ተረጋገጠ",
+      "rejected": "ተተርፏል"
+    },
+    "management": {
+      "pageTitle": "የ KYC አስተዳደር",
+      "statsLabel": "የ KYC ስርጭት ስታትስቲክስ",
+      "stats": {
+        "all": "ሁሉም",
+        "pending": "በመጠባበቅ ላይ",
+        "under_review": "በማጣራት ላይ",
+        "approved": "ተረጋገጠ",
+        "rejected": "ተተርፏል"
+      },
+      "tabs": {
+        "all": "ሁሉም",
+        "pending": "በመጠባበቅ ላይ",
+        "under_review": "በማጣራት ላይ",
+        "approved": "ተረጋገጠ",
+        "rejected": "ተተርፏል"
+      },
+      "displayStatus": {
+        "pending": "በመጠባበቅ ላይ",
+        "under_review": "በማጣራት ላይ",
+        "approved": "ተረጋገጠ",
+        "rejected": "ተተርፏል"
+      },
+      "tableToolbar": "የ KYC ሰንጠረዥ ማጣሪያዎች",
+      "searchPlaceholder": "በስም፣ ሞባይል ወይም ኢሜይል ይፈልጉ...",
+      "dateFrom": "ከ",
+      "dateTo": "እስከ",
+      "table": {
+        "loading": "የ KYC ስርጭቶች በመጫን ላይ...",
+        "footer": "{{total}} ስርጭቶች ውስጥ {{from}}–{{to}} በማሳየት ላይ",
+        "headers": {
+          "applicant_name": "የማመልከቻ ስም",
+          "user_type": "የተጠቃሚ አይነት",
+          "mobile_number": "የሞባይል ቁጥር",
+          "submission_date": "የስርጭት ቀን",
+          "documents_count": "ሰነዶች",
+          "status": "ሁኔታ",
+          "actions": "ድርጊቶች"
+        }
+      },
+      "pagination": {
+        "prev": "ቀዳሚ",
+        "next": "ቀጣይ",
+        "page": "ገጽ {{page}} ከ {{pages}}"
+      },
+      "userTypes": {
+        "individual": "ግለሰብ",
+        "organization": "ድርጅት"
+      },
+      "openDetail": "የ {{name}} KYC ዝርዝር ይክፈቱ",
+      "viewAction": "ዝርዝር ይመልከቱ",
+      "applicantInfo": "የማመልከቻ መረጃ",
+      "applicantName": "የማመልከቻ ስም",
+      "email": "ኢሜይል",
+      "registrationDate": "የምዝገባ ቀን",
+      "submissionDate": "የስርጭት ቀን",
+      "timelineTitle": "የማረጋገጫ የጊዜ መስመር",
+      "timeline": {
+        "submitted": "ተላልፏል",
+        "underReview": "በማጣራት ላይ",
+        "decision": "ውሳኔ"
+      },
+      "reviewInfo": "የግምገማ መረጃ",
+      "reviewedBy": "ያረጋገጠው",
+      "reviewedAt": "የግምገማ ቀን",
+      "auditTrail": "የኦዲት መዝገብ",
+      "noAuditTrail": "ለዚህ ስርጭት የኦዲት መዝገቦች የሉም።",
+      "noDocuments": "ምንም ሰነድ አልተሰቀለም።",
+      "detailLoadFailed": "የ KYC ዝርዝር ማጫን አልተሳካም።",
+      "markUnderReview": "በማጣራት ላይ ምልክት አድርግ",
+      "markUnderReviewFailed": "ስርጭቱን በማጣራት ላይ ምልክት ማድረግ አልተሳካም።",
+      "close": "ዝጋ",
+      "cancel": "ሰርዝ",
+      "confirmApprove": "ማረጋገጫ አረጋግጥ",
+      "confirmReject": "መተራ አረጋግጥ",
+      "approveModalTitle": "KYC ስርጭት አጽድቅ",
+      "approveModalBody": "የ {{name}} KYC ስርጭትን ማጽደቅ እርግጠኛ ነዎት?",
+      "rejectModalTitle": "KYC ስርጭት ተቀባይነት አይኖረውም",
+      "rejectModalBody": "ይህንን KYC ስርጭት ለመተራ ምክንያት ይስጡ።",
+      "quickReasons": "ፈጣን የመተራ ምክንያቶች",
+      "charCount": "{{count}} / {{max}} ቁምፊዎች",
+      "documentPreview": "የሰነድ ቅድመ እይታ",
+      "rejectionReasons": {
+        "documentUnclear": "ሰነዱ ግልጽ አይደለም",
+        "expiredDocument": "ሰነዱ ጊዜው አልፏል",
+        "informationMismatch": "መረጃ አይዛመድም",
+        "incompleteSubmission": "ያልተሟላ ስርጭት"
+      }
+    }
+  }
+}

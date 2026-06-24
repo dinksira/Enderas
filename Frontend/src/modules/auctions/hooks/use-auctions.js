@@ -1,23 +1,47 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useAuthStore } from '../../../stores/auth-store.js';
 import { auctionService } from '../services/auction-service.js';
 
-export function useAuctions() {
+function normalizeAuctionList(data) {
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (Array.isArray(data?.items)) {
+    return data.items;
+  }
+
+  return [];
+}
+
+export function useAuctions({ enabled = true } = {}) {
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchRecords = useCallback(async () => {
+    if (!enabled || !isAuthenticated || !accessToken) {
+      setRecords([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
+
     try {
       const data = await auctionService.getAll();
-      setRecords(Array.isArray(data) ? data : data?.items ?? []);
+      setRecords(normalizeAuctionList(data));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to load records.');
+      setRecords([]);
+      setError(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled, isAuthenticated, accessToken]);
 
   useEffect(() => {
     fetchRecords();

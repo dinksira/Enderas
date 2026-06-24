@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { ROUTES } from '../../../config/routes.js';
 import {
   AuthFormAlert,
   AuthInput,
@@ -5,7 +8,6 @@ import {
   AuthStepTitle,
   AuthSubmitButton,
 } from './auth-login-card.jsx';
-import { LoginBrandHeader } from './login-brand-header.jsx';
 import { LoginLocaleSwitcher } from './login-locale-switcher.jsx';
 
 const COPY = {
@@ -51,10 +53,10 @@ export function CredentialsStep({
   onLocaleChange,
 }) {
   const copy = COPY[locale];
+  const { t } = useTranslation();
 
   return (
     <AuthLoginCard footer={<LoginLocaleSwitcher locale={locale} onLocaleChange={onLocaleChange} />}>
-      <LoginBrandHeader />
       <AuthStepTitle title={copy.title} />
 
       <form className="auth-login-card__fields" onSubmit={onSubmit} noValidate>
@@ -87,6 +89,11 @@ export function CredentialsStep({
         />
 
         <AuthSubmitButton loading={loading} label={copy.submit} loadingLabel={copy.loading} />
+
+        <p className="auth-login-card__footer-link">
+          {t('auth.noAccount')}{' '}
+          <Link to={ROUTES.REGISTER}>{t('auth.createAccount')}</Link>
+        </p>
       </form>
     </AuthLoginCard>
   );

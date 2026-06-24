@@ -1,7 +1,8 @@
+import { Outlet } from 'react-router-dom';
 import { Navbar } from './Navbar.jsx';
 import { Footer } from './Footer.jsx';
 
-export function BaseLayout({ children }) {
+export function BaseLayout() {
   return (
     <div className="base-layout">
       <a href="#main-content" className="base-layout__skip-link">
@@ -9,7 +10,9 @@ export function BaseLayout({ children }) {
       </a>
       <Navbar />
       <main id="main-content" className="base-layout__main">
-        <div className="base-layout__container">{children}</div>
+        <div className="base-layout__container">
+          <Outlet />
+        </div>
       </main>
       <Footer />
     </div>

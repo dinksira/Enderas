@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../../config/routes.js';
+import { resolveDefaultRoute } from '../../../config/navigation.config.js';
+import { AuthBrandPanel } from '../components/auth-brand-panel.jsx';
 import { CredentialsStep } from '../components/credentials-step.jsx';
 import { OtpVerificationStep } from '../components/otp-verification-step.jsx';
 import { useOtpTimer } from '../hooks/use-otp-timer.js';
+import { authApi } from '../services/authApi.js';
+import { useAuthStore } from '../../../stores/auth-store.js';
 
 const AUTH_STEPS = Object.freeze({
   CREDENTIALS: 'CREDENTIALS',
@@ -27,8 +31,6 @@ function validateCredentials(phoneNumber, password) {
 
   if (!password) {
     errors.password = 'Password is required.';
-  } else if (password.length < 8) {
-    errors.password = 'Password must be at least 8 characters.';
   }
 
   return errors;
@@ -36,8 +38,21 @@ function validateCredentials(phoneNumber, password) {
 
 const MOCK_SESSION_DELAY_MS = 600;
 
+function resolveLoginError(err) {
+  if (err?.code === 'INVALID_CREDENTIALS') {
+    return 'Invalid credentials. Please check your phone number and password.';
+  }
+
+  if (err?.code === 'NETWORK_ERROR') {
+    return err.message;
+  }
+
+  return err instanceof Error ? err.message : 'Unable to sign in. Please try again.';
+}
+
 export function LoginView() {
   const navigate = useNavigate();
+  const setSession = useAuthStore((state) => state.setSession);
   const { formatted, isExpired, reset: resetOtpTimer } = useOtpTimer(60);
 
   const [step, setStep] = useState(AUTH_STEPS.CREDENTIALS);
@@ -77,15 +92,35 @@ export function LoginView() {
     setErrors({});
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, MOCK_SESSION_DELAY_MS));
+      const session = await authApi.login({ phoneNumber, password });
 
-      setSessionId('mock-session-id-12345');
-      setOtpDigits(EMPTY_OTP);
-      resetOtpTimer();
-      setStep(AUTH_STEPS.OTP);
+      setSession({
+        accessToken: session.accessToken,
+        identity: session.identity,
+        authz: session.authz,
+        user: session.user,
+      });
+
+      if (session.identity?.isMobileVerified === false) {
+        setSessionId(session.session?.sessionId || '');
+        setOtpDigits(EMPTY_OTP);
+        resetOtpTimer();
+        setStep(AUTH_STEPS.OTP);
+        return;
+      }
+
+      const roleCode = useAuthStore.getState().permissions?.roleCode;
+      const userStatus = session.identity?.status || session.user?.status;
+
+      if (['kyc_pending', 'kyc_rejected', 'pending'].includes(userStatus)) {
+        navigate(ROUTES.KYC_VERIFICATION, { replace: true });
+        return;
+      }
+
+      navigate(resolveDefaultRoute(roleCode), { replace: true });
     } catch (err) {
       setErrors({
-        form: err instanceof Error ? err.message : 'Unable to sign in. Please try again.',
+        form: resolveLoginError(err),
       });
     } finally {
       setLoading(false);
@@ -107,7 +142,8 @@ export function LoginView() {
     try {
       await new Promise((resolve) => setTimeout(resolve, MOCK_SESSION_DELAY_MS));
 
-      navigate(ROUTES.AUCTIONS, { replace: true });
+      const roleCode = useAuthStore.getState().permissions?.roleCode;
+      navigate(resolveDefaultRoute(roleCode), { replace: true });
     } catch (err) {
       setErrors({
         form: err instanceof Error ? err.message : 'Invalid verification code. Please try again.',
@@ -140,36 +176,40 @@ export function LoginView() {
   };
 
   return (
-    <section className="login-view" aria-live="polite">
-      <div className="login-view__container">
-        <div className={`login-view__step login-view__step--${step.toLowerCase()}`}>
-          {step === AUTH_STEPS.CREDENTIALS ? (
-            <CredentialsStep
-              locale={locale}
-              phoneNumber={phoneNumber}
-              password={password}
-              loading={loading}
-              errors={errors}
-              onPhoneChange={handlePhoneChange}
-              onPasswordChange={handlePasswordChange}
-              onSubmit={handleCredentialsSubmit}
-              onLocaleChange={setLocale}
-            />
-          ) : (
-            <OtpVerificationStep
-              locale={locale}
-              otpDigits={otpDigits}
-              loading={loading}
-              resending={resending}
-              canResend={isExpired}
-              timerLabel={formatted}
-              error={errors.form}
-              onOtpChange={setOtpDigits}
-              onSubmit={handleOtpSubmit}
-              onResend={handleResendOtp}
-              onLocaleChange={setLocale}
-            />
-          )}
+    <section className="premium-login-view" aria-live="polite">
+      <div className="premium-login-view__container">
+        <AuthBrandPanel />
+
+        <div className="premium-login-view__right">
+          <div className={`premium-login-view__step premium-login-view__step--${step.toLowerCase()}`}>
+            {step === AUTH_STEPS.CREDENTIALS ? (
+              <CredentialsStep
+                locale={locale}
+                phoneNumber={phoneNumber}
+                password={password}
+                loading={loading}
+                errors={errors}
+                onPhoneChange={handlePhoneChange}
+                onPasswordChange={handlePasswordChange}
+                onSubmit={handleCredentialsSubmit}
+                onLocaleChange={setLocale}
+              />
+            ) : (
+              <OtpVerificationStep
+                locale={locale}
+                otpDigits={otpDigits}
+                loading={loading}
+                resending={resending}
+                canResend={isExpired}
+                timerLabel={formatted}
+                error={errors.form}
+                onOtpChange={setOtpDigits}
+                onSubmit={handleOtpSubmit}
+                onResend={handleResendOtp}
+                onLocaleChange={setLocale}
+              />
+            )}
+          </div>
         </div>
       </div>
     </section>
