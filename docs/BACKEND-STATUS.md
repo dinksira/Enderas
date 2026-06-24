@@ -257,7 +257,7 @@ These tables exist in `docs/enderass_auction.sql` but have **no application code
 | SQL dump out of date | `docs/enderass_auction.sql` predates migrations 017–019 (`users.status`, KYC columns, auction extensions) |
 | No Sequelize models for most domain tables | Assets, bids (as model), payments, etc. cannot be managed from app code |
 | `refresh_tokens` unused for rotation | Tokens are **created** on login/OTP but no `/refresh` endpoint validates or rotates them |
-| Bidder KYC permissions in seed | Base `roles` seed omits `kyc` module for `bidder`/`asset_owner`; fix script at `docs/fix-kyc-role-permissions.sql` |
+| Bidder KYC + asset request permissions in seed | Base `roles` seed includes `kyc` + `assets` for `bidder` (v3). Existing DBs: `docs/fix-bidder-asset-permissions.sql` or migration `020_grant_bidder_asset_permissions.cjs` |
 | CSO role routes incomplete | `customer_service_officer` seed lacks new KYC routes (`GET /kyc/:id`, audit, mark-under-review) |
 | Document URLs as VARCHAR(500) | Base64 data URLs from frontend can exceed 500 chars |
 | `submitKYC` allows duplicate submissions | No guard preventing a second `KYCVerification` row for same user |
@@ -275,7 +275,7 @@ These tables exist in `docs/enderass_auction.sql` but have **no application code
 | **File upload** | **Partial** | `controllers/fileUpload.controller.js`, `integrations/fileStorage.integration.js` | Local upload/delete, type/size limits | Auth only — no FILES module RBAC; only `local` provider |
 | **Audit** | **Partial** | `services/audit.service.js` | Writes to `audit_logs`; failures logged, not thrown | Not wired to stub domain approve/reject handlers |
 | **Users** | **Stub** | `v1.routes.js` + `resource-handlers.util.js` | RBAC + data scope on list | Returns empty `items: []` |
-| **Assets** | **Stub** | same | RBAC + KYC gate on create | No DB operations |
+| **Assets** | **Complete** (submission + CSO review; no evaluation link) | `services/asset.service.js`, `controllers/asset.controller.js`, `models/asset.model.js`, `models/assetOwner.model.js` | Submit, list, detail, update (pending), approve/reject; auto-create asset_owner; audit + notification stubs | No evaluation workflow; no DELETE endpoint; notifications not persisted |
 | **Evaluations** | **Stub** | same | RBAC on all verbs | No DB operations |
 | **Auctions** | **Complete** (staff CRUD + lifecycle; no asset/bid integration) | `services/auction.service.js`, `controllers/auction.controller.js`, `models/auction.model.js` | Create/list/detail/update/delete; publish/suspend/reactivate/close; validation; audit logs; bid count via raw SQL | `attachDataScope` on routes but **not applied** in service queries; no asset FK validation; `auction_documents` table unused; `AUDIT_ACTIONS.CLOSE` undefined (close audit writes `undefined` action); `DELETE` route missing from `access-map.js` |
 | **Documents** | **Stub** | same | RBAC + KYC gate on create | No DB operations |
@@ -562,7 +562,7 @@ Stub handlers return `scope` in response but do not query DB with it.
 | `evaluation_officer` | evaluations, assets, dashboard | create, read, update, delete, approve, reject, publish, close | |
 | `finance_officer` | payments, dashboard | read, approve, reject, export | |
 | `customer_service_officer` | users, kyc, assets, cpo, dashboard | read, approve, reject, update | KYC list/approve/reject only in seed routes |
-| `bidder` | bids, payments, cpo, notifications | create, read, update | **Needs** `docs/fix-kyc-role-permissions.sql` for KYC |
+| `bidder` | bids, payments, cpo, notifications, kyc, assets | create, read, update | All registered users (individual + organization); run `docs/fix-bidder-asset-permissions.sql` on existing DBs |
 | `asset_owner` | assets, payments | create, read, update | **Needs** fix SQL for KYC |
 
 Staff users must have `users.status === active`. External users blocked only for `suspended` / `deactivated`.
@@ -579,6 +579,7 @@ Staff users must have `users.status === active`. External users blocked only for
 |------|---------|--------|
 | `services/kyc.service.js` | KYC business logic, status constants, duplicate checks, list/stats/audit | **Complete** |
 | `services/auction.service.js` | Auction CRUD, status transitions, validation, serialization, bid counts (raw SQL) | **Complete** (no asset/bid domain integration) |
+| `services/asset.service.js` | Asset submission, owner scoping, CSO approve/reject, serialization | **Complete** (no evaluation integration) |
 | `services/audit.service.js` | `writeAuditLog`, login/deny/approval helpers | **Complete** (failures swallowed; missing `CLOSE` action constant) |
 | `services/notification.service.js` | KYC event notifications | **Stub** — `console.info` only |
 | `services/user-permission.service.js` | Resolve user RBAC from DB; L1 + Redis cache | **Complete** |

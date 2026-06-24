@@ -343,6 +343,66 @@ export async function listAuctions(options = {}) {
   };
 }
 
+const BROWSE_VISIBLE_STATUSES = Object.freeze(['published', 'suspended', 'closed', 'cancelled']);
+
+/**
+ * Published auctions visible to bidders (no draft/pending).
+ * @param {{ status?: string, search?: string }} [options]
+ */
+export async function listBrowseAuctions(options = {}) {
+  const where = {
+    deleted_at: null,
+    status: { [Op.in]: BROWSE_VISIBLE_STATUSES },
+  };
+
+  if (options.status) {
+    const filter = String(options.status).toUpperCase();
+    const statusGroups = {
+      ACTIVE: ['published'],
+      SUSPENDED: ['suspended'],
+      CLOSED: ['closed', 'cancelled'],
+    };
+
+    if (statusGroups[filter]) {
+      where.status = { [Op.in]: statusGroups[filter] };
+    }
+  }
+
+  if (options.search) {
+    const term = `%${options.search.trim()}%`;
+    where[Op.or] = [
+      { title: { [Op.like]: term } },
+      { id: { [Op.like]: term } },
+    ];
+  }
+
+  const auctions = await Auction.findAll({
+    where,
+    order: [['start_date', 'DESC']],
+  });
+
+  const items = await attachBidCounts(auctions);
+
+  return {
+    items,
+    total: items.length,
+  };
+}
+
+/**
+ * @param {string} id
+ */
+export async function getBrowseAuctionById(id) {
+  const auction = await findAuctionOrThrow(id);
+
+  if (!BROWSE_VISIBLE_STATUSES.includes(auction.status)) {
+    throw new AppError('Auction not available', 404, 'AUCTION_NOT_FOUND');
+  }
+
+  const [serialized] = await attachBidCounts([auction]);
+  return serialized;
+}
+
 /**
  * @param {string} id
  */
@@ -517,7 +577,9 @@ export async function deleteAuction(id, staffId) {
 export const auctionService = Object.freeze({
   createAuction,
   listAuctions,
+  listBrowseAuctions,
   getAuctionById,
+  getBrowseAuctionById,
   updateAuction,
   publishAuction,
   suspendAuction,

@@ -1,146 +1,134 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '../../../stores/auth-store.js';
+import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
+import { DashboardToast } from '../../auctions/components/DashboardToast.jsx';
+import { assetService } from '../services/asset-service.js';
+import { useAssets } from '../hooks/use-assets.js';
+import { normalizeAssetStatus, resolveApiStatus, statusPillClass } from '../utils/asset-form-utils.js';
+import { AssetRequestDetailDrawer } from '../components/AssetRequestDetailDrawer.jsx';
+import { AssetApproveConfirmModal } from '../components/AssetApproveConfirmModal.jsx';
+import { AssetRejectModal } from '../components/AssetRejectModal.jsx';
 
 const STATUS_FILTERS = ['all', 'pending_review', 'under_evaluation', 'approved', 'rejected'];
 
-const TABLE_HEADERS = [
+const TABLE_HEADER_KEYS = [
   'request_id',
   'asset',
   'category',
-  'owner_bank',
+  'owner',
   'submitted_date',
-  'estimated_value',
   'status',
   'actions',
 ];
 
-const DEMO_RECORDS = [
-  {
-    id: 'AR-2204',
-    asset: 'Komatsu Excavator PC200',
-    category: 'Machinery',
-    owner: 'Commercial Bank of Ethiopia',
-    submitted: '13 Jun 2026',
-    value: 4200000,
-    status: 'PENDING_REVIEW',
-  },
-  {
-    id: 'AR-2203',
-    asset: 'Apartment Unit — Bole, Block 4',
-    category: 'Buildings',
-    owner: 'Awash Bank',
-    submitted: '12 Jun 2026',
-    value: 8500000,
-    status: 'PENDING_REVIEW',
-  },
-  {
-    id: 'AR-2202',
-    asset: 'Mitsubishi L200 Pickup',
-    category: 'Vehicles',
-    owner: 'Dashen Bank',
-    submitted: '11 Jun 2026',
-    value: 1450000,
-    status: 'UNDER_EVALUATION',
-  },
-  {
-    id: 'AR-2201',
-    asset: 'Farmland — 12 hectares, Debre Birhan',
-    category: 'Land',
-    owner: 'Wegagen Bank',
-    submitted: '10 Jun 2026',
-    value: 6800000,
-    status: 'APPROVED',
-  },
-  {
-    id: 'AR-2200',
-    asset: 'Office Equipment Bundle',
-    category: 'Office Assets',
-    owner: 'Abay Bank',
-    submitted: '09 Jun 2026',
-    value: 320000,
-    status: 'REJECTED',
-  },
-  {
-    id: 'AR-2199',
-    asset: 'Toyota Hilux 2023',
-    category: 'Vehicles',
-    owner: 'Commercial Bank of Ethiopia',
-    submitted: '08 Jun 2026',
-    value: 3100000,
-    status: 'APPROVED',
-  },
-];
-
-function normalizeStatus(status) {
-  return String(status || 'PENDING_REVIEW').toUpperCase();
-}
-
-function statusPillClass(status) {
-  const key = normalizeStatus(status);
-  const map = {
-    PENDING_REVIEW: 'asset-status-pill--pending',
-    UNDER_EVALUATION: 'asset-status-pill--evaluating',
-    APPROVED: 'asset-status-pill--approved',
-    REJECTED: 'asset-status-pill--rejected',
-  };
-  return map[key] || 'asset-status-pill--pending';
-}
-
-function formatCurrency(value) {
-  const amount = Number(value);
-  if (Number.isNaN(amount)) {
-    return '—';
-  }
-  return new Intl.NumberFormat('en-ET', { style: 'decimal', maximumFractionDigits: 0 }).format(amount);
-}
-
 export function AssetRequestsView() {
   const { t } = useTranslation();
+  const can = useAuthStore((state) => state.can);
+
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAssetId, setSelectedAssetId] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [approveTarget, setApproveTarget] = useState(null);
+  const [rejectTarget, setRejectTarget] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [modalError, setModalError] = useState('');
+  const [toast, setToast] = useState({ open: false, message: '', variant: 'success' });
 
-  const filteredRecords = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    return DEMO_RECORDS.filter((record) => {
-      const matchesFilter =
-        activeFilter === 'all' || normalizeStatus(record.status) === activeFilter.toUpperCase();
-      const matchesSearch =
-        !query ||
-        record.id.toLowerCase().includes(query) ||
-        record.asset.toLowerCase().includes(query) ||
-        record.category.toLowerCase().includes(query) ||
-        record.owner.toLowerCase().includes(query);
-      return matchesFilter && matchesSearch;
-    });
-  }, [activeFilter, searchQuery]);
+  const apiStatus = resolveApiStatus(activeFilter);
+  const { records, stats, loading, error, refetch } = useAssets({
+    status: apiStatus,
+    search: searchQuery.trim() || undefined,
+    includeStats: true,
+  });
+
+  const canApprove = can(MODULES.ASSETS, ACTIONS.APPROVE);
+  const canReject = can(MODULES.ASSETS, ACTIONS.REJECT);
 
   const countByStatus = useMemo(() => {
-    const counts = STATUS_FILTERS.reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
-    DEMO_RECORDS.forEach((r) => {
-      const statusKey = normalizeStatus(r.status).toLowerCase();
-      if (counts[statusKey] !== undefined) counts[statusKey]++;
-      counts.all++;
-    });
-    return counts;
-  }, []);
+    if (!stats) {
+      return STATUS_FILTERS.reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
+    }
+    return {
+      all: records.length,
+      pending_review: stats.pending_review ?? 0,
+      under_evaluation: stats.under_evaluation ?? 0,
+      approved: stats.approved ?? 0,
+      rejected: stats.rejected ?? 0,
+    };
+  }, [stats, records.length]);
+
+  const openDrawer = (record, event) => {
+    event?.stopPropagation?.();
+    setSelectedAssetId(record.id);
+    setDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setSelectedAssetId(null);
+  };
+
+  const showToast = (message, variant = 'success') => {
+    setToast({ open: true, message, variant });
+  };
+
+  const handleApproveConfirm = async () => {
+    if (!approveTarget) return;
+
+    setActionLoading(true);
+    setModalError('');
+
+    try {
+      await assetService.approve(approveTarget.id);
+      setApproveTarget(null);
+      closeDrawer();
+      refetch();
+      showToast(t('assets.review.approveSuccess'), 'success');
+    } catch (err) {
+      setModalError(err instanceof Error ? err.message : t('assets.review.actionFailed'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectConfirm = async (rejectionReason) => {
+    if (!rejectTarget) return;
+
+    setActionLoading(true);
+    setModalError('');
+
+    try {
+      await assetService.reject(rejectTarget.id, rejectionReason);
+      setRejectTarget(null);
+      closeDrawer();
+      refetch();
+      showToast(t('assets.review.rejectSuccess'), 'success');
+    } catch (err) {
+      setModalError(err instanceof Error ? err.message : t('assets.review.actionFailed'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <>
-      <section className="asset-stats-grid" aria-label="Asset Request Statistics">
+      <section className="asset-stats-grid" aria-label={t('assets.review.statsLabel')}>
         {STATUS_FILTERS.filter((key) => key !== 'all').map((filterKey) => (
           <div key={filterKey} className="asset-stat-card">
             <div className="asset-stat-card__header">
               <span className="asset-stat-card__label">
-                {filterKey.replace(/_/g, ' ').toUpperCase()}
+                {t(`assets.filters.${filterKey}`)}
               </span>
             </div>
-            <div className="asset-stat-card__value">{countByStatus[filterKey]}</div>
+            <div className="asset-stat-card__value">{countByStatus[filterKey] ?? 0}</div>
           </div>
         ))}
       </section>
 
-      <section className="dashboard-filters" aria-label="Asset Request Filters">
-        <div className="dashboard-filters__tabs" role="tablist" aria-label="Status filters">
+      <section className="dashboard-filters" aria-label={t('assets.review.filtersLabel')}>
+        <div className="dashboard-filters__tabs" role="tablist" aria-label={t('dashboard.a11y.status_filters')}>
           {STATUS_FILTERS.map((filterKey) => {
             const isActive = activeFilter === filterKey;
             return (
@@ -158,8 +146,8 @@ export function AssetRequestsView() {
                   .join(' ')}
                 onClick={() => setActiveFilter(filterKey)}
               >
-                {filterKey === 'all' ? 'All' : filterKey.replace(/_/g, ' ').toUpperCase()}
-                {filterKey !== 'all' && ` (${countByStatus[filterKey]})`}
+                {t(`assets.filters.${filterKey}`)}
+                {filterKey !== 'all' && ` (${countByStatus[filterKey] ?? 0})`}
               </button>
             );
           })}
@@ -171,9 +159,9 @@ export function AssetRequestsView() {
           </svg>
           <input
             type="search"
-            placeholder="Search by request ID, asset name, or owner..."
+            placeholder={t('assets.review.searchPlaceholder')}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(event) => setSearchQuery(event.target.value)}
           />
         </div>
       </section>
@@ -183,81 +171,188 @@ export function AssetRequestsView() {
           <table className="dashboard-table">
             <thead>
               <tr className="dashboard-table__head-row">
-                {TABLE_HEADERS.map((headerKey) => (
+                {TABLE_HEADER_KEYS.map((headerKey) => (
                   <th key={headerKey} scope="col" className="dashboard-table__head-cell">
-                    {headerKey.replace(/_/g, ' ').toUpperCase()}
+                    {t(`assets.table.headers.${headerKey}`)}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filteredRecords.map((record) => (
-                <tr key={record.id} className="dashboard-table__row">
-                  <td className="dashboard-table__cell dashboard-table__cell--strong">
-                    {record.id}
-                  </td>
-                  <td className="dashboard-table__cell">{record.asset}</td>
-                  <td className="dashboard-table__cell dashboard-table__cell--muted">
-                    {record.category}
-                  </td>
-                  <td className="dashboard-table__cell">{record.owner}</td>
-                  <td className="dashboard-table__cell">{record.submitted}</td>
-                  <td className="dashboard-table__cell dashboard-table__cell--strong">
-                    {formatCurrency(record.value)} ETB
-                  </td>
-                  <td className="dashboard-table__cell">
-                    <span className={`asset-status-pill ${statusPillClass(record.status)}`}>
-                      {record.status.replace(/_/g, ' ').toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="dashboard-table__cell">
-                    <div className="dashboard-actions">
-                      <button
-                        type="button"
-                        className="dashboard-actions__btn"
-                        aria-label={`View details for ${record.id}`}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path d="M12 5c4.632 0 8 5.878 8 7s-3.368 7-8 7-8-5.878-8-7 3.368-7 8-7z" stroke="currentColor" strokeWidth="1.8" />
-                          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        className="dashboard-actions__btn dashboard-actions__btn--success"
-                        aria-label={`Approve ${record.id}`}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        className="dashboard-actions__btn dashboard-actions__btn--danger"
-                        aria-label={`Reject ${record.id}`}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                    </div>
+              {loading && (
+                <tr>
+                  <td colSpan={TABLE_HEADER_KEYS.length} className="dashboard-table__empty">
+                    {t('dashboard.table.loading')}
                   </td>
                 </tr>
-              ))}
-              {filteredRecords.length === 0 && (
+              )}
+
+              {!loading && error && (
                 <tr>
-                  <td colSpan={TABLE_HEADERS.length} className="dashboard-table__empty">
-                    No asset requests found.
+                  <td colSpan={TABLE_HEADER_KEYS.length} className="dashboard-table__empty" role="alert">
+                    {t('dashboard.table.error', { message: error })}
+                  </td>
+                </tr>
+              )}
+
+              {!loading &&
+                !error &&
+                records.map((record) => {
+                  const displayStatus = normalizeAssetStatus(record.status);
+                  const isPending = record.dbStatus === 'pending_review';
+
+                  return (
+                    <tr
+                      key={record.id}
+                      className="dashboard-table__row dashboard-table__row--clickable"
+                      onClick={(event) => openDrawer(record, event)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          openDrawer(record, event);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={t('assets.review.openRow', { title: record.title })}
+                    >
+                      <td className="dashboard-table__cell dashboard-table__cell--strong">
+                        {record.id.slice(0, 8).toUpperCase()}
+                      </td>
+                      <td className="dashboard-table__cell dashboard-table__cell--strong">
+                        {record.title}
+                      </td>
+                      <td className="dashboard-table__cell dashboard-table__cell--muted">
+                        {t(`assets.types.${record.assetType}`, { defaultValue: record.assetType })}
+                      </td>
+                      <td className="dashboard-table__cell">{record.ownerName || '—'}</td>
+                      <td className="dashboard-table__cell">
+                        {record.submittedAtFormatted || '—'}
+                      </td>
+                      <td className="dashboard-table__cell">
+                        <span className={`asset-status-pill ${statusPillClass(record.status)}`}>
+                          {t(`assets.status.${displayStatus.toLowerCase()}`, {
+                            defaultValue: displayStatus.replace(/_/g, ' '),
+                          })}
+                        </span>
+                      </td>
+                      <td className="dashboard-table__cell">
+                        <div
+                          className="dashboard-actions"
+                          onClick={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => event.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            className="dashboard-actions__btn"
+                            aria-label={t('assets.review.viewAction', { title: record.title })}
+                            onClick={(event) => openDrawer(record, event)}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <path d="M12 5c4.632 0 8 5.878 8 7s-3.368 7-8 7-8-5.878-8-7 3.368-7 8-7z" stroke="currentColor" strokeWidth="1.8" />
+                              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
+                            </svg>
+                          </button>
+                          {isPending && canApprove && (
+                            <button
+                              type="button"
+                              className="dashboard-actions__btn dashboard-actions__btn--success"
+                              aria-label={t('assets.review.approveAction', { title: record.title })}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setModalError('');
+                                setApproveTarget(record);
+                              }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </button>
+                          )}
+                          {isPending && canReject && (
+                            <button
+                              type="button"
+                              className="dashboard-actions__btn dashboard-actions__btn--danger"
+                              aria-label={t('assets.review.rejectAction', { title: record.title })}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setModalError('');
+                                setRejectTarget(record);
+                              }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+              {!loading && !error && records.length === 0 && (
+                <tr>
+                  <td colSpan={TABLE_HEADER_KEYS.length} className="dashboard-table__empty">
+                    {t('assets.review.noResults')}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-        <div className="dashboard-table__footer">
-          Showing {filteredRecords.length} of {DEMO_RECORDS.length} requests
-        </div>
+
+        {!loading && !error && (
+          <div className="dashboard-table__footer">
+            {t('dashboard.table.footer_displayed', { count: records.length })}
+          </div>
+        )}
       </section>
+
+      <AssetRequestDetailDrawer
+        assetId={selectedAssetId}
+        open={drawerOpen}
+        onClose={closeDrawer}
+        onApprove={(asset) => {
+          setModalError('');
+          setApproveTarget(asset);
+        }}
+        onReject={(asset) => {
+          setModalError('');
+          setRejectTarget(asset);
+        }}
+        actionLoading={actionLoading}
+      />
+
+      <AssetApproveConfirmModal
+        open={Boolean(approveTarget)}
+        loading={actionLoading}
+        assetTitle={approveTarget?.title ?? ''}
+        onConfirm={handleApproveConfirm}
+        onCancel={() => {
+          if (!actionLoading) setApproveTarget(null);
+        }}
+      />
+
+      <AssetRejectModal
+        open={Boolean(rejectTarget)}
+        loading={actionLoading}
+        error={modalError}
+        onConfirm={handleRejectConfirm}
+        onCancel={() => {
+          if (!actionLoading) {
+            setRejectTarget(null);
+            setModalError('');
+          }
+        }}
+      />
+
+      <DashboardToast
+        open={toast.open}
+        message={toast.message}
+        variant={toast.variant}
+        onClose={() => setToast((current) => ({ ...current, open: false }))}
+      />
     </>
   );
 }

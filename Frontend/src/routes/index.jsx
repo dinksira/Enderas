@@ -11,7 +11,11 @@ import { ModulePageView } from '../modules/dashboard/views/ModulePageView.jsx';
 import { AccessDeniedView } from '../views/AccessDeniedView.jsx';
 import { DashboardEntry } from '../modules/role-workspaces/DashboardEntry.jsx';
 import { AssetRequestsView } from '../modules/assets/views/AssetRequestsView.jsx';
+import { MyAssetsView } from '../modules/assets/views/MyAssetsView.jsx';
+import { SubmitAssetView } from '../modules/assets/views/SubmitAssetView.jsx';
 import { SuperAdminDashboardView } from '../modules/role-workspaces/super-admin/SuperAdminDashboardView.jsx';
+import { BrowseAuctionsView } from '../modules/auctions/views/BrowseAuctionsView.jsx';
+import { BidsRouteEntry } from '../modules/auctions/views/BidsRouteEntry.jsx';
 
 function guard(module, action = ACTIONS.READ, element) {
   return (
@@ -85,13 +89,13 @@ export function AppRoutes() {
           }
         />
         <Route path="assets" element={guard(MODULES.ASSETS, ACTIONS.READ, <AssetRequestsView />)} />
-        <Route path="my-assets" element={guard(MODULES.ASSETS, ACTIONS.READ, <ModulePageView title="My Assets" module={MODULES.ASSETS} />)} />
-        <Route path="submit-asset" element={guard(MODULES.ASSETS, ACTIONS.CREATE, <ModulePageView title="Submit Asset" module={MODULES.ASSETS} />)} />
+        <Route path="my-assets" element={guard(MODULES.ASSETS, ACTIONS.READ, <MyAssetsView />)} />
+        <Route path="submit-asset" element={guard(MODULES.ASSETS, ACTIONS.CREATE, <SubmitAssetView />)} />
         <Route path="evaluations" element={guard(MODULES.EVALUATIONS, ACTIONS.READ, <ModulePageView title="Evaluations" module={MODULES.EVALUATIONS} />)} />
         <Route path="auctions" element={guard(MODULES.AUCTIONS, ACTIONS.READ, <SuperAdminDashboardView />)} />
-        <Route path="browse-auctions" element={guard(MODULES.BIDS, ACTIONS.READ, <ModulePageView title="Browse Auctions" module={MODULES.BIDS} />)} />
+        <Route path="browse-auctions" element={guard(MODULES.BIDS, ACTIONS.READ, <BrowseAuctionsView />)} />
         <Route path="documents" element={guard(MODULES.DOCUMENTS, ACTIONS.READ, <ModulePageView title="Documents" module={MODULES.DOCUMENTS} />)} />
-        <Route path="bids" element={guard(MODULES.BIDS, ACTIONS.READ, <ModulePageView title="Bids" module={MODULES.BIDS} />)} />
+        <Route path="bids" element={guard(MODULES.BIDS, ACTIONS.READ, <BidsRouteEntry />)} />
         <Route path="my-bids" element={guard(MODULES.BIDS, ACTIONS.READ, <ModulePageView title="My Bids" module={MODULES.BIDS} />)} />
         <Route path="winners" element={guard(MODULES.WINNERS, ACTIONS.READ, <ModulePageView title="Winners" module={MODULES.WINNERS} />)} />
         <Route path="payments" element={guard(MODULES.PAYMENTS, ACTIONS.READ, <ModulePageView title="Payments" module={MODULES.PAYMENTS} />)} />

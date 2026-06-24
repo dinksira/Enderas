@@ -11,6 +11,7 @@ import { sendSuccess } from '../utils/response.util.js';
 import { authorizationPermissionService } from '../core/authorization/permission.service.js';
 import { kycController } from '../controllers/kyc.controller.js';
 import { auctionController } from '../controllers/auction.controller.js';
+import { assetController } from '../controllers/asset.controller.js';
 import { requireKYCVerified } from '../middleware/kyc.middleware.js';
 import fileUploadRoutes from './fileUpload.routes.js';
 
@@ -130,10 +131,53 @@ v1Router.post(
 );
 
 // Assets
-const assets = createResourceHandlers('assets', MODULES.ASSETS);
-mountResource(v1Router, '/assets', MODULES.ASSETS, 'assets', { requireKycOnCreate: true });
-v1Router.post('/assets/:id/approve', authenticate, authorize({ module: MODULES.ASSETS, action: ACTIONS.APPROVE }), assets.approve);
-v1Router.post('/assets/:id/reject', authenticate, authorize({ module: MODULES.ASSETS, action: ACTIONS.REJECT }), assets.reject);
+v1Router.get(
+  '/assets/my',
+  authenticate,
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.READ }),
+  assetController.listMyAssets,
+);
+v1Router.get(
+  '/assets',
+  authenticate,
+  attachDataScope(MODULES.ASSETS),
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.READ }),
+  assetController.listAssets,
+);
+v1Router.get(
+  '/assets/:id',
+  authenticate,
+  attachDataScope(MODULES.ASSETS),
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.READ }),
+  assetController.getAssetById,
+);
+v1Router.post(
+  '/assets',
+  authenticate,
+  attachDataScope(MODULES.ASSETS),
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.CREATE }),
+  requireKYCVerified,
+  assetController.createAsset,
+);
+v1Router.put(
+  '/assets/:id',
+  authenticate,
+  attachDataScope(MODULES.ASSETS),
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.UPDATE }),
+  assetController.updateAsset,
+);
+v1Router.post(
+  '/assets/:id/approve',
+  authenticate,
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.APPROVE }),
+  assetController.approveAsset,
+);
+v1Router.post(
+  '/assets/:id/reject',
+  authenticate,
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.REJECT }),
+  assetController.rejectAsset,
+);
 
 // Evaluations
 const evaluations = createResourceHandlers('evaluations', MODULES.EVALUATIONS);
@@ -142,6 +186,20 @@ v1Router.post('/evaluations/:id/approve', authenticate, authorize({ module: MODU
 v1Router.post('/evaluations/:id/reject', authenticate, authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.REJECT }), evaluations.reject);
 
 // Auctions
+v1Router.get(
+  '/auctions/browse',
+  authenticate,
+  attachDataScope(MODULES.BIDS),
+  authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
+  auctionController.listBrowseAuctions,
+);
+v1Router.get(
+  '/auctions/browse/:id',
+  authenticate,
+  attachDataScope(MODULES.BIDS),
+  authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
+  auctionController.getBrowseAuctionById,
+);
 v1Router.get(
   '/auctions',
   authenticate,

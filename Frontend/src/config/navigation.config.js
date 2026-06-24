@@ -39,16 +39,36 @@ export const ACTIONS = Object.freeze({
  */
 export const PAGE_REGISTRY = Object.freeze([
   { id: 'kyc', label: 'KYC Verification', path: '/app/kyc', module: MODULES.KYC, action: ACTIONS.READ, group: 'operations' },
-  { id: 'auctions', label: 'Auctions', path: '/app/auctions', module: MODULES.AUCTIONS, action: ACTIONS.READ, group: 'admin' },
-  { id: 'assets', label: 'Asset Requests', path: '/app/assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'admin' },
+  { id: 'auctions', label: 'Auctions', path: '/app/auctions', module: MODULES.AUCTIONS, action: ACTIONS.READ, group: 'auction' },
+  { id: 'browse-auctions', label: 'Browse Auctions', path: '/app/browse-auctions', module: MODULES.BIDS, action: ACTIONS.READ, group: 'bidder' },
+  { id: 'my-bids', label: 'My Bids', path: '/app/my-bids', module: MODULES.BIDS, action: ACTIONS.READ, group: 'bidder' },
+  { id: 'assets', label: 'Asset Requests', path: '/app/assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'operations' },
+  { id: 'my-assets', label: 'My Requests', path: '/app/my-assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'owner' },
+  { id: 'submit-asset', label: 'Request Auction', path: '/app/submit-asset', module: MODULES.ASSETS, action: ACTIONS.CREATE, group: 'owner' },
   { id: 'users', label: 'Users', path: '/app/users', module: MODULES.USERS, action: ACTIONS.READ, group: 'admin' },
   { id: 'staff', label: 'Staff & Roles', path: '/app/staff', module: MODULES.STAFF, action: ACTIONS.READ, group: 'admin' },
-  { id: 'payments', label: 'Payments', path: '/app/payments', module: MODULES.PAYMENTS, action: ACTIONS.READ, group: 'admin' },
-  { id: 'cpo', label: 'CPO Management', path: '/app/cpo', module: MODULES.CPO, action: ACTIONS.READ, group: 'admin' },
-  { id: 'bids', label: 'Bid Management', path: '/app/bids', module: MODULES.BIDS, action: ACTIONS.READ, group: 'admin' },
-  { id: 'reports', label: 'Reports & Analytics', path: '/app/reports', module: MODULES.DASHBOARD, action: ACTIONS.EXPORT, group: 'admin' },
+  { id: 'payments', label: 'Payments', path: '/app/payments', module: MODULES.PAYMENTS, action: ACTIONS.READ, group: 'finance' },
+  { id: 'cpo', label: 'CPO Management', path: '/app/cpo', module: MODULES.CPO, action: ACTIONS.READ, group: 'operations' },
+  { id: 'bids', label: 'Bid Management', path: '/app/bids', module: MODULES.BIDS, action: ACTIONS.READ, group: 'auction' },
+  { id: 'reports', label: 'Reports & Analytics', path: '/app/reports', module: MODULES.DASHBOARD, action: ACTIONS.EXPORT, group: 'finance' },
   { id: 'settings', label: 'System Settings', path: '/app/settings', module: MODULES.SETTINGS, action: ACTIONS.READ, group: 'admin' },
   { id: 'roles', label: 'Audit Trail', path: '/app/roles', module: MODULES.ROLES, action: ACTIONS.READ, group: 'admin' },
+  { id: 'notifications', label: 'Notifications', path: '/app/notifications', module: MODULES.NOTIFICATIONS, action: ACTIONS.READ, group: 'bidder' },
+]);
+
+/** Nav groups shown per end-user role (staff roles use STAFF_NAV_GROUPS). */
+export const ROLE_NAV_GROUPS = Object.freeze({
+  bidder: ['bidder', 'owner', 'finance', 'operations', 'account'],
+  asset_owner: ['owner', 'operations', 'account'],
+});
+
+export const STAFF_NAV_GROUPS = Object.freeze([
+  'admin',
+  'auction',
+  'operations',
+  'finance',
+  'main',
+  'account',
 ]);
 
 /**
@@ -83,11 +103,17 @@ export function resolveNavigation(permissions, registry = PAGE_REGISTRY) {
     return [];
   }
 
-  if (hasWildcardAccess(permissions)) {
-    return [...registry];
+  let items = hasWildcardAccess(permissions)
+    ? [...registry]
+    : registry.filter((item) => canAccess(permissions, item.module, item.action));
+
+  if (!hasWildcardAccess(permissions)) {
+    const roleCode = permissions.roleCode;
+    const allowedGroups = ROLE_NAV_GROUPS[roleCode] ?? STAFF_NAV_GROUPS;
+    items = items.filter((item) => !item.group || allowedGroups.includes(item.group));
   }
 
-  return registry.filter((item) => canAccess(permissions, item.module, item.action));
+  return items;
 }
 
 /**
@@ -102,6 +128,8 @@ export default {
   MODULES,
   ACTIONS,
   PAGE_REGISTRY,
+  ROLE_NAV_GROUPS,
+  STAFF_NAV_GROUPS,
   ROLE_DEFAULT_ROUTES,
   canAccessPage,
   resolveNavigation,
