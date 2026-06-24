@@ -10,6 +10,7 @@ import { createResourceHandlers } from '../utils/resource-handlers.util.js';
 import { sendSuccess } from '../utils/response.util.js';
 import { authorizationPermissionService } from '../core/authorization/permission.service.js';
 import { kycController } from '../controllers/kyc.controller.js';
+import { auctionController } from '../controllers/auction.controller.js';
 import { requireKYCVerified } from '../middleware/kyc.middleware.js';
 import fileUploadRoutes from './fileUpload.routes.js';
 
@@ -141,10 +142,65 @@ v1Router.post('/evaluations/:id/approve', authenticate, authorize({ module: MODU
 v1Router.post('/evaluations/:id/reject', authenticate, authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.REJECT }), evaluations.reject);
 
 // Auctions
-const auctions = createResourceHandlers('auctions', MODULES.AUCTIONS);
-mountResource(v1Router, '/auctions', MODULES.AUCTIONS, 'auctions');
-v1Router.post('/auctions/:id/publish', authenticate, authorize({ module: MODULES.AUCTIONS, action: ACTIONS.PUBLISH }), auctions.publish);
-v1Router.post('/auctions/:id/close', authenticate, authorize({ module: MODULES.AUCTIONS, action: ACTIONS.CLOSE }), auctions.close);
+v1Router.get(
+  '/auctions',
+  authenticate,
+  attachDataScope(MODULES.AUCTIONS),
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.READ }),
+  auctionController.listAuctions,
+);
+v1Router.get(
+  '/auctions/:id',
+  authenticate,
+  attachDataScope(MODULES.AUCTIONS),
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.READ }),
+  auctionController.getAuctionById,
+);
+v1Router.post(
+  '/auctions',
+  authenticate,
+  attachDataScope(MODULES.AUCTIONS),
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.CREATE }),
+  auctionController.createAuction,
+);
+v1Router.put(
+  '/auctions/:id',
+  authenticate,
+  attachDataScope(MODULES.AUCTIONS),
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.UPDATE }),
+  auctionController.updateAuction,
+);
+v1Router.delete(
+  '/auctions/:id',
+  authenticate,
+  attachDataScope(MODULES.AUCTIONS),
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.DELETE }),
+  auctionController.deleteAuction,
+);
+v1Router.post(
+  '/auctions/:id/publish',
+  authenticate,
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.PUBLISH }),
+  auctionController.publishAuction,
+);
+v1Router.post(
+  '/auctions/:id/suspend',
+  authenticate,
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.UPDATE }),
+  auctionController.suspendAuction,
+);
+v1Router.post(
+  '/auctions/:id/reactivate',
+  authenticate,
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.UPDATE }),
+  auctionController.reactivateAuction,
+);
+v1Router.post(
+  '/auctions/:id/close',
+  authenticate,
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.CLOSE }),
+  auctionController.closeAuction,
+);
 
 // Documents
 mountResource(v1Router, '/documents', MODULES.DOCUMENTS, 'documents', { requireKycOnCreate: true });

@@ -1,11 +1,19 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '../../../stores/auth-store.js';
+import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
 import { useAuctions } from '../../auctions/hooks/use-auctions.js';
+import { CreateAuctionModal } from '../../auctions/components/CreateAuctionModal.jsx';
+import { AuctionDetailDrawer } from '../../auctions/components/AuctionDetailDrawer.jsx';
+import { AuctionSuspendConfirmModal } from '../../auctions/components/AuctionSuspendConfirmModal.jsx';
+import { AuctionDeleteConfirmModal } from '../../auctions/components/AuctionDeleteConfirmModal.jsx';
+import { DashboardToast } from '../../auctions/components/DashboardToast.jsx';
+import { auctionService } from '../../auctions/services/auction-service.js';
+import { normalizeAuctionStatus, statusPillClass } from '../../auctions/utils/auction-drawer-utils.js';
 
 const FILTER_KEYS = ['all', 'active', 'pending', 'closed', 'suspended'];
 
 const TABLE_HEADER_KEYS = [
-  'id',
   'auction_title',
   'category',
   'status',
@@ -16,84 +24,33 @@ const TABLE_HEADER_KEYS = [
   'actions',
 ];
 
-const DEMO_RECORDS = [
-  {
-    id: 'A-1042',
-    title: 'Toyota Land Cruiser 2020',
-    categoryKey: 'vehicles',
-    status: 'ACTIVE',
-    startingDate: '01 Jun 2026',
-    endingDate: '15 Jun 2026',
-    bids: 12,
-    reserve: 500000,
-  },
-  {
-    id: 'A-1043',
-    title: 'Commercial Plot — Bole',
-    categoryKey: 'real_estate',
-    status: 'PENDING',
-    startingDate: '05 Jun 2026',
-    endingDate: '20 Jun 2026',
-    bids: 0,
-    reserve: 8500000,
-  },
-  {
-    id: 'A-1044',
-    title: 'Industrial Crane Set',
-    categoryKey: 'equipment',
-    status: 'SUSPENDED',
-    startingDate: '10 May 2026',
-    endingDate: '25 May 2026',
-    bids: 11,
-    reserve: 1200000,
-  },
-  {
-    id: 'A-1045',
-    title: 'Office Furniture Bundle',
-    categoryKey: 'assets',
-    status: 'CLOSED',
-    startingDate: '01 Apr 2026',
-    endingDate: '14 Apr 2026',
-    bids: 8,
-    reserve: 500000,
-  },
-];
-
-function normalizeStatus(status) {
-  return String(status || 'PENDING').toUpperCase();
-}
+const FILTER_STATUS_MAP = Object.freeze({
+  active: 'ACTIVE',
+  pending: 'PENDING',
+  closed: 'CLOSED',
+  suspended: 'SUSPENDED',
+});
 
 function toCategoryKey(value) {
-  return String(value || 'general')
+  return String(value || 'other_assets')
     .trim()
     .toLowerCase()
     .replace(/\s+/g, '_')
     .replace(/[^a-z0-9_]/g, '');
 }
 
-function statusPillClass(status) {
-  const key = normalizeStatus(status);
-  const map = {
-    ACTIVE: 'dashboard-status-pill--active',
-    PENDING: 'dashboard-status-pill--pending',
-    SUSPENDED: 'dashboard-status-pill--suspended',
-    CLOSED: 'dashboard-status-pill--closed',
-  };
-  return map[key] || 'dashboard-status-pill--pending';
-}
-
-function mapRecord(record, index) {
-  const rawCategory = record.category ?? record.assetCategory ?? 'general';
+function mapRecord(record) {
+  const rawCategory = record.categoryKey ?? record.category ?? 'other_assets';
 
   return {
-    id: record.id ?? record.auctionId ?? `A-${String(index + 1).padStart(4, '0')}`,
-    title: record.title ?? record.auction ?? record.name ?? 'Untitled Auction',
-    categoryKey: record.categoryKey ?? toCategoryKey(rawCategory),
-    status: normalizeStatus(record.status),
-    startingDate: record.startingDate ?? record.startDate ?? '—',
-    endingDate: record.endingDate ?? record.endDate ?? '—',
+    id: record.id,
+    title: record.title ?? 'Untitled Auction',
+    categoryKey: toCategoryKey(rawCategory),
+    status: normalizeAuctionStatus(record.status),
+    startingDate: record.startingDate ?? '—',
+    endingDate: record.endingDate ?? '—',
     bids: record.bids ?? record.bidCount ?? 0,
-    reserve: record.reserve ?? record.reserveAmount ?? 0,
+    reserve: record.reserve ?? record.reservePrice ?? 0,
   };
 }
 
@@ -107,33 +64,117 @@ function formatReserve(value) {
 
 export function SuperAdminDashboardView() {
   const { t } = useTranslation();
-  const { records, loading, error } = useAuctions();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
+  const canCreate = useAuthStore((state) => state.can(MODULES.AUCTIONS, ACTIONS.CREATE));
 
-  const normalizedRecords = useMemo(() => {
-    const source = records.length > 0 ? records : DEMO_RECORDS;
-    return source.map(mapRecord);
-  }, [records]);
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [selectedAuctionId, setSelectedAuctionId] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: '', variant: 'success' });
+  const [suspendTarget, setSuspendTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [modalError, setModalError] = useState('');
+
+  const apiStatus = activeFilter === 'all' ? undefined : FILTER_STATUS_MAP[activeFilter];
+  const { records, loading, error, refetch } = useAuctions({
+    status: apiStatus,
+  });
+
+  const normalizedRecords = useMemo(() => records.map(mapRecord), [records]);
 
   const filteredRecords = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-
     return normalizedRecords.filter((record) => {
-      const matchesFilter =
-        activeFilter === 'all' || normalizeStatus(record.status) === activeFilter.toUpperCase();
-      const localizedCategory = t(`category.${record.categoryKey}`).toLowerCase();
-      const localizedStatus = t(`status.${record.status.toLowerCase()}`).toLowerCase();
-      const matchesSearch =
-        !query ||
-        record.id.toLowerCase().includes(query) ||
-        record.title.toLowerCase().includes(query) ||
-        localizedCategory.includes(query) ||
-        localizedStatus.includes(query);
-
-      return matchesFilter && matchesSearch;
+      return activeFilter === 'all' || record.status === activeFilter.toUpperCase();
     });
-  }, [normalizedRecords, activeFilter, searchQuery, t]);
+  }, [normalizedRecords, activeFilter]);
+
+  const handleCreateSuccess = () => {
+    setToast({
+      open: true,
+      message: t('auctions.create.success'),
+      variant: 'success',
+    });
+    refetch();
+  };
+
+  const handleRowClick = (record) => {
+    setSelectedAuctionId(record.id);
+    setDrawerOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    setDrawerOpen(false);
+    setSelectedAuctionId(null);
+  };
+
+  const showToast = (message, variant = 'success') => {
+    setToast({ open: true, message, variant });
+  };
+
+  const openSuspendModal = (event, record) => {
+    event.stopPropagation();
+    setModalError('');
+    setSuspendTarget(record);
+  };
+
+  const openDeleteModal = (event, record) => {
+    event.stopPropagation();
+    setModalError('');
+    setDeleteTarget(record);
+  };
+
+  const closeSuspendModal = () => {
+    if (actionLoading) return;
+    setSuspendTarget(null);
+    setModalError('');
+  };
+
+  const closeDeleteModal = () => {
+    if (actionLoading) return;
+    setDeleteTarget(null);
+    setModalError('');
+  };
+
+  const handleSuspendConfirm = async () => {
+    if (!suspendTarget) return;
+
+    setActionLoading(true);
+    setModalError('');
+
+    try {
+      await auctionService.suspend(suspendTarget.id);
+      setSuspendTarget(null);
+      showToast(t('auctions.drawer.suspendSuccess'), 'success');
+      refetch();
+    } catch (err) {
+      setModalError(
+        err instanceof Error ? err.message : t('auctions.confirmModals.actionFailed'),
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+
+    setActionLoading(true);
+    setModalError('');
+
+    try {
+      await auctionService.remove(deleteTarget.id);
+      setDeleteTarget(null);
+      showToast(t('auctions.drawer.deleteSuccess'), 'success');
+      refetch();
+    } catch (err) {
+      setModalError(
+        err instanceof Error ? err.message : t('auctions.confirmModals.actionFailed'),
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <>
@@ -161,9 +202,15 @@ export function SuperAdminDashboardView() {
             );
           })}
         </div>
-        <button type="button" className="dashboard-filters__cta">
-          {t('dashboard.buttons.create_auction')}
-        </button>
+        {canCreate && (
+          <button
+            type="button"
+            className="dashboard-filters__cta"
+            onClick={() => setCreateModalOpen(true)}
+          >
+            {t('dashboard.buttons.create_auction')}
+          </button>
+        )}
       </section>
 
       <section className="dashboard-table-panel" aria-live="polite">
@@ -210,13 +257,25 @@ export function SuperAdminDashboardView() {
               {!loading &&
                 !error &&
                 filteredRecords.map((record) => (
-                  <tr key={record.id} className="dashboard-table__row">
+                  <tr
+                    key={record.id}
+                    className="dashboard-table__row dashboard-table__row--clickable"
+                    onClick={() => handleRowClick(record)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        handleRowClick(record);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={t('auctions.drawer.openRow', { title: record.title })}
+                  >
                     <td className="dashboard-table__cell dashboard-table__cell--strong">
-                      {record.id}
+                      {record.title}
                     </td>
-                    <td className="dashboard-table__cell">{record.title}</td>
                     <td className="dashboard-table__cell dashboard-table__cell--muted">
-                      {t(`category.${record.categoryKey}`)}
+                      {t(`category.${record.categoryKey}`, { defaultValue: record.categoryKey })}
                     </td>
                     <td className="dashboard-table__cell">
                       <span
@@ -234,11 +293,16 @@ export function SuperAdminDashboardView() {
                       {formatReserve(record.reserve)}
                     </td>
                     <td className="dashboard-table__cell">
-                      <div className="dashboard-actions">
+                      <div
+                        className="dashboard-actions"
+                        onClick={(event) => event.stopPropagation()}
+                        onKeyDown={(event) => event.stopPropagation()}
+                      >
                         <button
                           type="button"
                           className="dashboard-actions__btn"
                           aria-label={t('dashboard.actions.pause', { title: record.title })}
+                          onClick={(event) => openSuspendModal(event, record)}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M9 7h2v10H9V7zm4 0h2v10h-2V7z" fill="currentColor" />
@@ -247,7 +311,8 @@ export function SuperAdminDashboardView() {
                         <button
                           type="button"
                           className="dashboard-actions__btn dashboard-actions__btn--danger"
-                          aria-label={t('dashboard.actions.cancel', { title: record.title })}
+                          aria-label={t('dashboard.actions.delete', { title: record.title })}
+                          onClick={(event) => openDeleteModal(event, record)}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" strokeWidth="2" />
@@ -266,12 +331,52 @@ export function SuperAdminDashboardView() {
             {t('dashboard.table.footer_displayed', { count: filteredRecords.length })}
             {records.length > 0
               ? t('dashboard.table.footer_total_loaded', { count: records.length })
-              : t('dashboard.table.footer_preview')}
+              : ''}
           </div>
         )}
       </section>
+
+      <CreateAuctionModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSuccess={handleCreateSuccess}
+      />
+
+      <AuctionDetailDrawer
+        auctionId={selectedAuctionId}
+        open={drawerOpen}
+        onClose={handleDrawerClose}
+        onRefresh={refetch}
+        onToast={showToast}
+      />
+
+      <AuctionSuspendConfirmModal
+        open={Boolean(suspendTarget)}
+        loading={actionLoading}
+        error={modalError}
+        auctionTitle={suspendTarget?.title ?? ''}
+        onConfirm={handleSuspendConfirm}
+        onCancel={closeSuspendModal}
+      />
+
+      <AuctionDeleteConfirmModal
+        open={Boolean(deleteTarget)}
+        loading={actionLoading}
+        error={modalError}
+        auctionTitle={deleteTarget?.title ?? ''}
+        onConfirm={handleDeleteConfirm}
+        onCancel={closeDeleteModal}
+      />
+
+      <DashboardToast
+        open={toast.open}
+        message={toast.message}
+        variant={toast.variant}
+        onClose={() => setToast((current) => ({ ...current, open: false }))}
+      />
     </>
   );
 }
 
 export default SuperAdminDashboardView;
+

@@ -88,6 +88,8 @@ export const API_ACCESS_MAP = Object.freeze({
   'POST /api/v1/auctions': { module: MODULES.AUCTIONS, action: ACTIONS.CREATE },
   'PUT /api/v1/auctions/:id': { module: MODULES.AUCTIONS, action: ACTIONS.UPDATE },
   'POST /api/v1/auctions/:id/publish': { module: MODULES.AUCTIONS, action: ACTIONS.PUBLISH },
+  'POST /api/v1/auctions/:id/suspend': { module: MODULES.AUCTIONS, action: ACTIONS.UPDATE },
+  'POST /api/v1/auctions/:id/reactivate': { module: MODULES.AUCTIONS, action: ACTIONS.UPDATE },
   'POST /api/v1/auctions/:id/close': { module: MODULES.AUCTIONS, action: ACTIONS.CLOSE },
 
   // Documents
