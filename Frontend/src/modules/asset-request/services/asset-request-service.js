@@ -1,11 +1,11 @@
-import { api } from '../../../services/api.js';
+import { assetService } from '../../assets/services/asset-service.js';
 
+/** @deprecated Use assetService from modules/assets/services/asset-service.js */
 export const assetRequestService = Object.freeze({
-  getAll: () => api.get('/asset-requests'),
-  getById: (id) => api.get(`/asset-requests/${id}`),
-  create: (payload) => api.post('/asset-requests', payload),
-  update: (id, payload) => api.put(`/asset-requests/${id}`, payload),
-  remove: (id) => api.delete(`/asset-requests/${id}`),
+  getAll: () => assetService.getAll(),
+  getById: (id) => assetService.getById(id),
+  create: (payload) => assetService.create(payload),
+  update: (id, payload) => assetService.update(id, payload),
 });
 
 export default assetRequestService;

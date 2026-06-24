@@ -13,6 +13,16 @@ export const auctionService = Object.freeze({
     return api.get(qs ? `${AUCTIONS_BASE}?${qs}` : AUCTIONS_BASE);
   },
 
+  browse: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.status) query.set('status', params.status);
+    if (params.search) query.set('search', params.search);
+    const qs = query.toString();
+    return api.get(qs ? `${AUCTIONS_BASE}/browse?${qs}` : `${AUCTIONS_BASE}/browse`);
+  },
+
+  browseById: (id) => api.get(`${AUCTIONS_BASE}/browse/${id}`),
+
   getById: (id) => api.get(`${AUCTIONS_BASE}/${id}`),
 
   create: (payload) => api.post(AUCTIONS_BASE, payload),

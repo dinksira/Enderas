@@ -5,6 +5,8 @@ import { RefreshToken } from './refreshToken.model.js';
 import { AuditLog } from './auditLog.model.js';
 import { KYCVerification } from './kyc.model.js';
 import { Auction } from './auction.model.js';
+import { AssetOwner } from './assetOwner.model.js';
+import { Asset } from './asset.model.js';
 
 User.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
 Role.hasMany(User, { foreignKey: 'role_id', as: 'users' });
@@ -33,6 +35,15 @@ Staff.hasMany(KYCVerification, { foreignKey: 'reviewed_by_staff_id', as: 'review
 Staff.hasMany(Auction, { foreignKey: 'created_by_staff_id', as: 'createdAuctions' });
 Auction.belongsTo(Staff, { foreignKey: 'created_by_staff_id', as: 'createdByStaff' });
 
+User.hasOne(AssetOwner, { foreignKey: 'user_id', as: 'assetOwnerProfile' });
+AssetOwner.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+AssetOwner.hasMany(Asset, { foreignKey: 'asset_owner_id', as: 'assets' });
+Asset.belongsTo(AssetOwner, { foreignKey: 'asset_owner_id', as: 'assetOwner' });
+
+Staff.hasMany(Asset, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedAssets' });
+Asset.belongsTo(Staff, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedByStaff' });
+
 export {
   User,
   Role,
@@ -41,6 +52,8 @@ export {
   AuditLog,
   KYCVerification,
   Auction,
+  AssetOwner,
+  Asset,
 };
 
 export default {
@@ -51,4 +64,6 @@ export default {
   AuditLog,
   KYCVerification,
   Auction,
+  AssetOwner,
+  Asset,
 };

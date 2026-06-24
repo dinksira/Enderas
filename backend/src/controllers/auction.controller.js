@@ -24,6 +24,25 @@ export async function listAuctions(req, res, next) {
   }
 }
 
+export async function listBrowseAuctions(req, res, next) {
+  try {
+    const { status, search } = req.query;
+    const result = await auctionService.listBrowseAuctions({ status, search });
+    return sendSuccess(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function getBrowseAuctionById(req, res, next) {
+  try {
+    const auction = await auctionService.getBrowseAuctionById(req.params.id);
+    return sendSuccess(res, { auction });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export async function getAuctionById(req, res, next) {
   try {
     const auction = await auctionService.getAuctionById(req.params.id);
@@ -90,7 +109,9 @@ export async function deleteAuction(req, res, next) {
 export const auctionController = Object.freeze({
   createAuction,
   listAuctions,
+  listBrowseAuctions,
   getAuctionById,
+  getBrowseAuctionById,
   updateAuction,
   publishAuction,
   suspendAuction,

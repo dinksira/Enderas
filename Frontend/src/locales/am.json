@@ -42,13 +42,25 @@
     "nav": {
       "kyc": "KYC ማረጋገጫ",
       "auctions": "ጨረታዎች",
+      "browseauctions": "ጨረታዎችን ይመልከቱ",
+      "mybids": "የኔ ጨረታዎች",
+      "assets": "የንብረት ጥያቄዎች",
+      "myassets": "የኔ ጥያቄዎች",
+      "submitasset": "ጨረታ ጠይቅ",
       "asset_request": "የንብረት ጥያቄ",
       "users": "ተጠቃሚዎች",
+      "staff": "ሰራተኞች እና ሚናዎች",
       "staff_roles": "ሰራተኞች እና ሚናዎች",
       "payments": "ክፍያዎች",
+      "cpo": "የ CPO አስተዳደር",
       "cpo_management": "የ CPO አስተዳደር",
+      "bids": "የጨረታ አስተዳደር",
       "bid_management": "የጨረታ አስተዳደር",
+      "reports": "ትንታኔ እና ሪፖርት",
       "analytics_report": "ትንታኔ እና ሪፖርት",
+      "roles": "የኦዲት መዝገብ",
+      "notifications": "ማሳወቂያዎች",
+      "settings": "የስርዓት ቅንብሮች",
       "setting": "ቅንብር"
     },
     "profile": {
@@ -216,6 +228,201 @@
         "confirm": "ሰርዝ",
         "processing": "በመሰረዝ ላይ..."
       }
+    }
+  },
+  "assets": {
+    "types": {
+      "vehicle": "ተሽከርካሪዎች",
+      "land": "መሬት",
+      "building": "ሕንፃዎች",
+      "machinery": "ማሽነሪ",
+      "equipment": "መሳሪያ",
+      "salvage": "ሳልቬጅ",
+      "other": "ሌላ"
+    },
+    "ownershipDocs": {
+      "vehicleRegistrationBook": "የተሽከርካሪ ምዝገባ መዝገብ",
+      "titleDeed": "የባለቤትነት ሰነድ",
+      "ownershipCertificate": "የባለቤትነት ማረጋገጫ",
+      "purchaseDocuments": "የግዢ ሰነዶች",
+      "other": "ሌላ የባለቤትነት ሰነድ"
+    },
+    "status": {
+      "pending_review": "በግምገማ ላይ",
+      "approved": "ጸድቋል",
+      "rejected": "ተቀባይነት አላገኘም",
+      "under_evaluation": "በግምገማ ሂደት",
+      "evaluated": "ተገመግሟል",
+      "in_auction": "በጨረታ ላይ",
+      "sold": "ተሸጧል"
+    },
+    "filters": {
+      "all": "ሁሉም",
+      "pending_review": "በግምገማ ላይ",
+      "under_evaluation": "በግምገማ ሂደት",
+      "approved": "ጸድቋል",
+      "rejected": "ተቀባይነት አላገኘም"
+    },
+    "table": {
+      "headers": {
+        "request_id": "የጥያቄ መለያ",
+        "asset": "ንብረት",
+        "category": "ምድብ",
+        "owner": "ባለቤት",
+        "owner_bank": "ባለቤት",
+        "submitted_date": "የተላከበት",
+        "estimated_value": "ግምታዊ ዋጋ",
+        "status": "ሁኔታ",
+        "actions": "ድርጊቶች",
+        "title": "ርዕስ",
+        "type": "አይነት",
+        "submitted": "የተላከበት"
+      }
+    },
+    "submit": {
+      "title": "ጨረታ ጠይቅ",
+      "subtitle": "ንብረትዎን ለባለቤትነት ግምገማ ያስገቡ። ከጸደቀ በኋላ ወደ ጨረታ ሂደት ይገባል።"
+    },
+    "my": {
+      "title": "የእኔ የጨረታ ጥያቄዎች",
+      "subtitle": "ለጨረታ የላኳቸውን ንብረቶች ሁኔታ ይከታተሉ።",
+      "submitNew": "+ ጨረታ ጠይቅ",
+      "empty": "እስካሁን ምንም ንብረት አላስገቡም።",
+      "rejectionReason": "ምክንያት፡ {{reason}}",
+      "refresh": "አድስ"
+    },
+    "form": {
+      "submit": "ለግምገማ አስገባ",
+      "submitting": "በመላክ ላይ...",
+      "submitFailed": "ንብረት ማስገባት አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+      "fields": {
+        "title": "የንብረት ርዕስ",
+        "assetType": "የንብረት ምድብ",
+        "description": "የንብረት መግለጫ",
+        "conditionNotes": "የንብረት ሁኔታ ማስታወሻ",
+        "location": "የንብረቱ አካባቢ",
+        "desiredReservePrice": "የሚፈለግ ዝቅተኛ ዋጋ (ብር)",
+        "auctionConditions": "ልዩ የጨረታ ሁኔታዎች ወይም ማስታወሻ",
+        "photos": "የንብረት ፎቶዎች",
+        "ownershipDocument": "የባለቤትነት ሰነድ",
+        "additionalDocuments": "የድጋፍ ሰነዶች (PDF)"
+      },
+      "placeholders": {
+        "selectAssetType": "የንብረት ምድብ ይምረጡ"
+      },
+      "hints": {
+        "ownershipDoc": "ለዚህ ምድብ የሚፈለገው ሰነድ፡ {{document}}",
+        "additionalDocuments": "አማራጭ የሆኑ የድጋፍ ሰነዶች (PDF ወይም ምስሎች)።",
+        "additionalDocumentsPdf": "ቢያንስ አንድ የድጋፍ PDF ሰነድ ይስቀሉ።",
+        "photos": "ከተለያዩ ማዕዘኖች የንብረቱን ግልጽ ፎቶዎች በርካታ ይስቀሉ።"
+      },
+      "errors": {
+        "titleRequired": "የንብረት ርዕስ ያስፈልጋል።",
+        "assetTypeRequired": "እባክዎ የንብረት ምድብ ይምረጡ።",
+        "descriptionRequired": "የንብረት መግለጫ ያስፈልጋል።",
+        "conditionNotesRequired": "የንብረት ሁኔታ ማስታወሻ ያስፈልጋል።",
+        "locationRequired": "የንብረት አካባቢ ያስፈልጋል።",
+        "reservePriceRequired": "ከዜሮ የሚበልጥ ትክክለኛ የሚፈለግ ዝቅተኛ ዋጋ ያስገቡ።",
+        "auctionConditionsRequired": "ልዩ የጨረታ ሁኔታዎች ወይም ማስታወሻ ያስፈልጋል።",
+        "photosRequired": "ቢያንስ አንድ ፎቶ ይስቀሉ።",
+        "ownershipDocRequired": "የባለቤትነት ሰነድ ያስፈልጋል።",
+        "supportingDocsRequired": "ቢያንስ አንድ የድጋፍ PDF ሰነድ ይስቀሉ።",
+        "pdfOnly": "የድጋፍ ፋይሎች በPDF ብቻ መሆን አለባቸው።"
+      }
+    },
+    "requestWizard": {
+      "title": "ጨረታ ጠይቅ",
+      "subtitle": "ንብረትዎን በቀላል ደረጃዎች ያስገቡ። ቡድናችን ይገመግማል፣ ያጸድቃል ወይም ይተላለፋል።",
+      "stepProgress": "የጨረታ ጥያቄ ሂደት",
+      "locationHint": "የአካባቢ መረጃ ለግምገማ ይረዳል። አሁን ላለመጋራት የምትመርጡትን መስኮች ማስቀረት ይችላሉ።",
+      "reviewIntro": "ለአስተዳዳሪ ቡድን ከመላክዎ በፊት ዝርዝሮችዎን ያረጋግጡ።",
+      "landingHint": "ንብረትዎን ለጨረታ ግምገማ ለመላክ የተመራ ሂደቱን ይጀምሩ።",
+      "removeDocument": "{{name}} አስወግድ",
+      "placeholders": {
+        "description": "ንብረቱን፣ ዋና ባህሪያትን እና አስፈላጊ ዝርዝሮችን ይግለጹ...",
+        "conditionNotes": "አሁኑን ሁኔታ፣ ጉዳት፣ የጥገና ታሪክ ወይም ጉድለቶችን ይግለጹ...",
+        "location": "ለምሳሌ አዲስ አበባ፣ ቦሌ",
+        "reservePrice": "ለምሳሌ 2500000",
+        "auctionConditions": "ሁኔታዎች፣ የመመልከቻ ህጎች፣ የክፍያ ግብረመልስ ወይም ልዩ ማስታወሻዎች..."
+      },
+      "steps": {
+        "details": "የንብረት ዝርዝር",
+        "location": "አካባቢ እና ሁኔታ",
+        "photos": "ፎቶዎች",
+        "documents": "ሰነዶች",
+        "review": "ግምገማ እና ላክ"
+      },
+      "actions": {
+        "back": "ተመለስ",
+        "next": "ቀጥል",
+        "cancel": "ሰርዝ",
+        "submit": "ጥያቄ ላክ",
+        "submitting": "በመላክ ላይ...",
+        "edit": "አርትዕ",
+        "addPhotos": "ፎቶዎች ያክሉ"
+      },
+      "errors": {
+        "fixBeforeSubmit": "ከመላክዎ በፊት ሁሉንም አስፈላጊ መስኮች ይሙሉ።"
+      },
+      "reserveHint": "የሚፈለገው ዝቅተኛ ዋጋ በአስተዳዳሪ ይገመገማል። የመጨረሻ ዋጋ በመጀመሪያ ይወሰናል።",
+      "removePhoto": "ፎቶ {{name}} አስወግድ",
+      "review": {
+        "uploaded": "ተላከ",
+        "documentCount": "{{count}} ፋይል(ዎች)",
+        "photoCount": "{{count}} ፎቶ(ዎች)"
+      },
+      "toolbar": {
+        "ariaLabel": "የጨረታ ጥያቄ ድርጊቶች",
+        "title": "ንብረትዎን ለጨረታ ማቅረብ ይፈልጋሉ?",
+        "hint": "ለአስተዳዳሪ ግምገማ ጥያቄ ያስገቡ። የጸደቁ ንብረቶች እንደ ቀጥታ ጨረታ ሊጀመሩ ይችላሉ።",
+        "cta": "+ ጨረታ ጠይቅ"
+      },
+      "success": {
+        "title": "ጥያቄ ተልኳል",
+        "subtitle": "የጨረታ ጥያቄዎ አሁን በአስተዳዳሪ ቡድን ውስጥ ነው።",
+        "body": "የንብረት ዝርዝሮችዎን ተቀብለናል። ግምገማው ሲጠናቀቅ ማሳወቂያ ይደርስዎታል።",
+        "stepReview": "አስተዳዳሪ የባለቤትነት ሰነዶችዎን ይገመግማል",
+        "stepEvaluation": "ከጸደቀ በኋላ ንብረቱ ወደ ግምገማ ይሄዳል",
+        "stepLaunch": "የጸደቁ ንብረቶች እንደ ጨረታ ሊጀመሩ ይችላሉ",
+        "viewRequests": "የኔ ጥያቄዎችን ይመልከቱ",
+        "close": "ዝጋ"
+      }
+    },
+    "review": {
+      "statsLabel": "የንብረት ጥያቄ ስታቲስቲክስ",
+      "filtersLabel": "የንብረት ጥያቄ ማጣሪያዎች",
+      "searchPlaceholder": "በርዕስ፣ አካባቢ ወይም ባለቤት ይፈልጉ...",
+      "noResults": "ምንም የንብረት ጥያቄዎች ከማጣሪያዎች ጋር አይዛመዱም።",
+      "drawerTitle": "የንብረት ጥያቄ",
+      "requestId": "መለያ፡ {{id}}",
+      "owner": "ባለቤት",
+      "ownerMobile": "ሞባይል",
+      "reviewedAt": "ተገምግሟል",
+      "reviewedBy": "ያገኘው",
+      "viewOwnershipDoc": "የባለቤትነት ሰነድ ይመልከቱ",
+      "viewPhoto": "{{title}} ፎቶ {{index}} ይመልከቱ",
+      "loadFailed": "የንብረት ዝርዝር መጫን አልተሳካም።",
+      "openRow": "የ{{title}} ዝርዝር ይመልከቱ",
+      "viewAction": "{{title}} ይመልከቱ",
+      "approveAction": "{{title}} ይፍቀዱ",
+      "rejectAction": "{{title}} ይካዱ",
+      "approve": "ፍቀድ",
+      "reject": "አትቀበል",
+      "cancel": "ሰርዝ",
+      "confirmApprove": "ፍቀድ",
+      "confirmReject": "አትቀበል",
+      "approving": "በማፅደቅ ላይ...",
+      "rejecting": "በመካድ ላይ...",
+      "approveModalTitle": "የንብረት ጥያቄ ፍቀድ",
+      "approveModalBodyIntro": "የባለቤትነት ማረጋገጫ ፍቀድ ለ",
+      "approveModalBodyRest": "? ንብረቱ ለግምገማ ዝግጁ ይሆናል።",
+      "rejectModalTitle": "የንብረት ጥያቄ አትቀበል",
+      "rejectModalBody": "ለካድ ምክንያት ያስገቡ። ባለቤቱ ይህን መልእክት ያያል።",
+      "rejectionReason": "የካድ ምክንያት",
+      "rejectionReasonRequired": "የካድ ምክንያት ያስፈልጋል።",
+      "approveSuccess": "የንብረት ጥያቄ በተሳካ ሁኔታ ጸድቋል።",
+      "rejectSuccess": "የንብረት ጥያቄ ተከልክሏል።",
+      "actionFailed": "ድርጊቱ አልተሳካም። እባክዎ እንደገና ይሞክሩ።"
     }
   },
   "status": {
@@ -417,6 +624,21 @@
         "informationMismatch": "መረጃ አይዛመድም",
         "incompleteSubmission": "ያልተሟላ ስርጭት"
       }
+    }
+  },
+  "bidder": {
+    "browse": {
+      "title": "ጨረታዎችን ይመልከቱ",
+      "subtitle": "የታተሙ ጨረታዎችን ይመልከቱ እና በሚሳተፉባቸው ዝርዝሮች ውስጥ ይግቡ።",
+      "searchPlaceholder": "በርዕስ ወይም መለያ ጨረታዎችን ይፈልጉ",
+      "empty": "ከማጣሪያዎች ጋር የሚዛመዱ የታተሙ ጨረታዎች የሉም።",
+      "view": "ይመልከቱ",
+      "detailEyebrow": "የጨረታ ዝርዝር",
+      "detailTitle": "ጨረታ",
+      "detailError": "የጨረታ ዝርዝር ማስገባት አልተሳካም",
+      "description": "መግለጫ",
+      "conditions": "የጨረታ ሁኔታዎች",
+      "bidComingSoon": "የመስመር ላይ ጨረታ በቅርቡ ይገኛል። ለመሳተፍ ደጋፊዎን ያግኙ።"
     }
   }
 }

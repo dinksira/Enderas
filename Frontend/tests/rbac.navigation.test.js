@@ -6,7 +6,7 @@ test('bidder navigation excludes staff and roles', () => {
   const permissions = {
     roleCode: 'bidder',
     wildcard: false,
-    modules: ['bids', 'payments', 'cpo', 'notifications'],
+    modules: ['bids', 'payments', 'cpo', 'notifications', 'kyc', 'assets'],
     actions: ['create', 'read', 'update'],
     routes: [],
   };
@@ -14,7 +14,11 @@ test('bidder navigation excludes staff and roles', () => {
   const nav = resolveNavigation(permissions);
   const ids = nav.map((item) => item.id);
 
+  assert.ok(ids.includes('browse-auctions'));
   assert.ok(ids.includes('my-bids'));
+  assert.ok(ids.includes('submit-asset'));
+  assert.ok(ids.includes('my-assets'));
+  assert.ok(!ids.includes('bids'));
   assert.ok(!ids.includes('staff'));
   assert.ok(!ids.includes('roles'));
 });

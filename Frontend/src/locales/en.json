@@ -42,13 +42,25 @@
     "nav": {
       "kyc": "KYC Verification",
       "auctions": "Auctions",
+      "browseauctions": "Browse Auctions",
+      "mybids": "My Bids",
+      "assets": "Asset Requests",
+      "myassets": "My Requests",
+      "submitasset": "Request Auction",
       "asset_request": "Asset Request",
       "users": "Users",
+      "staff": "Staff & Roles",
       "staff_roles": "Staff & Roles",
       "payments": "Payments",
+      "cpo": "CPO Management",
       "cpo_management": "CPO Management",
+      "bids": "Bid Management",
       "bid_management": "Bid Management",
+      "reports": "Reports & Analytics",
       "analytics_report": "Analytics & Report",
+      "roles": "Audit Trail",
+      "notifications": "Notifications",
+      "settings": "System Settings",
       "setting": "Setting"
     },
     "profile": {
@@ -216,6 +228,201 @@
         "confirm": "Delete",
         "processing": "Deleting..."
       }
+    }
+  },
+  "assets": {
+    "types": {
+      "vehicle": "Vehicles",
+      "land": "Land",
+      "building": "Buildings",
+      "machinery": "Machinery",
+      "equipment": "Equipment",
+      "salvage": "Salvage",
+      "other": "Other"
+    },
+    "ownershipDocs": {
+      "vehicleRegistrationBook": "Vehicle Registration Book",
+      "titleDeed": "Title Deed",
+      "ownershipCertificate": "Ownership Certificate",
+      "purchaseDocuments": "Purchase Documents",
+      "other": "Other ownership document"
+    },
+    "status": {
+      "pending_review": "Pending Review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "under_evaluation": "Under Evaluation",
+      "evaluated": "Evaluated",
+      "in_auction": "In Auction",
+      "sold": "Sold"
+    },
+    "filters": {
+      "all": "All",
+      "pending_review": "Pending Review",
+      "under_evaluation": "Under Evaluation",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "table": {
+      "headers": {
+        "request_id": "Request ID",
+        "asset": "Asset",
+        "category": "Category",
+        "owner": "Owner",
+        "owner_bank": "Owner",
+        "submitted_date": "Submitted",
+        "estimated_value": "Est. Value",
+        "status": "Status",
+        "actions": "Actions",
+        "title": "Title",
+        "type": "Type",
+        "submitted": "Submitted"
+      }
+    },
+    "submit": {
+      "title": "Request an Auction",
+      "subtitle": "Submit your asset for ownership review. Once approved, it can enter the auction pipeline."
+    },
+    "my": {
+      "title": "My Auction Requests",
+      "subtitle": "Track the status of assets you submitted for auction.",
+      "submitNew": "+ Request Auction",
+      "empty": "You have not submitted any assets yet.",
+      "rejectionReason": "Reason: {{reason}}",
+      "refresh": "Refresh"
+    },
+    "form": {
+      "submit": "Submit for Review",
+      "submitting": "Submitting...",
+      "submitFailed": "Failed to submit asset. Please try again.",
+      "fields": {
+        "title": "Asset Title",
+        "assetType": "Asset Category",
+        "description": "Asset Description",
+        "conditionNotes": "Asset Condition Notes",
+        "location": "Location of the Asset",
+        "desiredReservePrice": "Desired Reserve Price (ETB)",
+        "auctionConditions": "Special Auction Conditions or Notes",
+        "photos": "Asset Photos",
+        "ownershipDocument": "Ownership Document",
+        "additionalDocuments": "Supporting Documents (PDF)"
+      },
+      "placeholders": {
+        "selectAssetType": "Select asset category"
+      },
+      "hints": {
+        "ownershipDoc": "Required document for this category: {{document}}",
+        "additionalDocuments": "Optional supporting documents (PDF or images).",
+        "additionalDocumentsPdf": "Upload at least one supporting PDF document.",
+        "photos": "Upload multiple clear photos of the asset from different angles."
+      },
+      "errors": {
+        "titleRequired": "Asset title is required.",
+        "assetTypeRequired": "Please select an asset category.",
+        "descriptionRequired": "Asset description is required.",
+        "conditionNotesRequired": "Asset condition notes are required.",
+        "locationRequired": "Asset location is required.",
+        "reservePriceRequired": "Enter a valid desired reserve price greater than zero.",
+        "auctionConditionsRequired": "Special auction conditions or notes are required.",
+        "photosRequired": "Upload at least one photo of the asset.",
+        "ownershipDocRequired": "Ownership document is required.",
+        "supportingDocsRequired": "Upload at least one supporting PDF document.",
+        "pdfOnly": "Supporting files must be PDF format."
+      }
+    },
+    "requestWizard": {
+      "title": "Request an Auction",
+      "subtitle": "Submit your asset in a few guided steps. Our team will review, approve, or decline before launch.",
+      "stepProgress": "Auction request progress",
+      "locationHint": "Location details help evaluators verify your asset. You can skip fields you prefer not to share yet.",
+      "reviewIntro": "Confirm your details before sending the request to the admin team.",
+      "landingHint": "Start the guided request flow to submit your asset for auction review.",
+      "removeDocument": "Remove {{name}}",
+      "placeholders": {
+        "description": "Describe the asset, key features, and relevant details...",
+        "conditionNotes": "Describe current condition, damage, maintenance history, or defects...",
+        "location": "e.g. Addis Ababa, Bole",
+        "reservePrice": "e.g. 2500000",
+        "auctionConditions": "Any terms, viewing rules, payment expectations, or special notes..."
+      },
+      "steps": {
+        "details": "Asset Details",
+        "location": "Location & Terms",
+        "photos": "Photos",
+        "documents": "Documents",
+        "review": "Review & Submit"
+      },
+      "actions": {
+        "back": "Back",
+        "next": "Continue",
+        "cancel": "Cancel",
+        "submit": "Submit Request",
+        "submitting": "Submitting...",
+        "edit": "Edit",
+        "addPhotos": "Add Photos"
+      },
+      "errors": {
+        "fixBeforeSubmit": "Please complete all required fields before submitting."
+      },
+      "reserveHint": "Suggested reserve price is reviewed by admin. Final reserve is set at launch.",
+      "removePhoto": "Remove photo {{name}}",
+      "review": {
+        "uploaded": "Uploaded",
+        "documentCount": "{{count}} file(s)",
+        "photoCount": "{{count}} photo(s)"
+      },
+      "toolbar": {
+        "ariaLabel": "Request auction actions",
+        "title": "Want to auction your asset?",
+        "hint": "Submit a request for admin review. Approved assets can be launched as live auctions.",
+        "cta": "+ Request Auction"
+      },
+      "success": {
+        "title": "Request Submitted",
+        "subtitle": "Your auction request is now with the admin team.",
+        "body": "We received your asset details. You will be notified when the review is complete.",
+        "stepReview": "Admin reviews your ownership documents",
+        "stepEvaluation": "Asset moves to evaluation if approved",
+        "stepLaunch": "Approved assets can be launched as auctions",
+        "viewRequests": "View My Requests",
+        "close": "Close"
+      }
+    },
+    "review": {
+      "statsLabel": "Asset request statistics",
+      "filtersLabel": "Asset request filters",
+      "searchPlaceholder": "Search by title, location, or owner...",
+      "noResults": "No asset requests match the current filters.",
+      "drawerTitle": "Asset Request",
+      "requestId": "ID: {{id}}",
+      "owner": "Owner",
+      "ownerMobile": "Mobile",
+      "reviewedAt": "Reviewed",
+      "reviewedBy": "Reviewed By",
+      "viewOwnershipDoc": "View Ownership Document",
+      "viewPhoto": "View photo {{index}} of {{title}}",
+      "loadFailed": "Failed to load asset details.",
+      "openRow": "View details for {{title}}",
+      "viewAction": "View {{title}}",
+      "approveAction": "Approve {{title}}",
+      "rejectAction": "Reject {{title}}",
+      "approve": "Approve",
+      "reject": "Reject",
+      "cancel": "Cancel",
+      "confirmApprove": "Approve",
+      "confirmReject": "Reject",
+      "approving": "Approving...",
+      "rejecting": "Rejecting...",
+      "approveModalTitle": "Approve Asset Request",
+      "approveModalBodyIntro": "Approve ownership for",
+      "approveModalBodyRest": "? The asset will be ready for evaluation.",
+      "rejectModalTitle": "Reject Asset Request",
+      "rejectModalBody": "Provide a reason for rejection. The owner will see this message.",
+      "rejectionReason": "Rejection Reason",
+      "rejectionReasonRequired": "Rejection reason is required.",
+      "approveSuccess": "Asset request approved successfully.",
+      "rejectSuccess": "Asset request rejected.",
+      "actionFailed": "Action failed. Please try again."
     }
   },
   "status": {
@@ -417,6 +624,21 @@
         "informationMismatch": "Information mismatch",
         "incompleteSubmission": "Incomplete submission"
       }
+    }
+  },
+  "bidder": {
+    "browse": {
+      "title": "Browse Auctions",
+      "subtitle": "View published auctions and open listings you can participate in.",
+      "searchPlaceholder": "Search auctions by title or ID",
+      "empty": "No published auctions match your filters.",
+      "view": "View",
+      "detailEyebrow": "Auction details",
+      "detailTitle": "Auction",
+      "detailError": "Could not load auction details",
+      "description": "Description",
+      "conditions": "Auction conditions",
+      "bidComingSoon": "Online bidding will be available in a future update. Contact support for participation steps."
     }
   }
 }
