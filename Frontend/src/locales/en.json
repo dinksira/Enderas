@@ -57,7 +57,7 @@
     },
     "actions": {
       "pause": "Pause {{title}}",
-      "cancel": "Cancel {{title}}"
+      "delete": "Delete {{title}}"
     },
     "a11y": {
       "admin_navigation": "Admin navigation",
@@ -70,10 +70,153 @@
   },
   "category": {
     "vehicles": "Vehicles",
-    "real_estate": "Real Estate",
+    "machinery": "Machinery",
+    "buildings": "Buildings",
+    "land": "Land",
     "equipment": "Equipment",
+    "salvage_assets": "Salvage Assets",
+    "other_assets": "Other Assets",
+    "real_estate": "Real Estate",
     "assets": "Assets",
     "general": "General"
+  },
+  "auctions": {
+    "create": {
+      "title": "Create Auction",
+      "subtitle": "Set up a new auction listing for review and publication.",
+      "stepProgress": "Auction creation steps",
+      "success": "Auction created successfully and is pending approval.",
+      "steps": {
+        "basic": "Basic Info",
+        "schedule": "Schedule & Pricing",
+        "media": "Media & Documents",
+        "review": "Review & Submit"
+      },
+      "fields": {
+        "title": "Auction Title",
+        "category": "Category",
+        "description": "Description",
+        "auctionConditions": "Auction Conditions",
+        "startDate": "Start Date & Time",
+        "endDate": "Closing Date & Time",
+        "reservePrice": "Reserve Price (ETB)",
+        "documentFee": "Document Fee (ETB)",
+        "cpoPercentage": "CPO Percentage (%)",
+        "images": "Auction Images",
+        "documents": "Auction Documents"
+      },
+      "placeholders": {
+        "selectCategory": "Select a category"
+      },
+      "sections": {
+        "images": "Auction Images",
+        "documents": "Auction Documents"
+      },
+      "hints": {
+        "images": "Upload one or more images. JPEG, PNG, GIF, or WebP.",
+        "documents": "Upload at least one PDF document required for bidders."
+      },
+      "dropzone": {
+        "images": "Drag and drop images here, or browse to select files.",
+        "documents": "Drag and drop PDF documents here, or browse to select files."
+      },
+      "review": {
+        "edit": "Edit",
+        "imageCount": "{{count}} image(s) selected",
+        "documentCount": "{{count}} document(s) selected"
+      },
+      "actions": {
+        "back": "Back",
+        "next": "Next",
+        "cancel": "Cancel",
+        "submit": "Create Auction",
+        "submitting": "Creating..."
+      },
+      "removeImage": "Remove image {{name}}",
+      "removeDocument": "Remove document {{name}}",
+      "errors": {
+        "titleRequired": "Auction title is required.",
+        "categoryRequired": "Category is required.",
+        "conditionsRequired": "Auction conditions are required.",
+        "startDateRequired": "Start date and time are required.",
+        "endDateRequired": "Closing date and time are required.",
+        "endBeforeStart": "Closing date must be after the start date.",
+        "reservePositive": "Reserve price must be a positive number.",
+        "documentFeeInvalid": "Document fee must be zero or a positive number.",
+        "cpoRange": "CPO percentage must be between 1 and 100.",
+        "documentsRequired": "At least one PDF document is required.",
+        "pdfOnly": "Only PDF documents are allowed.",
+        "fixBeforeSubmit": "Please fix the highlighted fields before submitting.",
+        "submitFailed": "Failed to create auction. Please try again."
+      }
+    },
+    "drawer": {
+      "title": "Auction Details",
+      "auctionId": "ID: {{id}}",
+      "openRow": "View details for {{title}}",
+      "loadFailed": "Failed to load auction details.",
+      "saveSuccess": "Auction updated successfully.",
+      "saveFailed": "Failed to save auction changes.",
+      "actionFailed": "Action failed. Please try again.",
+      "publishSuccess": "Auction published successfully.",
+      "suspendSuccess": "Auction suspended successfully.",
+      "reactivateSuccess": "Auction reactivated successfully.",
+      "closeSuccess": "Auction closed successfully.",
+      "deleteSuccess": "Auction deleted successfully.",
+      "edit": "Edit",
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "cancelEdit": "Cancel",
+      "download": "Download",
+      "viewImage": "View image {{index}}",
+      "addImages": "Add Images",
+      "addDocuments": "Add Documents",
+      "fields": {
+        "category": "Category",
+        "startDate": "Starting Date",
+        "endDate": "Ending Date",
+        "reservePrice": "Reserve Price",
+        "documentFee": "Document Fee",
+        "cpoPercentage": "CPO Percentage",
+        "totalBids": "Total Bids",
+        "createdBy": "Created By",
+        "createdAt": "Created At"
+      },
+      "sections": {
+        "images": "Auction Images",
+        "documents": "Auction Documents",
+        "description": "Description",
+        "conditions": "Auction Conditions"
+      },
+      "actions": {
+        "publish": "Publish Auction",
+        "suspend": "Suspend",
+        "suspendAuction": "Suspend Auction",
+        "delete": "Delete",
+        "close": "Close Auction",
+        "reactivate": "Reactivate",
+        "viewWinners": "View Winners"
+      }
+    },
+    "confirmModals": {
+      "cancel": "Cancel",
+      "actionFailed": "Action failed. Please try again.",
+      "suspend": {
+        "title": "Suspend Auction",
+        "bodyIntro": "Are you sure you want to suspend",
+        "bodyRest": "? Bidders will no longer be able to participate until it is reactivated.",
+        "confirm": "Suspend",
+        "processing": "Suspending..."
+      },
+      "delete": {
+        "title": "Delete Auction",
+        "bodyIntro": "Are you sure you want to permanently delete",
+        "bodyRest": "? This action cannot be undone.",
+        "confirmLabel": "Type the auction title to confirm",
+        "confirm": "Delete",
+        "processing": "Deleting..."
+      }
+    }
   },
   "status": {
     "active": "Active",

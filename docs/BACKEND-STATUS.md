@@ -17,9 +17,10 @@ The backend is a REST API for the Enderass Auction Management System. It current
 - **KYC verification** (submit, resubmit, staff review, approve/reject, audit trail, tabbed listing with stats)
 - **File upload** (local disk storage via Multer)
 - **Audit logging** for auth, KYC, and access-denied events
-- **Stub/placeholder endpoints** for auctions, assets, bids, payments, and most other SRS domains (authorized but return empty or success placeholders)
+- **Auction management** (staff CRUD, publish/suspend/reactivate/close, list with filters, JSON-stored images/documents)
+- **Stub/placeholder endpoints** for assets, bids, payments, and most other SRS domains (authorized but return empty or success placeholders)
 
-The auction lifecycle (assets → evaluations → auctions → bids → winners → payments) is **defined in MySQL schema** (`docs/enderass_auction.sql`) but **not implemented** in application code beyond route stubs.
+The auction lifecycle is **partially implemented**: staff can create and manage auctions in the `auctions` table, but upstream workflows (assets → evaluations) and downstream flows (bids → winners → payments → CPO) remain stubs.
 
 ### Tech stack
 
@@ -33,7 +34,7 @@ The auction lifecycle (assets → evaluations → auctions → bids → winners 
 | Auth | jsonwebtoken + bcrypt | Access JWT (default 15m); refresh tokens stored hashed in DB |
 | File upload | multer | In-memory buffer → local filesystem |
 | i18n | i18n | Error messages via `res.__()` |
-| Migrations | sequelize-cli | Only 3 migrations in repo (016–018); base schema from SQL dump |
+| Migrations | sequelize-cli | Migrations 016–019 in repo; base schema from SQL dump |
 
 ### Architecture pattern
 
@@ -69,7 +70,7 @@ RBAC logic lives in `backend/src/core/authorization/`. Business logic for implem
 
 ### Sequelize models (implemented in code)
 
-Only **6 models** exist under `backend/src/models/`. All other tables in `enderass_auction.sql` have **no Sequelize model** and **no service layer**.
+Only **7 models** exist under `backend/src/models/`. All other tables in `enderass_auction.sql` have **no Sequelize model** and **no service layer** (except `auctions`, which is implemented; `bids` is queried via raw SQL for counts only).
 
 #### `users` — `backend/src/models/user.model.js`
 
@@ -169,6 +170,30 @@ Only **6 models** exist under `backend/src/models/`. All other tables in `endera
 | `under_review_at` | DATE, nullable | **Migration 018** — staff “under review” tab |
 | `created_at`, `updated_at`, `deleted_at` | | Paranoid |
 
+#### `auctions` — `backend/src/models/auction.model.js` *(migration 019)*
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | CHAR(36) PK | UUID |
+| `asset_id` | CHAR(36) FK → assets, nullable | Optional after migration 019; no asset workflow yet |
+| `created_by_staff_id` | CHAR(36) FK → staff | Required; staff-only creation |
+| `title` | STRING(255) | |
+| `category` | ENUM | `vehicles`, `machinery`, `buildings`, `land`, `equipment`, `salvage_assets`, `other_assets` |
+| `description` | TEXT, nullable | |
+| `auction_conditions` | TEXT, nullable | **Migration 019** |
+| `image_urls` | JSON, nullable | Array of URL strings; **Migration 019** |
+| `document_files` | JSON, nullable | Array of `{ name, url, size }`; **Migration 019** (not `auction_documents` table) |
+| `start_date`, `end_date` | DATE | |
+| `reserve_price` | DECIMAL(18,2) | |
+| `document_price` | DECIMAL(18,2) | Participation document fee; default `0` |
+| `cpo_percentage` | DECIMAL(5,2) | 1–100; **Migration 019** |
+| `currency` | STRING(3) | Default `ETB` |
+| `status` | ENUM | `draft`, `pending_approval`, `published`, `suspended`, `closed`, `cancelled` |
+| `published_at`, `closed_at` | DATE, nullable | Set on publish/close |
+| `created_at`, `updated_at`, `deleted_at` | | Paranoid soft delete |
+
+**API display mapping** (`auction.service.js`): `published`→`ACTIVE`, `draft`/`pending_approval`→`PENDING`, `suspended`→`SUSPENDED`, `closed`/`cancelled`→`CLOSED`.
+
 ### Model associations — `backend/src/models/index.js`
 
 ```
@@ -192,6 +217,9 @@ User ──hasOne──────────────────► KYCVe
 
 KYCVerification ──belongsTo──► Staff (as reviewedByStaff)
 Staff ──hasMany────────────────► KYCVerification (as reviewedKYCs)
+
+Staff ──hasMany────────────────► Auction (as createdAuctions)
+Auction ──belongsTo──────────────► Staff (as createdByStaff)
 ```
 
 ### Tables in SQL dump without Sequelize models
@@ -203,9 +231,8 @@ These tables exist in `docs/enderass_auction.sql` but have **no application code
 | `asset_owners` | `user_id`, address fields, `status` |
 | `assets` | `asset_owner_id`, `asset_type`, `title`, docs, `status` workflow |
 | `evaluations` | `asset_id`, valuation, `status` workflow |
-| `auctions` | `asset_id`, dates, `reserve_price`, `status` |
-| `auction_documents` | `auction_id`, `file_url`, download tracking |
-| `bids` | `auction_id`, `user_id`, `amount`, `status` |
+| `auction_documents` | `auction_id`, `file_url`, download tracking — **unused**; docs stored in `auctions.document_files` JSON |
+| `bids` | `auction_id`, `user_id`, `amount`, `status` — counted via raw SQL in auction list/detail only |
 | `cpos` | Certificate of Participation — `user_id`, `auction_id`, `document_url` |
 | `payments` | `user_id`, `auction_id`, `payment_method`, `status` |
 | `winners` | `auction_id`, `bid_id`, `user_id`, `status` |
@@ -219,15 +246,16 @@ These tables exist in `docs/enderass_auction.sql` but have **no application code
 | 016 | `migrations/016_create_refresh_tokens.cjs` | Creates `refresh_tokens` table + indexes |
 | 017 | `migrations/017_update_user_status_enum.cjs` | Extends `users.status` with KYC states |
 | 018 | `migrations/018_add_kyc_under_review_at.cjs` | Adds `kyc_verifications.under_review_at` |
+| 019 | `migrations/019_extend_auctions_table.cjs` | Makes `auctions.asset_id` nullable; adds `category`, `cpo_percentage`, `auction_conditions`, `image_urls`, `document_files` |
 
-**Current state:** Run `npm run db:migrate` in `backend/` to apply 016–018. Fresh installs need the SQL dump **plus** migrations.
+**Current state:** Run `npm run db:migrate` in `backend/` to apply 016–019. Fresh installs need the SQL dump **plus** migrations.
 
 ### Known schema issues
 
 | Issue | Detail |
 |-------|--------|
-| SQL dump out of date | `docs/enderass_auction.sql` `users.status` enum and `kyc_verifications` lack migration 017/018 changes |
-| No Sequelize models for domain tables | Assets, auctions, bids, etc. cannot be queried from app code |
+| SQL dump out of date | `docs/enderass_auction.sql` predates migrations 017–019 (`users.status`, KYC columns, auction extensions) |
+| No Sequelize models for most domain tables | Assets, bids (as model), payments, etc. cannot be managed from app code |
 | `refresh_tokens` unused for rotation | Tokens are **created** on login/OTP but no `/refresh` endpoint validates or rotates them |
 | Bidder KYC permissions in seed | Base `roles` seed omits `kyc` module for `bidder`/`asset_owner`; fix script at `docs/fix-kyc-role-permissions.sql` |
 | CSO role routes incomplete | `customer_service_officer` seed lacks new KYC routes (`GET /kyc/:id`, audit, mark-under-review) |
@@ -249,7 +277,7 @@ These tables exist in `docs/enderass_auction.sql` but have **no application code
 | **Users** | **Stub** | `v1.routes.js` + `resource-handlers.util.js` | RBAC + data scope on list | Returns empty `items: []` |
 | **Assets** | **Stub** | same | RBAC + KYC gate on create | No DB operations |
 | **Evaluations** | **Stub** | same | RBAC on all verbs | No DB operations |
-| **Auctions** | **Stub** | same | RBAC incl. publish/close | No DB operations |
+| **Auctions** | **Complete** (staff CRUD + lifecycle; no asset/bid integration) | `services/auction.service.js`, `controllers/auction.controller.js`, `models/auction.model.js` | Create/list/detail/update/delete; publish/suspend/reactivate/close; validation; audit logs; bid count via raw SQL | `attachDataScope` on routes but **not applied** in service queries; no asset FK validation; `auction_documents` table unused; `AUDIT_ACTIONS.CLOSE` undefined (close audit writes `undefined` action); `DELETE` route missing from `access-map.js` |
 | **Documents** | **Stub** | same | RBAC + KYC gate on create | No DB operations |
 | **Payments** | **Stub** | same | RBAC + KYC gate on create | No DB operations; no Addis Pay integration |
 | **CPO** | **Stub** | same | RBAC + KYC gate on create | No DB operations |
@@ -312,6 +340,26 @@ Base URL: `http://localhost:3000` (configurable via `PORT`).
 | POST | `/api/v1/kyc/:id/approve` | Bearer | kyc / approve | — | Approve KYC, user → `active` |
 | POST | `/api/v1/kyc/:id/reject` | Bearer | kyc / reject | — | Reject with `rejectionReason`, user → `kyc_rejected` |
 
+### Auctions — `/api/v1/auctions` *(real implementation)*
+
+**Files:** `controllers/auction.controller.js`, `services/auction.service.js`
+
+| Method | Path | Auth | Module / Action | Description |
+|--------|------|------|-----------------|-------------|
+| GET | `/api/v1/auctions` | Bearer | auctions / read | List auctions; query `status` (ACTIVE/PENDING/SUSPENDED/CLOSED), `search` |
+| GET | `/api/v1/auctions/:id` | Bearer | auctions / read | Detail with creator name, bid count, formatted dates |
+| POST | `/api/v1/auctions` | Bearer | auctions / create | Create auction (**requires `staffId`**); status → `pending_approval` |
+| PUT | `/api/v1/auctions/:id` | Bearer | auctions / update | Update when status is `draft`, `pending_approval`, or `suspended` |
+| DELETE | `/api/v1/auctions/:id` | Bearer | auctions / delete | Soft-delete (same editable statuses) |
+| POST | `/api/v1/auctions/:id/publish` | Bearer | auctions / publish | `draft` or `pending_approval` → `published` |
+| POST | `/api/v1/auctions/:id/suspend` | Bearer | auctions / update | → `suspended` |
+| POST | `/api/v1/auctions/:id/reactivate` | Bearer | auctions / update | `suspended` → `published` |
+| POST | `/api/v1/auctions/:id/close` | Bearer | auctions / close | `published` or `suspended` → `closed` |
+
+**Create payload (camelCase):** `title`, `category`, `description`, `auctionConditions`, `startDate`, `endDate`, `reservePrice`, `documentFee`, `cpoPercentage`, `imageUrls[]`, `documents[]` (`{ name, url, size }`), optional `assetId`.
+
+**Response fields (summary):** `id`, `title`, `category`, `categoryKey`, `status` (display), `dbStatus`, `imageUrls`, `documents`, `reservePrice`, `documentFee`, `cpoPercentage`, `bids`/`bidCount`, `createdByName`, formatted date fields.
+
 ### Stub resources — `/api/v1/*` (all require Bearer + module permission)
 
 Generated by `createResourceHandlers()` unless noted. Responses are placeholders (`items: []`, `{ created: true }`, etc.).
@@ -321,7 +369,6 @@ Generated by `createResourceHandlers()` unless noted. Responses are placeholders
 | `/users` | GET, GET/:id, POST, PUT/:id, DELETE/:id | No | — |
 | `/assets` | CRUD + POST `/:id/approve`, `/:id/reject` | **Yes** on POST | Stub approve/reject |
 | `/evaluations` | GET, GET/:id, POST, PUT/:id + approve/reject | No | Stub |
-| `/auctions` | CRUD + POST `/:id/publish`, `/:id/close` | No | Stub |
 | `/documents` | GET, POST | **Yes** on POST | — |
 | `/payments` | GET, GET/:id, POST + approve/reject | **Yes** on POST | Stub |
 | `/cpo` | GET, POST + approve/reject | **Yes** on POST | Stub |
@@ -531,7 +578,8 @@ Staff users must have `users.status === active`. External users blocked only for
 | File | Purpose | Status |
 |------|---------|--------|
 | `services/kyc.service.js` | KYC business logic, status constants, duplicate checks, list/stats/audit | **Complete** |
-| `services/audit.service.js` | `writeAuditLog`, login/deny/approval helpers | **Complete** (failures swallowed) |
+| `services/auction.service.js` | Auction CRUD, status transitions, validation, serialization, bid counts (raw SQL) | **Complete** (no asset/bid domain integration) |
+| `services/audit.service.js` | `writeAuditLog`, login/deny/approval helpers | **Complete** (failures swallowed; missing `CLOSE` action constant) |
 | `services/notification.service.js` | KYC event notifications | **Stub** — `console.info` only |
 | `services/user-permission.service.js` | Resolve user RBAC from DB; L1 + Redis cache | **Complete** |
 | `services/permission.service.js` | Role permission cache; Redis subscriber for invalidation | **Complete** (Redis optional for read) |
@@ -565,8 +613,11 @@ Staff users must have `users.status === active`. External users blocked only for
 | Duplicate KYC submissions | Low | Multiple pending rows possible per user. |
 | `markKYCUnderReview` without staffId | Low | No validation that caller is staff; `staffId` may be null in audit. |
 | Login blocks `pending` users | By design | Password login requires status in `LOGIN_ALLOWED_STATUSES` (excludes `pending`). |
-| SQL dump schema drift | Medium | `enderass_auction.sql` predates migrations 017/018. |
-| Domain tables orphaned | High | Full auction schema in DB but zero application logic. |
+| SQL dump schema drift | Medium | `enderass_auction.sql` predates migrations 017–019. |
+| Most domain tables orphaned | High | Assets, bids (placement), payments, winners, etc. have no application logic; auctions table is implemented. |
+| Auction close audit action | Low | `closeAuction` uses `AUDIT_ACTIONS.CLOSE` but constant not defined in `audit.service.js`. |
+| Auction DELETE not in access map | Low | `DELETE /api/v1/auctions/:id` works via explicit `authorize()` but missing from `API_ACCESS_MAP`. |
+| Auction data scope unused | Low | `attachDataScope(MODULES.AUCTIONS)` on routes; service does not filter by `req.dataScope`. |
 | No integration tests for KYC/API | Low | Only `tests/rbac.policy.test.js` (4 policy engine tests). |
 
 ---
@@ -576,27 +627,34 @@ Staff users must have `users.status === active`. External users blocked only for
 ### Critical path (SRS core)
 
 1. **Refresh token flow** — `POST /api/auth/refresh`, rotation, revocation, logout.
-2. **Sequelize models + services** for: `assets`, `asset_owners`, `evaluations`, `auctions`, `bids`, `payments`, `cpos`, `winners`, `notifications`, `auction_documents`.
-3. **Replace stub handlers** in `v1.routes.js` with real controllers/services.
+2. **Sequelize models + services** for remaining domains: `assets`, `asset_owners`, `evaluations`, `bids`, `payments`, `cpos`, `winners`, `notifications`, `auction_documents` (or keep JSON docs pattern).
+3. **Replace stub handlers** in `v1.routes.js` for non-auction domains.
 4. **SMS OTP provider** (or configurable notification channel) for production registration.
 5. **Apply role permission fixes** — `docs/fix-kyc-role-permissions.sql` + update CSO role for new KYC endpoints.
 
-### Auction domain (from schema, not implemented)
+### Auction domain
 
-- Asset submission and staff approval workflow  
-- Physical evaluation scheduling and completion  
-- Auction creation, publish, close, suspend  
-- Real-time or polling-based bidding with validation  
-- CPO (Certificate of Participation) document workflow  
-- Payment recording and finance officer verification (Addis Pay per SRS)  
-- Winner selection and notification  
+**Implemented:**
+- Staff auction CRUD with JSON image/document storage (migration 019)
+- Publish, suspend, reactivate, close lifecycle
+- List filtering by display status + search
+- Frontend super-admin dashboard wired to real API
+
+**Still missing:**
+- Asset submission and staff approval workflow (optional `asset_id` only)
+- Physical evaluation scheduling and completion
+- Real-time or polling-based bidding with validation
+- CPO (Certificate of Participation) document workflow
+- Payment recording and finance officer verification (Addis Pay per SRS)
+- Winner selection and notification
+- Scheduled auto-close on `end_date`
 - In-app notification persistence (`notifications` table)
 
 ### Infrastructure & quality
 
-- Align `docs/enderass_auction.sql` with migrations 017/018 (or generate from live DB).  
+- Align `docs/enderass_auction.sql` with migrations 017–019 (or generate from live DB).  
 - Add `authorize()` to file upload routes.  
-- Add Sequelize migrations for all base tables (not only 016–018).  
+- Add Sequelize migrations for all base tables (not only 016–019).  
 - Redis optional startup or health check endpoint reporting cache status.  
 - Integration/E2E tests for auth and KYC flows.  
 - Background jobs (`src/jobs/`) for auction close, notification dispatch.  
@@ -607,11 +665,11 @@ Staff users must have `users.status === active`. External users blocked only for
 
 1. Refresh tokens + role permission SQL fixes  
 2. Assets + asset owners (enables owner onboarding)  
-3. Evaluations → Auctions → Documents  
+3. Evaluations → link auctions to assets  
 4. Bids + CPO + Payments  
 5. Winners + Notifications  
 6. Dashboard metrics (real aggregations)  
-7. Staff/roles CRUD (admin tooling)
+7. Staff/roles CRUD (admin tooling); auction audit/access-map fixes (`CLOSE` action, DELETE in map)
 
 ---
 
@@ -624,14 +682,17 @@ Staff users must have `users.status === active`. External users blocked only for
 | V1 routes | `backend/src/routes/v1.routes.js` |
 | Auth module | `backend/src/modules/auth/` |
 | KYC controller | `backend/src/controllers/kyc.controller.js` |
+| Auction controller | `backend/src/controllers/auction.controller.js` |
+| Auction service | `backend/src/services/auction.service.js` |
+| Auction model | `backend/src/models/auction.model.js` |
 | RBAC core | `backend/src/core/authorization/` |
 | Access map | `backend/src/core/authorization/access-map.js` |
 | Env config | `backend/src/config/env.config.js` |
 | DB schema dump | `docs/enderass_auction.sql` |
-| Migrations | `backend/migrations/016–018` |
+| Migrations | `backend/migrations/016–019` |
 | RBAC docs | `docs/RBAC-IMPLEMENTATION.md` |
 | KYC role fix SQL | `docs/fix-kyc-role-permissions.sql` |
 
 ---
 
-*This document reflects the codebase as of branch `RBAC-Auth-and-KYC-Verification`. Re-verify after schema migrations or major refactors.*
+*This document reflects the codebase as of 2026-06-24 (includes auction module implementation). Re-verify after schema migrations or major refactors.*

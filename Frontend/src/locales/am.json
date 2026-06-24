@@ -57,7 +57,7 @@
     },
     "actions": {
       "pause": "{{title}} አቁም",
-      "cancel": "{{title}} ሰርዝ"
+      "delete": "{{title}} ሰርዝ"
     },
     "a11y": {
       "admin_navigation": "የአስተዳዳሪ አሰሳ",
@@ -70,10 +70,153 @@
   },
   "category": {
     "vehicles": "ተሽከርካሪዎች",
-    "real_estate": "ሪል እስቴት",
+    "machinery": "ማሽነሪዎች",
+    "buildings": "ሕንፃዎች",
+    "land": "መሬት",
     "equipment": "መሳሪያዎች",
+    "salvage_assets": "የጥፋት ንብረቶች",
+    "other_assets": "ሌሎች ንብረቶች",
+    "real_estate": "ሪል እስቴት",
     "assets": "ንብረቶች",
     "general": "አጠቃላይ"
+  },
+  "auctions": {
+    "create": {
+      "title": "ጨረታ ፍጠር",
+      "subtitle": "ለግምገማ እና ህትመት አዲስ የጨረታ ዝርዝር ያዘጋጁ።",
+      "stepProgress": "የጨረታ ፍጠራ ደረጃዎች",
+      "success": "ጨረታው በተሳካ ሁኔታ ተፈጥሯል እና ለማጽደቅ በመጠባበቅ ላይ ነው።",
+      "steps": {
+        "basic": "መሠረታዊ መረጃ",
+        "schedule": "ጊዜ እና ዋጋ",
+        "media": "ሚዲያ እና ሰነዶች",
+        "review": "ግምገማ እና ማስገባት"
+      },
+      "fields": {
+        "title": "የጨረታ ርዕስ",
+        "category": "ምድብ",
+        "description": "መግለጫ",
+        "auctionConditions": "የጨረታ ሁኔታዎች",
+        "startDate": "የመጀመሪያ ቀን እና ሰዓት",
+        "endDate": "የመዝጊያ ቀን እና ሰዓት",
+        "reservePrice": "ዝቅተኛ ዋጋ (ብር)",
+        "documentFee": "የሰነድ ክፍያ (ብር)",
+        "cpoPercentage": "CPO መቶኛ (%)",
+        "images": "የጨረታ ምስሎች",
+        "documents": "የጨረታ ሰነዶች"
+      },
+      "placeholders": {
+        "selectCategory": "ምድብ ይምረጡ"
+      },
+      "sections": {
+        "images": "የጨረታ ምስሎች",
+        "documents": "የጨረታ ሰነዶች"
+      },
+      "hints": {
+        "images": "አንድ ወይም ከዚያ በላይ ምስሎችን ይስቀሉ። JPEG፣ PNG፣ GIF ወይም WebP።",
+        "documents": "ለጨረታ ተሳታፊዎች ቢያንስ አንድ የ PDF ሰነድ ያስፈልጋል።"
+      },
+      "dropzone": {
+        "images": "ምስሎችን እዚህ ይጎትቱ ወይም ፋይሎችን ለመምረጥ ይቃኙ።",
+        "documents": "የ PDF ሰነዶችን እዚህ ይጎትቱ ወይም ፋይሎችን ለመምረጥ ይቃኙ።"
+      },
+      "review": {
+        "edit": "አርትዕ",
+        "imageCount": "{{count}} ምስል(ዎች) ተመርጠዋል",
+        "documentCount": "{{count}} ሰነድ(ዎች) ተመርጠዋል"
+      },
+      "actions": {
+        "back": "ተመለስ",
+        "next": "ቀጣይ",
+        "cancel": "ሰርዝ",
+        "submit": "ጨረታ ፍጠር",
+        "submitting": "በመፍጠር ላይ..."
+      },
+      "removeImage": "ምስል {{name}} አስወግድ",
+      "removeDocument": "ሰነድ {{name}} አስወግድ",
+      "errors": {
+        "titleRequired": "የጨረታ ርዕስ ያስፈልጋል።",
+        "categoryRequired": "ምድብ ያስፈልጋል።",
+        "conditionsRequired": "የጨረታ ሁኔታዎች ያስፈልጋሉ።",
+        "startDateRequired": "የመጀመሪያ ቀን እና ሰዓት ያስፈልጋሉ።",
+        "endDateRequired": "የመዝጊያ ቀን እና ሰዓት ያስፈልጋሉ።",
+        "endBeforeStart": "የመዝጊያ ቀን ከመጀመሪያ ቀን በኋላ መሆን አለበት።",
+        "reservePositive": "ዝቅተኛ ዋጋ አዎንታዊ ቁጥር መሆን አለበት።",
+        "documentFeeInvalid": "የሰነድ ክፍያ ዜሮ ወይም አዎንታዊ ቁጥር መሆን አለበት።",
+        "cpoRange": "CPO መቶኛ በ 1 እና 100 መካከል መሆን አለበት።",
+        "documentsRequired": "ቢያንስ አንድ የ PDF ሰነድ ያስፈልጋል።",
+        "pdfOnly": "የ PDF ሰነዶች ብቻ ይፈቀዳሉ።",
+        "fixBeforeSubmit": "ከማስገባትዎ በፊት የተገለጹትን መስኮች ያርሙ።",
+        "submitFailed": "ጨረታ መፍጠር አልተሳካም። እባክዎ እንደገና ይሞክሩ።"
+      }
+    },
+    "drawer": {
+      "title": "የጨረታ ዝርዝር",
+      "auctionId": "መለያ፡ {{id}}",
+      "openRow": "የ{{title}} ዝርዝር ይመልከቱ",
+      "loadFailed": "የጨረታ ዝርዝር መጫን አልተሳካም።",
+      "saveSuccess": "ጨረታው በተሳካ ሁኔታ ተዘምኗል።",
+      "saveFailed": "ለውጦችን ማስቀመጥ አልተሳካም።",
+      "actionFailed": "ድርጊቱ አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+      "publishSuccess": "ጨረታው በተሳካ ሁኔታ ታትሟል።",
+      "suspendSuccess": "ጨረታው ታግዷል።",
+      "reactivateSuccess": "ጨረታው እንደገና ንቁ ሆኗል።",
+      "closeSuccess": "ጨረታው ተዘግቷል።",
+      "deleteSuccess": "ጨረታው ተሰርዟል።",
+      "edit": "አርትዕ",
+      "save": "ለውጦችን አስቀምጥ",
+      "saving": "በማስቀመጥ ላይ...",
+      "cancelEdit": "ሰርዝ",
+      "download": "አውርድ",
+      "viewImage": "ምስል {{index}} ይመልከቱ",
+      "addImages": "ምስሎች ጨምር",
+      "addDocuments": "ሰነዶች ጨምር",
+      "fields": {
+        "category": "ምድብ",
+        "startDate": "የመጀመሪያ ቀን",
+        "endDate": "የመጨረሻ ቀን",
+        "reservePrice": "ዝቅተኛ ዋጋ",
+        "documentFee": "የሰነድ ክፍያ",
+        "cpoPercentage": "CPO መቶኛ",
+        "totalBids": "ጠቅላላ ጨረታዎች",
+        "createdBy": "የፈጠረው",
+        "createdAt": "የተፈጠረበት ቀን"
+      },
+      "sections": {
+        "images": "የጨረታ ምስሎች",
+        "documents": "የጨረታ ሰነዶች",
+        "description": "መግለጫ",
+        "conditions": "የጨረታ ሁኔታዎች"
+      },
+      "actions": {
+        "publish": "ጨረታ አትም",
+        "suspend": "አቁም",
+        "suspendAuction": "ጨረታ አቁም",
+        "delete": "ሰርዝ",
+        "close": "ጨረታ ዝጋ",
+        "reactivate": "እንደገና አንቃ",
+        "viewWinners": "ድልጋፊዎችን ይመልከቱ"
+      }
+    },
+    "confirmModals": {
+      "cancel": "ሰርዝ",
+      "actionFailed": "ድርጊቱ አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+      "suspend": {
+        "title": "ጨረታ አቁም",
+        "bodyIntro": "እርግጠኛ ነዎት ጨረታውን ማቆም ይፈልጋሉ",
+        "bodyRest": "? እስኪነሳ ድረስ ተሳታፊዎች መሳተፍ አይችሉም።",
+        "confirm": "አቁም",
+        "processing": "በማቆም ላይ..."
+      },
+      "delete": {
+        "title": "ጨረታ ሰርዝ",
+        "bodyIntro": "እርግጠኛ ነዎት ጨረታውን ለዘለዓለም መሰረዝ ይፈልጋሉ",
+        "bodyRest": "? ይህ ድርጊት ሊቀለበስ አይችልም።",
+        "confirmLabel": "ለማረጋገጥ የጨረታውን ርዕስ ይተይቡ",
+        "confirm": "ሰርዝ",
+        "processing": "በመሰረዝ ላይ..."
+      }
+    }
   },
   "status": {
     "active": "ንቁ",

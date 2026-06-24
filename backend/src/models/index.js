@@ -4,6 +4,7 @@ import { Staff } from './staff.model.js';
 import { RefreshToken } from './refreshToken.model.js';
 import { AuditLog } from './auditLog.model.js';
 import { KYCVerification } from './kyc.model.js';
+import { Auction } from './auction.model.js';
 
 User.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
 Role.hasMany(User, { foreignKey: 'role_id', as: 'users' });
@@ -29,6 +30,9 @@ User.hasOne(KYCVerification, { foreignKey: 'user_id', as: 'kycVerification' });
 KYCVerification.belongsTo(Staff, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedByStaff' });
 Staff.hasMany(KYCVerification, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedKYCs' });
 
+Staff.hasMany(Auction, { foreignKey: 'created_by_staff_id', as: 'createdAuctions' });
+Auction.belongsTo(Staff, { foreignKey: 'created_by_staff_id', as: 'createdByStaff' });
+
 export {
   User,
   Role,
@@ -36,6 +40,7 @@ export {
   RefreshToken,
   AuditLog,
   KYCVerification,
+  Auction,
 };
 
 export default {
@@ -45,4 +50,5 @@ export default {
   RefreshToken,
   AuditLog,
   KYCVerification,
+  Auction,
 };

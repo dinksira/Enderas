@@ -3,18 +3,18 @@ import { useAuthStore } from '../../../stores/auth-store.js';
 import { auctionService } from '../services/auction-service.js';
 
 function normalizeAuctionList(data) {
-  if (Array.isArray(data)) {
-    return data;
-  }
-
   if (Array.isArray(data?.items)) {
     return data.items;
+  }
+
+  if (Array.isArray(data)) {
+    return data;
   }
 
   return [];
 }
 
-export function useAuctions({ enabled = true } = {}) {
+export function useAuctions({ enabled = true, status, search } = {}) {
   const accessToken = useAuthStore((state) => state.accessToken);
   const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
   const [records, setRecords] = useState([]);
@@ -33,15 +33,15 @@ export function useAuctions({ enabled = true } = {}) {
     setError(null);
 
     try {
-      const data = await auctionService.getAll();
+      const data = await auctionService.getAll({ status, search });
       setRecords(normalizeAuctionList(data));
     } catch (err) {
       setRecords([]);
-      setError(null);
+      setError(err instanceof Error ? err.message : 'Failed to load auctions');
     } finally {
       setLoading(false);
     }
-  }, [enabled, isAuthenticated, accessToken]);
+  }, [enabled, isAuthenticated, accessToken, status, search]);
 
   useEffect(() => {
     fetchRecords();

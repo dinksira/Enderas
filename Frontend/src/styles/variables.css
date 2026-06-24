@@ -121,6 +121,9 @@
   --semantic-color-status-danger: var(--core-color-danger-500);
   --semantic-color-status-info: var(--core-color-info-500);
 
+  --semantic-color-warning: var(--semantic-color-status-warning);
+  --semantic-color-error: var(--semantic-color-status-danger);
+
   --semantic-color-surface-hover: rgba(6, 67, 106, 0.05);
   --semantic-color-surface-disabled: rgba(0, 0, 0, 0.5);
 
