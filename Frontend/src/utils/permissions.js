@@ -42,6 +42,13 @@ export function canAccess(context, moduleName, actionName) {
 
   const modules = toCapabilityArray(context?.modules);
   const actions = toCapabilityArray(context?.actions);
+  const moduleActions = context?.moduleActions && typeof context.moduleActions === 'object'
+    ? context.moduleActions
+    : null;
+
+  if (moduleName && actionName && moduleActions && Object.keys(moduleActions).length > 0) {
+    return toCapabilityArray(moduleActions[moduleName]).includes(actionName);
+  }
 
   if (moduleName && !modules.includes(moduleName)) {
     return false;

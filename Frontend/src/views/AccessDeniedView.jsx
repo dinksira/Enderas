@@ -1,10 +1,12 @@
+import { useTranslation } from 'react-i18next';
+
 export function AccessDeniedView() {
+  const { t } = useTranslation();
+
   return (
     <section className="access-denied-view">
-      <h1 className="access-denied-view__title">Access Denied</h1>
-      <p className="access-denied-view__message">
-        You do not have permission to view this page. Contact your administrator if you believe this is an error.
-      </p>
+      <h1 className="access-denied-view__title">{t('accessDenied.pageTitle')}</h1>
+      <p className="access-denied-view__message">{t('accessDenied.message')}</p>
     </section>
   );
 }

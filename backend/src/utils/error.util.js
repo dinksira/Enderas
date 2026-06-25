@@ -39,6 +39,7 @@ export function buildPermissionChecksum(canonical) {
     modules: canonical.permissions.modules,
     actions: canonical.permissions.actions,
     routes: canonical.permissions.routes,
+    moduleActions: canonical.permissions.moduleActions,
   });
 
   return createHash('sha256').update(payload).digest('hex').slice(0, 16);

@@ -2,7 +2,12 @@
   "dashboard": {
     "brand": {
       "name": "Enderas",
-      "subtitle": "Auction Management"
+      "subtitle": "Auction Management",
+      "systemSubtitle": "Auction Management System"
+    },
+    "page": {
+      "fallbackTitle": "Dashboard",
+      "fallbackSubtitle": "Overview of your workspace"
     },
     "header": {
       "title": "Auctions",
@@ -18,7 +23,8 @@
     },
     "buttons": {
       "create_auction": "+ Create Auction",
-      "logout": "LOGOUT"
+      "logout": "Logout",
+      "profile": "Profile"
     },
     "table": {
       "headers": {
@@ -40,31 +46,36 @@
       "footer_preview": " · showing preview data"
     },
     "nav": {
-      "kyc": "KYC Verification",
       "auctions": "Auctions",
-      "browseauctions": "Browse Auctions",
-      "mybids": "My Bids",
-      "assets": "Asset Requests",
-      "myassets": "My Requests",
-      "submitasset": "Request Auction",
-      "asset_request": "Asset Request",
+      "kyc": "KYC Verification",
       "users": "Users",
-      "staff": "Staff & Roles",
-      "staff_roles": "Staff & Roles",
+      "staff": "Staff Management",
+      "staff_roles": "Staff Management",
+      "assets": "Auction Requests",
+      "evaluations": "Evaluations",
       "payments": "Payments",
       "cpo": "CPO Management",
       "cpo_management": "CPO Management",
       "bids": "Bid Management",
       "bid_management": "Bid Management",
+      "winners": "Winners",
       "reports": "Reports & Analytics",
-      "analytics_report": "Analytics & Report",
+      "analytics_report": "Reports & Analytics",
       "roles": "Audit Trail",
-      "notifications": "Notifications",
       "settings": "System Settings",
-      "setting": "Setting"
+      "setting": "System Settings",
+      "profile": "Profile",
+      "browseauctions": "Browse Auctions",
+      "mybids": "My Bids",
+      "mypayments": "My Payments",
+      "mycpo": "My CPO",
+      "myassets": "My Requests",
+      "submitasset": "Request Auction",
+      "asset_request": "Asset Request",
+      "notifications": "Notifications"
     },
     "profile": {
-      "super_admin": "Super Admin",
+      "super_admin": "System Administrator",
       "full_access": "Full Access"
     },
     "actions": {
@@ -77,7 +88,50 @@
       "language_selection": "Language selection",
       "notifications": "Notifications",
       "auction_filters": "Auction filters",
-      "status_filters": "Status filters"
+      "status_filters": "Status filters",
+      "expand_sidebar": "Expand sidebar",
+      "collapse_sidebar": "Collapse sidebar"
+    },
+    "metrics": {
+      "loading": "Loading metrics...",
+      "empty": "No metrics available.",
+      "labels": {
+        "users": "Users",
+        "kyc": "KYC",
+        "assets": "Assets",
+        "evaluations": "Evaluations",
+        "auctions": "Auctions",
+        "bids": "Bids",
+        "payments": "Payments",
+        "cpo": "CPO",
+        "winners": "Winners"
+      }
+    },
+    "roles": {
+      "evaluationOfficer": {
+        "title": "Evaluation Officer Dashboard",
+        "description": "Schedule and complete asset evaluations."
+      },
+      "financeOfficer": {
+        "title": "Finance Officer Dashboard",
+        "description": "Verify payments and review CPO records."
+      },
+      "customerService": {
+        "title": "Customer Service Dashboard",
+        "description": "Support users and review intake queues."
+      },
+      "auctionManager": {
+        "title": "Auction Manager Dashboard",
+        "description": "Manage auctions, bids, winners, and CPO."
+      },
+      "bidder": {
+        "title": "Bidder Dashboard",
+        "description": "Your bids, payments, and CPO status."
+      },
+      "assetOwner": {
+        "title": "Asset Owner Dashboard",
+        "description": "Your assets and related payments."
+      }
     }
   },
   "category": {
@@ -93,6 +147,11 @@
     "general": "General"
   },
   "auctions": {
+    "management": {
+      "pageTitle": "Auctions",
+      "subtitle": "Manage all auction listings across categories",
+      "searchPlaceholder": "Search auctions by title or ID..."
+    },
     "create": {
       "title": "Create Auction",
       "subtitle": "Set up a new auction listing for review and publication.",
@@ -279,17 +338,30 @@
         "submitted": "Submitted"
       }
     },
+    "management": {
+      "pageTitle": "Auction Requests",
+      "subtitle": "Review and approve auction requests submitted by asset owners."
+    },
     "submit": {
       "title": "Request an Auction",
       "subtitle": "Submit your asset for ownership review. Once approved, it can enter the auction pipeline."
     },
     "my": {
       "title": "My Auction Requests",
-      "subtitle": "Track the status of assets you submitted for auction.",
+      "subtitle": "Submit and track auction requests. Once approved, your asset appears in Browse Auctions.",
       "submitNew": "+ Request Auction",
-      "empty": "You have not submitted any assets yet.",
+      "empty": "You have not submitted any auction requests yet.",
       "rejectionReason": "Reason: {{reason}}",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "drawer": {
+        "title": "Auction Request Details",
+        "loadFailed": "Failed to load auction request details.",
+        "detailsSection": "Request Information",
+        "rejectionSection": "Rejection Reason",
+        "liveAuctionSection": "Live auction",
+        "liveAuctionCopy": "This request was approved and is listed as a live auction.",
+        "viewLiveAuction": "Open Browse Auctions"
+      }
     },
     "form": {
       "submit": "Submit for Review",
@@ -301,6 +373,7 @@
         "description": "Asset Description",
         "conditionNotes": "Asset Condition Notes",
         "location": "Location of the Asset",
+        "address": "Asset Address",
         "desiredReservePrice": "Desired Reserve Price (ETB)",
         "auctionConditions": "Special Auction Conditions or Notes",
         "photos": "Asset Photos",
@@ -438,7 +511,12 @@
     "uploadedFile": "UPLOADED FILE",
     "viewFile": "VIEW FILE",
     "uploadFailed": "UPLOAD FAILED",
-    "close": "CLOSE"
+    "close": "CLOSE",
+    "empty": "—",
+    "languages": {
+      "english": "English",
+      "amharic": "Amharic"
+    }
   },
   "auth": {
     "registerTitle": "Create Account",
@@ -633,12 +711,1227 @@
       "searchPlaceholder": "Search auctions by title or ID",
       "empty": "No published auctions match your filters.",
       "view": "View",
+      "openDetail": "Open auction {{title}}",
+      "myStatus": "Your Status",
+      "photos": "Photos",
+      "auctionInfo": "Auction Information",
       "detailEyebrow": "Auction details",
       "detailTitle": "Auction",
       "detailError": "Could not load auction details",
       "description": "Description",
       "conditions": "Auction conditions",
-      "bidComingSoon": "Online bidding will be available in a future update. Contact support for participation steps."
+      "bidComingSoon": "Online bidding will be available in a future update. Contact support for participation steps.",
+      "placeBid": {
+        "title": "Place Your Bid",
+        "hint": "One bid per auction. Amount must meet or exceed the reserve price.",
+        "amountLabel": "Bid Amount (ETB)",
+        "amountRequired": "Enter a valid bid amount.",
+        "belowReserve": "Bid must be at least {{amount}}.",
+        "minAmount": "Min {{amount}}",
+        "submit": "Submit Bid",
+        "submitting": "Submitting...",
+        "success": "Your bid was submitted successfully.",
+        "failed": "Failed to submit bid. Please try again."
+      }
+    },
+    "participation": {
+      "panelTitle": "Participation Steps",
+      "panelSubtitle": "Complete each step to access auction documents and place your sealed bid.",
+      "loading": "Loading your participation status...",
+      "loadFailed": "Could not load participation status.",
+      "retry": "Retry",
+      "documentFee": "Document Fee",
+      "journeyEyebrow": "Bidder journey",
+      "documents": "Auction Documents",
+      "document": "Document",
+      "downloadDocument": "Download",
+      "documentsLockedTitle": "Documents locked",
+      "documentsLocked": "Pay the document fee and wait for approval to unlock auction documents.",
+      "documentsUnlockedTitle": "Documents unlocked",
+      "documentsUnlockedCopy": "You are registered for this auction. Review and download the documents below.",
+      "documentsEmpty": "No documents are attached to this auction yet.",
+      "paymentCopy": "Pay the document fee of {{amount}} and upload your payment receipt.",
+      "cpoCopy": "Upload your Certified Payment Order (CPO) after document payment is approved.",
+      "cpoNextAction": "This is your current step. Submit your CPO to move toward bidding.",
+      "bidCopy": "Submit one sealed bid at or above the reserve price once your CPO is approved.",
+      "bidLocked": {
+        "notRegistered": "Complete document payment and get it approved first.",
+        "submitCpo": "You are registered, but bidding stays locked until you submit and get CPO approved.",
+        "cpoPending": "Your CPO is under review. Bidding unlocks after staff approval.",
+        "cpoRejected": "Your CPO was rejected. Resubmit CPO to unlock bidding.",
+        "outsideWindow": "CPO is approved. Bidding opens during the auction active window shown above.",
+        "windowEnded": "CPO is approved, but the bidding window for this auction has ended.",
+        "auctionClosed": "This auction is no longer open for bidding."
+      },
+      "bidCard": {
+        "eyebrow": "Step 3 — Place bid",
+        "titleOpen": "Submit your sealed bid",
+        "titleWaiting": "Bidding opens soon",
+        "titleClosed": "Bidding window closed",
+        "leadOpen": "Enter an amount at or above the reserve price of {{amount}}.",
+        "leadWaiting": "Bidding opens at {{start}} and closes at {{end}} (East Africa Time).",
+        "leadClosed": "The bidding window was {{start}} to {{end}} (East Africa Time).",
+        "waitingHint": "Your CPO is approved. Come back between {{start}} and {{end}} to place your bid here.",
+        "closedHint": "Your CPO is approved, but this auction's bidding window has ended. You can no longer place a bid for this auction.",
+        "scrollHint": "Use the bid form at the top of this panel."
+      },
+      "paymentRejected": "Your payment was rejected. Review the reason and submit again.",
+      "cpoRejected": "Your CPO was rejected. Review the reason and submit again.",
+      "paymentPending": "Your payment is pending verification. You will be notified once it is reviewed.",
+      "cpoPending": "Your CPO is pending review. You will be notified once it is approved.",
+      "bidSubmitted": "You submitted a bid of {{amount}}.",
+      "steps": {
+        "payment": "Document Payment",
+        "cpo": "CPO Submission",
+        "bid": "Place Bid"
+      },
+      "stepStatus": {
+        "complete": "Complete",
+        "active": "Action Required",
+        "pending": "Pending Review",
+        "locked": "Locked",
+        "rejected": "Rejected"
+      },
+      "actions": {
+        "payDocumentFee": "Pay Document Fee",
+        "submitCpo": "Submit CPO"
+      },
+      "status": {
+        "not_started": {
+          "label": "Not started",
+          "title": "Start your participation",
+          "body": "Pay the document fee to register as a bidder for this auction."
+        },
+        "payment_pending": {
+          "label": "Payment pending",
+          "title": "Payment under review",
+          "body": "Your receipt was submitted. You will get document access once finance approves it."
+        },
+        "payment_rejected": {
+          "label": "Payment rejected",
+          "title": "Payment needs correction",
+          "body": "Review the rejection reason and submit a new payment receipt."
+        },
+        "registered": {
+          "label": "Registered bidder",
+          "title": "You are registered for this auction",
+          "body": "Payment approved. You now have document access. Submit your CPO below — bidding unlocks after CPO approval."
+        },
+        "cpo_pending": {
+          "label": "CPO pending",
+          "title": "CPO under review",
+          "body": "Your CPO was submitted. Bidding opens after staff approval."
+        },
+        "cpo_rejected": {
+          "label": "CPO rejected",
+          "title": "CPO needs correction",
+          "body": "Review the rejection reason and upload a new CPO document."
+        },
+        "ready_to_bid": {
+          "label": "Ready to bid",
+          "title": "Place your sealed bid now",
+          "body": "Your CPO is approved. Use the bid form below to submit one bid at or above the reserve price."
+        },
+        "bidding_waiting": {
+          "label": "CPO approved",
+          "title": "Bidding opens soon",
+          "body": "Your CPO is approved. The bid form appears when the auction enters its active bidding window."
+        },
+        "bidding_closed": {
+          "label": "Bidding closed",
+          "title": "Bidding window has ended",
+          "body": "Your CPO was approved, but the scheduled bidding window for this auction is over."
+        },
+        "bid_submitted": {
+          "label": "Bid submitted",
+          "title": "Your bid is in",
+          "body": "You have already submitted your sealed bid for this auction."
+        }
+      },
+      "paymentModal": {
+        "title": "Pay Document Fee",
+        "subtitle": "Upload your payment receipt for staff verification.",
+        "auction": "Auction",
+        "amount": "Amount",
+        "transactionReference": "Transaction Reference (optional)",
+        "transactionReferencePlaceholder": "Bank transfer reference or receipt number",
+        "receipt": "Payment Receipt",
+        "receiptRequired": "Upload a payment receipt.",
+        "receiptUploaded": "Receipt uploaded.",
+        "submit": "Submit Payment",
+        "submitting": "Submitting...",
+        "success": "Payment submitted for review.",
+        "failed": "Failed to submit payment. Please try again."
+      },
+      "cpoModal": {
+        "title": "Submit CPO",
+        "subtitle": "Upload your Certified Payment Order document.",
+        "auction": "Auction",
+        "document": "CPO Document",
+        "documentRequired": "Upload your CPO document.",
+        "documentUploaded": "Document uploaded.",
+        "submit": "Submit CPO",
+        "submitting": "Submitting...",
+        "success": "CPO submitted for review.",
+        "failed": "Failed to submit CPO. Please try again."
+      }
+    }
+  },
+  "evaluations": {
+    "management": {
+      "pageTitle": "Evaluations",
+      "subtitle": "Schedule and manage asset evaluations",
+      "schedule": "Schedule Evaluation",
+      "searchPlaceholder": "Search by asset title or owner...",
+      "empty": "No evaluations found.",
+      "openDetail": "Open evaluation for {{name}}",
+      "viewAction": "View details",
+      "tabs": {
+        "all": "ALL",
+        "scheduled": "SCHEDULED",
+        "in_progress": "IN PROGRESS",
+        "completed": "COMPLETED",
+        "approved": "APPROVED",
+        "rejected": "REJECTED"
+      },
+      "status": {
+        "scheduled": "Scheduled",
+        "in_progress": "In Progress",
+        "completed": "Completed",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} evaluations",
+        "headers": {
+          "asset": "Asset Title",
+          "category": "Category",
+          "owner": "Asset Owner",
+          "scheduledDate": "Scheduled Date",
+          "evaluator": "Evaluator",
+          "status": "Status",
+          "actions": "Actions"
+        }
+      },
+      "actions": {
+        "start": "Start Evaluation",
+        "reschedule": "Reschedule",
+        "complete": "Complete Evaluation",
+        "approve": "Approve",
+        "reject": "Reject",
+        "reSchedule": "Re-schedule"
+      },
+      "drawer": {
+        "title": "Evaluation Details",
+        "loadFailed": "Failed to load evaluation details.",
+        "assetSection": "Asset Information",
+        "evaluationSection": "Evaluation Details",
+        "valuationSection": "Valuation",
+        "rejectionSection": "Rejection",
+        "assetTitle": "Asset Title",
+        "assetType": "Category",
+        "ownerName": "Owner",
+        "location": "Location",
+        "conditionNotes": "Condition Notes",
+        "ownershipDocument": "Ownership Document",
+        "viewOwnershipDocument": "View ownership document",
+        "scheduledAt": "Scheduled Date & Time",
+        "startedAt": "Started At",
+        "completedAt": "Completed At",
+        "evaluator": "Assigned Evaluator",
+        "valuation": "Valuation Amount",
+        "reserveRecommendation": "Reserve Price Recommendation",
+        "notes": "Notes",
+        "photos": "Inspection Photos",
+        "report": "Evaluation Report",
+        "viewReport": "Download report",
+        "startSuccess": "Evaluation marked in progress.",
+        "startFailed": "Failed to start evaluation."
+      },
+      "scheduleModal": {
+        "title": "Schedule Evaluation",
+        "subtitle": "Select an approved asset and schedule date.",
+        "assetSearch": "Search assets",
+        "assetSearchPlaceholder": "Search by title or owner...",
+        "asset": "Asset",
+        "selectAsset": "Select asset",
+        "assetSummary": "Owner: {{owner}} · Location: {{location}}",
+        "evaluator": "Assigned Evaluator",
+        "selectEvaluator": "Select evaluator (optional)",
+        "scheduledAt": "Scheduled Date & Time",
+        "notes": "Notes",
+        "submit": "Schedule Evaluation",
+        "scheduling": "Scheduling...",
+        "success": "Evaluation scheduled.",
+        "failed": "Failed to schedule evaluation.",
+        "assetRequired": "Select an asset.",
+        "dateRequired": "Scheduled date is required.",
+        "dateFutureRequired": "Scheduled date must be in the future."
+      },
+      "rescheduleModal": {
+        "title": "Reschedule Evaluation",
+        "rescheduleTitle": "Re-schedule Evaluation",
+        "subtitle": "Update the scheduled date and notes.",
+        "scheduledAt": "Scheduled Date & Time",
+        "notes": "Notes",
+        "submit": "Save Changes",
+        "submitting": "Saving...",
+        "success": "Evaluation rescheduled.",
+        "failed": "Failed to reschedule evaluation.",
+        "dateRequired": "Scheduled date is required.",
+        "dateFutureRequired": "Scheduled date must be in the future."
+      },
+      "completeModal": {
+        "title": "Complete Evaluation",
+        "subtitle": "Enter valuation details and upload supporting files.",
+        "valuationSection": "Valuation",
+        "documentationSection": "Documentation",
+        "valuationAmount": "Valuation Amount (ETB)",
+        "reserveRecommendation": "Reserve Price Recommendation (ETB)",
+        "notes": "Additional Notes",
+        "photos": "Inspection Photos",
+        "report": "Evaluation Report",
+        "reportUploaded": "Report uploaded successfully.",
+        "submit": "Mark as Complete",
+        "submitting": "Saving...",
+        "success": "Evaluation completed.",
+        "failed": "Failed to complete evaluation.",
+        "valuationRequired": "Valuation amount is required and must be positive.",
+        "reserveRequired": "Reserve price recommendation is required and must be positive.",
+        "reserveTooHigh": "Reserve price cannot exceed valuation amount."
+      },
+      "approveModal": {
+        "title": "Approve Evaluation",
+        "body": "Approve this evaluation? The asset will be marked as evaluated and eligible for auction.",
+        "confirm": "Approve",
+        "success": "Evaluation approved.",
+        "failed": "Failed to approve evaluation."
+      },
+      "rejectModal": {
+        "title": "Reject Evaluation",
+        "body": "Provide a reason for rejecting this evaluation.",
+        "success": "Evaluation rejected.",
+        "failed": "Failed to reject evaluation.",
+        "reasons": {
+          "lowValuation": "Valuation too low",
+          "incomplete": "Incomplete documentation",
+          "condition": "Asset condition concerns"
+        }
+      }
+    }
+  },
+  "payments": {
+    "management": {
+      "pageTitle": "Payments",
+      "subtitle": "Verify document fees and payment receipts.",
+      "searchPlaceholder": "Search by payer name or mobile...",
+      "empty": "No payments found.",
+      "openDetail": "Open payment for {{name}}",
+      "viewAction": "View details",
+      "tabs": {
+        "all": "ALL",
+        "pending": "PENDING",
+        "approved": "APPROVED",
+        "rejected": "REJECTED"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "methods": {
+        "manual": "Manual",
+        "addis_pay": "Addis Pay"
+      },
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} payments",
+        "headers": {
+          "payer_name": "Payer",
+          "auction_title": "Auction",
+          "amount": "Amount",
+          "payment_method": "Method",
+          "status": "Status",
+          "paid_at": "Paid",
+          "actions": "Actions"
+        }
+      },
+      "drawer": {
+        "title": "Payment Details",
+        "loadFailed": "Failed to load payment details.",
+        "paymentSection": "Payment",
+        "payer": "Payer",
+        "auction": "Auction",
+        "amount": "Amount",
+        "method": "Method",
+        "transactionRef": "Transaction Reference",
+        "paidAt": "Paid At",
+        "verifiedBy": "Verified By",
+        "verifiedAt": "Verified At",
+        "rejectionReason": "Rejection Reason",
+        "receipt": "Receipt",
+        "approve": "Approve",
+        "reject": "Reject",
+        "refresh": "Refresh"
+      },
+      "approveModal": {
+        "title": "Approve Payment",
+        "body": "Approve payment from {{name}}?",
+        "confirm": "Approve",
+        "success": "Payment approved.",
+        "failed": "Failed to approve payment."
+      },
+      "rejectModal": {
+        "title": "Reject Payment",
+        "body": "Provide a reason for rejecting this payment.",
+        "success": "Payment rejected.",
+        "failed": "Failed to reject payment.",
+        "reasons": {
+          "amountMismatch": "Amount mismatch",
+          "invalidReceipt": "Invalid receipt",
+          "duplicate": "Duplicate payment"
+        }
+      }
+    },
+    "my": {
+      "pageTitle": "My Payments",
+      "subtitle": "Track document fee payments you submitted for auctions.",
+      "payHintTitle": "How to pay the document fee",
+      "payHintBody": "Open an active auction from Browse Auctions, then use Pay Document Fee in the participation steps.",
+      "browseCta": "Browse Auctions",
+      "empty": "You have not submitted any payments yet.",
+      "viewAction": "View payment details",
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} payments",
+        "headers": {
+          "auction_title": "Auction",
+          "amount": "Amount",
+          "status": "Status",
+          "created_at": "Submitted",
+          "actions": "Actions"
+        }
+      }
+    }
+  },
+  "cpo": {
+    "management": {
+      "pageTitle": "CPO Management",
+      "subtitle": "Review certified payment order submissions.",
+      "searchPlaceholder": "Search by bidder name or mobile...",
+      "empty": "No CPO records found.",
+      "openDetail": "Open CPO for {{name}}",
+      "viewAction": "View details",
+      "tabs": {
+        "all": "ALL",
+        "pending": "PENDING",
+        "approved": "APPROVED",
+        "rejected": "REJECTED"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} CPO records",
+        "headers": {
+          "bidder_name": "Bidder",
+          "auction_title": "Auction",
+          "status": "Status",
+          "expiry_date": "Expiry",
+          "created_at": "Submitted",
+          "actions": "Actions"
+        }
+      },
+      "drawer": {
+        "title": "CPO Details",
+        "loadFailed": "Failed to load CPO details.",
+        "cpoSection": "CPO Record",
+        "bidder": "Bidder",
+        "auction": "Auction",
+        "expiryDate": "Expiry Date",
+        "reviewedBy": "Reviewed By",
+        "reviewedAt": "Reviewed At",
+        "rejectionReason": "Rejection Reason",
+        "document": "Document",
+        "viewDocument": "View Document",
+        "approve": "Approve",
+        "reject": "Reject",
+        "refresh": "Refresh"
+      },
+      "approveModal": {
+        "title": "Approve CPO",
+        "body": "Approve CPO submission for {{name}}?",
+        "expiryDate": "Expiry Date",
+        "confirm": "Approve",
+        "dateRequired": "Expiry date is required.",
+        "success": "CPO approved.",
+        "failed": "Failed to approve CPO."
+      },
+      "rejectModal": {
+        "title": "Reject CPO",
+        "body": "Provide a reason for rejecting this CPO.",
+        "success": "CPO rejected.",
+        "failed": "Failed to reject CPO.",
+        "reasons": {
+          "invalidDocument": "Invalid document",
+          "expired": "Document expired",
+          "mismatch": "Information mismatch"
+        }
+      }
+    },
+    "my": {
+      "pageTitle": "My CPO",
+      "subtitle": "Track your Certified Payment Order submissions.",
+      "empty": "You have not submitted any CPO records yet.",
+      "viewAction": "View CPO details",
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} CPO records",
+        "headers": {
+          "auction_title": "Auction",
+          "status": "Status",
+          "created_at": "Submitted",
+          "actions": "Actions"
+        }
+      }
+    }
+  },
+  "bids": {
+    "management": {
+      "pageTitle": "Bid Management",
+      "subtitle": "Review all bids across auctions.",
+      "searchPlaceholder": "Search by bidder name or mobile...",
+      "auctionFilter": "Auction",
+      "allAuctions": "All auctions",
+      "empty": "No bids found.",
+      "openDetail": "Open bid for {{name}}",
+      "viewAction": "View details",
+      "status": {
+        "submitted": "Submitted",
+        "winning": "Winning",
+        "lost": "Lost",
+        "invalid": "Invalid"
+      },
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} bids",
+        "headers": {
+          "bidder_name": "Bidder",
+          "auction_title": "Auction",
+          "amount": "Amount",
+          "status": "Status",
+          "submitted_at": "Submitted",
+          "actions": "Actions"
+        }
+      },
+      "drawer": {
+        "title": "Bid Details",
+        "loadFailed": "Failed to load bid details.",
+        "bidSection": "Bid",
+        "bidder": "Bidder",
+        "auction": "Auction",
+        "amount": "Amount",
+        "submittedAt": "Submitted At",
+        "isValid": "Validity",
+        "valid": "Valid",
+        "invalid": "Invalid",
+        "invalidReason": "Invalid Reason"
+      }
+    },
+    "myBids": {
+      "pageTitle": "My Bids",
+      "subtitle": "Your submitted bids across auctions.",
+      "empty": "You have not placed any bids yet.",
+      "openDetail": "Open bid for {{name}}",
+      "viewAction": "View details",
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} bids",
+        "headers": {
+          "auction_title": "Auction",
+          "amount": "Amount",
+          "status": "Status",
+          "submitted_at": "Submitted",
+          "actions": "Actions"
+        }
+      }
+    }
+  },
+  "winners": {
+    "management": {
+      "pageTitle": "Winners",
+      "subtitle": "Manage auction winners and confirmations.",
+      "selectWinner": "Select Winner",
+      "searchPlaceholder": "Search by winner name or mobile...",
+      "empty": "No winner records found.",
+      "openDetail": "Open winner record for {{name}}",
+      "viewAction": "View details",
+      "tabs": {
+        "all": "ALL",
+        "pending_confirmation": "PENDING",
+        "confirmed": "CONFIRMED",
+        "declined": "DECLINED"
+      },
+      "status": {
+        "pending_confirmation": "Pending Confirmation",
+        "confirmed": "Confirmed",
+        "declined": "Declined",
+        "replaced": "Replaced"
+      },
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} winners",
+        "headers": {
+          "auction_title": "Auction",
+          "winner_name": "Winner",
+          "status": "Status",
+          "selected_at": "Selected",
+          "selected_by": "Selected By",
+          "actions": "Actions"
+        }
+      },
+      "drawer": {
+        "title": "Winner Details",
+        "loadFailed": "Failed to load winner details.",
+        "winnerSection": "Winner Record",
+        "auction": "Auction",
+        "winner": "Winner",
+        "bidAmount": "Winning Bid",
+        "selectedAt": "Selected At",
+        "selectedBy": "Selected By",
+        "declineReason": "Decline Reason",
+        "confirm": "Confirm Winner",
+        "decline": "Decline Winner",
+        "refresh": "Refresh"
+      },
+      "selectModal": {
+        "title": "Select Winner",
+        "subtitle": "Choose a closed auction and winning bid.",
+        "auction": "Auction",
+        "selectAuction": "Select auction",
+        "bid": "Bid",
+        "selectBid": "Select bid",
+        "submit": "Select Winner",
+        "submitting": "Selecting...",
+        "success": "Winner selected.",
+        "failed": "Failed to select winner.",
+        "required": "Auction and bid are required."
+      },
+      "confirmModal": {
+        "title": "Confirm Winner",
+        "body": "Confirm {{name}} as the auction winner?",
+        "confirm": "Confirm",
+        "success": "Winner confirmed.",
+        "failed": "Failed to confirm winner."
+      },
+      "declineModal": {
+        "title": "Decline Winner",
+        "body": "Provide a reason for declining this winner.",
+        "reasonLabel": "Decline reason",
+        "confirm": "Confirm Decline",
+        "success": "Winner declined.",
+        "failed": "Failed to decline winner."
+      }
+    }
+  },
+  "notifications": {
+    "center": {
+      "pageTitle": "Notifications",
+      "subtitle": "Your in-app notifications and alerts.",
+      "filters": "Notification filters",
+      "markAllRead": "Mark All Read",
+      "markRead": "Mark Read",
+      "markAllSuccess": "All notifications marked as read.",
+      "markAllFailed": "Failed to mark all as read.",
+      "markReadFailed": "Failed to mark notification as read.",
+      "empty": "No notifications found.",
+      "tabs": {
+        "all": "ALL",
+        "unread": "UNREAD",
+        "read": "READ"
+      },
+      "status": {
+        "unread": "Unread",
+        "read": "Read"
+      },
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} notifications"
+      }
+    }
+  },
+  "reports": {
+    "pageTitle": "Reports & Analytics",
+    "subtitle": "Operational reports and platform metrics.",
+    "refresh": "Refresh",
+    "loadFailed": "Failed to load reports.",
+    "exportFailed": "Failed to export report.",
+    "exporting": "Exporting...",
+    "exportCsv": "Export CSV",
+    "empty": "No reports available.",
+    "snapshotTitle": "Platform Snapshot",
+    "reportsTitle": "Available Reports",
+    "rowCount": "{{count}} data rows",
+    "types": {
+      "auction_summary": {
+        "title": "Auction Summary",
+        "description": "Auction counts by status and total reserve value."
+      },
+      "payment_summary": {
+        "title": "Payment Summary",
+        "description": "Payment totals by status and method."
+      },
+      "kyc_summary": {
+        "title": "KYC Summary",
+        "description": "KYC approval counts and status breakdown."
+      },
+      "asset_pipeline": {
+        "title": "Asset Pipeline",
+        "description": "Asset counts per workflow status."
+      }
+    }
+  },
+  "users": {
+    "management": {
+      "pageTitle": "User Management",
+      "subtitle": "Manage bidder and asset owner accounts, status, and access.",
+      "createUser": "Create User",
+      "searchPlaceholder": "Search by name, mobile, or email...",
+      "empty": "No users found for the selected filters.",
+      "loadFailed": "Failed to load users. Please try again.",
+      "openDetail": "Open user details for {{name}}",
+      "viewAction": "View details",
+      "tabs": {
+        "all": "ALL",
+        "active": "ACTIVE",
+        "kyc_pending": "KYC PENDING",
+        "kyc_under_review": "KYC UNDER REVIEW",
+        "kyc_rejected": "KYC REJECTED",
+        "suspended": "SUSPENDED",
+        "deactivated": "DEACTIVATED"
+      },
+      "userTypes": {
+        "individual": "Individual",
+        "organization": "Organization"
+      },
+      "status": {
+        "pending": "Pending",
+        "kyc_pending": "KYC Pending",
+        "kyc_under_review": "KYC Under Review",
+        "kyc_rejected": "KYC Rejected",
+        "active": "Active",
+        "suspended": "Suspended",
+        "deactivated": "Deactivated"
+      },
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} users",
+        "headers": {
+          "display_name": "Name",
+          "mobile_number": "Mobile",
+          "user_type": "User Type",
+          "status": "Status",
+          "registered_at": "Registered",
+          "actions": "Actions"
+        }
+      },
+      "drawer": {
+        "title": "User Details",
+        "loadFailed": "Failed to load user details.",
+        "profileSection": "Profile",
+        "kycSection": "KYC Summary",
+        "assetOwnerSection": "Asset Owner",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "organizationName": "Organization Name",
+        "mobile": "Mobile Number",
+        "mobileVerified": "Mobile Verified",
+        "email": "Email",
+        "emailVerified": "Email Verified",
+        "verifiedYes": "Yes",
+        "verifiedNo": "No",
+        "userType": "User Type",
+        "preferredLanguage": "Preferred Language",
+        "role": "Role",
+        "registeredAt": "Registered",
+        "lastLogin": "Last Login",
+        "kycStatus": "KYC Status",
+        "kycDocument": "Document Type",
+        "kycReviewedAt": "Reviewed",
+        "viewKycRecord": "View KYC Record →",
+        "assetOwnerStatus": "Status",
+        "assetOwnerCity": "City",
+        "assetOwnerRegion": "Region",
+        "staffNotice": "This account is linked to a staff profile. Manage it from Staff Management.",
+        "edit": "Edit",
+        "suspend": "Suspend",
+        "deactivate": "Deactivate",
+        "activate": "Activate",
+        "delete": "Delete",
+        "refresh": "Refresh",
+        "activateSuccess": "User account activated."
+      },
+      "statusModal": {
+        "suspendTitle": "Suspend User",
+        "deactivateTitle": "Deactivate User",
+        "suspendBody": "Provide a reason for suspending {{name}}.",
+        "deactivateBody": "Provide a reason for deactivating {{name}}.",
+        "reasonLabel": "Reason",
+        "confirmSuspend": "Confirm Suspend",
+        "confirmDeactivate": "Confirm Deactivate",
+        "success": "User status updated.",
+        "failed": "Failed to update user status.",
+        "quickReasons": {
+          "policy": "Policy violation",
+          "fraud": "Suspected fraud",
+          "abuse": "Platform abuse",
+          "requested": "User requested closure",
+          "duplicate": "Duplicate account",
+          "inactive": "Long-term inactivity"
+        }
+      },
+      "reactivateModal": {
+        "title": "Reactivate User",
+        "body": "Are you sure you want to reactivate this account? The user will regain full access.",
+        "confirm": "Confirm Reactivate"
+      },
+      "editModal": {
+        "title": "Edit User",
+        "subtitle": "Update account details and role assignment.",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "organizationName": "Organization Name",
+        "email": "Email",
+        "language": "Preferred Language",
+        "role": "Role",
+        "selectRole": "Select role",
+        "roleChangeNotice": "Role changes take effect after the user's next login.",
+        "cancel": "Cancel",
+        "submit": "Save Changes",
+        "saving": "Saving...",
+        "success": "User updated successfully.",
+        "failed": "Failed to update user.",
+        "rolesUnavailable": "No assignable roles available."
+      },
+      "deleteModal": {
+        "title": "Delete User",
+        "bodyIntro": "Are you sure you want to permanently delete",
+        "bodyRest": "? This action cannot be undone.",
+        "confirmLabel": "Type the user's name or mobile number to confirm",
+        "cancel": "Cancel",
+        "confirm": "Delete User",
+        "processing": "Deleting...",
+        "success": "User deleted successfully.",
+        "failed": "Failed to delete user."
+      },
+      "createModal": {
+        "title": "Create New User",
+        "subtitle": "Manually create a user account and assign their role",
+        "accountType": "Account Type",
+        "accountTypeHints": {
+          "individual": "Personal bidder or asset owner account",
+          "organization": "Registered organization account"
+        },
+        "accountSettings": "Account Settings",
+        "security": "Security",
+        "mobile": "Mobile Number",
+        "mobilePrefix": "+251",
+        "temporaryPassword": "Temporary Password",
+        "confirmPassword": "Confirm Password",
+        "passwordHint": "The user should change this password after first login",
+        "showPassword": "Show password",
+        "hidePassword": "Hide password",
+        "nationalIdNumber": "National ID Number",
+        "tinNumber": "TIN Number",
+        "emailOptional": "Email (optional)",
+        "userType": "User Type",
+        "role": "Role",
+        "roleOptions": {
+          "bidder": "Bidder",
+          "asset_owner": "Asset Owner"
+        },
+        "selectRole": "Select role",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "organizationName": "Organization Name",
+        "email": "Email",
+        "language": "Preferred Language",
+        "cancel": "Cancel",
+        "submit": "Create User",
+        "creating": "Creating...",
+        "success": "User created successfully.",
+        "failed": "Failed to create user.",
+        "mobileRequired": "Mobile number is required.",
+        "firstNameRequired": "First name is required.",
+        "lastNameRequired": "Last name is required.",
+        "nationalIdRequired": "National ID number is required.",
+        "tinRequired": "TIN number is required.",
+        "emailRequired": "Email is required.",
+        "emailInvalid": "Enter a valid email address.",
+        "passwordRequired": "Temporary password is required.",
+        "passwordMinLength": "Password must be at least 6 characters.",
+        "confirmPasswordRequired": "Please confirm the password.",
+        "passwordMismatch": "Passwords do not match.",
+        "roleRequired": "Role is required.",
+        "organizationRequired": "Organization name is required.",
+        "rolesUnavailable": "No assignable roles available."
+      }
+    },
+    "profile": {
+      "pageTitle": "My Profile",
+      "subtitle": "Your account identity and verification status.",
+      "title": "Profile",
+      "loading": "Loading profile...",
+      "loadFailed": "Failed to load profile.",
+      "mobile": "Mobile Number",
+      "email": "Email",
+      "role": "Role",
+      "userType": "User Type",
+      "kycStatus": "KYC Status",
+      "kycSubmitted": "KYC Submitted"
+    }
+  },
+  "staff": {
+    "management": {
+      "pageTitle": "Staff Management",
+      "subtitle": "Manage staff accounts, roles, and activation status.",
+      "loadFailed": "Failed to load staff members.",
+      "createStaff": "Create Staff",
+      "searchPlaceholder": "Search by name, employee ID, or department...",
+      "empty": "No staff members found.",
+      "openDetail": "Open staff details for {{name}}",
+      "viewAction": "View details",
+      "tabs": {
+        "all": "ALL",
+        "active": "ACTIVE",
+        "inactive": "INACTIVE"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "roles": {
+        "super_admin": {
+          "name": "Super Administrator",
+          "description": "Full system access"
+        },
+        "auction_manager": {
+          "name": "Auction Manager",
+          "description": "Manage auctions and monitor operations"
+        },
+        "evaluation_officer": {
+          "name": "Evaluation Officer",
+          "description": "Manage asset evaluations"
+        },
+        "finance_officer": {
+          "name": "Finance Officer",
+          "description": "Manage payments and financial reports"
+        },
+        "customer_service_officer": {
+          "name": "Customer Service Officer",
+          "description": "Manage KYC and customer support"
+        }
+      },
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} staff",
+        "headers": {
+          "display_name": "Name",
+          "employee_id": "Employee ID",
+          "department": "Department",
+          "role": "Role",
+          "status": "Status",
+          "created_at": "Created",
+          "actions": "Actions"
+        }
+      },
+      "drawer": {
+        "title": "Staff Details",
+        "loadFailed": "Failed to load staff details.",
+        "profileSection": "Staff Profile",
+        "roleSection": "Role",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "employeeId": "Employee ID",
+        "department": "Department",
+        "role": "Role",
+        "roleDescription": "Role Description",
+        "roleAssignedAt": "Role Assigned",
+        "mobile": "Mobile",
+        "email": "Email",
+        "preferredLanguage": "Preferred Language",
+        "createdAt": "Created",
+        "createdBy": "Created By",
+        "activatedAt": "Activated At",
+        "deactivatedAt": "Deactivated At",
+        "edit": "Edit",
+        "deactivate": "Deactivate",
+        "reactivate": "Reactivate",
+        "delete": "Delete",
+        "refresh": "Refresh",
+        "reactivateSuccess": "Staff member reactivated.",
+        "deactivateSuccess": "Staff member deactivated."
+      },
+      "permissions": {
+        "sectionTitle": "Permissions",
+        "edit": "Edit Permissions",
+        "cancelEdit": "Cancel Permission Edit",
+        "save": "Save Permissions",
+        "saving": "Saving...",
+        "warning": "Changes affect ALL staff members with this role. Staff must re-login for changes to take effect.",
+        "readOnly": "This permission matrix is read only.",
+        "superAdmin": "Super administrators have wildcard access to all modules and actions.",
+        "confirmTitle": "Update Role Permissions",
+        "confirmBody": "Update permissions for {{role}}? This affects {{count}} staff members.",
+        "confirm": "Confirm Update",
+        "updateSuccess": "Role permissions updated successfully.",
+        "updateFailed": "Failed to update role permissions.",
+        "granted": "Granted",
+        "denied": "Not granted",
+        "full": "full",
+        "none": "none",
+        "togglePermission": "Toggle {{action}} for {{module}}",
+        "table": {
+          "module": "Module"
+        },
+        "modules": {
+          "users": "Users",
+          "kyc": "KYC",
+          "assets": "Assets",
+          "evaluations": "Evaluations",
+          "auctions": "Auctions",
+          "documents": "Documents",
+          "payments": "Payments",
+          "cpo": "CPO",
+          "bids": "Bids",
+          "winners": "Winners",
+          "notifications": "Notifications",
+          "dashboard": "Dashboard",
+          "staff": "Staff",
+          "roles": "Roles",
+          "reports": "Reports",
+          "settings": "Settings",
+          "files": "Files"
+        },
+        "actions": {
+          "read": "Read",
+          "create": "Create",
+          "update": "Update",
+          "delete": "Delete",
+          "approve": "Approve",
+          "reject": "Reject",
+          "publish": "Publish",
+          "close": "Close",
+          "export": "Export"
+        }
+      },
+      "createModal": {
+        "title": "Create Staff Member",
+        "subtitle": "Create a new staff account and assign their role",
+        "staffInformation": "Staff Information",
+        "roleAssignment": "Role Assignment",
+        "security": "Security",
+        "mobile": "Mobile Number",
+        "mobilePrefix": "+251",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "passwordHint": "Staff member should change this password after first login",
+        "passwordStrength": {
+          "none": "Password strength",
+          "weak": "Weak",
+          "fair": "Fair",
+          "good": "Good",
+          "strong": "Strong"
+        },
+        "showPassword": "Show password",
+        "hidePassword": "Hide password",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email",
+        "employeeId": "Employee ID",
+        "department": "Department",
+        "preferredLanguage": "Preferred Language",
+        "role": "Role",
+        "rolePreviewIntro": "{{role}} can access:",
+        "selectRole": "Select role",
+        "cancel": "Cancel",
+        "submit": "Create Staff Member",
+        "creating": "Creating...",
+        "success": "Staff member created.",
+        "failed": "Failed to create staff member.",
+        "firstNameRequired": "First name is required.",
+        "lastNameRequired": "Last name is required.",
+        "mobileRequired": "Mobile number is required.",
+        "emailRequired": "Email is required.",
+        "emailInvalid": "Enter a valid email address.",
+        "passwordRequired": "Password is required.",
+        "passwordMinLength": "Password must be at least 8 characters.",
+        "confirmPasswordRequired": "Confirm password is required.",
+        "passwordMismatch": "Passwords do not match.",
+        "roleRequired": "Role is required.",
+        "rolesUnavailable": "Unable to load assignable roles. Please try again later.",
+        "rolesLoadFailed": "Failed to load roles."
+      },
+      "editModal": {
+        "title": "Edit Staff Member",
+        "subtitle": "Update staff profile and role assignment.",
+        "staffInformation": "Staff Information",
+        "roleAssignment": "Role Assignment",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email",
+        "employeeId": "Employee ID",
+        "department": "Department",
+        "preferredLanguage": "Preferred Language",
+        "role": "Role",
+        "selectRole": "Select role",
+        "roleChangeNotice": "Role changes take effect after the staff member's next login.",
+        "cancel": "Cancel",
+        "submit": "Save Changes",
+        "saving": "Saving...",
+        "success": "Staff member updated.",
+        "failed": "Failed to update staff member.",
+        "firstNameRequired": "First name is required.",
+        "lastNameRequired": "Last name is required.",
+        "emailRequired": "Email is required.",
+        "emailInvalid": "Enter a valid email address.",
+        "roleRequired": "Role is required.",
+        "rolesUnavailable": "Unable to load assignable roles. Please try again later."
+      },
+      "deactivateModal": {
+        "title": "Deactivate Staff Member",
+        "body": "Deactivate {{name}}? They will lose staff access.",
+        "confirm": "Confirm Deactivate",
+        "success": "Staff member deactivated.",
+        "failed": "Failed to deactivate staff member."
+      },
+      "reactivateModal": {
+        "title": "Reactivate Staff Member",
+        "body": "Are you sure you want to reactivate {{name}}? They will regain staff access.",
+        "confirm": "Confirm Reactivate",
+        "success": "Staff member reactivated.",
+        "failed": "Failed to reactivate staff member."
+      },
+      "deleteModal": {
+        "title": "Delete Staff Member",
+        "bodyIntro": "Are you sure you want to permanently delete",
+        "bodyRest": "? This action cannot be undone.",
+        "confirmLabel": "Type the staff member's name to confirm",
+        "cancel": "Cancel",
+        "confirm": "Delete Staff Member",
+        "processing": "Deleting...",
+        "success": "Staff member deleted.",
+        "failed": "Failed to delete staff member."
+      }
+    }
+  },
+  "settings": {
+    "pageTitle": "System Settings",
+    "subtitle": "Localization, auction defaults, and platform limits.",
+    "loading": "Loading settings...",
+    "loadFailed": "Failed to load settings.",
+    "save": "Save Settings",
+    "saving": "Saving...",
+    "saveSuccess": "Settings saved successfully.",
+    "saveFailed": "Failed to save settings.",
+    "localization": {
+      "title": "Localization",
+      "description": "Default language and supported UI languages.",
+      "defaultLanguage": "Default Language",
+      "supportedLanguages": "Supported Languages",
+      "languages": {
+        "en": "English",
+        "am": "Amharic"
+      }
+    },
+    "auction": {
+      "title": "Auction Defaults",
+      "defaultCurrency": "Default Currency",
+      "defaultCpoPercentage": "Default CPO Percentage",
+      "minBidIncrement": "Minimum Bid Increment"
+    },
+    "system": {
+      "title": "System Limits",
+      "otpTtlSeconds": "OTP TTL (seconds)",
+      "maxFileSize": "Max File Size (bytes)"
+    }
+  },
+  "audit": {
+    "trail": {
+      "pageTitle": "Audit Trail",
+      "subtitle": "Read-only log of platform actions and changes.",
+      "searchPlaceholder": "Search by action, entity, or actor...",
+      "actionFilter": "Action",
+      "allActions": "All actions",
+      "empty": "No audit log entries found.",
+      "openDetail": "Open audit log for {{action}}",
+      "viewAction": "View details",
+      "table": {
+        "footer": "Showing {{from}}–{{to}} of {{total}} entries",
+        "headers": {
+          "action": "Action",
+          "entity_type": "Entity Type",
+          "actor": "Actor",
+          "timestamp": "Timestamp",
+          "actions": "Actions"
+        }
+      },
+      "actions": {
+        "LOGIN": "Login",
+        "CREATE": "Create",
+        "UPDATE": "Update",
+        "DELETE": "Delete",
+        "APPROVE": "Approve",
+        "REJECT": "Reject",
+        "ACCESS_DENIED": "Access Denied",
+        "ROLE_CHANGE": "Role Change",
+        "PUBLISH": "Publish",
+        "CLOSE": "Close"
+      },
+      "drawer": {
+        "title": "Audit Log Entry",
+        "loadFailed": "Failed to load audit log entry.",
+        "summarySection": "Summary",
+        "changesSection": "Changes",
+        "action": "Action",
+        "entityType": "Entity Type",
+        "entityId": "Entity ID",
+        "actor": "Actor",
+        "timestamp": "Timestamp",
+        "ipAddress": "IP Address",
+        "userAgent": "User Agent",
+        "oldValues": "Previous Values",
+        "newValues": "New Values",
+        "metadata": "Metadata",
+        "noValues": "None"
+      }
+    }
+  },
+  "admin": {
+    "loading": "Loading...",
+    "loadFailed": "Failed to load data.",
+    "emptyDefault": "No records found.",
+    "retry": "Retry",
+    "searchPlaceholder": "Search...",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "confirming": "Confirming...",
+    "confirmReject": "Confirm Reject",
+    "rejecting": "Rejecting...",
+    "rejectionReason": "Rejection reason",
+    "rejectionReasonRequired": "A rejection reason is required.",
+    "quickReasons": "Quick reasons",
+    "charCount": "{{count}} / {{max}} characters",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {{page}} of {{pages}}"
+    }
+  },
+  "accessDenied": {
+    "pageTitle": "Access Denied",
+    "subtitle": "You do not have permission to view this page.",
+    "message": "You do not have permission to view this page. Contact your administrator if you believe this is an error."
+  },
+  "documents": {
+    "management": {
+      "pageTitle": "Documents",
+      "subtitle": "Manage auction documents and files."
     }
   }
 }

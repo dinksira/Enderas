@@ -1,4 +1,4 @@
-import { useAuth } from '../../hooks/use-auth.js';
+import { useAuth } from '../hooks/use-auth.js';
 
 /**
  * Conditionally renders children when the current user has module/action access.

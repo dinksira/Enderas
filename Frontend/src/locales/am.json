@@ -2,7 +2,12 @@
   "dashboard": {
     "brand": {
       "name": "እንደራስ",
-      "subtitle": "የጨረታ አስተዳደር"
+      "subtitle": "የጨረታ አስተዳደር",
+      "systemSubtitle": "የጨረታ አስተዳደር ስርዓት"
+    },
+    "page": {
+      "fallbackTitle": "ዳሽቦርድ",
+      "fallbackSubtitle": "የስራ ቦታዎ አጠቃላይ እይታ"
     },
     "header": {
       "title": "ጨረታዎች",
@@ -18,7 +23,8 @@
     },
     "buttons": {
       "create_auction": "+ ጨረታ ፍጠር",
-      "logout": "ውጣ"
+      "logout": "ውጣ",
+      "profile": "መገለጫ"
     },
     "table": {
       "headers": {
@@ -40,31 +46,36 @@
       "footer_preview": " · የቅድመ እይታ ውሂብ በማሳየት ላይ"
     },
     "nav": {
-      "kyc": "KYC ማረጋገጫ",
       "auctions": "ጨረታዎች",
-      "browseauctions": "ጨረታዎችን ይመልከቱ",
-      "mybids": "የኔ ጨረታዎች",
-      "assets": "የንብረት ጥያቄዎች",
-      "myassets": "የኔ ጥያቄዎች",
-      "submitasset": "ጨረታ ጠይቅ",
-      "asset_request": "የንብረት ጥያቄ",
+      "kyc": "KYC ማረጋገጫ",
       "users": "ተጠቃሚዎች",
-      "staff": "ሰራተኞች እና ሚናዎች",
-      "staff_roles": "ሰራተኞች እና ሚናዎች",
+      "staff": "የሰራተኞች አስተዳደር",
+      "staff_roles": "የሰራተኞች አስተዳደር",
+      "assets": "የጨረታ ጥያቄዎች",
+      "evaluations": "ግምገማዎች",
       "payments": "ክፍያዎች",
       "cpo": "የ CPO አስተዳደር",
       "cpo_management": "የ CPO አስተዳደር",
       "bids": "የጨረታ አስተዳደር",
       "bid_management": "የጨረታ አስተዳደር",
-      "reports": "ትንታኔ እና ሪፖርት",
-      "analytics_report": "ትንታኔ እና ሪፖርት",
+      "winners": "አሸናፊዎች",
+      "reports": "ሪፖርቶች እና ትንታኔ",
+      "analytics_report": "ሪፖርቶች እና ትንታኔ",
       "roles": "የኦዲት መዝገብ",
-      "notifications": "ማሳወቂያዎች",
       "settings": "የስርዓት ቅንብሮች",
-      "setting": "ቅንብር"
+      "setting": "የስርዓት ቅንብሮች",
+      "profile": "መገለጫ",
+      "browseauctions": "ጨረታዎችን ይመልከቱ",
+      "mybids": "የኔ ጨረታዎች",
+      "mypayments": "የኔ ክፍያዎች",
+      "mycpo": "የኔ CPO",
+      "myassets": "የኔ ጥያቄዎች",
+      "submitasset": "ጨረታ ጠይቅ",
+      "asset_request": "የንብረት ጥያቄ",
+      "notifications": "ማሳወቂያዎች"
     },
     "profile": {
-      "super_admin": "ሱፐር አስተዳዳሪ",
+      "super_admin": "የስርዓት አስተዳዳሪ",
       "full_access": "ሙሉ መዳረሻ"
     },
     "actions": {
@@ -77,7 +88,50 @@
       "language_selection": "ቋንቋ ምርጫ",
       "notifications": "ማሳወቂያዎች",
       "auction_filters": "የጨረታ ማጣሪያዎች",
-      "status_filters": "የሁኔታ ማጣሪያዎች"
+      "status_filters": "የሁኔታ ማጣሪያዎች",
+      "expand_sidebar": "ጎን አሞሌ ዘርጋ",
+      "collapse_sidebar": "ጎን አሞሌ ሰብስብ"
+    },
+    "metrics": {
+      "loading": "መለኪያዎች በመጫን ላይ...",
+      "empty": "ምንም መለኪያ የለም።",
+      "labels": {
+        "users": "ተጠቃሚዎች",
+        "kyc": "KYC",
+        "assets": "ንብረቶች",
+        "evaluations": "ግምገማዎች",
+        "auctions": "ጨረታዎች",
+        "bids": "ጨረታዎች",
+        "payments": "ክፍያዎች",
+        "cpo": "CPO",
+        "winners": "አሸናፊዎች"
+      }
+    },
+    "roles": {
+      "evaluationOfficer": {
+        "title": "የግምገማ ኦፊሰር ዳሽቦርድ",
+        "description": "የንብረት ግምገማዎችን ያቅዱ እና ያጠናቅቁ።"
+      },
+      "financeOfficer": {
+        "title": "የፋይናንስ ኦፊሰር ዳሽቦርድ",
+        "description": "ክፍያዎችን ያረጋግጡ እና CPO መዝገቦችን ይገምግሙ።"
+      },
+      "customerService": {
+        "title": "የደንበኞች አገልግሎት ዳሽቦርድ",
+        "description": "ተጠቃሚዎችን ይደግፉ እና ቅድመ ምዝገባዎችን ይገምግሙ።"
+      },
+      "auctionManager": {
+        "title": "የጨረታ አስተዳዳሪ ዳሽቦርድ",
+        "description": "ጨረታዎችን፣ ጨረታዎችን፣ አሸናፊዎችን እና CPO ያስተዳድሩ።"
+      },
+      "bidder": {
+        "title": "የጨረታ ተሳታፊ ዳሽቦርድ",
+        "description": "የእርስዎ ጨረታዎች፣ ክፍያዎች እና CPO ሁኔታ።"
+      },
+      "assetOwner": {
+        "title": "የንብረት ባለቤት ዳሽቦርድ",
+        "description": "የእርስዎ ንብረቶች እና ተዛማጅ ክፍያዎች።"
+      }
     }
   },
   "category": {
@@ -93,6 +147,11 @@
     "general": "አጠቃላይ"
   },
   "auctions": {
+    "management": {
+      "pageTitle": "ጨረታዎች",
+      "subtitle": "በሁሉም ምድቦች ውስጥ ያሉ የጨረታ ዝርዝሮችን ያስተዳድሩ",
+      "searchPlaceholder": "ጨረታዎችን በርዕስ ወይም በመለያ ይፈልጉ..."
+    },
     "create": {
       "title": "ጨረታ ፍጠር",
       "subtitle": "ለግምገማ እና ህትመት አዲስ የጨረታ ዝርዝር ያዘጋጁ።",
@@ -279,17 +338,30 @@
         "submitted": "የተላከበት"
       }
     },
+    "management": {
+      "pageTitle": "የጨረታ ጥያቄዎች",
+      "subtitle": "ከንብረት ባለቤቶች የቀረቡ የጨረታ ጥያቄዎችን ይገምግሙ እና ያጽድቁ።"
+    },
     "submit": {
       "title": "ጨረታ ጠይቅ",
       "subtitle": "ንብረትዎን ለባለቤትነት ግምገማ ያስገቡ። ከጸደቀ በኋላ ወደ ጨረታ ሂደት ይገባል።"
     },
     "my": {
       "title": "የእኔ የጨረታ ጥያቄዎች",
-      "subtitle": "ለጨረታ የላኳቸውን ንብረቶች ሁኔታ ይከታተሉ።",
+      "subtitle": "የጨረታ ጥያቄዎችን ያስገቡ እና ይከታተሉ። ከጸደቀ በኋላ ንብረትዎ በጨረታዎች ውስጥ ይታያል።",
       "submitNew": "+ ጨረታ ጠይቅ",
-      "empty": "እስካሁን ምንም ንብረት አላስገቡም።",
+      "empty": "እስካሁን ምንም የጨረታ ጥያቄ አላስገቡም።",
       "rejectionReason": "ምክንያት፡ {{reason}}",
-      "refresh": "አድስ"
+      "refresh": "አድስ",
+      "drawer": {
+        "title": "የጨረታ ጥያቄ ዝርዝር",
+        "loadFailed": "የጨረታ ጥያቄ ዝርዝር ማስገባት አልተሳካም።",
+        "detailsSection": "የጥያቄ መረጃ",
+        "rejectionSection": "የመካድ ምክንያት",
+        "liveAuctionSection": "ንቁ ጨረታ",
+        "liveAuctionCopy": "ይህ ጥያቄ ጸድቋል እና እንደ ንቁ ጨረታ ተዘርዝሯል።",
+        "viewLiveAuction": "ጨረታዎችን ይክፈቱ"
+      }
     },
     "form": {
       "submit": "ለግምገማ አስገባ",
@@ -301,6 +373,7 @@
         "description": "የንብረት መግለጫ",
         "conditionNotes": "የንብረት ሁኔታ ማስታወሻ",
         "location": "የንብረቱ አካባቢ",
+        "address": "የንብረቱ አድራሻ",
         "desiredReservePrice": "የሚፈለግ ዝቅተኛ ዋጋ (ብር)",
         "auctionConditions": "ልዩ የጨረታ ሁኔታዎች ወይም ማስታወሻ",
         "photos": "የንብረት ፎቶዎች",
@@ -438,7 +511,12 @@
     "uploadedFile": "የተሰቀለ ፋይል",
     "viewFile": "ፋይል ይመልከቱ",
     "uploadFailed": "መስቀል አልተሳካም",
-    "close": "ዝጋ"
+    "close": "ዝጋ",
+    "empty": "—",
+    "languages": {
+      "english": "እንግሊዝኛ",
+      "amharic": "አማርኛ"
+    }
   },
   "auth": {
     "registerTitle": "መለያ ፍጠር",
@@ -633,12 +711,1228 @@
       "searchPlaceholder": "በርዕስ ወይም መለያ ጨረታዎችን ይፈልጉ",
       "empty": "ከማጣሪያዎች ጋር የሚዛመዱ የታተሙ ጨረታዎች የሉም።",
       "view": "ይመልከቱ",
+      "participate": "ተሳተፍ",
+      "openDetail": "ጨረታ {{title}} ክፈት",
+      "myStatus": "የእርስዎ ሁኔታ",
+      "photos": "ፎቶዎች",
+      "auctionInfo": "የጨረታ መረጃ",
       "detailEyebrow": "የጨረታ ዝርዝር",
       "detailTitle": "ጨረታ",
       "detailError": "የጨረታ ዝርዝር ማስገባት አልተሳካም",
       "description": "መግለጫ",
       "conditions": "የጨረታ ሁኔታዎች",
-      "bidComingSoon": "የመስመር ላይ ጨረታ በቅርቡ ይገኛል። ለመሳተፍ ደጋፊዎን ያግኙ።"
+      "bidComingSoon": "የመስመር ላይ ጨረታ በቅርቡ ይገኛል። ለመሳተፍ ደጋፊዎን ያግኙ።",
+      "placeBid": {
+        "title": "ጨረታ ያስገቡ",
+        "hint": "በአንድ ጨረታ አንድ ጨረታ ብቻ። መጠኑ ከመጠበቂያ ዋጋ በላይ መሆን አለበት።",
+        "amountLabel": "የጨረታ መጠን (ETB)",
+        "amountRequired": "ትክክለኛ የጨረታ መጠን ያስገቡ።",
+        "belowReserve": "ጨረታው ቢያንስ {{amount}} መሆን አለበት።",
+        "minAmount": "ዝቅተኛ {{amount}}",
+        "submit": "ጨረታ አስገባ",
+        "submitting": "በመላክ ላይ...",
+        "success": "ጨረታዎ በተሳካ ሁኔታ ተልኳል።",
+        "failed": "ጨረታ ማስገባት አልተሳካም። እንደገና ይሞክሩ።"
+      }
+    },
+    "participation": {
+      "panelTitle": "የመሳተፍ ደረጃዎች",
+      "panelSubtitle": "የጨረታ ሰነዶችን ለመድረስ እና የታሸገ ጨረታ ለማስገባት እያንዳንዱን ደረጃ ያጠናቅቁ።",
+      "loading": "የመሳተፍ ሁኔታ በመጫን ላይ...",
+      "loadFailed": "የመሳተፍ ሁኔታ ማስገባት አልተሳካም።",
+      "retry": "እንደገና ይሞክሩ",
+      "documentFee": "የሰነድ ክፍያ",
+      "journeyEyebrow": "የጨረታ ተሳታፊ ጉዞ",
+      "documents": "የጨረታ ሰነዶች",
+      "document": "ሰነድ",
+      "downloadDocument": "አውርድ",
+      "documentsLockedTitle": "ሰነዶች ተቆልፈዋል",
+      "documentsLocked": "የጨረታ ሰነዶችን ለመክፈት የሰነድ ክፍያ ይክፈሉ እና ማጽደቅ ይጠብቁ።",
+      "documentsUnlockedTitle": "ሰነዶች ተከፍተዋል",
+      "documentsUnlockedCopy": "ለዚህ ጨረታ ተመዝግበዋል። ከታች ያሉትን ሰነዶች ይመልከቱ እና ያውርዱ።",
+      "documentsEmpty": "ለዚህ ጨረታ እስካሁን ምንም ሰነድ አልተያዘም።",
+      "paymentCopy": "የሰነድ ክፍያ {{amount}} ይክፈሉ እና የክፍያ ደረሰኝ ይስቀሉ።",
+      "cpoCopy": "የሰነድ ክፍያ ከጸደቀ በኋላ የተረጋገጠ የክፍያ ትዕዛዝ (CPO) ይስቀሉ።",
+      "cpoNextAction": "ይህ የአሁኑ ደረጃዎ ነው። ወደ ጨረታ ለመቀጠል CPO ያስገቡ።",
+      "bidCopy": "CPO ከጸደቀ በኋላ ከመጠበቂያ ዋጋ በላይ አንድ የታሸገ ጨረታ ያስገቡ።",
+      "bidLocked": {
+        "notRegistered": "መጀመሪያ የሰነድ ክፍያ ያጠናቅቁ እና ማጽደቅ ይጠብቁ።",
+        "submitCpo": "ተመዝግበዋል፣ ነገር ግን CPO እንዲጸድቅ ድረስ ጨረታ ተቆልፏል።",
+        "cpoPending": "CPO በግምገማ ላይ ነው። ሰራተኞች ከጸደቁ በኋላ ጨረታ ይከፈታል።",
+        "cpoRejected": "CPO ተቀባይነት አላገኘም። ጨረታ ለመክፈት CPO እንደገና ያስገቡ።",
+        "outsideWindow": "CPO ጸድቋል። ጨረታ ከላይ የተመዘገቡትን የንቁ ጊዜ ውስጥ ይከፈታል።",
+        "windowEnded": "CPO ጸድቋል፣ ነገር ግን ለዚህ ጨረታ የጨረታ ጊዜ አልቋል።",
+        "auctionClosed": "ይህ ጨረታ ለጨረታ ከበደ አልቋል።"
+      },
+      "bidCard": {
+        "eyebrow": "ደረጃ 3 — ጨረታ አስገባ",
+        "titleOpen": "የታሸገ ጨረታ ያስገቡ",
+        "titleWaiting": "ጨረታ በቅርቡ ይከፈታል",
+        "titleClosed": "የጨረታ ጊዜ አልቋል",
+        "leadOpen": "ከመጠበቂያ ዋጋ {{amount}} በላይ መጠን ያስገቡ።",
+        "leadWaiting": "ጨረታ በ {{start}} ይከፈታል እና በ {{end}} ይዘጋል (የምሥራቅ አፍሪካ ሰዓት)።",
+        "leadClosed": "የጨረታ ጊዜው {{start}} እስከ {{end}} ነበር (የምሥራቅ አፍሪካ ሰዓት)።",
+        "waitingHint": "CPO ጸድቋል። በ {{start}} እና {{end}} መካከል ተመልሰው ጨረታዎን እዚህ ያስገቡ።",
+        "closedHint": "CPO ጸድቋል፣ ነገር ግን የዚህ ጨረታ ጊዜ አልቋል። ለዚህ ጨረታ ጨረታ ማስገባት አይቻልም።",
+        "scrollHint": "ከዚህ ፓነል ላይታ የሚገኘውን የጨረታ ቅጽ ይጠቀሙ።"
+      },
+      "paymentRejected": "ክፍያዎ ተቀባይነት አላገኘም። ምክንያቱን ይመልከቱ እና እንደገና ያስገቡ።",
+      "cpoRejected": "CPO ተቀባይነት አላገኘም። ምክንያቱን ይመልከቱ እና እንደገና ያስገቡ።",
+      "paymentPending": "ክፍያዎ ለማረጋገጥ በመጠባበቅ ላይ ነው። ከተገመገመ በኋላ ይነገርዎታል።",
+      "cpoPending": "CPO ለግምገማ በመጠባበቅ ላይ ነው። ከጸደቀ በኋላ ይነገርዎታል።",
+      "bidSubmitted": "{{amount}} የጨረታ አስገብተዋል።",
+      "steps": {
+        "payment": "የሰነድ ክፍያ",
+        "cpo": "CPO ማስገባት",
+        "bid": "ጨረታ አስገባ"
+      },
+      "stepStatus": {
+        "complete": "ተጠናቋል",
+        "active": "ድርጊት ያስፈልጋል",
+        "pending": "በመጠባበቅ ላይ",
+        "locked": "ተቆልፏል",
+        "rejected": "ተቀባይነት አላገኘም"
+      },
+      "actions": {
+        "payDocumentFee": "የሰነድ ክፍያ ይክፈሉ",
+        "submitCpo": "CPO አስገባ"
+      },
+      "status": {
+        "not_started": {
+          "label": "አልተጀመረም",
+          "title": "መሳተፍ ይጀምሩ",
+          "body": "ለዚህ ጨረታ እንደ ተሳታፊ ለመመዝገብ የሰነድ ክፍያ ይክፈሉ።"
+        },
+        "payment_pending": {
+          "label": "ክፍያ በመጠባበቅ",
+          "title": "ክፍያ በግምገማ ላይ",
+          "body": "ደረሰኝዎ ተልኳል። የፋይናንስ ቡቅ ከጸደቀ በኋላ የሰነድ መዳረሻ ይከፈታል።"
+        },
+        "payment_rejected": {
+          "label": "ክፍያ ተቀባይነት አላገኘም",
+          "title": "ክፍያ ማስተካከል ያስፈልጋል",
+          "body": "የመካድ ምክንያቱን ይመልከቱ እና አዲስ የክፍያ ደረሰኝ ያስገቡ።"
+        },
+        "registered": {
+          "label": "የተመዘገበ ተሳታፊ",
+          "title": "ለዚህ ጨረታ ተመዝግበዋል",
+          "body": "ክፍያ ጸድቋል። የሰነድ መዳረሻ አለዎት። CPO ከታች ያስገቡ — CPO ከጸደቀ በኋላ ጨረታ ይከፈታል።"
+        },
+        "cpo_pending": {
+          "label": "CPO በመጠባበቅ",
+          "title": "CPO በግምገማ ላይ",
+          "body": "CPO ተልኳል። ሰራተኞች ከጸደቁ በኋላ ጨረታ ይከፈታል።"
+        },
+        "cpo_rejected": {
+          "label": "CPO ተቀባይነት አላገኘም",
+          "title": "CPO ማስተካከል ያስፈልጋል",
+          "body": "የመካድ ምክንያቱን ይመልከቱ እና አዲስ CPO ያስገቡ።"
+        },
+        "ready_to_bid": {
+          "label": "ጨረታ ለማስገባት ዝግጁ",
+          "title": "የታሸገ ጨረታዎን አሁን ያስገቡ",
+          "body": "CPO ጸድቋል። ከታች ያለውን የጨረታ ቅጽ በመጠቀም ከመጠበቂያ ዋጋ በላይ አንድ ጨረታ ያስገቡ።"
+        },
+        "bidding_waiting": {
+          "label": "CPO ጸድቋል",
+          "title": "ጨረታ በቅርቡ ይከፈታል",
+          "body": "CPO ጸድቋል። ጨረታው በንቁ የጨረታ ጊዜ ውስጥ ሲገባ የጨረታ ቅጽ ይታያል።"
+        },
+        "bidding_closed": {
+          "label": "ጨረታ ተዘጋ",
+          "title": "የጨረታ ጊዜ አልቋል",
+          "body": "CPO ጸድቋል፣ ነገር ግን ለዚህ ጨረታ የታቀደው የጨረታ ጊዜ አልቋል።"
+        },
+        "bid_submitted": {
+          "label": "ጨረታ ተልኳል",
+          "title": "ጨረታዎ ተቀብሏል",
+          "body": "ለዚህ ጨረታ የታሸገ ጨረታዎን አስቀድመው አስገብተዋል።"
+        }
+      },
+      "paymentModal": {
+        "title": "የሰነድ ክፍያ ይክፈሉ",
+        "subtitle": "ለሰራተኞች ማረጋገጥ የክፍያ ደረሰኝ ይስቀሉ።",
+        "auction": "ጨረታ",
+        "amount": "መጠን",
+        "transactionReference": "የግብይት ማጣቀሻ (አማራጭ)",
+        "transactionReferencePlaceholder": "የባንክ ማስተላለፊያ ማጣቀሻ ወይም የደረሰኝ ቁጥር",
+        "receipt": "የክፍያ ደረሰኝ",
+        "receiptRequired": "የክፍያ ደረሰኝ ይስቀሉ።",
+        "receiptUploaded": "ደረሰኝ ተስቅሏል።",
+        "submit": "ክፍያ አስገባ",
+        "submitting": "በመላክ ላይ...",
+        "success": "ክፍያ ለግምገማ ተልኳል።",
+        "failed": "ክፍያ ማስገባት አልተሳካም። እንደገና ይሞክሩ።"
+      },
+      "cpoModal": {
+        "title": "CPO አስገባ",
+        "subtitle": "የተረጋገጠ የክፍያ ትዕዛዝ ሰነድ ይስቀሉ።",
+        "auction": "ጨረታ",
+        "document": "CPO ሰነድ",
+        "documentRequired": "CPO ሰነድ ይስቀሉ።",
+        "documentUploaded": "ሰነድ ተስቅሏል።",
+        "submit": "CPO አስገባ",
+        "submitting": "በመላክ ላይ...",
+        "success": "CPO ለግምገማ ተልኳል።",
+        "failed": "CPO ማስገባት አልተሳካም። እንደገና ይሞክሩ።"
+      }
+    }
+  },
+  "evaluations": {
+    "management": {
+      "pageTitle": "ግምገማዎች",
+      "subtitle": "የንብረት ግምገማዎችን ያቅዱ እና ያስተዳድሩ",
+      "schedule": "ግምገማ ያቅዱ",
+      "searchPlaceholder": "በንብረት ርዕስ ወይም ባለቤት ይፈልጉ...",
+      "empty": "ምንም ግምገማ አልተገኘም።",
+      "openDetail": "ግምገማ ለ {{name}} ይክፈቱ",
+      "viewAction": "ዝርዝር ይመልከቱ",
+      "tabs": {
+        "all": "ሁሉም",
+        "scheduled": "የተታቀደ",
+        "in_progress": "በሂደት ላይ",
+        "completed": "ተጠናቋል",
+        "approved": "ጸድቋል",
+        "rejected": "ተቀባይነት አላገኘም"
+      },
+      "status": {
+        "scheduled": "የተታቀደ",
+        "in_progress": "በሂደት ላይ",
+        "completed": "ተጠናቋል",
+        "approved": "ጸድቋል",
+        "rejected": "ተቀባይነት አላገኘም"
+      },
+      "table": {
+        "footer": "{{from}}–{{to}} ከ {{total}} ግምገማዎች ታይቷል",
+        "headers": {
+          "asset": "የንብረት ርዕስ",
+          "category": "ምድብ",
+          "owner": "የንብረት ባለቤት",
+          "scheduledDate": "የተታቀደ ቀን",
+          "evaluator": "ገምጋሚ",
+          "status": "ሁኔታ",
+          "actions": "ድርጊቶች"
+        }
+      },
+      "actions": {
+        "start": "ግምገማ ይጀምሩ",
+        "reschedule": "እንደገና ያቅዱ",
+        "complete": "ግምገማ ያጠናቅቁ",
+        "approve": "ያጽድቁ",
+        "reject": "አትቀበል",
+        "reSchedule": "እንደገና ያቅዱ"
+      },
+      "drawer": {
+        "title": "የግምገማ ዝርዝር",
+        "loadFailed": "የግምገማ ዝርዝር ማስገባት አልተሳካም።",
+        "assetSection": "የንብረት መረጃ",
+        "evaluationSection": "የግምገማ ዝርዝር",
+        "valuationSection": "ግምት",
+        "rejectionSection": "መተው",
+        "assetTitle": "የንብረት ርዕስ",
+        "assetType": "ምድብ",
+        "ownerName": "ባለቤት",
+        "location": "ቦታ",
+        "conditionNotes": "የሁኔታ ማስታወሻዎች",
+        "ownershipDocument": "የባለቤትነት ሰነድ",
+        "viewOwnershipDocument": "የባለቤትነት ሰነድ ይመልከቱ",
+        "scheduledAt": "የታቀደ ቀን እና ሰዓት",
+        "startedAt": "የተጀመረበት",
+        "completedAt": "የተጠናቀቀበት",
+        "evaluator": "የተመደበ ገምጋሚ",
+        "valuation": "የግምት መጠን",
+        "reserveRecommendation": "የመጠበቂያ ዋጋ ምክር",
+        "notes": "ማስታወሻዎች",
+        "photos": "የምርመራ ፎቶዎች",
+        "report": "የግምገማ ሪፖርት",
+        "viewReport": "ሪፖርት ያውርዱ",
+        "startSuccess": "ግምገማ በሂደት ላይ ተለይቷል።",
+        "startFailed": "ግምገማ መጀመር አልተሳካም።"
+      },
+      "scheduleModal": {
+        "title": "ግምገማ ያቅዱ",
+        "subtitle": "የጸደቀ ንብረት ይምረጡ እና ቀን ያስቀምጡ።",
+        "assetSearch": "ንብረቶችን ይፈልጉ",
+        "assetSearchPlaceholder": "በርዕስ ወይም ባለቤት ይፈልጉ...",
+        "asset": "ንብረት",
+        "selectAsset": "ንብረት ይምረጡ",
+        "assetSummary": "ባለቤት፡ {{owner}} · ቦታ፡ {{location}}",
+        "evaluator": "የተመደበ ገምጋሚ",
+        "selectEvaluator": "ገምጋሚ ይምረጡ (አማራጭ)",
+        "scheduledAt": "የታቀደ ቀን እና ሰዓት",
+        "notes": "ማስታወሻዎች",
+        "submit": "ግምገማ ያቅዱ",
+        "scheduling": "በማቅድ ላይ...",
+        "success": "ግምገማ ታቅዷል።",
+        "failed": "ግምገማ ማቅድ አልተሳካም።",
+        "assetRequired": "ንብረት ይምረጡ።",
+        "dateRequired": "የታቀደ ቀን ያስፈልጋል።",
+        "dateFutureRequired": "የታቀደ ቀን በወደፊት መሆን አለበት።"
+      },
+      "rescheduleModal": {
+        "title": "ግምገማ እንደገና ያቅዱ",
+        "rescheduleTitle": "ግምገማ እንደገና ያቅዱ",
+        "subtitle": "የታቀደ ቀን እና ማስታወሻዎችን ያዘምኑ።",
+        "scheduledAt": "የታቀደ ቀን እና ሰዓት",
+        "notes": "ማስታወሻዎች",
+        "submit": "ለውጦችን አስቀምጥ",
+        "submitting": "በማስቀመጥ ላይ...",
+        "success": "ግምገማ እንደገና ታቅዷል።",
+        "failed": "ግምገማ እንደገና ማቅድ አልተሳካም።",
+        "dateRequired": "የታቀደ ቀን ያስፈልጋል።",
+        "dateFutureRequired": "የታቀደ ቀን በወደፊት መሆን አለበት።"
+      },
+      "completeModal": {
+        "title": "ግምገማ ያጠናቅቁ",
+        "subtitle": "የግምት ዝርዝሮችን ያስገቡ እና ፋይሎችን ይስቀሉ።",
+        "valuationSection": "ግምት",
+        "documentationSection": "ሰነዶች",
+        "valuationAmount": "የግምት መጠን (ETB)",
+        "reserveRecommendation": "የመጠበቂያ ዋጋ ምክር (ETB)",
+        "notes": "ተጨማሪ ማስታወሻዎች",
+        "photos": "የምርመራ ፎቶዎች",
+        "report": "የግምገማ ሪፖርት",
+        "reportUploaded": "ሪፖርት በተሳካ ሁኔታ ተስቀልቷል።",
+        "submit": "እንደተጠናቀቀ ምልክት አድርግ",
+        "submitting": "በማስቀመጥ ላይ...",
+        "success": "ግምገማ ተጠናቋል።",
+        "failed": "ግምገማ ማጠናቀቅ አልተሳካም።",
+        "valuationRequired": "የግምት መጠን ያስፈልጋል እና አዎንታዊ መሆን አለበት።",
+        "reserveRequired": "የመጠበቂያ ዋጋ ምክር ያስፈልጋል እና አዎንታዊ መሆን አለበት።",
+        "reserveTooHigh": "የመጠበቂያ ዋጋ ከግምት መጠን በላይ ሊሆን አይችልም።"
+      },
+      "approveModal": {
+        "title": "ግምገማ ያጽድቁ",
+        "body": "ይህን ግምገማ ይጽደቅ? ንብረቱ እንደተገመገመ ምልክት ይደረግበታል እና ለጨረታ ብቁ ይሆናል።",
+        "confirm": "ያጽድቁ",
+        "success": "ግምገማ ጸድቋል።",
+        "failed": "ግምገማ ማጽደቅ አልተሳካም።"
+      },
+      "rejectModal": {
+        "title": "ግምገማ አትቀበል",
+        "body": "ይህን ግምገማ ለመተው ምክንያት ያስገቡ።",
+        "success": "ግምገማ ተቀባይነት አላገኘም።",
+        "failed": "ግምገማ መተው አልተሳካም።",
+        "reasons": {
+          "lowValuation": "ግምት በጣም ዝቅተኛ",
+          "incomplete": "ያልተሟላ ሰነድ",
+          "condition": "የንብረት ሁኔታ ስጋት"
+        }
+      }
+    }
+  },
+  "payments": {
+    "management": {
+      "pageTitle": "ክፍያዎች",
+      "subtitle": "የሰነድ ክፍያዎችን እና ደረሰኞችን ያረጋግጡ።",
+      "searchPlaceholder": "በከፋይ ስም ወይም ሞባይል ይፈልጉ...",
+      "empty": "ምንም ክፍያ አልተገኘም።",
+      "openDetail": "ክፍያ ለ {{name}} ይክፈቱ",
+      "viewAction": "ዝርዝር ይመልከቱ",
+      "tabs": {
+        "all": "ሁሉም",
+        "pending": "በመጠባበቅ ላይ",
+        "approved": "ጸድቋል",
+        "rejected": "ተቀባይነት አላገኘም"
+      },
+      "status": {
+        "pending": "በመጠባበቅ ላይ",
+        "approved": "ጸድቋል",
+        "rejected": "ተቀባይነት አላገኘም"
+      },
+      "methods": {
+        "manual": "እጅ",
+        "addis_pay": "አዲስ ፔይ"
+      },
+      "table": {
+        "footer": "{{from}}–{{to}} ከ {{total}} ክፍያዎች ታይቷል",
+        "headers": {
+          "payer_name": "ከፋይ",
+          "auction_title": "ጨረታ",
+          "amount": "መጠን",
+          "payment_method": "ዘዴ",
+          "status": "ሁኔታ",
+          "paid_at": "ተከፍሏል",
+          "actions": "ድርጊቶች"
+        }
+      },
+      "drawer": {
+        "title": "የክፍያ ዝርዝር",
+        "loadFailed": "የክፍያ ዝርዝር ማስገባት አልተሳካም።",
+        "paymentSection": "ክፍያ",
+        "payer": "ከፋይ",
+        "auction": "ጨረታ",
+        "amount": "መጠን",
+        "method": "ዘዴ",
+        "transactionRef": "የግብይት ማጣቀሻ",
+        "paidAt": "የተከፈለበት",
+        "verifiedBy": "ያረጋገጠው",
+        "verifiedAt": "የተረጋገጠበት",
+        "rejectionReason": "የመተው ምክንያት",
+        "receipt": "ደረሰኝ",
+        "approve": "ያጽድቁ",
+        "reject": "አትቀበል",
+        "refresh": "አድስ"
+      },
+      "approveModal": {
+        "title": "ክፍያ ያጽድቁ",
+        "body": "ከ {{name}} ክፍያ ይጽደቅ?",
+        "confirm": "ያጽድቁ",
+        "success": "ክፍያ ጸድቋል።",
+        "failed": "ክፍያ ማጽደቅ አልተሳካም።"
+      },
+      "rejectModal": {
+        "title": "ክፍያ አትቀበል",
+        "body": "ይህን ክፍያ ለመተው ምክንያት ያስገቡ።",
+        "success": "ክፍያ ተቀባይነት አላገኘም።",
+        "failed": "ክፍያ መተው አልተሳካም።",
+        "reasons": {
+          "amountMismatch": "መጠን አይጣጣምም",
+          "invalidReceipt": "ልክ ያልሆነ ደረሰኝ",
+          "duplicate": "ድርብ ክፍያ"
+        }
+      }
+    },
+    "my": {
+      "pageTitle": "የኔ ክፍያዎች",
+      "subtitle": "ለጨረታዎች የላኳቸውን የሰነድ ክፍያዎች ይከታተሉ።",
+      "payHintTitle": "የሰነድ ክፍያ እንዴት ይከፍላሉ",
+      "payHintBody": "ከጨረታዎችን ይመልከቱ ውስጥ ንቁ ጨረታ ይክፈቱ፣ ከዚያ በመሳተፍ ደረጃዎች ውስጥ የሰነድ ክፍያ ይክፈሉ።",
+      "browseCta": "ጨረታዎችን ይመልከቱ",
+      "empty": "እስካሁን ምንም ክፍያ አላስገቡም።",
+      "viewAction": "የክፍያ ዝርዝር ይመልከቱ",
+      "table": {
+        "footer": "{{from}}–{{to}} ከ {{total}} ክፍያዎች ታይቷል",
+        "headers": {
+          "auction_title": "ጨረታ",
+          "amount": "መጠን",
+          "status": "ሁኔታ",
+          "created_at": "ተልኳል",
+          "actions": "ድርጊቶች"
+        }
+      }
+    }
+  },
+  "cpo": {
+    "management": {
+      "pageTitle": "CPO አስተዳደር",
+      "subtitle": "የሰነድ ክፍያ ትዕዛዞችን ይገምግሙ።",
+      "searchPlaceholder": "በጨረታ ተሳታፊ ስም ወይም ሞባይል ይፈልጉ...",
+      "empty": "ምንም CPO መዝገብ አልተገኘም።",
+      "openDetail": "CPO ለ {{name}} ይክፈቱ",
+      "viewAction": "ዝርዝር ይመልከቱ",
+      "tabs": {
+        "all": "ሁሉም",
+        "pending": "በመጠባበቅ ላይ",
+        "approved": "ጸድቋል",
+        "rejected": "ተቀባይነት አላገኘም"
+      },
+      "status": {
+        "pending": "በመጠባበቅ ላይ",
+        "approved": "ጸድቋል",
+        "rejected": "ተቀባይነት አላገኘም"
+      },
+      "table": {
+        "footer": "{{from}}–{{to}} ከ {{total}} CPO መዝገቦች ታይቷል",
+        "headers": {
+          "bidder_name": "ጨረታ ተሳታፊ",
+          "auction_title": "ጨረታ",
+          "status": "ሁኔታ",
+          "expiry_date": "ጊዜ አልቋል",
+          "created_at": "ተልኳል",
+          "actions": "ድርጊቶች"
+        }
+      },
+      "drawer": {
+        "title": "የCPO ዝርዝር",
+        "loadFailed": "የCPO ዝርዝር ማስገባት አልተሳካም።",
+        "cpoSection": "CPO መዝገብ",
+        "bidder": "ጨረታ ተሳታፊ",
+        "auction": "ጨረታ",
+        "expiryDate": "የጊዜ አልባታ ቀን",
+        "reviewedBy": "ያገናዘበው",
+        "reviewedAt": "የተገናዘበበት",
+        "rejectionReason": "የመተው ምክንያት",
+        "document": "ሰነድ",
+        "viewDocument": "ሰነድ ይመልከቱ",
+        "approve": "ያጽድቁ",
+        "reject": "አትቀበል",
+        "refresh": "አድስ"
+      },
+      "approveModal": {
+        "title": "CPO ያጽድቁ",
+        "body": "ለ {{name}} CPO ይጽደቅ?",
+        "expiryDate": "የጊዜ አልባታ ቀን",
+        "confirm": "ያጽድቁ",
+        "dateRequired": "የጊዜ አልባታ ቀን ያስፈልጋል።",
+        "success": "CPO ጸድቋል።",
+        "failed": "CPO ማጽደቅ አልተሳካም።"
+      },
+      "rejectModal": {
+        "title": "CPO አትቀበል",
+        "body": "ይህን CPO ለመተው ምክንያት ያስገቡ።",
+        "success": "CPO ተቀባይነት አላገኘም።",
+        "failed": "CPO መተው አልተሳካም።",
+        "reasons": {
+          "invalidDocument": "ልክ ያልሆነ ሰነድ",
+          "expired": "ጊዜው ያለፈ ሰነድ",
+          "mismatch": "መረጃ አይጣጣምም"
+        }
+      }
+    },
+    "my": {
+      "pageTitle": "የኔ CPO",
+      "subtitle": "የተረጋገጠ የክፍያ ትዕዛዝ ማስገባቶችዎን ይከታተሉ።",
+      "empty": "እስካሁን ምንም CPO አላስገቡም።",
+      "viewAction": "የ CPO ዝርዝር ይመልከቱ",
+      "table": {
+        "footer": "{{from}}–{{to}} ከ {{total}} CPO መዝገቦች ታይቷል",
+        "headers": {
+          "auction_title": "ጨረታ",
+          "status": "ሁኔታ",
+          "created_at": "ተልኳል",
+          "actions": "ድርጊቶች"
+        }
+      }
+    }
+  },
+  "bids": {
+    "management": {
+      "pageTitle": "ጨረታ አስተዳደር",
+      "subtitle": "በሁሉም ጨረታዎች ላይ ያሉ ጨረታዎችን ይመልከቱ።",
+      "searchPlaceholder": "በጨረታ ተሳታፊ ስም ወይም ሞባይል ይፈልጉ...",
+      "auctionFilter": "ጨረታ",
+      "allAuctions": "ሁሉም ጨረታዎች",
+      "empty": "ምንም ጨረታ አልተገኘም።",
+      "openDetail": "ጨረታ ለ {{name}} ይክፈቱ",
+      "viewAction": "ዝርዝር ይመልከቱ",
+      "status": {
+        "submitted": "ተልኳል",
+        "winning": "አሸናፊ",
+        "lost": "ተሸንፏል",
+        "invalid": "ልክ ያልሆነ"
+      },
+      "table": {
+        "footer": "{{from}}–{{to}} ከ {{total}} ጨረታዎች ታይቷል",
+        "headers": {
+          "bidder_name": "ጨረታ ተሳታፊ",
+          "auction_title": "ጨረታ",
+          "amount": "መጠን",
+          "status": "ሁኔታ",
+          "submitted_at": "ተልኳል",
+          "actions": "ድርጊቶች"
+        }
+      },
+      "drawer": {
+        "title": "የጨረታ ዝርዝር",
+        "loadFailed": "የጨረታ ዝርዝር ማስገባት አልተሳካም።",
+        "bidSection": "ጨረታ",
+        "bidder": "ጨረታ ተሳታፊ",
+        "auction": "ጨረታ",
+        "amount": "መጠን",
+        "submittedAt": "የተልከበት",
+        "isValid": "ትክክለኛነት",
+        "valid": "ትክክለኛ",
+        "invalid": "ልክ ያልሆነ",
+        "invalidReason": "የልክ ያልሆነ ምክንያት"
+      }
+    },
+    "myBids": {
+      "pageTitle": "የእኔ ጨረታዎች",
+      "subtitle": "በጨረታዎች ላይ ያስገቡት ጨረታዎች።",
+      "empty": "ገና ምንም ጨረታ አላስገቡም።",
+      "openDetail": "ጨረታ ለ {{name}} ይክፈቱ",
+      "viewAction": "ዝርዝር ይመልከቱ",
+      "table": {
+        "footer": "{{from}}–{{to}} ከ {{total}} ጨረታዎች ታይቷል",
+        "headers": {
+          "auction_title": "ጨረታ",
+          "amount": "መጠን",
+          "status": "ሁኔታ",
+          "submitted_at": "ተልኳል",
+          "actions": "ድርጊቶች"
+        }
+      }
+    }
+  },
+  "winners": {
+    "management": {
+      "pageTitle": "አሸናፊዎች",
+      "subtitle": "የጨረታ አሸናፊዎችን ያስተዳድሩ።",
+      "selectWinner": "አሸናፊ ይምረጡ",
+      "searchPlaceholder": "በአሸናፊ ስም ወይም ሞባይል ይፈልጉ...",
+      "empty": "ምንም አሸናፊ መዝገብ አልተገኘም።",
+      "openDetail": "አሸናፊ መዝገብ ለ {{name}} ይክፈቱ",
+      "viewAction": "ዝርዝር ይመልከቱ",
+      "tabs": {
+        "all": "ሁሉም",
+        "pending_confirmation": "በመጠባበቅ ላይ",
+        "confirmed": "ተረጋግጧል",
+        "declined": "ተቀባይነት አላገኘም"
+      },
+      "status": {
+        "pending_confirmation": "ማረጋገጫ በመጠባበቅ ላይ",
+        "confirmed": "ተረጋግጧል",
+        "declined": "ተቀባይነት አላገኘም",
+        "replaced": "ተተክሏል"
+      },
+      "table": {
+        "footer": "{{from}}–{{to}} ከ {{total}} አሸናፊዎች ታይቷል",
+        "headers": {
+          "auction_title": "ጨረታ",
+          "winner_name": "አሸናፊ",
+          "status": "ሁኔታ",
+          "selected_at": "ተመርጧል",
+          "selected_by": "ያመረጠው",
+          "actions": "ድርጊቶች"
+        }
+      },
+      "drawer": {
+        "title": "የአሸናፊ ዝርዝር",
+        "loadFailed": "የአሸናፊ ዝርዝር ማስገባት አልተሳካም።",
+        "winnerSection": "አሸናፊ መዝገብ",
+        "auction": "ጨረታ",
+        "winner": "አሸናፊ",
+        "bidAmount": "አሸናፊ ጨረታ",
+        "selectedAt": "የተመረጠበት",
+        "selectedBy": "ያመረጠው",
+        "declineReason": "የመተው ምክንያት",
+        "confirm": "አሸናፊ ያረጋግጡ",
+        "decline": "አሸናፊ አትቀበል",
+        "refresh": "አድስ"
+      },
+      "selectModal": {
+        "title": "አሸናፊ ይምረጡ",
+        "subtitle": "የተዘጋ ጨረታ እና አሸናፊ ጨረታ ይምረጡ።",
+        "auction": "ጨረታ",
+        "selectAuction": "ጨረታ ይምረጡ",
+        "bid": "ጨረታ",
+        "selectBid": "ጨረታ ይምረጡ",
+        "submit": "አሸናፊ ይምረጡ",
+        "submitting": "በመምረጥ ላይ...",
+        "success": "አሸናፊ ተመርጧል።",
+        "failed": "አሸናፊ መምረጥ አልተሳካም።",
+        "required": "ጨረታ እና ጨረታ መምረጥ ያስፈልጋል።"
+      },
+      "confirmModal": {
+        "title": "አሸናፊ ያረጋግጡ",
+        "body": "{{name}}ን እንደ አሸናፊ ያረጋግጡ?",
+        "confirm": "ያረጋግጡ",
+        "success": "አሸናፊ ተረጋግጧል።",
+        "failed": "አሸናፊ ማረጋገጥ አልተሳካም።"
+      },
+      "declineModal": {
+        "title": "አሸናፊ አትቀበል",
+        "body": "ይህን አሸናፊ ለመተው ምክንያት ያስገቡ።",
+        "reasonLabel": "የመተው ምክንያት",
+        "confirm": "መተው አረጋግጥ",
+        "success": "አሸናፊ ተቀባይነት አላገኘም።",
+        "failed": "አሸናፊ መተው አልተሳካም።"
+      }
+    }
+  },
+  "notifications": {
+    "center": {
+      "pageTitle": "ማሳወቂያዎች",
+      "subtitle": "የእርስዎ የመተግበሪያ ማሳወቂያዎች።",
+      "filters": "ማሳወቂያ ማጣሪያዎች",
+      "markAllRead": "ሁሉንም እንደተነበበ ምልክት አድርግ",
+      "markRead": "እንደተነበበ ምልክት አድርግ",
+      "markAllSuccess": "ሁሉም ማሳወቂያዎች እንደተነበቡ ምልክት ተደርጎባቸዋል።",
+      "markAllFailed": "ሁሉንም እንደተነበበ ምልክት ማድረግ አልተሳካም።",
+      "markReadFailed": "ማሳወቂያ እንደተነበበ ምልክት ማድረግ አልተሳካም።",
+      "empty": "ምንም ማሳወቂያ አልተገኘም።",
+      "tabs": {
+        "all": "ሁሉም",
+        "unread": "ያልተነበበ",
+        "read": "ተነብቷል"
+      },
+      "status": {
+        "unread": "ያልተነበበ",
+        "read": "ተነብቷል"
+      },
+      "table": {
+        "footer": "{{from}}–{{to}} ከ {{total}} ማሳወቂያዎች ታይቷል"
+      }
+    }
+  },
+  "reports": {
+    "pageTitle": "ሪፖርቶች እና ትንታኔ",
+    "subtitle": "የክዋኔ ሪፖርቶች እና የመድረክ መለኪያዎች።",
+    "refresh": "አድስ",
+    "loadFailed": "ሪፖርቶችን ማስገባት አልተሳካም።",
+    "exportFailed": "ሪፖርት ማስመጣት አልተሳካም።",
+    "exporting": "በማስመጣት ላይ...",
+    "exportCsv": "CSV ማስመጣት",
+    "empty": "ምንም ሪፖርት የለም።",
+    "snapshotTitle": "የመድረክ ማጠቃለያ",
+    "reportsTitle": "የሚገኙ ሪፖርቶች",
+    "rowCount": "{{count}} የውሂብ ረድፎች",
+    "types": {
+      "auction_summary": {
+        "title": "የጨረታ ማጠቃለያ",
+        "description": "በሁኔታ የጨረታ ብዛት እና ጠቅላላ የመጠበቂያ ዋጋ።"
+      },
+      "payment_summary": {
+        "title": "የክፍያ ማጠቃለያ",
+        "description": "በሁኔታ እና ዘዴ የክፍያ ጠቅላላ።"
+      },
+      "kyc_summary": {
+        "title": "የKYC ማጠቃለያ",
+        "description": "የKYC ማጽደቅ ብዛት እና ሁኔታ ብድር።"
+      },
+      "asset_pipeline": {
+        "title": "የንብረት ቧንቧ",
+        "description": "በስራ ሂደት ሁኔታ የንብረት ብዛት።"
+      }
+    }
+  },
+  "users": {
+    "management": {
+      "pageTitle": "የተጠቃሚ አስተዳደር",
+      "subtitle": "የጨረታ ተሳታፊዎችን እና የንብረት ባለቤቶችን መለያዎችን ያስተዳድሩ።",
+      "createUser": "ተጠቃሚ ፍጠር",
+      "searchPlaceholder": "በስም፣ ስልክ ወይም ኢሜይል ይፈልጉ...",
+      "empty": "ለተመረጡት ማጣሪያዎች ተጠቃሚዎች አልተገኙም።",
+      "loadFailed": "ተጠቃሚዎችን ማስገባት አልተሳካም።",
+      "openDetail": "የ{{name}} ዝርዝር ይክፈቱ",
+      "viewAction": "ዝርዝር ይመልከቱ",
+      "tabs": {
+        "all": "ሁሉም",
+        "active": "ንቁ",
+        "kyc_pending": "KYC በመጠባበቅ",
+        "kyc_under_review": "KYC በግምገማ",
+        "kyc_rejected": "KYC ተቀባይነት አላገኘም",
+        "suspended": "ታግዷል",
+        "deactivated": "ተሰናክሏል"
+      },
+      "userTypes": {
+        "individual": "ግለሰብ",
+        "organization": "ድርጅት"
+      },
+      "status": {
+        "pending": "በመጠባበቅ",
+        "kyc_pending": "KYC በመጠባበቅ",
+        "kyc_under_review": "KYC በግምገማ",
+        "kyc_rejected": "KYC ተቀባይነት አላገኘም",
+        "active": "ንቁ",
+        "suspended": "ታግዷል",
+        "deactivated": "ተሰናክሏል"
+      },
+      "table": {
+        "footer": "{{total}} ተጠቃሚዎች ውስጥ {{from}}–{{to}} በማሳየት ላይ",
+        "headers": {
+          "display_name": "ስም",
+          "mobile_number": "ስልክ",
+          "user_type": "የተጠቃሚ አይነት",
+          "status": "ሁኔታ",
+          "registered_at": "ተመዝግቧል",
+          "actions": "ድርጊቶች"
+        }
+      },
+      "drawer": {
+        "title": "የተጠቃሚ ዝርዝር",
+        "loadFailed": "የተጠቃሚ ዝርዝር ማስገባት አልተሳካም።",
+        "profileSection": "መገለጫ",
+        "kycSection": "KYC ማጠቃለያ",
+        "assetOwnerSection": "የንብረት ባለቤት",
+        "firstName": "የመጀመሪያ ስም",
+        "lastName": "የአባት ስም",
+        "organizationName": "የድርጅት ስም",
+        "mobile": "ስልክ ቁጥር",
+        "mobileVerified": "ስልክ ተረጋግጧል",
+        "email": "ኢሜይል",
+        "emailVerified": "ኢሜይል ተረጋግጧል",
+        "verifiedYes": "አዎ",
+        "verifiedNo": "አይ",
+        "userType": "የተጠቃሚ አይነት",
+        "preferredLanguage": "የተመረጠ ቋንቋ",
+        "role": "ሚና",
+        "registeredAt": "ተመዝግቧል",
+        "lastLogin": "የመጨረሻ ግባት",
+        "kycStatus": "የKYC ሁኔታ",
+        "kycDocument": "የሰነድ አይነት",
+        "kycReviewedAt": "ተገምግሟል",
+        "viewKycRecord": "የKYC መዝገብ ይመልከቱ →",
+        "assetOwnerStatus": "ሁኔታ",
+        "assetOwnerCity": "ከተማ",
+        "assetOwnerRegion": "ክልል",
+        "staffNotice": "ይህ መለያ ከሰራተኛ መገለጫ ጋር ተገናኝቷል። ከሰራተኛ አስተዳደር ያስተዳድሩት።",
+        "edit": "አርትዕ",
+        "suspend": "አቁም",
+        "deactivate": "አሰናክል",
+        "activate": "አንቃ",
+        "delete": "ሰርዝ",
+        "refresh": "አድስ",
+        "activateSuccess": "የተጠቃሚ መለያ ነቅቷል።"
+      },
+      "statusModal": {
+        "suspendTitle": "ተጠቃሚን አቁም",
+        "deactivateTitle": "ተጠቃሚን አሰናክል",
+        "suspendBody": "ለ{{name}} የማቆም ምክንያት ያስገቡ።",
+        "deactivateBody": "ለ{{name}} የማሰናከል ምክንያት ያስገቡ።",
+        "reasonLabel": "ምክንያት",
+        "confirmSuspend": "ማቆም አረጋግጥ",
+        "confirmDeactivate": "ማሰናከል አረጋግጥ",
+        "success": "የተጠቃሚ ሁኔታ ተዘምኗል።",
+        "failed": "የተጠቃሚ ሁኔታ ማዘመን አልተሳካም።",
+        "quickReasons": {
+          "policy": "የፖሊሲ ጥሰት",
+          "fraud": "የማጭበርበር ጥርጣሬ",
+          "abuse": "የመድረክ አላግባብ አጠቃቀም",
+          "requested": "ተጠቃሚ መዝጋት ጠየቀ",
+          "duplicate": "የተደገመ መለያ",
+          "inactive": "ለረጅም ጊዜ ባዶ"
+        }
+      },
+      "reactivateModal": {
+        "title": "ተጠቃሚን እንደገና አንቃ",
+        "body": "ይህን መለያ እንደገና ማንቃት ይፈልጋሉ? ተጠቃሚው ሙሉ መዳረሻ ይኖራቸዋል።",
+        "confirm": "እንደገና ማንቃት አረጋግጥ"
+      },
+      "editModal": {
+        "title": "ተጠቃሚን አርትዕ",
+        "subtitle": "የመለያ ዝርዝሮችን እና የሚና መመደብን ያዘምኑ።",
+        "firstName": "የመጀመሪያ ስም",
+        "lastName": "የአባት ስም",
+        "organizationName": "የድርጅት ስም",
+        "email": "ኢሜይል",
+        "language": "የተመረጠ ቋንቋ",
+        "role": "ሚና",
+        "selectRole": "ሚና ይምረጡ",
+        "roleChangeNotice": "የሚና ለውጦች በተጠቃሚው ቀጣይ ግባት ላይ ይተገብራሉ።",
+        "cancel": "ሰርዝ",
+        "submit": "ለውጦችን አስቀምጥ",
+        "saving": "በማስቀመጥ ላይ...",
+        "success": "ተጠቃሚ በተሳካ ሁኔታ ተዘምኗል።",
+        "failed": "ተጠቃሚ ማዘመን አልተሳካም።",
+        "rolesUnavailable": "ሊመደቡ የሚችሉ ሚናዎች የሉም።"
+      },
+      "deleteModal": {
+        "title": "ተጠቃሚን ሰርዝ",
+        "bodyIntro": "ለዘለዓለም መሰረዝ ይፈልጋሉ",
+        "bodyRest": "? ይህ ድርጊት ሊቀለበስ አይችልም።",
+        "confirmLabel": "ለማረጋገጥ የተጠቃሚውን ስም ወይም ስልክ ቁጥር ይተይቡ",
+        "cancel": "ሰርዝ",
+        "confirm": "ተጠቃሚን ሰርዝ",
+        "processing": "በመሰረዝ ላይ...",
+        "success": "ተጠቃሚ በተሳካ ሁኔታ ተሰርዟል።",
+        "failed": "ተጠቃሚ መሰረዝ አልተሳካም።"
+      },
+      "createModal": {
+        "title": "አዲስ ተጠቃሚ ፍጠር",
+        "subtitle": "የተጠቃሚ መለያ በእጅ ፍጠር እና ሚና መድብ",
+        "accountType": "የመለያ አይነት",
+        "accountTypeHints": {
+          "individual": "የግል ጨረታ ተሳታፊ ወይም የንብረት ባለቤት መለያ",
+          "organization": "የተመዘገበ ድርጅት መለያ"
+        },
+        "accountSettings": "የመለያ ቅንብሮች",
+        "security": "ደህንነት",
+        "mobile": "ስልክ ቁጥር",
+        "mobilePrefix": "+251",
+        "temporaryPassword": "ጊዜያዊ የይለፍ ቃል",
+        "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+        "passwordHint": "ተጠቃሚው በመጀመሪያው ግባት በኋላ ይህን የይለፍ ቃል መቀየር አለበት",
+        "showPassword": "የይለፍ ቃል አሳይ",
+        "hidePassword": "የይለፍ ቃል ደብቅ",
+        "nationalIdNumber": "የብሔራዊ መታወቂያ ቁጥር",
+        "tinNumber": "የTIN ቁጥር",
+        "emailOptional": "ኢሜይል (አማራጭ)",
+        "userType": "የተጠቃሚ አይነት",
+        "role": "ሚና",
+        "roleOptions": {
+          "bidder": "ጨረታ ተሳታፊ",
+          "asset_owner": "የንብረት ባለቤት"
+        },
+        "selectRole": "ሚና ይምረጡ",
+        "firstName": "የመጀመሪያ ስም",
+        "lastName": "የአባት ስም",
+        "organizationName": "የድርጅት ስም",
+        "email": "ኢሜይል",
+        "language": "የተመረጠ ቋንቋ",
+        "cancel": "ሰርዝ",
+        "submit": "ተጠቃሚ ፍጠር",
+        "creating": "በመፍጠር ላይ...",
+        "success": "ተጠቃሚ በተሳካ ሁኔታ ተፈጥሯል።",
+        "failed": "ተጠቃሚ መፍጠር አልተሳካም።",
+        "mobileRequired": "ስልክ ቁጥር ያስፈልጋል።",
+        "firstNameRequired": "የመጀመሪያ ስም ያስፈልጋል።",
+        "lastNameRequired": "የአባት ስም ያስፈልጋል።",
+        "nationalIdRequired": "የብሔራዊ መታወቂያ ቁጥር ያስፈልጋል።",
+        "tinRequired": "የTIN ቁጥር ያስፈልጋል።",
+        "emailRequired": "ኢሜይል ያስፈልጋል።",
+        "emailInvalid": "ትክክለኛ ኢሜይል ያስገቡ።",
+        "passwordRequired": "ጊዜያዊ የይለፍ ቃል ያስፈልጋል።",
+        "passwordMinLength": "የይለፍ ቃል ቢያንስ 6 ቁምፊ መሆን አለበት።",
+        "confirmPasswordRequired": "እባክዎ የይለፍ ቃሉን ያረጋግጡ።",
+        "passwordMismatch": "የይለፍ ቃሎች አይዛመዱም።",
+        "roleRequired": "ሚና ያስፈልጋል።",
+        "organizationRequired": "የድርጅት ስም ያስፈልጋል።",
+        "rolesUnavailable": "ሊመደቡ የሚችሉ ሚናዎች የሉም።"
+      }
+    },
+    "profile": {
+      "pageTitle": "መገለጫዬ",
+      "subtitle": "የመለያዎ መረጃ እና የማረጋገጫ ሁኔታ።",
+      "title": "መገለጫ",
+      "loading": "መገለጫ በመጫን ላይ...",
+      "loadFailed": "መገለጫ ማስገባት አልተሳካም።",
+      "mobile": "ስልክ ቁጥር",
+      "email": "ኢሜይል",
+      "role": "ሚና",
+      "userType": "የተጠቃሚ አይነት",
+      "kycStatus": "የKYC ሁኔታ",
+      "kycSubmitted": "KYC ቀርቧል"
+    }
+  },
+  "staff": {
+    "management": {
+      "pageTitle": "የሰራተኛ አስተዳደር",
+      "subtitle": "የሰራተኞች መለያዎችን፣ ሚናዎችን እና ሁኔታን ያስተዳድሩ።",
+      "loadFailed": "ሰራተኞችን ማስገባት አልተሳካም።",
+      "createStaff": "ሰራተኛ ፍጠር",
+      "searchPlaceholder": "በስም፣ የሰራተኛ መለያ ወይም ክፍል ይፈልጉ...",
+      "empty": "ሰራተኞች አልተገኙም።",
+      "openDetail": "የ{{name}} ዝርዝር ይክፈቱ",
+      "viewAction": "ዝርዝር ይመልከቱ",
+      "tabs": {
+        "all": "ሁሉም",
+        "active": "ንቁ",
+        "inactive": "አልንቁ"
+      },
+      "status": {
+        "active": "ንቁ",
+        "inactive": "አልንቁ"
+      },
+      "roles": {
+        "super_admin": {
+          "name": "ዋና አስተዳዳሪ",
+          "description": "ሙሉ የስርዓት መዳረሻ"
+        },
+        "auction_manager": {
+          "name": "የጨረታ አስተዳዳሪ",
+          "description": "ጨረታዎችን ያስተዳድሩ እና ክዋኔዎችን ይከታተሉ"
+        },
+        "evaluation_officer": {
+          "name": "የግምገማ ኦፊሰር",
+          "description": "የንብረት ግምገማዎችን ያስተዳድሩ"
+        },
+        "finance_officer": {
+          "name": "የፋይናንስ ኦፊሰር",
+          "description": "ክፍያዎችን እና የፋይናንስ ሪፖርቶችን ያስተዳድሩ"
+        },
+        "customer_service_officer": {
+          "name": "የደንበኞች አገልግሎት ኦፊሰር",
+          "description": "KYC እና የደንበኛ ድጋፍ ያስተዳድሩ"
+        }
+      },
+      "table": {
+        "footer": "{{total}} ሰራተኞች ውስጥ {{from}}–{{to}} በማሳየት ላይ",
+        "headers": {
+          "display_name": "ስም",
+          "employee_id": "የሰራተኛ መለያ",
+          "department": "ክፍል",
+          "role": "ሚና",
+          "status": "ሁኔታ",
+          "created_at": "ተፈጥሯል",
+          "actions": "ድርጊቶች"
+        }
+      },
+      "drawer": {
+        "title": "የሰራተኛ ዝርዝር",
+        "loadFailed": "የሰራተኛ ዝርዝር ማስገባት አልተሳካም።",
+        "profileSection": "የሰራተኛ መገለጫ",
+        "roleSection": "ሚና",
+        "firstName": "የመጀመሪያ ስም",
+        "lastName": "የአባት ስም",
+        "employeeId": "የሰራተኛ መለያ",
+        "department": "ክፍል",
+        "role": "ሚና",
+        "roleDescription": "የሚና መግለጫ",
+        "roleAssignedAt": "ሚና የተመደበበት",
+        "mobile": "ስልክ",
+        "email": "ኢሜይል",
+        "preferredLanguage": "የተመረጠ ቋንቋ",
+        "createdAt": "ተፈጥሯል",
+        "createdBy": "የፈጠረው",
+        "activatedAt": "የተነቃበት",
+        "deactivatedAt": "የተሰናከለበት",
+        "edit": "አርትዕ",
+        "deactivate": "አሰናክል",
+        "reactivate": "እንደገና አንቃ",
+        "delete": "ሰርዝ",
+        "refresh": "አድስ",
+        "reactivateSuccess": "ሰራተኛ እንደገና ተነስቷል።",
+        "deactivateSuccess": "ሰራተኛ ተሰናክሏል።"
+      },
+      "permissions": {
+        "sectionTitle": "ፍቃዶች",
+        "edit": "ፍቃዶችን አርትዕ",
+        "cancelEdit": "የፍቃድ አርትዖት ሰርዝ",
+        "save": "ፍቃዶችን አስቀምጥ",
+        "saving": "በማስቀመጥ ላይ...",
+        "warning": "ለውጦቹ ይህን ሚና ላላቸው ሁሉም ሰራተኞች ይተገበራሉ። ለውጦቹ እንዲተገበሩ ሰራተኞች እንደገና መግባት አለባቸው።",
+        "readOnly": "ይህ የፍቃድ ማትሪክስ ለንባብ ብቻ ነው።",
+        "superAdmin": "ዋና አስተዳዳሪዎች በሁሉም ሞጁሎች እና ድርጊቶች ላይ ሙሉ ፍቃድ አላቸው።",
+        "confirmTitle": "የሚና ፍቃዶችን አዘምን",
+        "confirmBody": "የ{{role}} ፍቃዶችን ማዘመን ይፈልጋሉ? ይህ በ{{count}} ሰራተኞች ላይ ይተገበራል።",
+        "confirm": "አረጋግጥ",
+        "updateSuccess": "የሚና ፍቃዶች በትክክል ተዘምነዋል።",
+        "updateFailed": "የሚና ፍቃዶችን ማዘመን አልተሳካም።",
+        "granted": "ተፈቅዷል",
+        "denied": "አልተፈቀደም",
+        "full": "ሙሉ",
+        "none": "የለም",
+        "togglePermission": "ለ{{module}} የ{{action}} ፍቃድ ቀይር",
+        "table": {
+          "module": "ሞጁል"
+        },
+        "modules": {
+          "users": "ተጠቃሚዎች",
+          "kyc": "KYC",
+          "assets": "ንብረቶች",
+          "evaluations": "ግምገማዎች",
+          "auctions": "ጨረታዎች",
+          "documents": "ሰነዶች",
+          "payments": "ክፍያዎች",
+          "cpo": "CPO",
+          "bids": "ጨረታዎች",
+          "winners": "አሸናፊዎች",
+          "notifications": "ማሳወቂያዎች",
+          "dashboard": "ዳሽቦርድ",
+          "staff": "ሰራተኞች",
+          "roles": "ሚናዎች",
+          "reports": "ሪፖርቶች",
+          "settings": "ቅንብሮች",
+          "files": "ፋይሎች"
+        },
+        "actions": {
+          "read": "አንብብ",
+          "create": "ፍጠር",
+          "update": "አዘምን",
+          "delete": "ሰርዝ",
+          "approve": "አፅድቅ",
+          "reject": "እምቢ በል",
+          "publish": "አትም",
+          "close": "ዝጋ",
+          "export": "ላክ"
+        }
+      },
+      "createModal": {
+        "title": "ሰራተኛ ፍጠር",
+        "subtitle": "አዲስ የሰራተኛ መለያ ፍጠር እና ሚና መድብ",
+        "staffInformation": "የሰራተኛ መረጃ",
+        "roleAssignment": "የሚና መድብ",
+        "security": "ደህንነት",
+        "mobile": "ስልክ ቁጥር",
+        "mobilePrefix": "+251",
+        "password": "የይለፍ ቃል",
+        "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+        "passwordHint": "ሰራተኛው ከመጀመሪያ ግባት በኋላ ይህን የይለፍ ቃል መለወጥ አለበት",
+        "passwordStrength": {
+          "none": "የይለፍ ቃል ጥንካሬ",
+          "weak": "ደካማ",
+          "fair": "መካከለኛ",
+          "good": "ጥሩ",
+          "strong": "ጠንካራ"
+        },
+        "showPassword": "የይለፍ ቃል አሳይ",
+        "hidePassword": "የይለፍ ቃል ደብቅ",
+        "firstName": "የመጀመሪያ ስም",
+        "lastName": "የአባት ስም",
+        "email": "ኢሜይል",
+        "employeeId": "የሰራተኛ መለያ",
+        "department": "ክፍል",
+        "preferredLanguage": "የተመረጠ ቋንቋ",
+        "role": "ሚና",
+        "rolePreviewIntro": "{{role}} የሚደርስባቸው:",
+        "selectRole": "ሚና ይምረጡ",
+        "cancel": "ሰርዝ",
+        "submit": "ሰራተኛ ፍጠር",
+        "creating": "በመፍጠር ላይ...",
+        "success": "ሰራተኛ ተፈጥሯል።",
+        "failed": "ሰራተኛ መፍጠር አልተሳካም።",
+        "firstNameRequired": "የመጀመሪያ ስም ያስፈልጋል።",
+        "lastNameRequired": "የአባት ስም ያስፈልጋል።",
+        "mobileRequired": "ስልክ ቁጥር ያስፈልጋል።",
+        "emailRequired": "ኢሜይል ያስፈልጋል።",
+        "emailInvalid": "ትክክለኛ ኢሜይል ያስገቡ።",
+        "passwordRequired": "የይለፍ ቃል ያስፈልጋል።",
+        "passwordMinLength": "የይለፍ ቃል ቢያንስ 8 ቁምፊ መሆን አለበት።",
+        "confirmPasswordRequired": "የይለፍ ቃል ማረጋገጥ ያስፈልጋል።",
+        "passwordMismatch": "የይለፍ ቃሎች አይዛመዱም።",
+        "roleRequired": "ሚና ያስፈልጋል።",
+        "rolesUnavailable": "ሊመደቡ የሚችሉ ሚናዎችን ማስገባት አልተቻለም። እባክዎ ቆይተው ይሞክሩ።",
+        "rolesLoadFailed": "ሚናዎችን ማስገባት አልተሳካም።"
+      },
+      "editModal": {
+        "title": "ሰራተኛ አርትዕ",
+        "subtitle": "የሰራተኛ መገለጫ እና የሚና መድብ ያዘምኑ።",
+        "staffInformation": "የሰራተኛ መረጃ",
+        "roleAssignment": "የሚና መድብ",
+        "firstName": "የመጀመሪያ ስም",
+        "lastName": "የአባት ስም",
+        "email": "ኢሜይል",
+        "employeeId": "የሰራተኛ መለያ",
+        "department": "ክፍል",
+        "preferredLanguage": "የተመረጠ ቋንቋ",
+        "role": "ሚና",
+        "selectRole": "ሚና ይምረጡ",
+        "roleChangeNotice": "የሚና ለውጦች ከሰራተኛው ቀጣይ ግባት በኋላ ይተገበራሉ።",
+        "cancel": "ሰርዝ",
+        "submit": "ለውጦችን አስቀምጥ",
+        "saving": "በማስቀመጥ ላይ...",
+        "success": "ሰራተኛ ተዘምኗል።",
+        "failed": "ሰራተኛን ማዘመን አልተሳካም።",
+        "firstNameRequired": "የመጀመሪያ ስም ያስፈልጋል።",
+        "lastNameRequired": "የአባት ስም ያስፈልጋል።",
+        "emailRequired": "ኢሜይል ያስፈልጋል።",
+        "emailInvalid": "ትክክለኛ ኢሜይል ያስገቡ።",
+        "roleRequired": "ሚና ያስፈልጋል።",
+        "rolesUnavailable": "ሊመደቡ የሚችሉ ሚናዎችን ማስገባት አልተቻለም። እባክዎ ቆይተው ይሞክሩ።"
+      },
+      "deactivateModal": {
+        "title": "ሰራተኛን አሰናክል",
+        "body": "{{name}}ን ማሰናከል ይፈልጋሉ? የሰራተኛ መዳረሻ ያጣሉ።",
+        "confirm": "ማሰናከል አረጋግጥ",
+        "success": "ሰራተኛ ተሰናክሏል።",
+        "failed": "ሰራተኛን ማሰናከል አልተሳካም።"
+      },
+      "reactivateModal": {
+        "title": "ሰራተኛን እንደገና አንቃ",
+        "body": "{{name}}ን እንደገና ማንቃት ይፈልጋሉ? የሰራተኛ መዳረሻ ይመለሳላቸዋል።",
+        "confirm": "እንደገና ማንቃት አረጋግጥ",
+        "success": "ሰራተኛ እንደገና ተነስቷል።",
+        "failed": "ሰራተኛን እንደገና ማንቃት አልተሳካም።"
+      },
+      "deleteModal": {
+        "title": "ሰራተኛ ሰርዝ",
+        "bodyIntro": "በቋሚነት መሰረዝ ይፈልጋሉ",
+        "bodyRest": "? ይህ ድርጊት ሊቀለበስ አይችልም።",
+        "confirmLabel": "ለማረጋገጥ የሰራተኛውን ስም ይተይቡ",
+        "cancel": "ሰርዝ",
+        "confirm": "ሰራተኛ ሰርዝ",
+        "processing": "በመሰረዝ ላይ...",
+        "success": "ሰራተኛ ተሰርዟል።",
+        "failed": "ሰራተኛን መሰረዝ አልተሳካም።"
+      }
+    }
+  },
+  "settings": {
+    "pageTitle": "የስርዓት ቅንብሮች",
+    "subtitle": "ቋንቋ፣ የጨረታ ነባሪዎች እና የመድረክ ገደቦች።",
+    "loading": "ቅንብሮች በመጫን ላይ...",
+    "loadFailed": "ቅንብሮችን ማስገባት አልተሳካም።",
+    "save": "ቅንብሮችን አስቀምጥ",
+    "saving": "በማስቀመጥ ላይ...",
+    "saveSuccess": "ቅንብሮች በተሳካ ሁኔታ ተቀምጠዋል።",
+    "saveFailed": "ቅንብሮችን ማስቀመጥ አልተሳካም።",
+    "localization": {
+      "title": "ቋንቋ",
+      "description": "ነባሪ ቋንቋ እና የሚደገፉ ቋንቋዎች።",
+      "defaultLanguage": "ነባሪ ቋንቋ",
+      "supportedLanguages": "የሚደገፉ ቋንቋዎች",
+      "languages": {
+        "en": "እንግሊዝኛ",
+        "am": "አማርኛ"
+      }
+    },
+    "auction": {
+      "title": "የጨረታ ነባሪዎች",
+      "defaultCurrency": "ነባሪ ምንዛሬ",
+      "defaultCpoPercentage": "ነባሪ CPO መቶኛ",
+      "minBidIncrement": "ዝቅተኛ የጨረታ ጭማሪ"
+    },
+    "system": {
+      "title": "የስርዓት ገደቦች",
+      "otpTtlSeconds": "OTP TTL (ሰከንዶች)",
+      "maxFileSize": "ከፍተኛ የፋይል መጠን (ባይት)"
+    }
+  },
+  "audit": {
+    "trail": {
+      "pageTitle": "የኦዲት ትራክ",
+      "subtitle": "የመድረክ ድርጊቶች እና ለውጦች የማንበብ ብቻ መዝገብ።",
+      "searchPlaceholder": "በድርጊት፣ ነገር ወይም ተጠቃሚ ይፈልጉ...",
+      "actionFilter": "ድርጊት",
+      "allActions": "ሁሉም ድርጊቶች",
+      "empty": "የኦዲት መዝገቦች አልተገኙም።",
+      "openDetail": "የ{{action}} ኦዲት ይክፈቱ",
+      "viewAction": "ዝርዝር ይመልከቱ",
+      "table": {
+        "footer": "{{total}} መዝገቦች ውስጥ {{from}}–{{to}} በማሳየት ላይ",
+        "headers": {
+          "action": "ድርጊት",
+          "entity_type": "የነገር አይነት",
+          "actor": "ተጠቃሚ",
+          "timestamp": "ጊዜ",
+          "actions": "ድርጊቶች"
+        }
+      },
+      "actions": {
+        "LOGIN": "ግባት",
+        "CREATE": "ፍጠር",
+        "UPDATE": "አዘምን",
+        "DELETE": "ሰርዝ",
+        "APPROVE": "አጽድቅ",
+        "REJECT": "አትቀበል",
+        "ACCESS_DENIED": "መዳረሻ ተከልክሏል",
+        "ROLE_CHANGE": "የሚና ለውጥ",
+        "PUBLISH": "አተምም",
+        "CLOSE": "ዝጋ"
+      },
+      "drawer": {
+        "title": "የኦዲት መዝገብ",
+        "loadFailed": "የኦዲት መዝገብ ማስገባት አልተሳካም።",
+        "summarySection": "ማጠቃለያ",
+        "changesSection": "ለውጦች",
+        "action": "ድርጊት",
+        "entityType": "የነገር አይነት",
+        "entityId": "የነገር መለያ",
+        "actor": "ተጠቃሚ",
+        "timestamp": "ጊዜ",
+        "ipAddress": "IP አድራሻ",
+        "userAgent": "የተጠቃሚ ወኪል",
+        "oldValues": "ቀድሞ ያሉት እሴቶች",
+        "newValues": "አዲስ እሴቶች",
+        "metadata": "ሜታዳታ",
+        "noValues": "የለም"
+      }
+    }
+  },
+  "admin": {
+    "loading": "በመጫን ላይ...",
+    "loadFailed": "መረጃ ማስገባት አልተሳካም።",
+    "emptyDefault": "ምንም መዝገቦች አልተገኙም።",
+    "retry": "እንደገና ይሞክሩ",
+    "searchPlaceholder": "ይፈልጉ...",
+    "dateFrom": "ከ",
+    "dateTo": "እስከ",
+    "cancel": "ሰርዝ",
+    "confirm": "አረጋግጥ",
+    "confirming": "በማረጋገጥ ላይ...",
+    "confirmReject": "አስተውል አረጋግጥ",
+    "rejecting": "በመተው ላይ...",
+    "rejectionReason": "የመተው ምክንያት",
+    "rejectionReasonRequired": "የመተው ምክንያት ያስፈልጋል።",
+    "quickReasons": "ፈጣን ምክንያቶች",
+    "charCount": "{{count}} / {{max}} ቁምፊዎች",
+    "pagination": {
+      "prev": "ቀዳሚ",
+      "next": "ቀጣይ",
+      "page": "ገጽ {{page}} ከ {{pages}}"
+    }
+  },
+  "accessDenied": {
+    "pageTitle": "መዳረሻ ተከልክሏል",
+    "subtitle": "ይህን ገጽ ለማየት ፈቃድ የለዎትም።",
+    "message": "ይህን ገጽ ለማየት ፈቃድ የለዎትም። ይህ ስህተት ከሆነ በሰላፊዎ ያግኙ።"
+  },
+  "documents": {
+    "management": {
+      "pageTitle": "ሰነዶች",
+      "subtitle": "የጨረታ ሰነዶችን እና ፋይሎችን ያስተዳድሩ።"
     }
   }
 }

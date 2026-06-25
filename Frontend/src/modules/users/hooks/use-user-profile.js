@@ -1,29 +1,42 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { getMyKYC } from '../../kyc/services/kyc.service.js';
 import { userService } from '../services/user-service.js';
+import { formatDate } from '../utils/user-management-utils.js';
 
 export function useUserProfile() {
-  const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { t } = useTranslation();
+  const [profile, setProfile] = useState(null);
+  const [kyc, setKyc] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const fetchRecords = useCallback(async () => {
+  const fetchProfile = useCallback(async () => {
     setLoading(true);
-    setError(null);
+    setError('');
+
     try {
-      const data = await userService.getAll();
-      setRecords(Array.isArray(data) ? data : data?.items ?? []);
+      const [me, kycResponse] = await Promise.all([
+        userService.getMe(),
+        getMyKYC().catch(() => null),
+      ]);
+
+      setProfile(me);
+      setKyc(kycResponse?.kyc ?? kycResponse ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to load records.');
+      setError(err instanceof Error ? err.message : t('users.profile.loadFailed'));
+      setProfile(null);
+      setKyc(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
-    fetchRecords();
-  }, [fetchRecords]);
+    fetchProfile();
+  }, [fetchProfile]);
 
-  return { records, loading, error, refetch: fetchRecords };
+  return { profile, kyc, loading, error, refetch: fetchProfile };
 }
 
 export default useUserProfile;

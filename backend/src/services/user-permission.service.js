@@ -149,6 +149,7 @@ function mapUserPermissionRecord(row) {
     modules: canonical.permissions.modules,
     actions: canonical.permissions.actions,
     routes: canonical.permissions.routes,
+    moduleActions: canonical.permissions.moduleActions,
     permissionVersion: canonical.permissionVersion,
     checksum: canonical.checksum,
     version,

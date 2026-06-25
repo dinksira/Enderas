@@ -17,10 +17,31 @@ const ROLE_DASHBOARDS = Object.freeze({
   asset_owner: AssetOwnerDashboardView,
 });
 
-export function RoleDashboardView() {
+const ROLE_METRIC_KEYS = Object.freeze({
+  evaluation_officer: ['assets', 'evaluations'],
+  finance_officer: ['payments', 'cpo'],
+  auction_manager: ['auctions', 'bids', 'winners', 'cpo'],
+  customer_service_officer: ['users', 'kyc', 'assets', 'cpo'],
+  bidder: ['bids', 'payments', 'cpo'],
+  asset_owner: ['assets', 'payments'],
+});
+
+/**
+ * @param {{ metrics?: object, metricsLoading?: boolean, metricsError?: string }} props
+ */
+export function RoleDashboardView({ metrics, metricsLoading, metricsError }) {
   const { roleCode } = usePermission();
   const View = ROLE_DASHBOARDS[roleCode] ?? SuperAdminDashboardView;
-  return <View />;
+  const metricKeys = ROLE_METRIC_KEYS[roleCode] ?? [];
+
+  return (
+    <View
+      metrics={metrics}
+      metricsLoading={metricsLoading}
+      metricsError={metricsError}
+      metricKeys={metricKeys}
+    />
+  );
 }
 
 export default RoleDashboardView;

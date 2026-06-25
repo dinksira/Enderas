@@ -1,12 +1,21 @@
+import { useTranslation } from 'react-i18next';
+import { MetricsCardGrid } from '../components/MetricsCardGrid.jsx';
 import { WorkspacePage } from '../components/WorkspacePage.jsx';
 
-export function AuctionManagerDashboardView() {
+export function AuctionManagerDashboardView({ metrics, metricsLoading, metricsError, metricKeys }) {
+  const { t } = useTranslation();
+
   return (
     <WorkspacePage
-      title="Auction Manager Dashboard"
-      description="Manage assets, auctions, documents, bids, winners, and CPO workflows."
+      title={t('dashboard.roles.auctionManager.title')}
+      description={t('dashboard.roles.auctionManager.description')}
     >
-      <p>Auction pipeline status and pending approvals.</p>
+      <MetricsCardGrid
+        metrics={metrics}
+        metricKeys={metricKeys}
+        loading={metricsLoading}
+        error={metricsError}
+      />
     </WorkspacePage>
   );
 }

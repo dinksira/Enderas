@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../../stores/auth-store.js';
 import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
-import { DashboardToast } from '../../auctions/components/DashboardToast.jsx';
+import { DashboardToast } from '../../../components/DashboardToast.jsx';
+import { useRegisterPageSearch } from '../../../contexts/PageSearchContext.jsx';
 import { assetService } from '../services/asset-service.js';
 import { useAssets } from '../hooks/use-assets.js';
 import { normalizeAssetStatus, resolveApiStatus, statusPillClass } from '../utils/asset-form-utils.js';
@@ -41,6 +42,12 @@ export function AssetRequestsView() {
     status: apiStatus,
     search: searchQuery.trim() || undefined,
     includeStats: true,
+  });
+
+  useRegisterPageSearch({
+    value: searchQuery,
+    onChange: setSearchQuery,
+    placeholder: t('assets.review.searchPlaceholder'),
   });
 
   const canApprove = can(MODULES.ASSETS, ACTIONS.APPROVE);
@@ -114,19 +121,6 @@ export function AssetRequestsView() {
 
   return (
     <>
-      <section className="asset-stats-grid" aria-label={t('assets.review.statsLabel')}>
-        {STATUS_FILTERS.filter((key) => key !== 'all').map((filterKey) => (
-          <div key={filterKey} className="asset-stat-card">
-            <div className="asset-stat-card__header">
-              <span className="asset-stat-card__label">
-                {t(`assets.filters.${filterKey}`)}
-              </span>
-            </div>
-            <div className="asset-stat-card__value">{countByStatus[filterKey] ?? 0}</div>
-          </div>
-        ))}
-      </section>
-
       <section className="dashboard-filters" aria-label={t('assets.review.filtersLabel')}>
         <div className="dashboard-filters__tabs" role="tablist" aria-label={t('dashboard.a11y.status_filters')}>
           {STATUS_FILTERS.map((filterKey) => {
@@ -151,18 +145,6 @@ export function AssetRequestsView() {
               </button>
             );
           })}
-        </div>
-        <div className="asset-filters__search">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
-            <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="1.8" />
-          </svg>
-          <input
-            type="search"
-            placeholder={t('assets.review.searchPlaceholder')}
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-          />
         </div>
       </section>
 

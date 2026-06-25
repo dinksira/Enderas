@@ -9,8 +9,10 @@ import { AssetOwner } from '../models/assetOwner.model.js';
 import { User, Staff } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
+import { Auction } from '../models/auction.model.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
+import { auctionService } from './auction.service.js';
 
 const DISPLAY_STATUS_MAP = Object.freeze({
   pending_review: 'PENDING_REVIEW',
@@ -24,7 +26,7 @@ const DISPLAY_STATUS_MAP = Object.freeze({
 
 const STATUS_FILTER_GROUPS = Object.freeze({
   PENDING_REVIEW: ['pending_review'],
-  APPROVED: ['approved'],
+  APPROVED: ['approved', 'in_auction'],
   REJECTED: ['rejected'],
   UNDER_EVALUATION: ['under_evaluation', 'evaluated', 'in_auction'],
 });
@@ -216,6 +218,34 @@ const assetInclude = [
     include: [{ model: User, as: 'user', attributes: ['id', 'first_name', 'last_name', 'mobile_number'] }],
   },
 ];
+
+async function attachLinkedAuctions(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return items;
+  }
+
+  const assetIds = items.map((item) => item.id);
+  const auctions = await Auction.findAll({
+    where: { asset_id: { [Op.in]: assetIds }, deleted_at: null },
+    attributes: ['id', 'asset_id', 'title', 'status'],
+  });
+
+  const auctionByAssetId = new Map(auctions.map((row) => [row.asset_id, row]));
+
+  return items.map((item) => {
+    const auction = auctionByAssetId.get(item.id);
+    if (!auction) {
+      return item;
+    }
+
+    return {
+      ...item,
+      auctionId: auction.id,
+      auctionTitle: auction.title,
+      auctionStatus: auctionService.mapDisplayStatus(auction.status),
+    };
+  });
+}
 
 function serializeAsset(asset) {
   const plain = asset.get ? asset.get({ plain: true }) : asset;
@@ -425,7 +455,8 @@ export async function listAssets(options = {}, scope = {}) {
     order: [['created_at', 'DESC']],
   });
 
-  const items = assets.map(serializeAsset);
+  let items = assets.map(serializeAsset);
+  items = await attachLinkedAuctions(items);
 
   const result = { items };
 
@@ -489,7 +520,8 @@ async function computeStats(scope) {
 export async function getAssetById(id, scope, userId) {
   const asset = await findAssetOrThrow(id);
   await assertAssetAccess(asset, scope, userId);
-  return serializeAsset(asset);
+  const [enriched] = await attachLinkedAuctions([serializeAsset(asset)]);
+  return enriched;
 }
 
 /**
@@ -578,11 +610,14 @@ export async function approveAsset(id, staffId, reviewNotes = null) {
 
   const now = new Date();
   await asset.update({
-    status: 'approved',
     reviewed_by_staff_id: staffId,
     reviewed_at: now,
     rejection_reason: null,
   });
+
+  const auction = await auctionService.createPublishedAuctionFromApprovedAsset(asset, staffId);
+
+  await asset.update({ status: 'in_auction' });
 
   const owner = await AssetOwner.findByPk(asset.asset_owner_id, { attributes: ['user_id'] });
 
@@ -592,8 +627,8 @@ export async function approveAsset(id, staffId, reviewNotes = null) {
     action: AUDIT_ACTIONS.APPROVE,
     entityType: 'Asset',
     entityId: asset.id,
-    metadata: { reviewNotes },
-    newValues: { status: 'approved' },
+    metadata: { reviewNotes, auctionId: auction.id },
+    newValues: { status: 'in_auction' },
   });
 
   if (owner?.user_id) {

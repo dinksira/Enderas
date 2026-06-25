@@ -14,6 +14,7 @@ const EMPTY_PERMISSIONS = Object.freeze({
   modules: [],
   actions: [],
   routes: [],
+  moduleActions: {},
 });
 
 /**
@@ -65,6 +66,7 @@ export const useAuthStore = create((set, get) => ({
         employeeId: userPayload.employeeId ?? identity.employeeId ?? null,
         department: userPayload.department ?? identity.department ?? null,
         status: userPayload.status || identity.status,
+        preferredLanguage: userPayload.preferredLanguage || identity.preferredLanguage || null,
       },
       permissions: {
         roleCode: authz.roleCode ?? userPayload.roleCode ?? authz.code ?? null,
@@ -78,6 +80,9 @@ export const useAuthStore = create((set, get) => ({
         routes: Array.isArray(authz.routes)
           ? authz.routes
           : (userPayload.permissions?.routes ?? []),
+        moduleActions: authz.moduleActions && typeof authz.moduleActions === 'object'
+          ? authz.moduleActions
+          : (userPayload.permissions?.moduleActions ?? {}),
       },
     });
   },

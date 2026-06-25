@@ -52,6 +52,7 @@ export const API_ACCESS_MAP = Object.freeze({
   'GET /api/v1/users/:id': { module: MODULES.USERS, action: ACTIONS.READ },
   'PUT /api/v1/users/:id': { module: MODULES.USERS, action: ACTIONS.UPDATE },
   'POST /api/v1/users': { module: MODULES.USERS, action: ACTIONS.CREATE },
+  'POST /api/v1/users/:id/status': { module: MODULES.USERS, action: ACTIONS.UPDATE },
   'DELETE /api/v1/users/:id': { module: MODULES.USERS, action: ACTIONS.DELETE },
 
   // KYC
@@ -76,15 +77,20 @@ export const API_ACCESS_MAP = Object.freeze({
   'POST /api/v1/assets/:id/reject': { module: MODULES.ASSETS, action: ACTIONS.REJECT },
 
   // Evaluations
+  'GET /api/v1/evaluations/eligible-assets': { module: MODULES.EVALUATIONS, action: ACTIONS.READ },
   'GET /api/v1/evaluations': { module: MODULES.EVALUATIONS, action: ACTIONS.READ },
   'GET /api/v1/evaluations/:id': { module: MODULES.EVALUATIONS, action: ACTIONS.READ },
   'POST /api/v1/evaluations': { module: MODULES.EVALUATIONS, action: ACTIONS.CREATE },
   'PUT /api/v1/evaluations/:id': { module: MODULES.EVALUATIONS, action: ACTIONS.UPDATE },
+  'POST /api/v1/evaluations/:id/start': { module: MODULES.EVALUATIONS, action: ACTIONS.UPDATE },
+  'POST /api/v1/evaluations/:id/complete': { module: MODULES.EVALUATIONS, action: ACTIONS.UPDATE },
   'POST /api/v1/evaluations/:id/approve': { module: MODULES.EVALUATIONS, action: ACTIONS.APPROVE },
   'POST /api/v1/evaluations/:id/reject': { module: MODULES.EVALUATIONS, action: ACTIONS.REJECT },
+  'POST /api/v1/evaluations/:id/reschedule': { module: MODULES.EVALUATIONS, action: ACTIONS.UPDATE },
 
   // Auctions
   'GET /api/v1/auctions/browse': { module: MODULES.BIDS, action: ACTIONS.READ },
+  'GET /api/v1/auctions/browse/:id/participation': { module: MODULES.BIDS, action: ACTIONS.READ },
   'GET /api/v1/auctions/browse/:id': { module: MODULES.BIDS, action: ACTIONS.READ },
   'GET /api/v1/auctions': { module: MODULES.AUCTIONS, action: ACTIONS.READ },
   'GET /api/v1/auctions/:id': { module: MODULES.AUCTIONS, action: ACTIONS.READ },
@@ -94,6 +100,7 @@ export const API_ACCESS_MAP = Object.freeze({
   'POST /api/v1/auctions/:id/suspend': { module: MODULES.AUCTIONS, action: ACTIONS.UPDATE },
   'POST /api/v1/auctions/:id/reactivate': { module: MODULES.AUCTIONS, action: ACTIONS.UPDATE },
   'POST /api/v1/auctions/:id/close': { module: MODULES.AUCTIONS, action: ACTIONS.CLOSE },
+  'DELETE /api/v1/auctions/:id': { module: MODULES.AUCTIONS, action: ACTIONS.DELETE },
 
   // Documents
   'GET /api/v1/documents': { module: MODULES.DOCUMENTS, action: ACTIONS.READ },
@@ -108,6 +115,7 @@ export const API_ACCESS_MAP = Object.freeze({
 
   // CPO
   'GET /api/v1/cpo': { module: MODULES.CPO, action: ACTIONS.READ },
+  'GET /api/v1/cpo/:id': { module: MODULES.CPO, action: ACTIONS.READ },
   'POST /api/v1/cpo': { module: MODULES.CPO, action: ACTIONS.CREATE },
   'POST /api/v1/cpo/:id/approve': { module: MODULES.CPO, action: ACTIONS.APPROVE },
   'POST /api/v1/cpo/:id/reject': { module: MODULES.CPO, action: ACTIONS.REJECT },
@@ -116,14 +124,22 @@ export const API_ACCESS_MAP = Object.freeze({
   'GET /api/v1/bids': { module: MODULES.BIDS, action: ACTIONS.READ },
   'GET /api/v1/bids/my': { module: MODULES.BIDS, action: ACTIONS.READ },
   'GET /api/v1/bids/auction/:auctionId': { module: MODULES.BIDS, action: ACTIONS.READ },
+  'GET /api/v1/bids/:id': { module: MODULES.BIDS, action: ACTIONS.READ },
   'POST /api/v1/bids': { module: MODULES.BIDS, action: ACTIONS.CREATE },
 
   // Winners
   'GET /api/v1/winners': { module: MODULES.WINNERS, action: ACTIONS.READ },
+  'GET /api/v1/winners/:id': { module: MODULES.WINNERS, action: ACTIONS.READ },
   'POST /api/v1/winners': { module: MODULES.WINNERS, action: ACTIONS.CREATE },
+  'POST /api/v1/winners/:id/confirm': { module: MODULES.WINNERS, action: ACTIONS.UPDATE },
+  'POST /api/v1/winners/:id/decline': { module: MODULES.WINNERS, action: ACTIONS.UPDATE },
 
   // Notifications
+  'GET /api/v1/notifications/unread-count': { module: MODULES.NOTIFICATIONS, action: ACTIONS.READ },
+  'POST /api/v1/notifications/read-all': { module: MODULES.NOTIFICATIONS, action: ACTIONS.UPDATE },
   'GET /api/v1/notifications': { module: MODULES.NOTIFICATIONS, action: ACTIONS.READ },
+  'GET /api/v1/notifications/:id': { module: MODULES.NOTIFICATIONS, action: ACTIONS.READ },
+  'POST /api/v1/notifications/:id/read': { module: MODULES.NOTIFICATIONS, action: ACTIONS.UPDATE },
 
   // Dashboard & reports
   'GET /api/v1/dashboard': { module: MODULES.DASHBOARD, action: ACTIONS.READ },
@@ -132,10 +148,17 @@ export const API_ACCESS_MAP = Object.freeze({
 
   // Staff & roles (super-admin operational)
   'GET /api/v1/staff': { module: MODULES.STAFF, action: ACTIONS.READ },
+  'GET /api/v1/staff/assignable-roles': { module: MODULES.STAFF, action: ACTIONS.READ },
+  'GET /api/v1/staff/:id': { module: MODULES.STAFF, action: ACTIONS.READ },
   'POST /api/v1/staff': { module: MODULES.STAFF, action: ACTIONS.CREATE },
   'PUT /api/v1/staff/:id': { module: MODULES.STAFF, action: ACTIONS.UPDATE },
+  'POST /api/v1/staff/:id/deactivate': { module: MODULES.STAFF, action: ACTIONS.UPDATE },
+  'DELETE /api/v1/staff/:id': { module: MODULES.STAFF, action: ACTIONS.DELETE },
   'GET /api/v1/roles': { module: MODULES.ROLES, action: ACTIONS.READ },
   'PUT /api/v1/roles/:id': { module: MODULES.ROLES, action: ACTIONS.UPDATE },
+  'GET /api/v1/audit-logs': { module: MODULES.ROLES, action: ACTIONS.READ },
+  'GET /api/v1/audit-logs/entity/:entityType/:entityId': { module: MODULES.ROLES, action: ACTIONS.READ },
+  'GET /api/v1/audit-logs/:id': { module: MODULES.ROLES, action: ACTIONS.READ },
 
   // Settings
   'GET /api/v1/settings': { module: MODULES.SETTINGS, action: ACTIONS.READ },
@@ -158,9 +181,8 @@ export const PAGE_ACCESS_REGISTRY = Object.freeze([
   { id: 'settings', label: 'Settings', path: '/app/settings', module: MODULES.SETTINGS, action: ACTIONS.READ, group: 'admin' },
 
   { id: 'kyc', label: 'KYC', path: '/app/kyc', module: MODULES.KYC, action: ACTIONS.READ, group: 'operations' },
-  { id: 'assets', label: 'Assets', path: '/app/assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'operations' },
-  { id: 'my-assets', label: 'My Requests', path: '/app/my-assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'owner' },
-  { id: 'submit-asset', label: 'Request Auction', path: '/app/submit-asset', module: MODULES.ASSETS, action: ACTIONS.CREATE, group: 'owner' },
+  { id: 'assets', label: 'Auction Requests', path: '/app/assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'operations' },
+  { id: 'my-assets', label: 'My Auction Requests', path: '/app/my-assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'owner' },
   { id: 'evaluations', label: 'Evaluations', path: '/app/evaluations', module: MODULES.EVALUATIONS, action: ACTIONS.READ, group: 'operations' },
 
   { id: 'auctions', label: 'Auctions', path: '/app/auctions', module: MODULES.AUCTIONS, action: ACTIONS.READ, group: 'auction' },
@@ -186,12 +208,14 @@ export const DATA_SCOPE_RULES = Object.freeze({
   [MODULES.ASSETS]: 'own_asset_owner',
   [MODULES.PAYMENTS]: 'own_user_or_finance',
   [MODULES.CPO]: 'own_user_or_staff',
-  [MODULES.NOTIFICATIONS]: 'own_user',
+  [MODULES.NOTIFICATIONS]: 'staff_module',
   [MODULES.EVALUATIONS]: 'staff_module',
   [MODULES.AUCTIONS]: 'staff_module',
   [MODULES.WINNERS]: 'staff_module',
   [MODULES.KYC]: 'staff_module',
   [MODULES.USERS]: 'staff_module',
+  [MODULES.STAFF]: 'staff_module',
+  [MODULES.ROLES]: 'staff_module',
 });
 
 /**

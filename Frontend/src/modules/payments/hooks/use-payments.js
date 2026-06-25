@@ -1,29 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { usePaginatedResource } from '../../../hooks/use-paginated-resource.js';
 import { paymentService } from '../services/payment-service.js';
+import { PAYMENT_PAGE_SIZE } from '../utils/payment-management-utils.js';
 
 export function usePayments() {
-  const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const fetchRecords = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await paymentService.getAll();
-      setRecords(Array.isArray(data) ? data : data?.items ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to load records.');
-    } finally {
-      setLoading(false);
-    }
+  const fetchFn = useCallback(async (params) => {
+    const response = await paymentService.listPayments(params);
+    return {
+      items: response?.items ?? [],
+      pagination: response?.pagination,
+      stats: response?.stats,
+    };
   }, []);
 
-  useEffect(() => {
-    fetchRecords();
-  }, [fetchRecords]);
-
-  return { records, loading, error, refetch: fetchRecords };
+  return usePaginatedResource({
+    fetchFn,
+    pageSize: PAYMENT_PAGE_SIZE,
+    itemsKey: 'items',
+  });
 }
 
 export default usePayments;

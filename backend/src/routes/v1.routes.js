@@ -12,7 +12,20 @@ import { authorizationPermissionService } from '../core/authorization/permission
 import { kycController } from '../controllers/kyc.controller.js';
 import { auctionController } from '../controllers/auction.controller.js';
 import { assetController } from '../controllers/asset.controller.js';
+import { userController } from '../controllers/user.controller.js';
+import { staffController } from '../controllers/staff.controller.js';
+import { settingsController } from '../controllers/settings.controller.js';
+import { auditController } from '../controllers/audit.controller.js';
+import { roleController } from '../controllers/role.controller.js';
+import { evaluationController } from '../controllers/evaluation.controller.js';
+import { paymentController } from '../controllers/payment.controller.js';
+import { cpoController } from '../controllers/cpo.controller.js';
+import { bidController } from '../controllers/bid.controller.js';
+import { winnerController } from '../controllers/winner.controller.js';
+import { notificationController } from '../controllers/notification.controller.js';
+import { dashboardController } from '../controllers/dashboard.controller.js';
 import { requireKYCVerified } from '../middleware/kyc.middleware.js';
+import { requireStaff } from '../middleware/staff.middleware.js';
 import fileUploadRoutes from './fileUpload.routes.js';
 
 const v1Router = Router();
@@ -67,7 +80,52 @@ function mountResource(router, basePath, moduleName, resourceName, options = {})
 }
 
 // Users
-mountResource(v1Router, '/users', MODULES.USERS, 'users');
+v1Router.get(
+  '/users',
+  authenticate,
+  attachDataScope(MODULES.USERS),
+  authorize({ module: MODULES.USERS, action: ACTIONS.READ }),
+  userController.listUsers,
+);
+v1Router.get(
+  '/users/:id',
+  authenticate,
+  attachDataScope(MODULES.USERS),
+  authorize({ module: MODULES.USERS, action: ACTIONS.READ }),
+  userController.getUserById,
+);
+v1Router.post(
+  '/users',
+  authenticate,
+  attachDataScope(MODULES.USERS),
+  authorize({ module: MODULES.USERS, action: ACTIONS.CREATE }),
+  requireStaff,
+  userController.createUser,
+);
+v1Router.put(
+  '/users/:id',
+  authenticate,
+  attachDataScope(MODULES.USERS),
+  authorize({ module: MODULES.USERS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  userController.updateUser,
+);
+v1Router.post(
+  '/users/:id/status',
+  authenticate,
+  attachDataScope(MODULES.USERS),
+  authorize({ module: MODULES.USERS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  userController.updateUserStatus,
+);
+v1Router.delete(
+  '/users/:id',
+  authenticate,
+  attachDataScope(MODULES.USERS),
+  authorize({ module: MODULES.USERS, action: ACTIONS.DELETE }),
+  requireStaff,
+  userController.deleteUser,
+);
 
 // KYC — user-facing routes (must be registered before /kyc/:id)
 v1Router.post(
@@ -180,10 +238,83 @@ v1Router.post(
 );
 
 // Evaluations
-const evaluations = createResourceHandlers('evaluations', MODULES.EVALUATIONS);
-mountResource(v1Router, '/evaluations', MODULES.EVALUATIONS, 'evaluations');
-v1Router.post('/evaluations/:id/approve', authenticate, authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.APPROVE }), evaluations.approve);
-v1Router.post('/evaluations/:id/reject', authenticate, authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.REJECT }), evaluations.reject);
+v1Router.get(
+  '/evaluations/eligible-assets',
+  authenticate,
+  attachDataScope(MODULES.EVALUATIONS),
+  authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.READ }),
+  evaluationController.listEligibleAssets,
+);
+v1Router.get(
+  '/evaluations',
+  authenticate,
+  attachDataScope(MODULES.EVALUATIONS),
+  authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.READ }),
+  evaluationController.listEvaluations,
+);
+v1Router.get(
+  '/evaluations/:id',
+  authenticate,
+  attachDataScope(MODULES.EVALUATIONS),
+  authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.READ }),
+  evaluationController.getEvaluationById,
+);
+v1Router.post(
+  '/evaluations',
+  authenticate,
+  attachDataScope(MODULES.EVALUATIONS),
+  authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.CREATE }),
+  requireStaff,
+  evaluationController.scheduleEvaluation,
+);
+v1Router.put(
+  '/evaluations/:id',
+  authenticate,
+  attachDataScope(MODULES.EVALUATIONS),
+  authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  evaluationController.updateEvaluation,
+);
+v1Router.post(
+  '/evaluations/:id/start',
+  authenticate,
+  attachDataScope(MODULES.EVALUATIONS),
+  authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  evaluationController.markInProgress,
+);
+v1Router.post(
+  '/evaluations/:id/complete',
+  authenticate,
+  attachDataScope(MODULES.EVALUATIONS),
+  authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  evaluationController.completeEvaluation,
+);
+v1Router.post(
+  '/evaluations/:id/approve',
+  authenticate,
+  attachDataScope(MODULES.EVALUATIONS),
+  authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.APPROVE }),
+  requireStaff,
+  evaluationController.approveEvaluation,
+);
+v1Router.post(
+  '/evaluations/:id/reject',
+  authenticate,
+  attachDataScope(MODULES.EVALUATIONS),
+  authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.REJECT }),
+  requireStaff,
+  evaluationController.rejectEvaluation,
+);
+v1Router.post(
+  '/evaluations/:id/reschedule',
+  authenticate,
+  attachDataScope(MODULES.EVALUATIONS),
+  authorize({ module: MODULES.EVALUATIONS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  evaluationController.rescheduleEvaluation,
+);
 
 // Auctions
 v1Router.get(
@@ -192,6 +323,13 @@ v1Router.get(
   attachDataScope(MODULES.BIDS),
   authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
   auctionController.listBrowseAuctions,
+);
+v1Router.get(
+  '/auctions/browse/:id/participation',
+  authenticate,
+  attachDataScope(MODULES.BIDS),
+  authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
+  auctionController.getAuctionParticipation,
 );
 v1Router.get(
   '/auctions/browse/:id',
@@ -264,75 +402,337 @@ v1Router.post(
 mountResource(v1Router, '/documents', MODULES.DOCUMENTS, 'documents', { requireKycOnCreate: true });
 
 // Payments
-const payments = createResourceHandlers('payments', MODULES.PAYMENTS);
-mountResource(v1Router, '/payments', MODULES.PAYMENTS, 'payments', { requireKycOnCreate: true });
-v1Router.post('/payments/:id/approve', authenticate, authorize({ module: MODULES.PAYMENTS, action: ACTIONS.APPROVE }), payments.approve);
-v1Router.post('/payments/:id/reject', authenticate, authorize({ module: MODULES.PAYMENTS, action: ACTIONS.REJECT }), payments.reject);
+v1Router.get(
+  '/payments',
+  authenticate,
+  attachDataScope(MODULES.PAYMENTS),
+  authorize({ module: MODULES.PAYMENTS, action: ACTIONS.READ }),
+  paymentController.listPayments,
+);
+v1Router.get(
+  '/payments/:id',
+  authenticate,
+  attachDataScope(MODULES.PAYMENTS),
+  authorize({ module: MODULES.PAYMENTS, action: ACTIONS.READ }),
+  paymentController.getPaymentById,
+);
+v1Router.post(
+  '/payments',
+  authenticate,
+  attachDataScope(MODULES.PAYMENTS),
+  authorize({ module: MODULES.PAYMENTS, action: ACTIONS.CREATE }),
+  requireKYCVerified,
+  paymentController.createPayment,
+);
+v1Router.post(
+  '/payments/:id/approve',
+  authenticate,
+  authorize({ module: MODULES.PAYMENTS, action: ACTIONS.APPROVE }),
+  requireStaff,
+  paymentController.approvePayment,
+);
+v1Router.post(
+  '/payments/:id/reject',
+  authenticate,
+  authorize({ module: MODULES.PAYMENTS, action: ACTIONS.REJECT }),
+  requireStaff,
+  paymentController.rejectPayment,
+);
 
 // CPO
-const cpo = createResourceHandlers('cpo', MODULES.CPO);
-mountResource(v1Router, '/cpo', MODULES.CPO, 'cpo', { requireKycOnCreate: true });
-v1Router.post('/cpo/:id/approve', authenticate, authorize({ module: MODULES.CPO, action: ACTIONS.APPROVE }), cpo.approve);
-v1Router.post('/cpo/:id/reject', authenticate, authorize({ module: MODULES.CPO, action: ACTIONS.REJECT }), cpo.reject);
+v1Router.get(
+  '/cpo',
+  authenticate,
+  attachDataScope(MODULES.CPO),
+  authorize({ module: MODULES.CPO, action: ACTIONS.READ }),
+  cpoController.listCpos,
+);
+v1Router.get(
+  '/cpo/:id',
+  authenticate,
+  attachDataScope(MODULES.CPO),
+  authorize({ module: MODULES.CPO, action: ACTIONS.READ }),
+  cpoController.getCpoById,
+);
+v1Router.post(
+  '/cpo',
+  authenticate,
+  attachDataScope(MODULES.CPO),
+  authorize({ module: MODULES.CPO, action: ACTIONS.CREATE }),
+  requireKYCVerified,
+  cpoController.createCpo,
+);
+v1Router.post(
+  '/cpo/:id/approve',
+  authenticate,
+  authorize({ module: MODULES.CPO, action: ACTIONS.APPROVE }),
+  requireStaff,
+  cpoController.approveCpo,
+);
+v1Router.post(
+  '/cpo/:id/reject',
+  authenticate,
+  authorize({ module: MODULES.CPO, action: ACTIONS.REJECT }),
+  requireStaff,
+  cpoController.rejectCpo,
+);
 
 // Bids
-const bids = createResourceHandlers('bids', MODULES.BIDS);
-v1Router.get('/bids/my', authenticate, attachDataScope(MODULES.BIDS), authorize({ module: MODULES.BIDS, action: ACTIONS.READ }), bids.list);
-v1Router.get('/bids/auction/:auctionId', authenticate, attachDataScope(MODULES.BIDS), authorize({ module: MODULES.BIDS, action: ACTIONS.READ }), bids.list);
-v1Router.get('/bids', authenticate, attachDataScope(MODULES.BIDS), authorize({ module: MODULES.BIDS, action: ACTIONS.READ }), bids.list);
+v1Router.get(
+  '/bids/my',
+  authenticate,
+  attachDataScope(MODULES.BIDS),
+  authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
+  bidController.listMyBids,
+);
+v1Router.get(
+  '/bids/auction/:auctionId',
+  authenticate,
+  attachDataScope(MODULES.BIDS),
+  authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
+  bidController.listBidsForAuction,
+);
+v1Router.get(
+  '/bids',
+  authenticate,
+  attachDataScope(MODULES.BIDS),
+  authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
+  bidController.listBids,
+);
+v1Router.get(
+  '/bids/:id',
+  authenticate,
+  attachDataScope(MODULES.BIDS),
+  authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
+  bidController.getBidById,
+);
 v1Router.post(
   '/bids',
   authenticate,
   attachDataScope(MODULES.BIDS),
   authorize({ module: MODULES.BIDS, action: ACTIONS.CREATE }),
   requireKYCVerified,
-  bids.create,
+  bidController.placeBid,
 );
 
 // Winners
-mountResource(v1Router, '/winners', MODULES.WINNERS, 'winners', { requireKycOnCreate: true });
+v1Router.get(
+  '/winners',
+  authenticate,
+  attachDataScope(MODULES.WINNERS),
+  authorize({ module: MODULES.WINNERS, action: ACTIONS.READ }),
+  winnerController.listWinners,
+);
+v1Router.get(
+  '/winners/:id',
+  authenticate,
+  attachDataScope(MODULES.WINNERS),
+  authorize({ module: MODULES.WINNERS, action: ACTIONS.READ }),
+  winnerController.getWinnerById,
+);
+v1Router.post(
+  '/winners',
+  authenticate,
+  attachDataScope(MODULES.WINNERS),
+  authorize({ module: MODULES.WINNERS, action: ACTIONS.CREATE }),
+  requireStaff,
+  winnerController.selectWinner,
+);
+v1Router.post(
+  '/winners/:id/confirm',
+  authenticate,
+  attachDataScope(MODULES.WINNERS),
+  authorize({ module: MODULES.WINNERS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  winnerController.confirmWinner,
+);
+v1Router.post(
+  '/winners/:id/decline',
+  authenticate,
+  attachDataScope(MODULES.WINNERS),
+  authorize({ module: MODULES.WINNERS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  winnerController.declineWinner,
+);
 
 // Notifications
-mountResource(v1Router, '/notifications', MODULES.NOTIFICATIONS, 'notifications');
+v1Router.get(
+  '/notifications/unread-count',
+  authenticate,
+  authorize({ module: MODULES.NOTIFICATIONS, action: ACTIONS.READ }),
+  notificationController.getUnreadCount,
+);
+v1Router.post(
+  '/notifications/read-all',
+  authenticate,
+  authorize({ module: MODULES.NOTIFICATIONS, action: ACTIONS.UPDATE }),
+  notificationController.markAllRead,
+);
+v1Router.get(
+  '/notifications',
+  authenticate,
+  attachDataScope(MODULES.NOTIFICATIONS),
+  authorize({ module: MODULES.NOTIFICATIONS, action: ACTIONS.READ }),
+  notificationController.listNotifications,
+);
+v1Router.get(
+  '/notifications/:id',
+  authenticate,
+  attachDataScope(MODULES.NOTIFICATIONS),
+  authorize({ module: MODULES.NOTIFICATIONS, action: ACTIONS.READ }),
+  notificationController.getNotificationById,
+);
+v1Router.post(
+  '/notifications/:id/read',
+  authenticate,
+  authorize({ module: MODULES.NOTIFICATIONS, action: ACTIONS.UPDATE }),
+  notificationController.markAsRead,
+);
 
 // Dashboard
 v1Router.get(
   '/dashboard',
   authenticate,
   authorize({ module: MODULES.DASHBOARD, action: ACTIONS.READ }),
-  (req, res) => sendSuccess(res, { metrics: {}, roleCode: req.user?.roleCode }),
+  dashboardController.getMetrics,
 );
-
 v1Router.get(
   '/dashboard/reports',
   authenticate,
   authorize({ module: MODULES.DASHBOARD, action: ACTIONS.READ }),
-  (req, res) => sendSuccess(res, { reports: [] }),
+  dashboardController.listReports,
 );
-
 v1Router.get(
   '/dashboard/reports/export',
   authenticate,
   authorize({ module: MODULES.DASHBOARD, action: ACTIONS.EXPORT }),
-  (req, res) => sendSuccess(res, { exportUrl: null }),
+  dashboardController.exportReport,
 );
 
 // Staff & roles
-mountResource(v1Router, '/staff', MODULES.STAFF, 'staff');
-mountResource(v1Router, '/roles', MODULES.ROLES, 'roles');
+v1Router.get(
+  '/staff/assignable-roles',
+  authenticate,
+  attachDataScope(MODULES.STAFF),
+  authorize({ module: MODULES.STAFF, action: ACTIONS.READ }),
+  requireStaff,
+  staffController.listAssignableRoles,
+);
+v1Router.get(
+  '/staff',
+  authenticate,
+  attachDataScope(MODULES.STAFF),
+  authorize({ module: MODULES.STAFF, action: ACTIONS.READ }),
+  requireStaff,
+  staffController.listStaff,
+);
+v1Router.get(
+  '/staff/:id',
+  authenticate,
+  attachDataScope(MODULES.STAFF),
+  authorize({ module: MODULES.STAFF, action: ACTIONS.READ }),
+  requireStaff,
+  staffController.getStaffById,
+);
+v1Router.post(
+  '/staff',
+  authenticate,
+  attachDataScope(MODULES.STAFF),
+  authorize({ module: MODULES.STAFF, action: ACTIONS.CREATE }),
+  requireStaff,
+  staffController.createStaff,
+);
+v1Router.put(
+  '/staff/:id',
+  authenticate,
+  attachDataScope(MODULES.STAFF),
+  authorize({ module: MODULES.STAFF, action: ACTIONS.UPDATE }),
+  requireStaff,
+  staffController.updateStaff,
+);
+v1Router.post(
+  '/staff/:id/deactivate',
+  authenticate,
+  attachDataScope(MODULES.STAFF),
+  authorize({ module: MODULES.STAFF, action: ACTIONS.UPDATE }),
+  requireStaff,
+  staffController.deactivateStaff,
+);
+v1Router.delete(
+  '/staff/:id',
+  authenticate,
+  attachDataScope(MODULES.STAFF),
+  authorize({ module: MODULES.STAFF, action: ACTIONS.DELETE }),
+  requireStaff,
+  staffController.deleteStaff,
+);
+
+const roles = createResourceHandlers('roles', MODULES.ROLES);
+v1Router.get(
+  '/roles',
+  authenticate,
+  attachDataScope(MODULES.ROLES),
+  authorize({ module: MODULES.ROLES, action: ACTIONS.READ }),
+  requireStaff,
+  roles.list,
+);
+v1Router.get(
+  '/roles/:id',
+  authenticate,
+  attachDataScope(MODULES.ROLES),
+  authorize({ module: MODULES.ROLES, action: ACTIONS.READ }),
+  requireStaff,
+  roles.getById,
+);
+v1Router.put(
+  '/roles/:id',
+  authenticate,
+  attachDataScope(MODULES.ROLES),
+  authorize({ module: MODULES.ROLES, action: ACTIONS.UPDATE }),
+  requireStaff,
+  roleController.updateRolePermissions,
+);
+
+// Audit logs (entity route before :id)
+v1Router.get(
+  '/audit-logs/entity/:entityType/:entityId',
+  authenticate,
+  attachDataScope(MODULES.ROLES),
+  authorize({ module: MODULES.ROLES, action: ACTIONS.READ }),
+  requireStaff,
+  auditController.listAuditLogsForEntity,
+);
+v1Router.get(
+  '/audit-logs',
+  authenticate,
+  attachDataScope(MODULES.ROLES),
+  authorize({ module: MODULES.ROLES, action: ACTIONS.READ }),
+  requireStaff,
+  auditController.listAuditLogs,
+);
+v1Router.get(
+  '/audit-logs/:id',
+  authenticate,
+  attachDataScope(MODULES.ROLES),
+  authorize({ module: MODULES.ROLES, action: ACTIONS.READ }),
+  requireStaff,
+  auditController.getAuditLogById,
+);
 
 // Settings
 v1Router.get(
   '/settings',
   authenticate,
   authorize({ module: MODULES.SETTINGS, action: ACTIONS.READ }),
-  (req, res) => sendSuccess(res, { settings: {} }),
+  requireStaff,
+  settingsController.getSettings,
 );
 v1Router.put(
   '/settings',
   authenticate,
   authorize({ module: MODULES.SETTINGS, action: ACTIONS.UPDATE }),
-  (req, res) => sendSuccess(res, { updated: true }),
+  requireStaff,
+  settingsController.updateSettings,
 );
 
 // Session introspection

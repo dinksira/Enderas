@@ -7,6 +7,7 @@ const EMPTY_PERMISSIONS_BLOCK = Object.freeze({
   modules: [],
   actions: [],
   routes: [],
+  moduleActions: {},
 });
 
 function uniqueStrings(values) {
@@ -15,6 +16,27 @@ function uniqueStrings(values) {
   }
 
   return [...new Set(values.filter((value) => typeof value === 'string' && value.length > 0))];
+}
+
+function normalizeModuleActions(moduleActions) {
+  if (!moduleActions || typeof moduleActions !== 'object' || Array.isArray(moduleActions)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(moduleActions)
+      .filter(([moduleName]) => typeof moduleName === 'string' && moduleName.length > 0)
+      .map(([moduleName, actions]) => [moduleName, uniqueStrings(actions)]),
+  );
+}
+
+function deriveModuleActionsFromLegacy(modules, actions) {
+  const normalizedModules = uniqueStrings(modules);
+  const normalizedActions = uniqueStrings(actions);
+
+  return Object.fromEntries(
+    normalizedModules.map((moduleName) => [moduleName, [...normalizedActions]]),
+  );
 }
 
 function hasWildcardToken(values) {
@@ -88,6 +110,7 @@ export function safeParseRoleDescription(description) {
       modules: uniqueStrings(permissionsBlock.modules),
       actions: uniqueStrings(permissionsBlock.actions),
       routes: uniqueStrings(permissionsBlock.routes),
+      moduleActions: normalizeModuleActions(permissionsBlock.moduleActions),
     },
     permissionVersion: Number.isFinite(Number(parsed.permissionVersion))
       && Number(parsed.permissionVersion) > 0
@@ -115,6 +138,10 @@ export function normalizeRolePermissions(role) {
   const permissionsBlock = parsed.permissions;
   const wildcard = detectWildcard(role.code, permissionsBlock);
   const permissionVersion = resolvePermissionVersion(parsed);
+  const derivedModuleActions = permissionsBlock.moduleActions
+    && Object.keys(permissionsBlock.moduleActions).length > 0
+    ? permissionsBlock.moduleActions
+    : deriveModuleActionsFromLegacy(permissionsBlock.modules, permissionsBlock.actions);
 
   const canonical = {
     roleId: role.id,
@@ -127,6 +154,7 @@ export function normalizeRolePermissions(role) {
       modules: wildcard ? [WILDCARD] : uniqueStrings(permissionsBlock.modules),
       actions: wildcard ? [WILDCARD] : uniqueStrings(permissionsBlock.actions),
       routes: wildcard ? [WILDCARD] : uniqueStrings(permissionsBlock.routes),
+      moduleActions: wildcard ? { [WILDCARD]: [WILDCARD] } : derivedModuleActions,
     },
     parsedAt: new Date().toISOString(),
     checksum: null,

@@ -21,7 +21,12 @@ export const auctionService = Object.freeze({
     return api.get(qs ? `${AUCTIONS_BASE}/browse?${qs}` : `${AUCTIONS_BASE}/browse`);
   },
 
-  browseById: (id) => api.get(`${AUCTIONS_BASE}/browse/${id}`),
+  browseById: async (id) => {
+    const response = await api.get(`${AUCTIONS_BASE}/browse/${id}`);
+    return response;
+  },
+
+  getParticipation: async (id) => api.get(`${AUCTIONS_BASE}/browse/${id}/participation`),
 
   getById: (id) => api.get(`${AUCTIONS_BASE}/${id}`),
 

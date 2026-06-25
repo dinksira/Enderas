@@ -1,4 +1,5 @@
 import { sendSuccess } from '../utils/response.util.js';
+import { AppError } from '../utils/error.util.js';
 import { auctionService } from '../services/auction.service.js';
 
 function resolveStaffId(req) {
@@ -27,7 +28,8 @@ export async function listAuctions(req, res, next) {
 export async function listBrowseAuctions(req, res, next) {
   try {
     const { status, search } = req.query;
-    const result = await auctionService.listBrowseAuctions({ status, search });
+    const userId = req.user?.id ?? req.auth?.userId ?? null;
+    const result = await auctionService.listBrowseAuctions({ status, search }, userId);
     return sendSuccess(res, result);
   } catch (error) {
     return next(error);
@@ -36,8 +38,22 @@ export async function listBrowseAuctions(req, res, next) {
 
 export async function getBrowseAuctionById(req, res, next) {
   try {
-    const auction = await auctionService.getBrowseAuctionById(req.params.id);
+    const userId = req.user?.id ?? req.auth?.userId ?? null;
+    const auction = await auctionService.getBrowseAuctionById(req.params.id, userId);
     return sendSuccess(res, { auction });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function getAuctionParticipation(req, res, next) {
+  try {
+    const userId = req.user?.id ?? req.auth?.userId ?? null;
+    if (!userId) {
+      return next(new AppError('Authentication required', 401, 'UNAUTHORIZED'));
+    }
+    const participation = await auctionService.getAuctionParticipation(req.params.id, userId);
+    return sendSuccess(res, { participation });
   } catch (error) {
     return next(error);
   }
@@ -112,6 +128,7 @@ export const auctionController = Object.freeze({
   listBrowseAuctions,
   getAuctionById,
   getBrowseAuctionById,
+  getAuctionParticipation,
   updateAuction,
   publishAuction,
   suspendAuction,

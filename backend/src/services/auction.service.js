@@ -1,10 +1,16 @@
 import { Op, QueryTypes } from 'sequelize';
 import { sequelize } from '../config/db.config.js';
 import { Auction, AUCTION_CATEGORIES } from '../models/auction.model.js';
+import { Bid } from '../models/bid.model.js';
+import { Payment } from '../models/payment.model.js';
+import { Cpo } from '../models/cpo.model.js';
 import { Staff, User } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
+import { winnerService } from './winner.service.js';
+import { paymentService } from './payment.service.js';
+import { settingsService } from './settings.service.js';
 
 const DISPLAY_STATUS_MAP = Object.freeze({
   published: 'ACTIVE',
@@ -30,6 +36,65 @@ function formatDateForList(date) {
   });
 }
 
+const ASSET_TYPE_TO_AUCTION_CATEGORY = Object.freeze({
+  vehicle: 'vehicles',
+  land: 'land',
+  building: 'buildings',
+  machinery: 'machinery',
+  equipment: 'equipment',
+  salvage: 'salvage_assets',
+  other: 'other_assets',
+});
+
+function mapAssetTypeToAuctionCategory(assetType) {
+  return ASSET_TYPE_TO_AUCTION_CATEGORY[assetType] || 'other_assets';
+}
+
+function buildAuctionDocumentsFromAsset(asset) {
+  const docs = [];
+
+  if (asset.ownership_document_url) {
+    docs.push({
+      name: 'Ownership Document',
+      url: asset.ownership_document_url,
+      size: 0,
+    });
+  }
+
+  const additional = Array.isArray(asset.additional_document_urls)
+    ? asset.additional_document_urls
+    : [];
+
+  for (const doc of additional) {
+    if (typeof doc === 'string' && doc.trim()) {
+      docs.push({ name: 'Supporting Document', url: doc.trim(), size: 0 });
+      continue;
+    }
+
+    if (doc?.url) {
+      docs.push({
+        name: doc.name || doc.fileName || 'Supporting Document',
+        url: doc.url,
+        size: Number(doc.size) || 0,
+      });
+    }
+  }
+
+  return normalizeDocumentFiles(docs);
+}
+
+function defaultAuctionWindowDates() {
+  const start = new Date();
+  start.setSeconds(0, 0);
+  start.setMinutes(0);
+  start.setHours(start.getHours() + 1);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 7);
+
+  return { start, end };
+}
+
 function normalizeDocumentFiles(documents) {
   if (!Array.isArray(documents)) {
     return [];
@@ -44,6 +109,8 @@ function normalizeDocumentFiles(documents) {
     }));
 }
 
+const DISPLAY_TIMEZONE = 'Africa/Addis_Ababa';
+
 function formatDateTimeForDetail(date) {
   if (!date) {
     return '—';
@@ -54,7 +121,22 @@ function formatDateTimeForDetail(date) {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: DISPLAY_TIMEZONE,
   });
+}
+
+function getBiddingWindowStatus(auction) {
+  const now = new Date();
+  const start = auction.startDate ? new Date(auction.startDate) : null;
+  const end = auction.endDate ? new Date(auction.endDate) : null;
+  if (!start || !end) return 'unknown';
+  if (now < start) return 'before';
+  if (now > end) return 'after';
+  return 'open';
+}
+
+function isWithinBiddingWindow(auction) {
+  return getBiddingWindowStatus(auction) === 'open';
 }
 
 function buildStaffDisplayName(staff) {
@@ -349,7 +431,7 @@ const BROWSE_VISIBLE_STATUSES = Object.freeze(['published', 'suspended', 'closed
  * Published auctions visible to bidders (no draft/pending).
  * @param {{ status?: string, search?: string }} [options]
  */
-export async function listBrowseAuctions(options = {}) {
+export async function listBrowseAuctions(options = {}, userId = null) {
   const where = {
     deleted_at: null,
     status: { [Op.in]: BROWSE_VISIBLE_STATUSES },
@@ -381,7 +463,8 @@ export async function listBrowseAuctions(options = {}) {
     order: [['start_date', 'DESC']],
   });
 
-  const items = await attachBidCounts(auctions);
+  let items = (await attachBidCounts(auctions)).map((row) => sanitizeBrowseAuction(row));
+  items = await attachUserParticipationSummaries(items, userId);
 
   return {
     items,
@@ -389,10 +472,195 @@ export async function listBrowseAuctions(options = {}) {
   };
 }
 
+function sanitizeBrowseAuction(auction, { documentAccess = false } = {}) {
+  if (!auction || typeof auction !== 'object') {
+    return auction;
+  }
+
+  const sanitized = { ...auction };
+  if (!documentAccess) {
+    sanitized.documents = [];
+    sanitized.documentAccess = false;
+  } else {
+    sanitized.documentAccess = true;
+  }
+  return sanitized;
+}
+
+function buildParticipationSummary({ payment = null, cpo = null, bid = null } = {}) {
+  const paymentApproved = payment?.status === 'approved';
+  const paymentPending = payment?.status === 'pending';
+  const paymentRejected = payment?.status === 'rejected';
+  const cpoApproved = cpo?.status === 'approved';
+  const cpoPending = cpo?.status === 'pending';
+  const cpoRejected = cpo?.status === 'rejected';
+  const hasBid = Boolean(bid);
+
+  let participationStatus = 'not_started';
+  if (hasBid) {
+    participationStatus = 'bid_submitted';
+  } else if (cpoApproved) {
+    participationStatus = 'bidding_waiting';
+  } else if (cpoRejected) {
+    participationStatus = 'cpo_rejected';
+  } else if (cpoPending) {
+    participationStatus = 'cpo_pending';
+  } else if (paymentApproved) {
+    participationStatus = 'registered';
+  } else if (paymentRejected) {
+    participationStatus = 'payment_rejected';
+  } else if (paymentPending) {
+    participationStatus = 'payment_pending';
+  }
+
+  return {
+    participationStatus,
+    isRegisteredBidder: paymentApproved,
+    documentAccess: paymentApproved,
+    hasBid,
+  };
+}
+
+function latestRecordByAuction(records) {
+  const map = new Map();
+  for (const record of records) {
+    const auctionId = record.auction_id ?? record.auctionId;
+    if (auctionId && !map.has(auctionId)) {
+      map.set(auctionId, record);
+    }
+  }
+  return map;
+}
+
+async function attachUserParticipationSummaries(items, userId) {
+  if (!userId || !items.length) {
+    return items;
+  }
+
+  const auctionIds = items.map((item) => item.id);
+  const [payments, cpos, bids] = await Promise.all([
+    Payment.findAll({
+      where: { user_id: userId, auction_id: { [Op.in]: auctionIds }, deleted_at: null },
+      order: [['created_at', 'DESC']],
+    }),
+    Cpo.findAll({
+      where: { user_id: userId, auction_id: { [Op.in]: auctionIds }, deleted_at: null },
+      order: [['created_at', 'DESC']],
+    }),
+    Bid.findAll({
+      where: { user_id: userId, auction_id: { [Op.in]: auctionIds } },
+    }),
+  ]);
+
+  const paymentByAuction = latestRecordByAuction(payments);
+  const cpoByAuction = latestRecordByAuction(cpos);
+  const bidByAuction = latestRecordByAuction(bids);
+
+  return items.map((item) => ({
+    ...item,
+    myParticipation: buildParticipationSummary({
+      payment: paymentByAuction.get(item.id),
+      cpo: cpoByAuction.get(item.id),
+      bid: bidByAuction.get(item.id),
+    }),
+  }));
+}
+
+/**
+ * @param {string} auctionId
+ * @param {string} userId
+ */
+export async function getAuctionParticipation(auctionId, userId) {
+  const auction = await getBrowseAuctionById(auctionId, userId);
+
+  const [payment, cpo, bid] = await Promise.all([
+    Payment.findOne({
+      where: { user_id: userId, auction_id: auctionId, deleted_at: null },
+      order: [['created_at', 'DESC']],
+    }),
+    Cpo.findOne({
+      where: { user_id: userId, auction_id: auctionId, deleted_at: null },
+      order: [['created_at', 'DESC']],
+    }),
+    Bid.findOne({ where: { auction_id: auctionId, user_id: userId } }),
+  ]);
+
+  const paymentApproved = payment?.status === 'approved';
+  const paymentPending = payment?.status === 'pending';
+  const paymentRejected = payment?.status === 'rejected';
+  const cpoApproved = cpo?.status === 'approved';
+  const cpoPending = cpo?.status === 'pending';
+  const cpoRejected = cpo?.status === 'rejected';
+  const auctionOpen = auction.dbStatus === 'published';
+  const inWindow = isWithinBiddingWindow(auction);
+  const biddingWindowStatus = getBiddingWindowStatus(auction);
+
+  const summary = buildParticipationSummary({ payment, cpo, bid });
+  let participationStatus = summary.participationStatus;
+  if (cpoApproved && !bid && auctionOpen && inWindow) {
+    participationStatus = 'ready_to_bid';
+  } else if (cpoApproved && !bid && biddingWindowStatus === 'after') {
+    participationStatus = 'bidding_closed';
+  } else if (cpoApproved && !bid) {
+    participationStatus = 'bidding_waiting';
+  }
+
+  return {
+    auctionId,
+    participationStatus,
+    isRegisteredBidder: summary.isRegisteredBidder,
+    payment: payment
+      ? {
+          id: payment.id,
+          status: payment.status,
+          amount: Number(payment.amount),
+          rejectionReason: payment.rejection_reason,
+          createdAt: payment.created_at,
+        }
+      : null,
+    cpo: cpo
+      ? {
+          id: cpo.id,
+          status: cpo.status,
+          rejectionReason: cpo.rejection_reason,
+          expiryDate: cpo.expiry_date,
+          createdAt: cpo.created_at,
+        }
+      : null,
+    bid: bid
+      ? {
+          id: bid.id,
+          amount: Number(bid.amount),
+          status: bid.status,
+          submittedAt: bid.submitted_at,
+        }
+      : null,
+    gates: {
+      documentAccess: paymentApproved,
+      canSubmitPayment:
+        auctionOpen && !paymentApproved && !paymentPending && (!payment || paymentRejected),
+      canSubmitCpo: auctionOpen && paymentApproved && !cpoApproved && !cpoPending,
+      canPlaceBid: auctionOpen && inWindow && cpoApproved && !bid,
+      inBiddingWindow: inWindow,
+      biddingWindowStatus,
+      paymentPending,
+      cpoPending,
+    },
+    flags: {
+      paymentApproved,
+      paymentRejected,
+      cpoApproved,
+      cpoRejected,
+      hasBid: Boolean(bid),
+    },
+  };
+}
+
 /**
  * @param {string} id
+ * @param {string|null} [userId]
  */
-export async function getBrowseAuctionById(id) {
+export async function getBrowseAuctionById(id, userId = null) {
   const auction = await findAuctionOrThrow(id);
 
   if (!BROWSE_VISIBLE_STATUSES.includes(auction.status)) {
@@ -400,7 +668,13 @@ export async function getBrowseAuctionById(id) {
   }
 
   const [serialized] = await attachBidCounts([auction]);
-  return serialized;
+  let documentAccess = false;
+
+  if (userId) {
+    documentAccess = await paymentService.hasApprovedDocumentPayment(userId, id);
+  }
+
+  return sanitizeBrowseAuction(serialized, { documentAccess });
 }
 
 /**
@@ -545,13 +819,21 @@ export async function reactivateAuction(id, staffId) {
 }
 
 export async function closeAuction(id, staffId) {
-  return transitionAuctionStatus(
+  const result = await transitionAuctionStatus(
     id,
     ['published', 'suspended'],
     'closed',
     staffId,
     AUDIT_ACTIONS.CLOSE,
   );
+
+  try {
+    await winnerService.autoSelectWinner(id, staffId);
+  } catch (error) {
+    console.warn('[auction.service] autoSelectWinner failed:', error.message);
+  }
+
+  return result;
 }
 
 export async function deleteAuction(id, staffId) {
@@ -574,12 +856,96 @@ export async function deleteAuction(id, staffId) {
   return { deleted: true, id };
 }
 
+/**
+ * When an auction request (asset) is approved, create and publish a linked auction
+ * so it appears in browse and admin auction lists.
+ * @param {import('sequelize').Model} asset
+ * @param {string} staffId
+ */
+export async function createPublishedAuctionFromApprovedAsset(asset, staffId) {
+  const plain = asset.get ? asset.get({ plain: true }) : asset;
+
+  const existing = await Auction.findOne({
+    where: { asset_id: plain.id, deleted_at: null },
+  });
+
+  if (existing) {
+    if (existing.status !== 'published') {
+      await transitionAuctionStatus(
+        existing.id,
+        ['draft', 'pending_approval', 'suspended'],
+        'published',
+        staffId,
+        AUDIT_ACTIONS.PUBLISH,
+      );
+    }
+    return existing;
+  }
+
+  const reserve = Number(plain.desired_reserve_price);
+  if (!Number.isFinite(reserve) || reserve <= 0) {
+    throw new AppError(
+      'Asset must have a valid desired reserve price before approval',
+      400,
+      'INVALID_RESERVE_PRICE',
+    );
+  }
+
+  const documents = buildAuctionDocumentsFromAsset(plain);
+  if (documents.length === 0) {
+    throw new AppError(
+      'Asset must include ownership or supporting documents before approval',
+      400,
+      'DOCUMENTS_REQUIRED',
+    );
+  }
+
+  const cpoPercentage = Number(await settingsService.getSetting('auction.default_cpo_percentage'));
+  const { start, end } = defaultAuctionWindowDates();
+  const imageUrls = normalizeImageUrls(plain.image_urls);
+
+  const auction = await Auction.create({
+    id: generateUuid(),
+    asset_id: plain.id,
+    created_by_staff_id: staffId,
+    title: plain.title.trim(),
+    category: mapAssetTypeToAuctionCategory(plain.asset_type),
+    description: plain.description?.trim() || null,
+    auction_conditions: plain.auction_conditions?.trim() || null,
+    image_urls: imageUrls.length > 0 ? imageUrls : null,
+    document_files: documents,
+    start_date: start,
+    end_date: end,
+    reserve_price: reserve,
+    document_price: 0,
+    cpo_percentage: Number.isFinite(cpoPercentage) && cpoPercentage >= 1 ? cpoPercentage : 1,
+    currency: 'ETB',
+    status: 'published',
+  });
+
+  await auditService.writeAuditLog({
+    staffId,
+    action: AUDIT_ACTIONS.PUBLISH,
+    entityType: 'Auction',
+    entityId: auction.id,
+    metadata: {
+      title: auction.title,
+      assetId: plain.id,
+      source: 'asset_request_approval',
+    },
+  });
+
+  return auction;
+}
+
 export const auctionService = Object.freeze({
   createAuction,
+  createPublishedAuctionFromApprovedAsset,
   listAuctions,
   listBrowseAuctions,
   getAuctionById,
   getBrowseAuctionById,
+  getAuctionParticipation,
   updateAuction,
   publishAuction,
   suspendAuction,

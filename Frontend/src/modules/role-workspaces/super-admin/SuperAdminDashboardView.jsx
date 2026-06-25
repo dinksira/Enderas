@@ -7,7 +7,8 @@ import { CreateAuctionModal } from '../../auctions/components/CreateAuctionModal
 import { AuctionDetailDrawer } from '../../auctions/components/AuctionDetailDrawer.jsx';
 import { AuctionSuspendConfirmModal } from '../../auctions/components/AuctionSuspendConfirmModal.jsx';
 import { AuctionDeleteConfirmModal } from '../../auctions/components/AuctionDeleteConfirmModal.jsx';
-import { DashboardToast } from '../../auctions/components/DashboardToast.jsx';
+import { DashboardToast } from '../../../components/DashboardToast.jsx';
+import { useRegisterPageSearch } from '../../../contexts/PageSearchContext.jsx';
 import { auctionService } from '../../auctions/services/auction-service.js';
 import { normalizeAuctionStatus, statusPillClass } from '../../auctions/utils/auction-drawer-utils.js';
 
@@ -67,6 +68,7 @@ export function SuperAdminDashboardView() {
   const canCreate = useAuthStore((state) => state.can(MODULES.AUCTIONS, ACTIONS.CREATE));
 
   const [activeFilter, setActiveFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedAuctionId, setSelectedAuctionId] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -79,6 +81,13 @@ export function SuperAdminDashboardView() {
   const apiStatus = activeFilter === 'all' ? undefined : FILTER_STATUS_MAP[activeFilter];
   const { records, loading, error, refetch } = useAuctions({
     status: apiStatus,
+    search: search.trim() || undefined,
+  });
+
+  useRegisterPageSearch({
+    value: search,
+    onChange: setSearch,
+    placeholder: t('auctions.management.searchPlaceholder'),
   });
 
   const normalizedRecords = useMemo(() => records.map(mapRecord), [records]);
