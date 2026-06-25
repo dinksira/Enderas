@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../../stores/auth-store.js';
+import { useRegisterPageSearch } from '../../../contexts/PageSearchContext.jsx';
 import { kycService } from '../services/kyc.service.js';
 import { KYCApproveConfirmModal } from '../components/KYCApproveConfirmModal.jsx';
 import { KYCRejectModal } from '../components/KYCRejectModal.jsx';
@@ -30,12 +31,14 @@ const PAGE_SIZE = 20;
 
 export function KYCManagementView() {
   const { t, i18n } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const user = useAuthStore((state) => state.user);
   const locale = i18n.language === 'am' ? 'am' : 'en';
   const isAmharic = locale === 'am';
 
   const [activeTab, setActiveTab] = useState('all');
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
 
   const [kycs, setKycs] = useState([]);
   const [stats, setStats] = useState(null);
@@ -61,6 +64,7 @@ export function KYCManagementView() {
         page,
         limit: PAGE_SIZE,
         tab: activeTab === 'all' ? undefined : activeTab,
+        search: search.trim() || undefined,
         includeStats: true,
       });
 
@@ -75,7 +79,13 @@ export function KYCManagementView() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, page, t]);
+  }, [activeTab, page, search, t]);
+
+  useRegisterPageSearch({
+    value: search,
+    onChange: setSearch,
+    placeholder: t('kyc.management.searchPlaceholder'),
+  });
 
   useEffect(() => {
     loadKYCs();
@@ -83,7 +93,7 @@ export function KYCManagementView() {
 
   useEffect(() => {
     setPage(1);
-  }, [activeTab]);
+  }, [activeTab, search]);
 
   const tabCounts = useMemo(() => {
     if (!stats) {
@@ -101,6 +111,17 @@ export function KYCManagementView() {
     setSelectedKycId(kycId);
     setDrawerOpen(true);
   };
+
+  useEffect(() => {
+    const kycId = searchParams.get('kycId');
+    if (!kycId) return;
+
+    openDrawer(kycId);
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('kycId');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const closeDrawer = () => {
     setDrawerOpen(false);
@@ -152,11 +173,6 @@ export function KYCManagementView() {
 
   return (
     <div className={`kyc-management-page ${isAmharic ? 'kyc-management-page--am' : ''}`}>
-      <header className="kyc-management-page__header">
-        <h1 className="kyc-management-page__title">{t('kyc.management.pageTitle')}</h1>
-        <p className="kyc-management-page__subtitle">{t('kyc.managementSubtitle')}</p>
-      </header>
-
       <section className="dashboard-filters kyc-management-page__filters" aria-label={t('kyc.statusFilters')}>
         <div className="dashboard-filters__tabs" role="tablist" aria-label={t('kyc.statusFilters')}>
           {KYC_TAB_KEYS.map((tabKey) => {

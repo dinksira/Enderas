@@ -1,29 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { usePaginatedResource } from '../../../hooks/use-paginated-resource.js';
 import { cpoService } from '../services/cpo-service.js';
+import { CPO_PAGE_SIZE } from '../utils/cpo-management-utils.js';
 
 export function useCpoRecords() {
-  const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const fetchRecords = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await cpoService.getAll();
-      setRecords(Array.isArray(data) ? data : data?.items ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to load records.');
-    } finally {
-      setLoading(false);
-    }
+  const fetchFn = useCallback(async (params) => {
+    const response = await cpoService.listCpos(params);
+    return {
+      items: response?.items ?? [],
+      pagination: response?.pagination,
+      stats: response?.stats,
+    };
   }, []);
 
-  useEffect(() => {
-    fetchRecords();
-  }, [fetchRecords]);
-
-  return { records, loading, error, refetch: fetchRecords };
+  return usePaginatedResource({
+    fetchFn,
+    pageSize: CPO_PAGE_SIZE,
+    itemsKey: 'items',
+  });
 }
 
 export default useCpoRecords;

@@ -141,6 +141,7 @@ function buildAuthzPayload(permissions) {
     modules: permissions.modules,
     actions: permissions.actions,
     routes: permissions.routes,
+    moduleActions: permissions.moduleActions,
   };
 }
 
@@ -164,6 +165,7 @@ function buildSessionUserPayload(permissions) {
       modules: permissions.modules,
       actions: permissions.actions,
       routes: permissions.routes,
+      moduleActions: permissions.moduleActions,
     },
   };
 }

@@ -16,8 +16,8 @@ test('bidder navigation excludes staff and roles', () => {
 
   assert.ok(ids.includes('browse-auctions'));
   assert.ok(ids.includes('my-bids'));
-  assert.ok(ids.includes('submit-asset'));
   assert.ok(ids.includes('my-assets'));
+  assert.ok(!ids.includes('submit-asset'));
   assert.ok(!ids.includes('bids'));
   assert.ok(!ids.includes('staff'));
   assert.ok(!ids.includes('roles'));

@@ -1,12 +1,21 @@
+import { useTranslation } from 'react-i18next';
+import { MetricsCardGrid } from '../components/MetricsCardGrid.jsx';
 import { WorkspacePage } from '../components/WorkspacePage.jsx';
 
-export function FinanceOfficerDashboardView() {
+export function FinanceOfficerDashboardView({ metrics, metricsLoading, metricsError, metricKeys }) {
+  const { t } = useTranslation();
+
   return (
     <WorkspacePage
-      title="Finance Officer Dashboard"
-      description="Verify payments and generate financial reports."
+      title={t('dashboard.roles.financeOfficer.title')}
+      description={t('dashboard.roles.financeOfficer.description')}
     >
-      <p>Payment verification queue and report exports.</p>
+      <MetricsCardGrid
+        metrics={metrics}
+        metricKeys={metricKeys}
+        loading={metricsLoading}
+        error={metricsError}
+      />
     </WorkspacePage>
   );
 }

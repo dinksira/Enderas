@@ -1,2 +1,2 @@
-export { BidManagementView } from './bid-management-view.jsx';
-export { default } from './bid-management-view.jsx';
+export { BidManagementView } from './BidManagementView.jsx';
+export { MyBidsView } from './MyBidsView.jsx';

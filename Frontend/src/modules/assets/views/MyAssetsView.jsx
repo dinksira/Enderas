@@ -1,18 +1,42 @@
-import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ROUTES } from '../../../config/routes.js';
+import { RequestAuctionWizardModal } from '../components/RequestAuctionWizardModal.jsx';
+import { AssetDetailDrawer } from '../components/AssetDetailDrawer.jsx';
 import { useMyAssets } from '../hooks/use-my-assets.js';
 import { normalizeAssetStatus, statusPillClass } from '../utils/asset-form-utils.js';
 
 export function MyAssetsView() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { records, loading, error, refetch } = useMyAssets();
+  const [selectedId, setSelectedId] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setWizardOpen(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('new');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const sortedRecords = useMemo(
     () => [...records].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)),
     [records],
   );
+
+  const openDrawer = (id) => {
+    setSelectedId(id);
+    setDrawerOpen(true);
+  };
+
+  const handleWizardSuccess = () => {
+    setWizardOpen(false);
+    refetch();
+  };
 
   return (
     <section className="asset-page">
@@ -21,9 +45,13 @@ export function MyAssetsView() {
           <h1 className="asset-page__title">{t('assets.my.title')}</h1>
           <p className="asset-page__lead">{t('assets.my.subtitle')}</p>
         </div>
-        <Link to={ROUTES.APP_SUBMIT_ASSET} className="dashboard-filters__cta">
+        <button
+          type="button"
+          className="dashboard-filters__cta"
+          onClick={() => setWizardOpen(true)}
+        >
           {t('assets.my.submitNew')}
-        </Link>
+        </button>
       </header>
 
       <section className="dashboard-table-panel" aria-live="polite">
@@ -75,7 +103,13 @@ export function MyAssetsView() {
                 sortedRecords.map((record) => {
                   const displayStatus = normalizeAssetStatus(record.status);
                   return (
-                    <tr key={record.id} className="dashboard-table__row">
+                    <tr
+                      key={record.id}
+                      className="dashboard-table__row kyc-management-page__row"
+                      onClick={() => openDrawer(record.id)}
+                      tabIndex={0}
+                      role="button"
+                    >
                       <td className="dashboard-table__cell dashboard-table__cell--strong">
                         {record.title}
                         {displayStatus === 'REJECTED' && record.rejectionReason && (
@@ -113,6 +147,18 @@ export function MyAssetsView() {
           </div>
         )}
       </section>
+
+      <AssetDetailDrawer
+        assetId={selectedId}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      />
+
+      <RequestAuctionWizardModal
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onSuccess={handleWizardSuccess}
+      />
     </section>
   );
 }

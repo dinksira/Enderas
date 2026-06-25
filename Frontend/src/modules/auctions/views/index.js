@@ -1,2 +1,2 @@
-export { AuctionCatalogView } from './auction-catalog-view.jsx';
-export { default } from './auction-catalog-view.jsx';
+export { BrowseAuctionsView } from './BrowseAuctionsView.jsx';
+export { default } from './BrowseAuctionsView.jsx';

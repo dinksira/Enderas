@@ -1,29 +1,62 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { settingService } from '../services/setting-service.js';
 
 export function useSettings() {
-  const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { t } = useTranslation();
+  const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [saveError, setSaveError] = useState('');
 
-  const fetchRecords = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
+    setError('');
+
     try {
-      const data = await settingService.getAll();
-      setRecords(Array.isArray(data) ? data : data?.items ?? []);
+      const response = await settingService.getSettings();
+      setSettings(response?.settings ?? {});
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to load records.');
+      setError(err instanceof Error ? err.message : t('settings.loadFailed'));
+      setSettings(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
-    fetchRecords();
-  }, [fetchRecords]);
+    load();
+  }, [load]);
 
-  return { records, loading, error, refetch: fetchRecords };
+  const saveSettings = useCallback(
+    async (patch) => {
+      setSaving(true);
+      setSaveError('');
+
+      try {
+        const response = await settingService.updateSettings(patch);
+        setSettings(response?.settings ?? patch);
+        return true;
+      } catch (err) {
+        setSaveError(err instanceof Error ? err.message : t('settings.saveFailed'));
+        return false;
+      } finally {
+        setSaving(false);
+      }
+    },
+    [t],
+  );
+
+  return {
+    settings,
+    loading,
+    saving,
+    error,
+    saveError,
+    reload: load,
+    saveSettings,
+  };
 }
 
 export default useSettings;

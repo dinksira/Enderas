@@ -7,6 +7,13 @@ import { KYCVerification } from './kyc.model.js';
 import { Auction } from './auction.model.js';
 import { AssetOwner } from './assetOwner.model.js';
 import { Asset } from './asset.model.js';
+import { Notification } from './notification.model.js';
+import { SystemSetting } from './systemSetting.model.js';
+import { Evaluation } from './evaluation.model.js';
+import { Payment } from './payment.model.js';
+import { Cpo } from './cpo.model.js';
+import { Bid } from './bid.model.js';
+import { Winner } from './winner.model.js';
 
 User.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
 Role.hasMany(User, { foreignKey: 'role_id', as: 'users' });
@@ -16,6 +23,9 @@ User.hasOne(Staff, { foreignKey: 'user_id', as: 'staffProfile' });
 
 Staff.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
 Role.hasMany(Staff, { foreignKey: 'role_id', as: 'staffMembers' });
+
+Staff.belongsTo(Staff, { foreignKey: 'created_by_staff_id', as: 'createdByStaff' });
+Staff.hasMany(Staff, { foreignKey: 'created_by_staff_id', as: 'createdStaffMembers' });
 
 RefreshToken.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(RefreshToken, { foreignKey: 'user_id', as: 'refreshTokens' });
@@ -44,6 +54,42 @@ Asset.belongsTo(AssetOwner, { foreignKey: 'asset_owner_id', as: 'assetOwner' });
 Staff.hasMany(Asset, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedAssets' });
 Asset.belongsTo(Staff, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedByStaff' });
 
+Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
+
+Evaluation.belongsTo(Asset, { foreignKey: 'asset_id', as: 'asset' });
+Asset.hasOne(Evaluation, { foreignKey: 'asset_id', as: 'evaluation' });
+Evaluation.belongsTo(Staff, { foreignKey: 'evaluated_by_staff_id', as: 'evaluatedByStaff' });
+Staff.hasMany(Evaluation, { foreignKey: 'evaluated_by_staff_id', as: 'evaluations' });
+
+Payment.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Payment, { foreignKey: 'user_id', as: 'payments' });
+Payment.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
+Auction.hasMany(Payment, { foreignKey: 'auction_id', as: 'payments' });
+Payment.belongsTo(Staff, { foreignKey: 'verified_by_staff_id', as: 'verifiedByStaff' });
+Staff.hasMany(Payment, { foreignKey: 'verified_by_staff_id', as: 'verifiedPayments' });
+
+Cpo.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Cpo, { foreignKey: 'user_id', as: 'cpos' });
+Cpo.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
+Auction.hasMany(Cpo, { foreignKey: 'auction_id', as: 'cpos' });
+Cpo.belongsTo(Staff, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedByStaff' });
+Staff.hasMany(Cpo, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedCpos' });
+
+Bid.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Bid, { foreignKey: 'user_id', as: 'bids' });
+Bid.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
+Auction.hasMany(Bid, { foreignKey: 'auction_id', as: 'bids' });
+
+Winner.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
+Auction.hasOne(Winner, { foreignKey: 'auction_id', as: 'winner' });
+Winner.belongsTo(Bid, { foreignKey: 'bid_id', as: 'bid' });
+Bid.hasOne(Winner, { foreignKey: 'bid_id', as: 'winner' });
+Winner.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Winner, { foreignKey: 'user_id', as: 'wins' });
+Winner.belongsTo(Staff, { foreignKey: 'selected_by_staff_id', as: 'selectedByStaff' });
+Staff.hasMany(Winner, { foreignKey: 'selected_by_staff_id', as: 'selectedWinners' });
+
 export {
   User,
   Role,
@@ -54,6 +100,13 @@ export {
   Auction,
   AssetOwner,
   Asset,
+  Notification,
+  SystemSetting,
+  Evaluation,
+  Payment,
+  Cpo,
+  Bid,
+  Winner,
 };
 
 export default {
@@ -66,4 +119,11 @@ export default {
   Auction,
   AssetOwner,
   Asset,
+  Notification,
+  SystemSetting,
+  Evaluation,
+  Payment,
+  Cpo,
+  Bid,
+  Winner,
 };

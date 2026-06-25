@@ -1,11 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../config/routes.js';
+import { resolvePageMeta } from '../config/navigation.config.js';
 import { useAuth } from '../hooks/use-auth.js';
 import { usePermission } from '../core/auth/usePermission.js';
+import { PageSearchProvider, usePageSearch } from '../contexts/PageSearchContext.jsx';
+import { notificationService } from '../modules/notifications/services/notification-service.js';
 import iconSrc from '../assets/images/enderas_icon.svg';
 import { KYCStatusBanner } from '../components/KYCStatusBanner.jsx';
+
+const PREFERRED_LANGUAGE_KEY = 'preferredLanguage';
+const NOTIFICATION_POLL_MS = 60_000;
 
 const ICON_MAP = {
   dashboard: (
@@ -82,6 +88,17 @@ const ICON_MAP = {
       <path d="M4 18l8-8 4 4 4-6 4 4" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   ),
+  'my-payments': (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="6" width="18" height="12" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  ),
+  'my-cpo': (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  ),
   'browse-auctions': (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M4 7h16M6 7v12h12V7M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" />
@@ -147,11 +164,6 @@ const ICON_MAP = {
       <path d="M10 20h4" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   ),
-  kyc: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 6h16v12H4zM8 10h8M8 14h5" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
   profile: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8" />
@@ -165,6 +177,24 @@ function resolveLanguage(language) {
   return code === 'am' ? 'am' : 'en';
 }
 
+function resolveInitialLanguage(user) {
+  const profileLanguage = resolveLanguage(user?.preferredLanguage);
+  if (user?.preferredLanguage) {
+    return profileLanguage;
+  }
+
+  try {
+    const stored = localStorage.getItem(PREFERRED_LANGUAGE_KEY);
+    if (stored) {
+      return resolveLanguage(stored);
+    }
+  } catch {
+    // Ignore storage access errors.
+  }
+
+  return 'en';
+}
+
 function NavIcon({ name }) {
   return (
     <span className="dashboard-shell__nav-icon">
@@ -173,14 +203,115 @@ function NavIcon({ name }) {
   );
 }
 
+function DashboardShellHeader({
+  isAmharic,
+  onLanguageChange,
+  activeLanguage,
+  unreadCount,
+  onNotificationsClick,
+}) {
+  const { t } = useTranslation();
+  const location = useLocation();
+  const pageMeta = resolvePageMeta(location.pathname);
+  const pageSearch = usePageSearch();
+
+  const showSearch = pageSearch.isRegistered
+    ? pageSearch.enabled
+    : pageMeta.searchEnabled;
+
+  const searchPlaceholder = pageSearch.placeholder || t(pageMeta.searchPlaceholderKey);
+  const searchValue = pageSearch.isRegistered ? pageSearch.value : '';
+  const searchOnChange = pageSearch.onChange;
+
+  const badgeLabel =
+    unreadCount >= 10 ? '9+' : String(unreadCount);
+
+  return (
+    <header className="dashboard-shell__header">
+      <div className="dashboard-shell__header-title-block">
+        <h1
+          className={`dashboard-shell__page-title${isAmharic ? ' dashboard-shell__page-title--am' : ''}`}
+        >
+          {t(pageMeta.titleKey)}
+        </h1>
+        <p className="dashboard-shell__page-subtitle">{t(pageMeta.subtitleKey)}</p>
+      </div>
+
+      {showSearch && (
+        <div className="dashboard-shell__search-wrap">
+          <input
+            type="search"
+            className="dashboard-shell__search-input"
+            value={searchValue}
+            onChange={(event) => searchOnChange(event.target.value)}
+            placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
+          />
+          <span className="dashboard-shell__search-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M20 20l-3-3" stroke="currentColor" strokeWidth="1.8" />
+            </svg>
+          </span>
+        </div>
+      )}
+
+      <div className="dashboard-shell__utilities">
+        <div
+          className="dashboard-shell__locale-toggle"
+          role="group"
+          aria-label={t('dashboard.a11y.language_selection')}
+        >
+          {['en', 'am'].map((code) => (
+            <button
+              key={code}
+              type="button"
+              className={[
+                'dashboard-shell__locale-btn',
+                activeLanguage === code ? 'dashboard-shell__locale-btn--active' : '',
+                code === 'am' ? 'dashboard-shell__locale-btn--am' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              onClick={() => onLanguageChange(code)}
+              aria-pressed={activeLanguage === code}
+            >
+              {code}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="dashboard-shell__notify-btn"
+          aria-label={t('dashboard.a11y.notifications')}
+          onClick={onNotificationsClick}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12 4a5 5 0 00-5 5v3l-2 2h14l-2-2V9a5 5 0 00-5-5z"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            />
+            <path d="M10 20h4" stroke="currentColor" strokeWidth="1.8" />
+          </svg>
+          {unreadCount > 0 && (
+            <span className="dashboard-shell__notify-badge" aria-hidden="true">
+              {badgeLabel}
+            </span>
+          )}
+        </button>
+      </div>
+    </header>
+  );
+}
+
 export function DashboardShell() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, clearSession } = useAuth();
-  const { navigation, roleCode } = usePermission();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { navigation } = usePermission();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const location = useLocation();
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const activeLanguage = resolveLanguage(i18n.language);
   const isAmharic = activeLanguage === 'am';
@@ -193,8 +324,52 @@ export function DashboardShell() {
     .slice(0, 2)
     .toUpperCase();
 
+  useLayoutEffect(() => {
+    const initialLanguage = resolveInitialLanguage(user);
+    if (resolveLanguage(i18n.language) !== initialLanguage) {
+      i18n.changeLanguage(initialLanguage);
+    }
+
+    try {
+      localStorage.setItem(PREFERRED_LANGUAGE_KEY, initialLanguage);
+    } catch {
+      // Ignore storage access errors.
+    }
+  }, [user, i18n]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadUnreadCount() {
+      try {
+        const count = await notificationService.getUnreadCount();
+        if (!cancelled) {
+          setUnreadCount(Number(count) || 0);
+        }
+      } catch {
+        if (!cancelled) {
+          setUnreadCount(0);
+        }
+      }
+    }
+
+    loadUnreadCount();
+    const intervalId = window.setInterval(loadUnreadCount, NOTIFICATION_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
   function handleLanguageChange(code) {
     i18n.changeLanguage(code);
+
+    try {
+      localStorage.setItem(PREFERRED_LANGUAGE_KEY, code);
+    } catch {
+      // Ignore storage access errors.
+    }
   }
 
   function handleLogout() {
@@ -202,23 +377,25 @@ export function DashboardShell() {
     navigate(ROUTES.HOME, { replace: true });
   }
 
-  // Helper to get i18n key for nav item label
+  function handleNotificationsClick() {
+    navigate(ROUTES.APP_NOTIFICATIONS);
+  }
+
   function getNavLabelKey(item) {
-    // Create key from id: e.g., "dashboard.nav.users"
     return `dashboard.nav.${item.id.replace(/-/g, '')}`;
   }
 
   return (
     <div className={`dashboard-shell${isAmharic ? ' dashboard-shell--am' : ''}${isSidebarCollapsed ? ' dashboard-shell--collapsed' : ''}`}>
       <aside className="dashboard-shell__sidebar" aria-label={t('dashboard.a11y.admin_navigation')}>
-        <button 
-          type="button" 
-          className="dashboard-shell__toggle-btn" 
+        <button
+          type="button"
+          className="dashboard-shell__toggle-btn"
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={isSidebarCollapsed ? t('dashboard.a11y.expand_sidebar') : t('dashboard.a11y.collapse_sidebar')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
 
@@ -226,8 +403,8 @@ export function DashboardShell() {
           <img src={iconSrc} alt={t('dashboard.brand.name')} className="dashboard-shell__brand-icon" />
           {!isSidebarCollapsed && (
             <div className="dashboard-shell__brand-text">
-              <p className="dashboard-shell__brand-title">Enderas</p>
-              <p className="dashboard-shell__brand-subtitle">Auction Management System</p>
+              <p className="dashboard-shell__brand-title">{t('dashboard.brand.name')}</p>
+              <p className="dashboard-shell__brand-subtitle">{t('dashboard.brand.systemSubtitle')}</p>
             </div>
           )}
         </div>
@@ -270,78 +447,20 @@ export function DashboardShell() {
       </aside>
 
       <div className="dashboard-shell__main">
-        <header className="dashboard-shell__header">
-          <div className="dashboard-shell__header-title-block">
-            <h1
-              className={`dashboard-shell__page-title${isAmharic ? ' dashboard-shell__page-title--am' : ''}`}
-            >
-              {t('dashboard.header.title')}
-            </h1>
-            <p className="dashboard-shell__page-subtitle">{t('dashboard.header.subtitle')}</p>
-          </div>
+        <PageSearchProvider>
+          <DashboardShellHeader
+            isAmharic={isAmharic}
+            onLanguageChange={handleLanguageChange}
+            activeLanguage={activeLanguage}
+            unreadCount={unreadCount}
+            onNotificationsClick={handleNotificationsClick}
+          />
 
-          <div className="dashboard-shell__search-wrap">
-            <input
-              type="search"
-              className="dashboard-shell__search-input"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder={t('dashboard.header.search_placeholder')}
-              aria-label={t('dashboard.header.search_placeholder')}
-            />
-            <span className="dashboard-shell__search-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
-                <path d="M20 20l-3-3" stroke="currentColor" strokeWidth="1.8" />
-              </svg>
-            </span>
+          <div className="dashboard-shell__content">
+            <KYCStatusBanner />
+            <Outlet />
           </div>
-
-          <div className="dashboard-shell__utilities">
-            <div
-              className="dashboard-shell__locale-toggle"
-              role="group"
-              aria-label={t('dashboard.a11y.language_selection')}
-            >
-              {['en', 'am'].map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  className={[
-                    'dashboard-shell__locale-btn',
-                    activeLanguage === code ? 'dashboard-shell__locale-btn--active' : '',
-                    code === 'am' ? 'dashboard-shell__locale-btn--am' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  onClick={() => handleLanguageChange(code)}
-                  aria-pressed={activeLanguage === code}
-                >
-                  {code}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              className="dashboard-shell__notify-btn"
-              aria-label={t('dashboard.a11y.notifications')}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M12 4a5 5 0 00-5 5v3l-2 2h14l-2-2V9a5 5 0 00-5-5z"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                />
-                <path d="M10 20h4" stroke="currentColor" strokeWidth="1.8" />
-              </svg>
-            </button>
-          </div>
-        </header>
-
-        <div className="dashboard-shell__content">
-          <KYCStatusBanner />
-          <Outlet />
-        </div>
+        </PageSearchProvider>
       </div>
     </div>
   );

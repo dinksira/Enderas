@@ -1,12 +1,21 @@
+import { useTranslation } from 'react-i18next';
+import { MetricsCardGrid } from '../components/MetricsCardGrid.jsx';
 import { WorkspacePage } from '../components/WorkspacePage.jsx';
 
-export function AssetOwnerDashboardView() {
+export function AssetOwnerDashboardView({ metrics, metricsLoading, metricsError, metricKeys }) {
+  const { t } = useTranslation();
+
   return (
     <WorkspacePage
-      title="Asset Owner Dashboard"
-      description="Manage your assets, submissions, and payments."
+      title={t('dashboard.roles.assetOwner.title')}
+      description={t('dashboard.roles.assetOwner.description')}
     >
-      <p>Your asset portfolio and submission status.</p>
+      <MetricsCardGrid
+        metrics={metrics}
+        metricKeys={metricKeys}
+        loading={metricsLoading}
+        error={metricsError}
+      />
     </WorkspacePage>
   );
 }

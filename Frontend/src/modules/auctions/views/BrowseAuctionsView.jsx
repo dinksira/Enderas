@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MODULES } from '../../../config/navigation.config.js';
-import { usePermission } from '../../../core/auth/usePermission.js';
-import { RequestAuctionWizardModal } from '../../assets/components/RequestAuctionWizardModal.jsx';
+import { useRegisterPageSearch } from '../../../contexts/PageSearchContext.jsx';
 import { useBrowseAuctions } from '../hooks/use-browse-auctions.js';
 import { BidderAuctionDetailDrawer } from '../components/BidderAuctionDetailDrawer.jsx';
 import {
@@ -10,22 +8,30 @@ import {
   normalizeAuctionStatus,
   statusPillClass,
 } from '../utils/auction-drawer-utils.js';
+import {
+  getParticipationStatusVariant,
+  resolveParticipationStatus,
+} from '../utils/participation-utils.js';
+import { StatusPill } from '../../../components/admin/StatusPill.jsx';
 
 const STATUS_FILTERS = ['', 'ACTIVE', 'CLOSED', 'SUSPENDED'];
 
 export function BrowseAuctionsView() {
   const { t } = useTranslation();
-  const { canCreate } = usePermission();
-  const canRequestAuction = canCreate(MODULES.ASSETS);
 
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState(null);
-  const [wizardOpen, setWizardOpen] = useState(false);
 
   const { records, loading, error } = useBrowseAuctions({
     status: statusFilter || undefined,
     search: search.trim() || undefined,
+  });
+
+  useRegisterPageSearch({
+    value: search,
+    onChange: setSearch,
+    placeholder: t('bidder.browse.searchPlaceholder'),
   });
 
   const sortedRecords = useMemo(
@@ -35,20 +41,7 @@ export function BrowseAuctionsView() {
 
   return (
     <section className="asset-page">
-      <header className="asset-page__header">
-        <h1 className="asset-page__title">{t('bidder.browse.title')}</h1>
-        <p className="asset-page__lead">{t('bidder.browse.subtitle')}</p>
-      </header>
-
       <div className="dashboard-filters" role="search">
-        <input
-          type="search"
-          className="dashboard-filters__search"
-          placeholder={t('bidder.browse.searchPlaceholder')}
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          aria-label={t('bidder.browse.searchPlaceholder')}
-        />
         <div className="dashboard-filters__pills" role="group" aria-label={t('dashboard.a11y.status_filters')}>
           {STATUS_FILTERS.map((filter) => {
             const label = filter
@@ -68,22 +61,6 @@ export function BrowseAuctionsView() {
           })}
         </div>
       </div>
-
-      {canRequestAuction && (
-        <section className="browse-auctions__toolbar" aria-label={t('assets.requestWizard.toolbar.ariaLabel')}>
-          <div className="browse-auctions__toolbar-copy">
-            <p className="browse-auctions__toolbar-title">{t('assets.requestWizard.toolbar.title')}</p>
-            <p className="browse-auctions__toolbar-hint">{t('assets.requestWizard.toolbar.hint')}</p>
-          </div>
-          <button
-            type="button"
-            className="dashboard-filters__cta browse-auctions__request-btn"
-            onClick={() => setWizardOpen(true)}
-          >
-            {t('assets.requestWizard.toolbar.cta')}
-          </button>
-        </section>
-      )}
 
       <section className="dashboard-table-panel" aria-live="polite">
         <div className="dashboard-table-scroll">
@@ -106,7 +83,7 @@ export function BrowseAuctionsView() {
                   {t('dashboard.table.headers.reserve_etb')}
                 </th>
                 <th scope="col" className="dashboard-table__head-cell">
-                  {t('dashboard.table.headers.actions')}
+                  {t('bidder.browse.myStatus')}
                 </th>
               </tr>
             </thead>
@@ -139,8 +116,23 @@ export function BrowseAuctionsView() {
                 !error &&
                 sortedRecords.map((record) => {
                   const displayStatus = normalizeAuctionStatus(record.status);
+                  const myStatus = resolveParticipationStatus(record.myParticipation);
+                  const myStatusVariant = getParticipationStatusVariant(myStatus);
                   return (
-                    <tr key={record.id} className="dashboard-table__row">
+                    <tr
+                      key={record.id}
+                      className="dashboard-table__row kyc-management-page__row"
+                      onClick={() => setSelectedId(record.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          setSelectedId(record.id);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={t('bidder.browse.openDetail', { title: record.title })}
+                    >
                       <td className="dashboard-table__cell dashboard-table__cell--strong">
                         {record.title}
                       </td>
@@ -157,13 +149,12 @@ export function BrowseAuctionsView() {
                         {formatEtbAmount(record.reservePrice ?? record.reserve)}
                       </td>
                       <td className="dashboard-table__cell">
-                        <button
-                          type="button"
-                          className="dashboard-filters__cta"
-                          onClick={() => setSelectedId(record.id)}
-                        >
-                          {t('bidder.browse.view')}
-                        </button>
+                        <StatusPill
+                          label={t(`bidder.participation.status.${myStatus}.label`, {
+                            defaultValue: myStatus,
+                          })}
+                          variant={myStatusVariant}
+                        />
                       </td>
                     </tr>
                   );
@@ -177,11 +168,6 @@ export function BrowseAuctionsView() {
         auctionId={selectedId}
         open={Boolean(selectedId)}
         onClose={() => setSelectedId(null)}
-      />
-
-      <RequestAuctionWizardModal
-        open={wizardOpen}
-        onClose={() => setWizardOpen(false)}
       />
     </section>
   );

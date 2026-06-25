@@ -1,6 +1,6 @@
 # Backend Status — Enderass Auction System
 
-**Last updated:** 2026-06-23  
+**Last updated:** 2026-06-25  
 **Source of truth:** Code under `backend/` and `docs/enderass_auction.sql`  
 **Purpose:** Technical reference for developers — what exists, what works, what is stubbed, and what is missing.
 
@@ -15,12 +15,24 @@ The backend is a REST API for the Enderass Auction Management System. It current
 - **User registration and authentication** (mobile + password, OTP verification, JWT access tokens, opaque refresh token issuance)
 - **Role-based access control (RBAC)** on all `/api/v1/*` domain routes
 - **KYC verification** (submit, resubmit, staff review, approve/reject, audit trail, tabbed listing with stats)
+- **Asset requests** (submit, CSO review, approve/reject)
+- **Evaluations** (schedule, complete, approve/reject; asset status transitions)
+- **Auction management** (staff CRUD, publish/suspend/reactivate/close, bidder browse)
+- **Payments** (manual submission, finance approve/reject)
+- **CPO** (request, staff approve/reject; bid gate)
+- **Bids** (place bid with CPO/auction validation; staff invalidation)
+- **Winners** (manual/auto select on auction close, confirm/decline)
+- **Notifications** (in-app persistence, read/unread)
+- **User & staff admin** (CRUD, status management)
+- **System settings** (`system_settings` table)
+- **Audit trail** (`GET /api/v1/audit-logs`)
+- **Dashboard metrics & reports** (real SQL aggregations, CSV export)
 - **File upload** (local disk storage via Multer)
-- **Audit logging** for auth, KYC, and access-denied events
-- **Auction management** (staff CRUD, publish/suspend/reactivate/close, list with filters, JSON-stored images/documents)
-- **Stub/placeholder endpoints** for assets, bids, payments, and most other SRS domains (authorized but return empty or success placeholders)
+- **Audit logging** across all domain mutations
 
-The auction lifecycle is **partially implemented**: staff can create and manage auctions in the `auctions` table, but upstream workflows (assets → evaluations) and downstream flows (bids → winners → payments → CPO) remain stubs.
+**Still stubbed or incomplete:** `documents` module, Addis Pay integration, SMS/email delivery, refresh token endpoint, background jobs.
+
+The full auction lifecycle is **implemented end-to-end** in code; production integrations (Addis Pay, SMS) remain phase 2.
 
 ### Tech stack
 
@@ -34,7 +46,7 @@ The auction lifecycle is **partially implemented**: staff can create and manage 
 | Auth | jsonwebtoken + bcrypt | Access JWT (default 15m); refresh tokens stored hashed in DB |
 | File upload | multer | In-memory buffer → local filesystem |
 | i18n | i18n | Error messages via `res.__()` |
-| Migrations | sequelize-cli | Migrations 016–019 in repo; base schema from SQL dump |
+| Migrations | sequelize-cli | Migrations 016–023 in repo; base schema from SQL dump |
 
 ### Architecture pattern
 
@@ -70,7 +82,7 @@ RBAC logic lives in `backend/src/core/authorization/`. Business logic for implem
 
 ### Sequelize models (implemented in code)
 
-Only **7 models** exist under `backend/src/models/`. All other tables in `enderass_auction.sql` have **no Sequelize model** and **no service layer** (except `auctions`, which is implemented; `bids` is queried via raw SQL for counts only).
+Only **16 models** exist under `backend/src/models/`. The `documents` table and `auction_documents` remain unused (docs stored in `auctions.document_files` JSON).
 
 #### `users` — `backend/src/models/user.model.js`
 
