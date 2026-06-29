@@ -51,6 +51,10 @@ export const Asset = sequelize.define(
       type: DataTypes.CHAR(36),
       allowNull: false,
     },
+    submission_batch_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: true,
+    },
     asset_type: {
       type: DataTypes.ENUM(...ASSET_TYPES),
       allowNull: false,

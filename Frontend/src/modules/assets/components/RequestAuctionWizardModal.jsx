@@ -12,9 +12,12 @@ import {
   ASSET_TYPE_KEYS,
   buildAssetPayload,
   buildEmptyAssetForm,
+  cloneAssetFormDraft,
   formatReserveAmount,
   getOwnershipDocType,
+  MAX_ASSETS_PER_BATCH,
   OWNERSHIP_DOC_LABEL_KEYS,
+  summarizeAssetDraft,
   validateAssetForm,
   validateAssetStep,
 } from '../utils/asset-form-utils.js';
@@ -27,8 +30,29 @@ function cloneInitialForm() {
   return buildEmptyAssetForm();
 }
 
+function createClientId() {
+  return globalThis.crypto?.randomUUID?.() ?? `asset-${Date.now()}-${Math.random()}`;
+}
+
+function buildPhotoPreviewsFromFiles(files) {
+  return files.map((file) => ({
+    id: `${file.name}-${file.size}-${file.lastModified}`,
+    url: URL.createObjectURL(file),
+    name: file.name,
+  }));
+}
+
+function revokePhotoPreviews(previews) {
+  previews.forEach((preview) => {
+    if (preview?.url) {
+      URL.revokeObjectURL(preview.url);
+    }
+  });
+}
+
 /**
  * Multi-step auction request wizard for bidders and asset owners.
+ * Supports queuing multiple assets before a single batch submission.
  * @param {{ open: boolean, onClose: () => void, onSuccess?: () => void }} props
  */
 export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
@@ -40,35 +64,47 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
   const [step, setStep] = useState(ASSET_REQUEST_STEPS.DETAILS);
   const [form, setForm] = useState(cloneInitialForm);
   const [photoPreviews, setPhotoPreviews] = useState([]);
+  const [assetQueue, setAssetQueue] = useState([]);
+  const [editingClientId, setEditingClientId] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [uploadingAdditional, setUploadingAdditional] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [submittedCount, setSubmittedCount] = useState(0);
 
   const stepIndex = ASSET_REQUEST_STEP_ORDER.indexOf(step);
   const ownershipDocType = form.assetType ? getOwnershipDocType(form.assetType) : '';
   const ownershipDocLabelKey = ownershipDocType
     ? OWNERSHIP_DOC_LABEL_KEYS[ownershipDocType]
     : null;
+  const canAddAnother = assetQueue.length < MAX_ASSETS_PER_BATCH;
+
+  const resetCurrentForm = () => {
+    setForm(cloneInitialForm());
+    setPhotoPreviews((current) => {
+      revokePhotoPreviews(current);
+      return [];
+    });
+    setEditingClientId(null);
+  };
 
   useEffect(() => {
     if (!open) {
       setStep(ASSET_REQUEST_STEPS.DETAILS);
       setForm(cloneInitialForm());
       setPhotoPreviews((current) => {
-        current.forEach((preview) => {
-          if (preview?.url) {
-            URL.revokeObjectURL(preview.url);
-          }
-        });
+        revokePhotoPreviews(current);
         return [];
       });
+      setAssetQueue([]);
+      setEditingClientId(null);
       setErrors({});
       setSubmitError('');
       setSubmitting(false);
       setUploadingAdditional(false);
       setCompleted(false);
+      setSubmittedCount(0);
     }
   }, [open]);
 
@@ -200,10 +236,93 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
     setSubmitError('');
   };
 
+  const goToFirstErrorStep = (validationErrors) => {
+    const firstErrorStep = ASSET_REQUEST_STEP_ORDER.find(
+      (stepKey) => stepKey !== ASSET_REQUEST_STEPS.BATCH_REVIEW
+        && Object.keys(validateAssetStep(stepKey, form, t)).some((key) => validationErrors[key]),
+    );
+    if (firstErrorStep) {
+      goToStep(firstErrorStep);
+    }
+  };
+
+  const commitCurrentToQueue = () => {
+    const validationErrors = validateAssetForm(form, t);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      goToFirstErrorStep(validationErrors);
+      return false;
+    }
+
+    if (!editingClientId && assetQueue.length >= MAX_ASSETS_PER_BATCH) {
+      setSubmitError(t('assets.requestWizard.batchReview.limitReached', { max: MAX_ASSETS_PER_BATCH }));
+      return false;
+    }
+
+    const entry = {
+      clientId: editingClientId || createClientId(),
+      form: cloneAssetFormDraft(form),
+      photoPreviews: photoPreviews.map((preview) => ({ ...preview })),
+    };
+
+    setAssetQueue((current) => {
+      if (editingClientId) {
+        return [...current.filter((item) => item.clientId !== editingClientId), entry];
+      }
+      return [...current, entry];
+    });
+
+    resetCurrentForm();
+    return true;
+  };
+
+  const removeFromQueue = (clientId) => {
+    setAssetQueue((current) => {
+      const removed = current.find((item) => item.clientId === clientId);
+      if (removed) {
+        revokePhotoPreviews(removed.photoPreviews);
+      }
+      return current.filter((item) => item.clientId !== clientId);
+    });
+    if (editingClientId === clientId) {
+      resetCurrentForm();
+    }
+  };
+
+  const editQueueItem = (clientId) => {
+    const item = assetQueue.find((entry) => entry.clientId === clientId);
+    if (!item) return;
+
+    setAssetQueue((current) => current.filter((entry) => entry.clientId !== clientId));
+    setForm(cloneAssetFormDraft(item.form));
+    setPhotoPreviews((current) => {
+      revokePhotoPreviews(current);
+      return buildPhotoPreviewsFromFiles(item.form.photoFiles);
+    });
+    setEditingClientId(clientId);
+    goToStep(ASSET_REQUEST_STEPS.DETAILS);
+  };
+
+  const handleAddAnother = () => {
+    if (!canAddAnother) {
+      setSubmitError(t('assets.requestWizard.batchReview.limitReached', { max: MAX_ASSETS_PER_BATCH }));
+      return;
+    }
+    resetCurrentForm();
+    goToStep(ASSET_REQUEST_STEPS.DETAILS);
+  };
+
   const handleNext = () => {
     const stepErrors = validateAssetStep(step, form, t);
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);
+      return;
+    }
+
+    if (step === ASSET_REQUEST_STEPS.DOCUMENTS) {
+      if (commitCurrentToQueue()) {
+        goToStep(ASSET_REQUEST_STEPS.BATCH_REVIEW);
+      }
       return;
     }
 
@@ -221,33 +340,45 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
   };
 
   const handleSubmit = async () => {
-    const validationErrors = validateAssetForm(form, t);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      setSubmitError(t('assets.requestWizard.errors.fixBeforeSubmit'));
-      const firstErrorStep = ASSET_REQUEST_STEP_ORDER.find(
-        (stepKey) => stepKey !== ASSET_REQUEST_STEPS.REVIEW
-          && Object.keys(validateAssetStep(stepKey, form, t)).length > 0,
-      );
-      if (firstErrorStep) {
-        goToStep(firstErrorStep);
-      }
+    if (!assetQueue.length) {
+      setSubmitError(t('assets.requestWizard.errors.emptyQueue'));
       return;
+    }
+
+    for (const item of assetQueue) {
+      const validationErrors = validateAssetForm(item.form, t);
+      if (Object.keys(validationErrors).length > 0) {
+        setSubmitError(t('assets.requestWizard.errors.fixBeforeSubmit'));
+        editQueueItem(item.clientId);
+        setErrors(validationErrors);
+        return;
+      }
     }
 
     setSubmitting(true);
     setSubmitError('');
 
     try {
-      const uploadedImages = await assetService.uploadFiles(form.photoFiles, 'assets/images');
-      const imageUrls = uploadedImages.map((file) => file.fileUrl).filter(Boolean);
+      const payloads = [];
 
-      if (!imageUrls.length) {
-        throw new Error(t('assets.form.errors.photosRequired'));
+      for (const item of assetQueue) {
+        const uploadedImages = await assetService.uploadFiles(item.form.photoFiles, 'assets/images');
+        const imageUrls = uploadedImages.map((file) => file.fileUrl).filter(Boolean);
+
+        if (!imageUrls.length) {
+          throw new Error(t('assets.form.errors.photosRequired'));
+        }
+
+        payloads.push(buildAssetPayload(item.form, imageUrls));
       }
 
-      const payload = buildAssetPayload(form, imageUrls);
-      await assetService.create(payload);
+      if (payloads.length === 1) {
+        await assetService.create(payloads[0]);
+      } else {
+        await assetService.createBatch(payloads);
+      }
+
+      setSubmittedCount(payloads.length);
       setCompleted(true);
       onSuccess?.();
     } catch (err) {
@@ -257,71 +388,22 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
     }
   };
 
-  const reviewRows = useMemo(
-    () => [
-      {
-        label: t('assets.form.fields.title'),
-        value: form.title || '—',
-        step: ASSET_REQUEST_STEPS.DETAILS,
-      },
-      {
-        label: t('assets.form.fields.assetType'),
-        value: form.assetType ? t(`assets.types.${form.assetType}`) : '—',
-        step: ASSET_REQUEST_STEPS.DETAILS,
-      },
-      {
-        label: t('assets.form.fields.description'),
-        value: form.description?.trim() || '—',
-        step: ASSET_REQUEST_STEPS.DETAILS,
-      },
-      {
-        label: t('assets.form.fields.conditionNotes'),
-        value: form.conditionNotes?.trim() || '—',
-        step: ASSET_REQUEST_STEPS.DETAILS,
-      },
-      {
-        label: t('assets.form.fields.location'),
-        value: form.location?.trim() || '—',
-        step: ASSET_REQUEST_STEPS.LOCATION,
-      },
-      {
-        label: t('assets.form.fields.desiredReservePrice'),
-        value: formatReserveAmount(form.desiredReservePrice),
-        step: ASSET_REQUEST_STEPS.LOCATION,
-      },
-      {
-        label: t('assets.form.fields.auctionConditions'),
-        value: form.auctionConditions?.trim() || '—',
-        step: ASSET_REQUEST_STEPS.LOCATION,
-      },
-      {
-        label: t('assets.form.fields.photos'),
-        value: form.photoFiles.length
-          ? t('assets.requestWizard.review.photoCount', { count: form.photoFiles.length })
-          : '—',
-        step: ASSET_REQUEST_STEPS.PHOTOS,
-      },
-      {
-        label: t('assets.form.fields.ownershipDocument'),
-        value: form.ownershipDocumentUrl ? t('assets.requestWizard.review.uploaded') : '—',
-        step: ASSET_REQUEST_STEPS.DOCUMENTS,
-      },
-      {
-        label: t('assets.form.fields.additionalDocuments'),
-        value: form.additionalDocuments.length
-          ? t('assets.requestWizard.review.documentCount', {
-              count: form.additionalDocuments.length,
-            })
-          : '—',
-        step: ASSET_REQUEST_STEPS.DOCUMENTS,
-      },
-    ],
-    [form, t],
+  const queueSummaries = useMemo(
+    () => assetQueue.map((item, index) => ({
+      clientId: item.clientId,
+      index: index + 1,
+      ...summarizeAssetDraft(item.form, t),
+    })),
+    [assetQueue, t],
   );
 
   if (!open) {
     return null;
   }
+
+  const submitLabel = assetQueue.length <= 1
+    ? t('assets.requestWizard.actions.submit')
+    : t('assets.requestWizard.actions.submitAll', { count: assetQueue.length });
 
   return (
     <div className="kyc-modal-overlay" role="presentation" onClick={submitting ? undefined : onClose}>
@@ -397,7 +479,9 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
                 </svg>
               </div>
               <p className="request-auction-wizard__success-lead">
-                {t('assets.requestWizard.success.body')}
+                {submittedCount > 1
+                  ? t('assets.requestWizard.success.bodyMultiple', { count: submittedCount })
+                  : t('assets.requestWizard.success.body')}
               </p>
               <ul className="request-auction-wizard__timeline">
                 <li>{t('assets.requestWizard.success.stepReview')}</li>
@@ -409,6 +493,12 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
 
           {!completed && step === ASSET_REQUEST_STEPS.DETAILS && (
             <div className="auction-create-modal__grid">
+              {editingClientId && (
+                <p className="request-auction-wizard__editing-banner auction-create-modal__full">
+                  {t('assets.requestWizard.batchReview.editing')}
+                </p>
+              )}
+
               <Input
                 label={t('assets.form.fields.title')}
                 value={form.title}
@@ -680,30 +770,70 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
                   </span>
                 )}
               </section>
+
+              {assetQueue.length > 0 && (
+                <p className="request-auction-wizard__queue-hint">
+                  {t('assets.requestWizard.batchReview.queuedCount', { count: assetQueue.length })}
+                </p>
+              )}
             </div>
           )}
 
-          {!completed && step === ASSET_REQUEST_STEPS.REVIEW && (
-            <div className="auction-create-modal__review">
+          {!completed && step === ASSET_REQUEST_STEPS.BATCH_REVIEW && (
+            <div className="request-auction-wizard__batch-review">
               <p className="request-auction-wizard__review-intro">
-                {t('assets.requestWizard.reviewIntro')}
+                {t('assets.requestWizard.batchReview.intro')}
               </p>
-              {reviewRows.map((row) => (
-                <div key={row.label} className="auction-create-modal__review-row">
-                  <div>
-                    <p className="auction-create-modal__review-label">{row.label}</p>
-                    <p className="auction-create-modal__review-value">{row.value}</p>
-                  </div>
-                  <button
-                    type="button"
-                    className="auction-create-modal__edit-link"
-                    onClick={() => goToStep(row.step)}
-                    disabled={submitting}
-                  >
-                    {t('assets.requestWizard.actions.edit')}
-                  </button>
-                </div>
-              ))}
+
+              {queueSummaries.length === 0 ? (
+                <p className="request-auction-wizard__batch-empty" role="status">
+                  {t('assets.requestWizard.batchReview.empty')}
+                </p>
+              ) : (
+                <ul className="request-auction-wizard__batch-list">
+                  {queueSummaries.map((item) => (
+                    <li key={item.clientId} className="request-auction-wizard__batch-item">
+                      <div className="request-auction-wizard__batch-item-main">
+                        <p className="request-auction-wizard__batch-item-title">
+                          {t('assets.requestWizard.batchReview.assetLabel', { index: item.index })}
+                          {' — '}
+                          {item.title}
+                        </p>
+                        <p className="request-auction-wizard__batch-item-meta">
+                          {item.assetTypeLabel}
+                          {' · '}
+                          {item.location}
+                          {' · '}
+                          {item.reserve}
+                        </p>
+                        <p className="request-auction-wizard__batch-item-meta">
+                          {t('assets.requestWizard.review.photoCount', { count: item.photoCount })}
+                          {' · '}
+                          {t('assets.requestWizard.review.documentCount', { count: item.documentCount })}
+                        </p>
+                      </div>
+                      <div className="request-auction-wizard__batch-item-actions">
+                        <button
+                          type="button"
+                          className="auction-create-modal__edit-link"
+                          onClick={() => editQueueItem(item.clientId)}
+                          disabled={submitting}
+                        >
+                          {t('assets.requestWizard.actions.edit')}
+                        </button>
+                        <button
+                          type="button"
+                          className="auction-create-modal__edit-link request-auction-wizard__remove-link"
+                          onClick={() => removeFromQueue(item.clientId)}
+                          disabled={submitting}
+                        >
+                          {t('assets.requestWizard.actions.removeFromQueue')}
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
 
@@ -732,7 +862,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
             </div>
           ) : (
             <>
-              {stepIndex > 0 && (
+              {stepIndex > 0 && step !== ASSET_REQUEST_STEPS.BATCH_REVIEW && (
                 <Button variant="secondary" onClick={handleBack} disabled={submitting}>
                   {t('assets.requestWizard.actions.back')}
                 </Button>
@@ -743,19 +873,29 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
                   {t('assets.requestWizard.actions.cancel')}
                 </Button>
 
-                {step !== ASSET_REQUEST_STEPS.REVIEW ? (
+                {step === ASSET_REQUEST_STEPS.BATCH_REVIEW && canAddAnother && (
+                  <Button variant="secondary" onClick={handleAddAnother} disabled={submitting}>
+                    {t('assets.requestWizard.actions.addAnother')}
+                  </Button>
+                )}
+
+                {step !== ASSET_REQUEST_STEPS.BATCH_REVIEW ? (
                   <Button
                     variant="primary"
                     onClick={handleNext}
                     disabled={submitting || uploadingAdditional}
                   >
-                    {t('assets.requestWizard.actions.next')}
+                    {step === ASSET_REQUEST_STEPS.DOCUMENTS
+                      ? t('assets.requestWizard.actions.addToQueue')
+                      : t('assets.requestWizard.actions.next')}
                   </Button>
                 ) : (
-                  <Button variant="primary" onClick={handleSubmit} disabled={submitting}>
-                    {submitting
-                      ? t('assets.requestWizard.actions.submitting')
-                      : t('assets.requestWizard.actions.submit')}
+                  <Button
+                    variant="primary"
+                    onClick={handleSubmit}
+                    disabled={submitting || assetQueue.length === 0}
+                  >
+                    {submitting ? t('assets.requestWizard.actions.submitting') : submitLabel}
                   </Button>
                 )}
               </div>

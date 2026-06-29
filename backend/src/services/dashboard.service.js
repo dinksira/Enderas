@@ -8,6 +8,9 @@ import { Bid } from '../models/bid.model.js';
 import { Payment } from '../models/payment.model.js';
 import { Cpo } from '../models/cpo.model.js';
 import { Winner } from '../models/winner.model.js';
+import { normalizeEndUserRoleCode } from '../constants/end-user-role.constants.js';
+
+const BIDDER_METRIC_KEYS = Object.freeze(['bids', 'payments', 'cpo', 'assets']);
 
 const ROLE_METRIC_KEYS = Object.freeze({
   super_admin: ['users', 'kyc', 'assets', 'evaluations', 'auctions', 'bids', 'payments', 'cpo', 'winners'],
@@ -15,8 +18,7 @@ const ROLE_METRIC_KEYS = Object.freeze({
   finance_officer: ['payments', 'cpo'],
   auction_manager: ['auctions', 'bids', 'winners', 'cpo'],
   customer_service_officer: ['users', 'kyc', 'assets', 'cpo'],
-  bidder: ['bids', 'payments', 'cpo'],
-  asset_owner: ['assets', 'payments'],
+  bidder: BIDDER_METRIC_KEYS,
 });
 
 async function countUsersByStatus() {
@@ -189,7 +191,8 @@ async function getGlobalMetrics() {
 }
 
 function serializeMetricsBundle(counts, roleCode) {
-  const allowed = ROLE_METRIC_KEYS[roleCode] || ROLE_METRIC_KEYS.bidder;
+  const normalizedRoleCode = normalizeEndUserRoleCode(roleCode);
+  const allowed = ROLE_METRIC_KEYS[normalizedRoleCode] || ROLE_METRIC_KEYS.bidder;
   const metrics = {};
 
   allowed.forEach((key) => {

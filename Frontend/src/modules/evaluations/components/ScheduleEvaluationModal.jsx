@@ -13,6 +13,7 @@ function formatStaffLabel(member) {
  * @param {{
  *   open: boolean,
  *   loading?: boolean,
+ *   initialAssetId?: string|null,
  *   onClose: () => void,
  *   onSubmit: (payload: {
  *     assetId: string,
@@ -22,7 +23,13 @@ function formatStaffLabel(member) {
  *   }) => Promise<void>,
  * }} props
  */
-export function ScheduleEvaluationModal({ open, loading = false, onClose, onSubmit }) {
+export function ScheduleEvaluationModal({
+  open,
+  loading = false,
+  initialAssetId = null,
+  onClose,
+  onSubmit,
+}) {
   const { t } = useTranslation();
   const [assets, setAssets] = useState([]);
   const [evaluators, setEvaluators] = useState([]);
@@ -44,6 +51,10 @@ export function ScheduleEvaluationModal({ open, loading = false, onClose, onSubm
       setNotes('');
       setError('');
       return undefined;
+    }
+
+    if (initialAssetId) {
+      setAssetId(initialAssetId);
     }
 
     let cancelled = false;
@@ -68,7 +79,7 @@ export function ScheduleEvaluationModal({ open, loading = false, onClose, onSubm
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, initialAssetId]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -182,6 +193,10 @@ export function ScheduleEvaluationModal({ open, loading = false, onClose, onSubm
             {t('evaluations.management.scheduleModal.assetSummary', {
               owner: selectedAsset.ownerName || '—',
               location: selectedAsset.location || '—',
+            })}{' '}
+            ·{' '}
+            {t(`assets.status.${String(selectedAsset.dbStatus || 'approved').toLowerCase()}`, {
+              defaultValue: selectedAsset.status || 'Ready for Evaluation',
             })}
           </p>
         )}

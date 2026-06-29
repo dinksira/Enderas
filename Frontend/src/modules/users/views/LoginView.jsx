@@ -8,6 +8,7 @@ import { OtpVerificationStep } from '../components/otp-verification-step.jsx';
 import { useOtpTimer } from '../hooks/use-otp-timer.js';
 import { authApi } from '../services/authApi.js';
 import { useAuthStore } from '../../../stores/auth-store.js';
+import { isValidEthiopianMobile } from '../../../utils/mobile-utils.js';
 
 const AUTH_STEPS = Object.freeze({
   CREDENTIALS: 'CREDENTIALS',
@@ -15,7 +16,6 @@ const AUTH_STEPS = Object.freeze({
 });
 
 const OTP_LENGTH = 6;
-const PHONE_PATTERN = /^09\d{8}$/;
 
 const EMPTY_OTP = Array.from({ length: OTP_LENGTH }, () => '');
 
@@ -25,8 +25,8 @@ function validateCredentials(phoneNumber, password) {
 
   if (!normalizedPhone) {
     errors.phoneNumber = 'Phone number is required.';
-  } else if (!PHONE_PATTERN.test(normalizedPhone)) {
-    errors.phoneNumber = 'Enter a valid phone number (e.g. 09123456789).';
+  } else if (!isValidEthiopianMobile(normalizedPhone)) {
+    errors.phoneNumber = 'Enter a valid phone number (e.g. 0912345678 or +251912345678).';
   }
 
   if (!password) {

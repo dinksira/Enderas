@@ -253,12 +253,6 @@ export function StaffManagementView() {
               {formatDisplayValue(getStaffDisplayName(member), emptyLabel)}
             </td>
             <td className="dashboard-table__cell">
-              {formatDisplayValue(member.employeeId, emptyLabel)}
-            </td>
-            <td className="dashboard-table__cell dashboard-table__cell--muted">
-              {formatDisplayValue(member.department, emptyLabel)}
-            </td>
-            <td className="dashboard-table__cell">
               {formatDisplayValue(
                 getStaffRoleLabel(t, member.roleCode) || member.roleName,
                 emptyLabel,

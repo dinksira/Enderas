@@ -1,7 +1,7 @@
 import { authenticate as baseAuthenticate } from '../../middleware/auth.middleware.js';
 import { UnauthorizedError } from '../../utils/error.util.js';
 import { logAccessDenied } from '../../services/audit.service.js';
-import { buildPermissionContext } from './permission.service.js';
+import { buildPermissionContext, authorizationPermissionService } from './permission.service.js';
 import { policyEngine } from './policy.engine.js';
 import { resolveApiAccess } from './access-map.js';
 
@@ -27,6 +27,8 @@ function resolveRequestPrincipal(req) {
       modules: req.user.permissions?.modules,
       actions: req.user.permissions?.actions,
       routes: req.user.permissions?.routes,
+      moduleActions: req.user.permissions?.moduleActions,
+      permissionVersion: req.user.permissions?.permissionVersion,
     };
   }
 
@@ -38,15 +40,79 @@ function resolveRequestPrincipal(req) {
       modules: req.auth.permissions?.modules,
       actions: req.auth.permissions?.actions,
       routes: req.auth.permissions?.routes,
+      moduleActions: req.auth.permissions?.moduleActions,
+      permissionVersion: req.auth.permissions?.permissionVersion,
     };
   }
 
   return null;
 }
 
+async function resolveAuthorizationPrincipal(req) {
+  const jwtPrincipal = resolveRequestPrincipal(req);
+  const userId = req.user?.id ?? req.auth?.userId;
+
+  if (!userId || !jwtPrincipal?.roleId) {
+    return jwtPrincipal;
+  }
+
+  const jwtPermissionVersion = Number(
+    req.user?.permissions?.permissionVersion
+    ?? req.auth?.permissions?.permissionVersion
+    ?? 0,
+  );
+
+  try {
+    const fresh = await authorizationPermissionService.resolvePrincipal(userId);
+    const freshPermissionVersion = Number(fresh?.permissionVersion ?? 0);
+
+    if (freshPermissionVersion > jwtPermissionVersion) {
+      const refreshed = {
+        roleCode: fresh.role?.code,
+        roleId: fresh.effectiveRoleId,
+        wildcard: fresh.wildcard,
+        modules: fresh.modules,
+        actions: fresh.actions,
+        routes: fresh.routes,
+        moduleActions: fresh.moduleActions,
+        permissionVersion: freshPermissionVersion,
+      };
+
+      if (req.user?.permissions) {
+        Object.assign(req.user.permissions, {
+          wildcard: refreshed.wildcard,
+          modules: refreshed.modules,
+          actions: refreshed.actions,
+          routes: refreshed.routes,
+          moduleActions: refreshed.moduleActions,
+          permissionVersion: refreshed.permissionVersion,
+        });
+      }
+
+      if (req.auth?.permissions) {
+        Object.assign(req.auth.permissions, {
+          wildcard: refreshed.wildcard,
+          modules: refreshed.modules,
+          actions: refreshed.actions,
+          routes: refreshed.routes,
+          moduleActions: refreshed.moduleActions,
+          permissionVersion: refreshed.permissionVersion,
+        });
+      }
+
+      return refreshed;
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn('[authorize] permission refresh failed:', message);
+  }
+
+  return jwtPrincipal;
+}
+
 export function authorize(requirement = {}) {
   return async (req, res, next) => {
-    const principal = resolveRequestPrincipal(req);
+    const principal = await resolveAuthorizationPrincipal(req);
 
     if (!req.user?.id && !req.auth?.userId) {
       return next(new UnauthorizedError('Authentication required', 'AUTHENTICATION_REQUIRED'));
@@ -58,6 +124,7 @@ export function authorize(requirement = {}) {
       modules: principal?.modules,
       actions: principal?.actions,
       routes: principal?.routes,
+      moduleActions: principal?.moduleActions,
       effectiveRoleId: principal?.roleId,
     });
 

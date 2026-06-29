@@ -7,14 +7,13 @@ import {
   getStaffRoleDescription,
   getStaffRoleLabel,
 } from '../utils/staff-management-utils.js';
+import { formatMobileNumber, isValidEthiopianMobile } from '../../../utils/mobile-utils.js';
 
 const EMPTY_FORM = {
   firstName: '',
   lastName: '',
   mobileNumber: '',
   email: '',
-  employeeId: '',
-  department: '',
   roleId: '',
   password: '',
   confirmPassword: '',
@@ -298,13 +297,6 @@ const STAFF_FORM_STYLES = `
 }
 `;
 
-function formatMobileNumber(localNumber) {
-  const digits = localNumber.replace(/\D/g, '');
-  if (!digits) return '';
-  if (digits.startsWith('251')) return `+${digits}`;
-  return `+251${digits}`;
-}
-
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
@@ -453,6 +445,9 @@ export function StaffCreateModal({ open, loading = false, onClose, onSubmit }) {
         if (!values.mobileNumber.trim()) {
           return t('staff.management.createModal.mobileRequired');
         }
+        if (!isValidEthiopianMobile(values.mobileNumber)) {
+          return t('staff.management.createModal.mobileInvalid');
+        }
         return '';
       case 'email':
         if (!values.email.trim()) {
@@ -547,8 +542,6 @@ export function StaffCreateModal({ open, loading = false, onClose, onSubmit }) {
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         email: form.email.trim(),
-        employeeId: form.employeeId.trim() || undefined,
-        department: form.department.trim() || undefined,
       });
       onClose();
     } catch (err) {
@@ -692,28 +685,6 @@ export function StaffCreateModal({ open, loading = false, onClose, onSubmit }) {
                   autoComplete="off"
                 />
                 {renderFieldError('email')}
-              </div>
-
-              <div className="user-create-modal__field">
-                {renderLabel(t('staff.management.createModal.employeeId'))}
-                <input
-                  className="user-create-modal__control"
-                  value={form.employeeId}
-                  onChange={(event) => setField('employeeId', event.target.value)}
-                  disabled={loading}
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="user-create-modal__field">
-                {renderLabel(t('staff.management.createModal.department'))}
-                <input
-                  className="user-create-modal__control"
-                  value={form.department}
-                  onChange={(event) => setField('department', event.target.value)}
-                  disabled={loading}
-                  autoComplete="off"
-                />
               </div>
             </div>
 

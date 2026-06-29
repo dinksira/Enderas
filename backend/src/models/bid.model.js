@@ -15,6 +15,10 @@ export const Bid = sequelize.define(
       type: DataTypes.CHAR(36),
       allowNull: false,
     },
+    auction_asset_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: true,
+    },
     user_id: {
       type: DataTypes.CHAR(36),
       allowNull: false,

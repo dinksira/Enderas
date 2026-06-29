@@ -11,6 +11,8 @@ export const AUCTION_CATEGORIES = Object.freeze([
   'other_assets',
 ]);
 
+export const AUCTION_MODES = Object.freeze(['single', 'multi']);
+
 export const AUCTION_STATUSES = Object.freeze([
   'draft',
   'pending_approval',
@@ -73,6 +75,10 @@ export const Auction = sequelize.define(
       type: DataTypes.DECIMAL(18, 2),
       allowNull: false,
     },
+    total_reserve_price: {
+      type: DataTypes.DECIMAL(18, 2),
+      allowNull: true,
+    },
     document_price: {
       type: DataTypes.DECIMAL(18, 2),
       allowNull: false,
@@ -92,6 +98,11 @@ export const Auction = sequelize.define(
       type: DataTypes.ENUM(...AUCTION_STATUSES),
       allowNull: false,
       defaultValue: 'draft',
+    },
+    auction_mode: {
+      type: DataTypes.ENUM(...AUCTION_MODES),
+      allowNull: false,
+      defaultValue: 'single',
     },
     published_at: {
       type: DataTypes.DATE,

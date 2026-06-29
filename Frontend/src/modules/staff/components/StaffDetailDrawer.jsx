@@ -11,6 +11,11 @@ import { useAuthStore } from '../../../stores/auth-store.js';
 import { staffService } from '../services/staff-service.js';
 import { StaffPermissionMatrix } from './StaffPermissionMatrix.jsx';
 import {
+  applyPermissionDependencies,
+  permissionDraftsEqual,
+  sanitizePermissionDraft,
+} from '../utils/staff-permission-utils.js';
+import {
   formatDate,
   formatDisplayValue,
   formatStaffLanguage,
@@ -121,21 +126,13 @@ export function StaffDetailDrawer({
   const permissionMatrix = staff?.rolePermissionMatrix ?? [];
   const roleLabel = getStaffRoleLabel(t, staffRoleCode) || staff?.roleName;
 
-  const handlePermissionToggle = (moduleName, actionName, checked) => {
-    setPermissionDraft((current) => {
-      const nextActions = new Set(Array.isArray(current[moduleName]) ? current[moduleName] : []);
-      if (checked) nextActions.add(actionName);
-      else nextActions.delete(actionName);
-
-      const next = { ...current };
-      if (nextActions.size > 0) {
-        next[moduleName] = [...nextActions];
-      } else {
-        delete next[moduleName];
-      }
-      return next;
-    });
+  const handlePermissionDraftChange = (nextDraft) => {
+    setPermissionDraft(applyPermissionDependencies(nextDraft));
   };
+
+  const originalPermissions = staff?.rolePermissions?.moduleActions ?? {};
+  const permissionsDirty = permissionEditMode
+    && !permissionDraftsEqual(permissionDraft, originalPermissions);
 
   const handleRefresh = async () => {
     await loadStaff();
@@ -157,7 +154,9 @@ export function StaffDetailDrawer({
     try {
       await staffService.updateRolePermissions(staff.roleId, {
         summary: staff.roleSummary,
-        moduleActions: permissionDraft,
+        moduleActions: applyPermissionDependencies(
+          sanitizePermissionDraft(permissionDraft, permissionCatalog),
+        ),
       });
       setPermissionConfirmOpen(false);
       setPermissionEditMode(false);
@@ -241,7 +240,7 @@ export function StaffDetailDrawer({
         {canManageRolePermissions && permissionEditMode && (
           <Button
             variant="primary"
-            disabled={permissionSaving || actionLoading}
+            disabled={permissionSaving || actionLoading || !permissionsDirty}
             onClick={() => setPermissionConfirmOpen(true)}
           >
             {permissionSaving
@@ -266,8 +265,6 @@ export function StaffDetailDrawer({
               <MetaField label={t('staff.management.drawer.lastName')} value={staff.user?.lastName} />
               <MetaField label={t('staff.management.drawer.mobile')} value={staff.user?.mobileNumber} />
               <MetaField label={t('staff.management.drawer.email')} value={staff.user?.email} />
-              <MetaField label={t('staff.management.drawer.employeeId')} value={staff.employeeId} />
-              <MetaField label={t('staff.management.drawer.department')} value={staff.department} />
               <MetaField
                 label={t('staff.management.drawer.preferredLanguage')}
                 value={formatStaffLanguage(t, staff.user?.preferredLanguage)}
@@ -342,7 +339,9 @@ export function StaffDetailDrawer({
               <p className="staff-permission-note">
                 {staff.roleIsWildcard
                   ? t('staff.management.permissions.superAdmin')
-                  : t('staff.management.permissions.readOnly')}
+                  : canManageRolePermissions
+                    ? t('staff.management.permissions.editableNote')
+                    : t('staff.management.permissions.readOnly')}
               </p>
               <Can module={MODULES.ROLES} action={ACTIONS.UPDATE} fallback={null}>
                 <StaffPermissionMatrix
@@ -352,7 +351,9 @@ export function StaffDetailDrawer({
                   editable={Boolean(canManageRolePermissions)}
                   editMode={permissionEditMode}
                   draft={permissionDraft}
-                  onToggle={handlePermissionToggle}
+                  onDraftChange={handlePermissionDraftChange}
+                  roleLabel={roleLabel}
+                  affectedStaffCount={staff.roleAffectedStaffCount ?? 0}
                   headerAction={permissionHeaderAction}
                   warning={permissionWarning}
                 />
@@ -362,6 +363,8 @@ export function StaffDetailDrawer({
                   t={t}
                   catalog={permissionCatalog}
                   matrix={permissionMatrix}
+                  roleLabel={roleLabel}
+                  affectedStaffCount={staff.roleAffectedStaffCount ?? 0}
                 />
               )}
               {permissionError && (
@@ -381,7 +384,10 @@ export function StaffDetailDrawer({
         open={open}
         onClose={onClose}
         title={displayName || t('staff.management.drawer.title')}
-        subtitle={formatDisplayValue(staff?.employeeId, emptyLabel)}
+        subtitle={formatDisplayValue(
+          getStaffRoleLabel(t, staffRoleCode) || staff?.roleName,
+          emptyLabel,
+        )}
         loading={loading}
         error={error}
         onRetry={loadStaff}
@@ -401,7 +407,7 @@ export function StaffDetailDrawer({
         sections={sections}
         footer={footer}
         titleId="staff-detail-drawer-title"
-        width={520}
+        width={760}
       />
       <ApproveConfirmModal
         open={permissionConfirmOpen}

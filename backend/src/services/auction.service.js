@@ -1,16 +1,21 @@
 import { Op, QueryTypes } from 'sequelize';
 import { sequelize } from '../config/db.config.js';
-import { Auction, AUCTION_CATEGORIES } from '../models/auction.model.js';
+import { Auction, AUCTION_CATEGORIES, AUCTION_STATUSES } from '../models/auction.model.js';
+import { AuctionAsset } from '../models/auctionAsset.model.js';
+import { Asset } from '../models/asset.model.js';
+import { Evaluation } from '../models/evaluation.model.js';
 import { Bid } from '../models/bid.model.js';
 import { Payment } from '../models/payment.model.js';
 import { Cpo } from '../models/cpo.model.js';
 import { Staff, User } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
+import { LAUNCH_WORKFLOW_ROLES } from '../constants/staff-role.constants.js';
+import { assertStaffRole } from '../utils/staff-role.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { winnerService } from './winner.service.js';
 import { paymentService } from './payment.service.js';
-import { settingsService } from './settings.service.js';
+import { normalizeLotIdList } from '../utils/auction-lot.util.js';
 
 const DISPLAY_STATUS_MAP = Object.freeze({
   published: 'ACTIVE',
@@ -21,19 +26,83 @@ const DISPLAY_STATUS_MAP = Object.freeze({
   cancelled: 'CLOSED',
 });
 
-function mapDisplayStatus(dbStatus) {
-  return DISPLAY_STATUS_MAP[dbStatus] || 'PENDING';
+const ACTIVE_LINKED_AUCTION_STATUSES = Object.freeze(
+  AUCTION_STATUSES.filter((status) => !['closed', 'cancelled'].includes(status)),
+);
+
+const MAX_LOTS_PER_AUCTION = 25;
+
+/**
+ * @param {string} assetId
+ */
+async function findActiveAuctionForAsset(assetId) {
+  const legacyAuction = await Auction.findOne({
+    where: {
+      asset_id: assetId,
+      deleted_at: null,
+      status: { [Op.in]: ACTIVE_LINKED_AUCTION_STATUSES },
+    },
+    attributes: ['id'],
+  });
+
+  if (legacyAuction) {
+    return legacyAuction;
+  }
+
+  const activeLot = await AuctionAsset.findOne({
+    where: { asset_id: assetId },
+    include: [
+      {
+        model: Auction,
+        as: 'auction',
+        required: true,
+        where: {
+          deleted_at: null,
+          status: { [Op.in]: ACTIVE_LINKED_AUCTION_STATUSES },
+        },
+        attributes: ['id'],
+      },
+    ],
+    attributes: ['id'],
+  });
+
+  return activeLot?.auction ?? null;
 }
 
-function formatDateForList(date) {
-  if (!date) {
-    return '—';
+/**
+ * @param {object[]} assets
+ */
+function normalizeLotInputs(assets) {
+  if (!Array.isArray(assets)) {
+    return [];
   }
-  return new Date(date).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
+
+  return assets
+    .map((entry, index) => ({
+      assetId: entry?.assetId ?? entry?.asset_id,
+      reservePrice: Number(entry?.reservePrice ?? entry?.reserve_price),
+      sortOrder: Number.isFinite(Number(entry?.sortOrder)) ? Number(entry.sortOrder) : index,
+      lotLabel: entry?.lotLabel?.trim() || entry?.lot_label?.trim() || `Lot ${index + 1}`,
+    }))
+    .filter((entry) => entry.assetId);
+}
+
+function serializeLot(lot) {
+  const plain = lot.get ? lot.get({ plain: true }) : lot;
+  const asset = plain.asset;
+
+  return {
+    id: plain.id,
+    auctionId: plain.auction_id,
+    assetId: plain.asset_id,
+    reservePrice: Number(plain.reserve_price),
+    sortOrder: plain.sort_order,
+    lotLabel: plain.lot_label,
+    outcomeStatus: plain.outcome_status,
+    assetTitle: asset?.title ?? null,
+    assetType: asset?.asset_type ?? null,
+    assetLocation: asset?.location ?? null,
+  };
 }
 
 const ASSET_TYPE_TO_AUCTION_CATEGORY = Object.freeze({
@@ -50,49 +119,66 @@ function mapAssetTypeToAuctionCategory(assetType) {
   return ASSET_TYPE_TO_AUCTION_CATEGORY[assetType] || 'other_assets';
 }
 
-function buildAuctionDocumentsFromAsset(asset) {
-  const docs = [];
-
-  if (asset.ownership_document_url) {
-    docs.push({
-      name: 'Ownership Document',
-      url: asset.ownership_document_url,
-      size: 0,
-    });
+function normalizeAssetImageUrls(urls) {
+  if (!urls) {
+    return [];
   }
-
-  const additional = Array.isArray(asset.additional_document_urls)
-    ? asset.additional_document_urls
-    : [];
-
-  for (const doc of additional) {
-    if (typeof doc === 'string' && doc.trim()) {
-      docs.push({ name: 'Supporting Document', url: doc.trim(), size: 0 });
-      continue;
+  if (typeof urls === 'string') {
+    try {
+      const parsed = JSON.parse(urls);
+      return normalizeAssetImageUrls(parsed);
+    } catch {
+      return urls.trim() ? [urls.trim()] : [];
     }
+  }
+  if (!Array.isArray(urls)) {
+    return [];
+  }
+  return urls.filter((url) => typeof url === 'string' && url.trim().length > 0);
+}
 
-    if (doc?.url) {
-      docs.push({
+function normalizeAssetAdditionalDocuments(documents) {
+  if (!documents) {
+    return [];
+  }
+  if (typeof documents === 'string') {
+    try {
+      const parsed = JSON.parse(documents);
+      return normalizeAssetAdditionalDocuments(parsed);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(documents)) {
+    return [];
+  }
+  return documents
+    .filter((doc) => doc && (typeof doc === 'string' ? doc.trim() : doc.url))
+    .map((doc) => {
+      if (typeof doc === 'string') {
+        return { name: 'Supporting Document', url: doc.trim(), size: 0 };
+      }
+      return {
         name: doc.name || doc.fileName || 'Supporting Document',
         url: doc.url,
         size: Number(doc.size) || 0,
-      });
-    }
-  }
-
-  return normalizeDocumentFiles(docs);
+      };
+    });
 }
 
-function defaultAuctionWindowDates() {
-  const start = new Date();
-  start.setSeconds(0, 0);
-  start.setMinutes(0);
-  start.setHours(start.getHours() + 1);
+function mapDisplayStatus(dbStatus) {
+  return DISPLAY_STATUS_MAP[dbStatus] || 'PENDING';
+}
 
-  const end = new Date(start);
-  end.setDate(end.getDate() + 7);
-
-  return { start, end };
+function formatDateForList(date) {
+  if (!date) {
+    return '—';
+  }
+  return new Date(date).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 function normalizeDocumentFiles(documents) {
@@ -224,6 +310,138 @@ function validateAuctionFields(payload, { requireDocuments = false } = {}) {
 }
 
 /**
+ * @param {string} assetId
+ */
+async function assertAssetEligibleForAuction(assetId) {
+  const asset = await Asset.findOne({ where: { id: assetId, deleted_at: null } });
+  if (!asset) {
+    throw new AppError('Asset not found', 404, 'ASSET_NOT_FOUND');
+  }
+
+  if (asset.status !== 'evaluated') {
+    throw new AppError(
+      'Asset must be fully evaluated before auction creation',
+      400,
+      'ASSET_NOT_EVALUATED',
+    );
+  }
+
+  const existingAuction = await findActiveAuctionForAsset(assetId);
+
+  if (existingAuction) {
+    throw new AppError('An active auction already exists for this asset', 409, 'ASSET_AUCTION_EXISTS');
+  }
+
+  return asset;
+}
+
+/**
+ * Assets ready for auction creation: evaluated and not linked to an active auction.
+ * @param {{ search?: string }} [options]
+ */
+export async function listEligibleAssetsForAuction(options = {}) {
+  const where = { status: 'evaluated', deleted_at: null };
+
+  if (options.assetId) {
+    where.id = options.assetId;
+  }
+
+  if (options.search?.trim()) {
+    const term = `%${options.search.trim()}%`;
+    where[Op.or] = [
+      { title: { [Op.like]: term } },
+      { location: { [Op.like]: term } },
+    ];
+  }
+
+  const assets = await Asset.findAll({
+    where,
+    include: [
+      {
+        model: Evaluation,
+        as: 'evaluation',
+        required: true,
+        where: { status: 'approved', deleted_at: null },
+      },
+    ],
+    order: [['updated_at', 'DESC']],
+  });
+
+  if (assets.length === 0) {
+    return [];
+  }
+
+  const assetIds = assets.map((asset) => asset.id);
+  const activeLots = await AuctionAsset.findAll({
+    where: { asset_id: { [Op.in]: assetIds } },
+    attributes: ['asset_id'],
+    include: [
+      {
+        model: Auction,
+        as: 'auction',
+        required: true,
+        where: {
+          deleted_at: null,
+          status: { [Op.in]: ACTIVE_LINKED_AUCTION_STATUSES },
+        },
+        attributes: ['id'],
+      },
+    ],
+  });
+
+  const activeAuctions = await Auction.findAll({
+    where: {
+      asset_id: { [Op.in]: assetIds },
+      deleted_at: null,
+      status: { [Op.in]: ACTIVE_LINKED_AUCTION_STATUSES },
+    },
+    attributes: ['asset_id'],
+    raw: true,
+  });
+
+  const blockedAssetIds = new Set([
+    ...activeAuctions.map((row) => row.asset_id),
+    ...activeLots.map((row) => row.asset_id),
+  ]);
+
+  return assets
+    .filter((asset) => !blockedAssetIds.has(asset.id))
+    .map((asset) => {
+      const plain = asset.get({ plain: true });
+      const evaluation = plain.evaluation;
+
+      return {
+        id: plain.id,
+        title: plain.title,
+        assetType: plain.asset_type,
+        auctionCategory: mapAssetTypeToAuctionCategory(plain.asset_type),
+        location: plain.location,
+        description: plain.description,
+        auctionConditions: plain.auction_conditions,
+        desiredReservePrice: plain.desired_reserve_price != null
+          ? Number(plain.desired_reserve_price)
+          : null,
+        imageUrls: normalizeAssetImageUrls(plain.image_urls),
+        ownershipDocumentUrl: plain.ownership_document_url,
+        additionalDocuments: normalizeAssetAdditionalDocuments(plain.additional_document_urls),
+        evaluation: evaluation
+          ? {
+              id: evaluation.id,
+              valuationAmount: evaluation.valuation_amount != null
+                ? Number(evaluation.valuation_amount)
+                : null,
+              reservePriceRecommendation: evaluation.reserve_price_recommendation != null
+                ? Number(evaluation.reserve_price_recommendation)
+                : null,
+              photoUrls: normalizeAssetImageUrls(evaluation.photo_urls),
+              reportUrl: evaluation.report_url,
+            }
+          : null,
+      };
+    });
+}
+
+/**
  * @param {object} payload
  * @param {string} staffId
  */
@@ -245,6 +463,8 @@ export async function createAuction(payload, staffId) {
     imageUrls,
     documents,
     assetId,
+    auctionMode,
+    assets,
   } = payload;
 
   if (!title?.trim()) {
@@ -266,11 +486,6 @@ export async function createAuction(payload, staffId) {
     throw new AppError('Closing date must be after start date', 400, 'END_BEFORE_START');
   }
 
-  const reserve = Number(reservePrice);
-  if (!Number.isFinite(reserve) || reserve <= 0) {
-    throw new AppError('Reserve price must be a positive number', 400, 'INVALID_RESERVE_PRICE');
-  }
-
   const docFee = Number(documentFee ?? 0);
   if (!Number.isFinite(docFee) || docFee < 0) {
     throw new AppError('Document fee must be zero or positive', 400, 'INVALID_DOCUMENT_FEE');
@@ -287,24 +502,103 @@ export async function createAuction(payload, staffId) {
   }
 
   const normalizedImages = normalizeImageUrls(imageUrls);
+  const resolvedMode = auctionMode === 'multi' ? 'multi' : 'single';
+  let lotInputs = normalizeLotInputs(assets);
 
-  const auction = await Auction.create({
-    id: generateUuid(),
-    asset_id: assetId || null,
-    created_by_staff_id: staffId,
-    title: title.trim(),
-    category,
-    description: description?.trim() || null,
-    auction_conditions: auctionConditions?.trim() || null,
-    image_urls: normalizedImages.length > 0 ? normalizedImages : null,
-    document_files: normalizedDocuments,
-    start_date: start,
-    end_date: end,
-    reserve_price: reserve,
-    document_price: docFee,
-    cpo_percentage: cpo,
-    currency: 'ETB',
-    status: 'pending_approval',
+  if (resolvedMode === 'single' && lotInputs.length === 0 && assetId) {
+    const reserve = Number(reservePrice);
+    if (!Number.isFinite(reserve) || reserve <= 0) {
+      throw new AppError('Reserve price must be a positive number', 400, 'INVALID_RESERVE_PRICE');
+    }
+    lotInputs = [{
+      assetId,
+      reservePrice: reserve,
+      sortOrder: 0,
+      lotLabel: 'Lot 1',
+    }];
+  }
+
+  if (resolvedMode === 'multi') {
+    if (lotInputs.length < 2) {
+      throw new AppError('Multi-asset auctions require at least two assets', 400, 'MULTI_ASSETS_REQUIRED');
+    }
+  }
+
+  if (lotInputs.length > MAX_LOTS_PER_AUCTION) {
+    throw new AppError(
+      `Maximum ${MAX_LOTS_PER_AUCTION} assets per auction`,
+      400,
+      'AUCTION_LOT_LIMIT',
+    );
+  }
+
+  const uniqueAssetIds = new Set(lotInputs.map((lot) => lot.assetId));
+  if (uniqueAssetIds.size !== lotInputs.length) {
+    throw new AppError('Each asset can only appear once in an auction', 400, 'DUPLICATE_AUCTION_ASSET');
+  }
+
+  for (const lot of lotInputs) {
+    if (!Number.isFinite(lot.reservePrice) || lot.reservePrice <= 0) {
+      throw new AppError('Each lot must have a positive reserve price', 400, 'INVALID_LOT_RESERVE');
+    }
+    await assertAssetEligibleForAuction(lot.assetId);
+  }
+
+  let auctionReserve = Number(reservePrice);
+  let totalReservePrice = null;
+
+  if (resolvedMode === 'multi') {
+    totalReservePrice = lotInputs.reduce((sum, lot) => sum + lot.reservePrice, 0);
+    auctionReserve = totalReservePrice;
+  } else if (!Number.isFinite(auctionReserve) || auctionReserve <= 0) {
+    if (lotInputs.length === 1) {
+      auctionReserve = lotInputs[0].reservePrice;
+    } else {
+      throw new AppError('Reserve price must be a positive number', 400, 'INVALID_RESERVE_PRICE');
+    }
+  } else if (lotInputs.length === 1) {
+    lotInputs[0].reservePrice = auctionReserve;
+  }
+
+  const primaryAssetId = resolvedMode === 'single' && lotInputs.length === 1
+    ? lotInputs[0].assetId
+    : null;
+
+  const auction = await sequelize.transaction(async (transaction) => {
+    const createdAuction = await Auction.create({
+      id: generateUuid(),
+      asset_id: primaryAssetId,
+      created_by_staff_id: staffId,
+      title: title.trim(),
+      category,
+      description: description?.trim() || null,
+      auction_conditions: auctionConditions?.trim() || null,
+      image_urls: normalizedImages.length > 0 ? normalizedImages : null,
+      document_files: normalizedDocuments,
+      start_date: start,
+      end_date: end,
+      reserve_price: auctionReserve,
+      total_reserve_price: totalReservePrice,
+      document_price: docFee,
+      cpo_percentage: cpo,
+      currency: 'ETB',
+      auction_mode: resolvedMode,
+      status: 'pending_approval',
+    }, { transaction });
+
+    for (const lot of lotInputs) {
+      await AuctionAsset.create({
+        id: generateUuid(),
+        auction_id: createdAuction.id,
+        asset_id: lot.assetId,
+        reserve_price: lot.reservePrice,
+        sort_order: lot.sortOrder,
+        lot_label: lot.lotLabel,
+        outcome_status: 'pending',
+      }, { transaction });
+    }
+
+    return createdAuction;
   });
 
   await auditService.writeAuditLog({
@@ -312,10 +606,15 @@ export async function createAuction(payload, staffId) {
     action: AUDIT_ACTIONS.CREATE,
     entityType: 'Auction',
     entityId: auction.id,
-    metadata: { title: auction.title, category: auction.category },
+    metadata: {
+      title: auction.title,
+      category: auction.category,
+      auctionMode: resolvedMode,
+      lotCount: lotInputs.length,
+    },
   });
 
-  return serializeAuction(auction, 0);
+  return getAuctionById(auction.id);
 }
 
 /**
@@ -345,6 +644,12 @@ function serializeAuction(auction, bidCount = 0, extras = {}) {
     endDateFormatted: formatDateTimeForDetail(plain.end_date),
     reservePrice: Number(plain.reserve_price),
     reserve: Number(plain.reserve_price),
+    totalReservePrice: plain.total_reserve_price != null
+      ? Number(plain.total_reserve_price)
+      : null,
+    auctionMode: plain.auction_mode || 'single',
+    lots: extras.lots ?? [],
+    lotCount: extras.lotCount ?? (extras.lots?.length ?? 0),
     documentFee: Number(plain.document_price),
     cpoPercentage: Number(plain.cpo_percentage),
     currency: plain.currency,
@@ -425,6 +730,7 @@ export async function listAuctions(options = {}) {
   };
 }
 
+const BROWSE_DEFAULT_STATUSES = Object.freeze(['published']);
 const BROWSE_VISIBLE_STATUSES = Object.freeze(['published', 'suspended', 'closed', 'cancelled']);
 
 /**
@@ -434,7 +740,7 @@ const BROWSE_VISIBLE_STATUSES = Object.freeze(['published', 'suspended', 'closed
 export async function listBrowseAuctions(options = {}, userId = null) {
   const where = {
     deleted_at: null,
-    status: { [Op.in]: BROWSE_VISIBLE_STATUSES },
+    status: { [Op.in]: BROWSE_DEFAULT_STATUSES },
   };
 
   if (options.status) {
@@ -487,14 +793,15 @@ function sanitizeBrowseAuction(auction, { documentAccess = false } = {}) {
   return sanitized;
 }
 
-function buildParticipationSummary({ payment = null, cpo = null, bid = null } = {}) {
+function buildParticipationSummary({ payment = null, cpo = null, bid = null, bids = [] } = {}) {
   const paymentApproved = payment?.status === 'approved';
   const paymentPending = payment?.status === 'pending';
   const paymentRejected = payment?.status === 'rejected';
   const cpoApproved = cpo?.status === 'approved';
   const cpoPending = cpo?.status === 'pending';
   const cpoRejected = cpo?.status === 'rejected';
-  const hasBid = Boolean(bid);
+  const bidList = bids.length > 0 ? bids : (bid ? [bid] : []);
+  const hasBid = bidList.length > 0;
 
   let participationStatus = 'not_started';
   if (hasBid) {
@@ -554,14 +861,22 @@ async function attachUserParticipationSummaries(items, userId) {
 
   const paymentByAuction = latestRecordByAuction(payments);
   const cpoByAuction = latestRecordByAuction(cpos);
-  const bidByAuction = latestRecordByAuction(bids);
+  const bidsByAuction = new Map();
+  for (const bidRecord of bids) {
+    const auctionId = bidRecord.auction_id ?? bidRecord.auctionId;
+    if (!auctionId) continue;
+    if (!bidsByAuction.has(auctionId)) {
+      bidsByAuction.set(auctionId, []);
+    }
+    bidsByAuction.get(auctionId).push(bidRecord);
+  }
 
   return items.map((item) => ({
     ...item,
     myParticipation: buildParticipationSummary({
       payment: paymentByAuction.get(item.id),
       cpo: cpoByAuction.get(item.id),
-      bid: bidByAuction.get(item.id),
+      bids: bidsByAuction.get(item.id) || [],
     }),
   }));
 }
@@ -572,8 +887,9 @@ async function attachUserParticipationSummaries(items, userId) {
  */
 export async function getAuctionParticipation(auctionId, userId) {
   const auction = await getBrowseAuctionById(auctionId, userId);
+  const lots = auction.lots || [];
 
-  const [payment, cpo, bid] = await Promise.all([
+  const [payment, cpo, bids] = await Promise.all([
     Payment.findOne({
       where: { user_id: userId, auction_id: auctionId, deleted_at: null },
       order: [['created_at', 'DESC']],
@@ -582,7 +898,7 @@ export async function getAuctionParticipation(auctionId, userId) {
       where: { user_id: userId, auction_id: auctionId, deleted_at: null },
       order: [['created_at', 'DESC']],
     }),
-    Bid.findOne({ where: { auction_id: auctionId, user_id: userId } }),
+    Bid.findAll({ where: { auction_id: auctionId, user_id: userId } }),
   ]);
 
   const paymentApproved = payment?.status === 'approved';
@@ -595,20 +911,75 @@ export async function getAuctionParticipation(auctionId, userId) {
   const inWindow = isWithinBiddingWindow(auction);
   const biddingWindowStatus = getBiddingWindowStatus(auction);
 
-  const summary = buildParticipationSummary({ payment, cpo, bid });
+  const selectedLotIds = cpo ? normalizeLotIdList(cpo.selected_auction_asset_ids) : [];
+  const bidByLotId = new Map(
+    bids
+      .filter((bid) => bid.auction_asset_id)
+      .map((bid) => [bid.auction_asset_id, bid]),
+  );
+  const legacyBid = bids.find((bid) => !bid.auction_asset_id) || null;
+
+  const lotParticipation = lots.map((lot) => {
+    const selected = selectedLotIds.includes(lot.id);
+    const lotBid = bidByLotId.get(lot.id);
+    const canPlaceBidOnLot = Boolean(
+      cpoApproved && selected && !lotBid && auctionOpen && inWindow,
+    );
+
+    return {
+      ...lot,
+      selected,
+      bid: lotBid
+        ? {
+            id: lotBid.id,
+            amount: Number(lotBid.amount),
+            status: lotBid.status,
+            submittedAt: lotBid.submitted_at,
+          }
+        : null,
+      canPlaceBid: canPlaceBidOnLot,
+    };
+  });
+
+  const pendingLotIds = selectedLotIds.filter((lotId) => !bidByLotId.has(lotId));
+  const hasBid = bids.length > 0;
+  const allSelectedBid = selectedLotIds.length > 0
+    ? pendingLotIds.length === 0
+    : Boolean(legacyBid);
+
+  const summary = buildParticipationSummary({ payment, cpo, bids });
   let participationStatus = summary.participationStatus;
-  if (cpoApproved && !bid && auctionOpen && inWindow) {
+
+  if (cpoApproved && pendingLotIds.length > 0 && auctionOpen && inWindow) {
     participationStatus = 'ready_to_bid';
-  } else if (cpoApproved && !bid && biddingWindowStatus === 'after') {
+  } else if (cpoApproved && allSelectedBid && hasBid) {
+    participationStatus = 'bid_submitted';
+  } else if (cpoApproved && pendingLotIds.length > 0 && biddingWindowStatus === 'after') {
     participationStatus = 'bidding_closed';
-  } else if (cpoApproved && !bid) {
+  } else if (cpoApproved && pendingLotIds.length > 0) {
+    participationStatus = 'bidding_waiting';
+  } else if (cpoApproved && !hasBid && biddingWindowStatus === 'after') {
+    participationStatus = 'bidding_closed';
+  } else if (cpoApproved && !hasBid) {
     participationStatus = 'bidding_waiting';
   }
+
+  const canPlaceBid = lotParticipation.some((lot) => lot.canPlaceBid)
+    || Boolean(cpoApproved && !legacyBid && lots.length === 0 && auctionOpen && inWindow);
+
+  const serializedBids = bids.map((bid) => ({
+    id: bid.id,
+    auctionAssetId: bid.auction_asset_id ?? null,
+    amount: Number(bid.amount),
+    status: bid.status,
+    submittedAt: bid.submitted_at,
+  }));
 
   return {
     auctionId,
     participationStatus,
     isRegisteredBidder: summary.isRegisteredBidder,
+    isMultiLot: lots.length > 1,
     payment: payment
       ? {
           id: payment.id,
@@ -624,23 +995,29 @@ export async function getAuctionParticipation(auctionId, userId) {
           status: cpo.status,
           rejectionReason: cpo.rejection_reason,
           expiryDate: cpo.expiry_date,
+          selectedAuctionAssetIds: selectedLotIds,
+          requiredCpoAmount: cpo.required_cpo_amount != null ? Number(cpo.required_cpo_amount) : null,
+          declaredCpoAmount: cpo.declared_cpo_amount != null ? Number(cpo.declared_cpo_amount) : null,
           createdAt: cpo.created_at,
         }
       : null,
-    bid: bid
+    bids: serializedBids,
+    lotParticipation,
+    bid: legacyBid
       ? {
-          id: bid.id,
-          amount: Number(bid.amount),
-          status: bid.status,
-          submittedAt: bid.submitted_at,
+          id: legacyBid.id,
+          amount: Number(legacyBid.amount),
+          status: legacyBid.status,
+          submittedAt: legacyBid.submitted_at,
         }
-      : null,
+      : (serializedBids.length === 1 && lots.length <= 1 ? serializedBids[0] : null),
     gates: {
       documentAccess: paymentApproved,
+      cpoApproved,
       canSubmitPayment:
         auctionOpen && !paymentApproved && !paymentPending && (!payment || paymentRejected),
       canSubmitCpo: auctionOpen && paymentApproved && !cpoApproved && !cpoPending,
-      canPlaceBid: auctionOpen && inWindow && cpoApproved && !bid,
+      canPlaceBid,
       inBiddingWindow: inWindow,
       biddingWindowStatus,
       paymentPending,
@@ -651,7 +1028,9 @@ export async function getAuctionParticipation(auctionId, userId) {
       paymentRejected,
       cpoApproved,
       cpoRejected,
-      hasBid: Boolean(bid),
+      hasBid,
+      allBidsSubmitted: allSelectedBid && hasBid,
+      pendingLotCount: pendingLotIds.length,
     },
   };
 }
@@ -667,7 +1046,26 @@ export async function getBrowseAuctionById(id, userId = null) {
     throw new AppError('Auction not available', 404, 'AUCTION_NOT_FOUND');
   }
 
+  const lots = await AuctionAsset.findAll({
+    where: { auction_id: id },
+    include: [
+      {
+        model: Asset,
+        as: 'asset',
+        attributes: ['id', 'title', 'asset_type', 'location'],
+      },
+    ],
+    order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
+  });
+
   const [serialized] = await attachBidCounts([auction]);
+  serialized.lots = lots.map(serializeLot);
+  serialized.lotCount = serialized.lots.length;
+  serialized.auctionMode = auction.auction_mode || (serialized.lotCount > 1 ? 'multi' : 'single');
+  serialized.totalReservePrice = auction.total_reserve_price != null
+    ? Number(auction.total_reserve_price)
+    : serialized.lots.reduce((sum, lot) => sum + Number(lot.reservePrice || 0), 0);
+
   let documentAccess = false;
 
   if (userId) {
@@ -694,8 +1092,23 @@ export async function getAuctionById(id) {
     ],
   });
 
+  const lots = await AuctionAsset.findAll({
+    where: { auction_id: id },
+    include: [
+      {
+        model: Asset,
+        as: 'asset',
+        attributes: ['id', 'title', 'asset_type', 'location'],
+      },
+    ],
+    order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
+  });
+
+  const serializedLots = lots.map(serializeLot);
   const [serialized] = await attachBidCounts([auction]);
   serialized.createdByName = buildStaffDisplayName(staff?.get({ plain: true }));
+  serialized.lots = serializedLots;
+  serialized.lotCount = serializedLots.length;
   return serialized;
 }
 
@@ -777,6 +1190,26 @@ async function transitionAuctionStatus(id, allowedFrom, nextStatus, staffId, aud
 
   await auction.update(updateData);
 
+  if (nextStatus === 'published') {
+    const lots = await AuctionAsset.findAll({
+      where: { auction_id: auction.id },
+      attributes: ['asset_id'],
+    });
+    const lotAssetIds = lots.map((lot) => lot.asset_id).filter(Boolean);
+
+    if (lotAssetIds.length > 0) {
+      await Asset.update(
+        { status: 'in_auction' },
+        { where: { id: { [Op.in]: lotAssetIds }, deleted_at: null } },
+      );
+    } else if (auction.asset_id) {
+      await Asset.update(
+        { status: 'in_auction' },
+        { where: { id: auction.asset_id, deleted_at: null } },
+      );
+    }
+  }
+
   await auditService.writeAuditLog({
     staffId: staffId ?? null,
     action: auditAction,
@@ -789,6 +1222,17 @@ async function transitionAuctionStatus(id, allowedFrom, nextStatus, staffId, aud
 }
 
 export async function publishAuction(id, staffId) {
+  if (!staffId) {
+    throw new AppError('Staff profile required', 403, 'STAFF_REQUIRED');
+  }
+
+  await assertStaffRole(
+    staffId,
+    LAUNCH_WORKFLOW_ROLES.AUCTION_PUBLISH,
+    'Only super admins can approve and publish auctions',
+    'SUPER_ADMIN_REQUIRED',
+  );
+
   return transitionAuctionStatus(
     id,
     ['draft', 'pending_approval'],
@@ -827,13 +1271,68 @@ export async function closeAuction(id, staffId) {
     AUDIT_ACTIONS.CLOSE,
   );
 
+  let winnerSelection = {
+    winner: null,
+    noReserveMet: false,
+    noBids: false,
+  };
+
   try {
-    await winnerService.autoSelectWinner(id, staffId);
+    winnerSelection = await winnerService.autoSelectWinner(id, staffId);
   } catch (error) {
     console.warn('[auction.service] autoSelectWinner failed:', error.message);
   }
 
-  return result;
+  return {
+    ...result,
+    winnerSelection,
+  };
+}
+
+/**
+ * Close all published auctions whose end_date has passed.
+ * Used by the background auto-close job and safe to call on a schedule.
+ */
+export async function closeExpiredPublishedAuctions() {
+  const now = new Date();
+  const expired = await Auction.findAll({
+    where: {
+      status: 'published',
+      deleted_at: null,
+      end_date: { [Op.lte]: now },
+    },
+    attributes: ['id', 'title', 'created_by_staff_id', 'end_date'],
+    order: [['end_date', 'ASC']],
+  });
+
+  const results = [];
+
+  for (const auction of expired) {
+    const plain = auction.get ? auction.get({ plain: true }) : auction;
+    try {
+      const closeResult = await closeAuction(plain.id, plain.created_by_staff_id);
+      results.push({
+        auctionId: plain.id,
+        title: plain.title,
+        success: true,
+        winnerSelection: closeResult.winnerSelection,
+      });
+    } catch (error) {
+      results.push({
+        auctionId: plain.id,
+        title: plain.title,
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  return {
+    scanned: expired.length,
+    closed: results.filter((row) => row.success).length,
+    failed: results.filter((row) => !row.success).length,
+    results,
+  };
 }
 
 export async function deleteAuction(id, staffId) {
@@ -856,91 +1355,8 @@ export async function deleteAuction(id, staffId) {
   return { deleted: true, id };
 }
 
-/**
- * When an auction request (asset) is approved, create and publish a linked auction
- * so it appears in browse and admin auction lists.
- * @param {import('sequelize').Model} asset
- * @param {string} staffId
- */
-export async function createPublishedAuctionFromApprovedAsset(asset, staffId) {
-  const plain = asset.get ? asset.get({ plain: true }) : asset;
-
-  const existing = await Auction.findOne({
-    where: { asset_id: plain.id, deleted_at: null },
-  });
-
-  if (existing) {
-    if (existing.status !== 'published') {
-      await transitionAuctionStatus(
-        existing.id,
-        ['draft', 'pending_approval', 'suspended'],
-        'published',
-        staffId,
-        AUDIT_ACTIONS.PUBLISH,
-      );
-    }
-    return existing;
-  }
-
-  const reserve = Number(plain.desired_reserve_price);
-  if (!Number.isFinite(reserve) || reserve <= 0) {
-    throw new AppError(
-      'Asset must have a valid desired reserve price before approval',
-      400,
-      'INVALID_RESERVE_PRICE',
-    );
-  }
-
-  const documents = buildAuctionDocumentsFromAsset(plain);
-  if (documents.length === 0) {
-    throw new AppError(
-      'Asset must include ownership or supporting documents before approval',
-      400,
-      'DOCUMENTS_REQUIRED',
-    );
-  }
-
-  const cpoPercentage = Number(await settingsService.getSetting('auction.default_cpo_percentage'));
-  const { start, end } = defaultAuctionWindowDates();
-  const imageUrls = normalizeImageUrls(plain.image_urls);
-
-  const auction = await Auction.create({
-    id: generateUuid(),
-    asset_id: plain.id,
-    created_by_staff_id: staffId,
-    title: plain.title.trim(),
-    category: mapAssetTypeToAuctionCategory(plain.asset_type),
-    description: plain.description?.trim() || null,
-    auction_conditions: plain.auction_conditions?.trim() || null,
-    image_urls: imageUrls.length > 0 ? imageUrls : null,
-    document_files: documents,
-    start_date: start,
-    end_date: end,
-    reserve_price: reserve,
-    document_price: 0,
-    cpo_percentage: Number.isFinite(cpoPercentage) && cpoPercentage >= 1 ? cpoPercentage : 1,
-    currency: 'ETB',
-    status: 'published',
-  });
-
-  await auditService.writeAuditLog({
-    staffId,
-    action: AUDIT_ACTIONS.PUBLISH,
-    entityType: 'Auction',
-    entityId: auction.id,
-    metadata: {
-      title: auction.title,
-      assetId: plain.id,
-      source: 'asset_request_approval',
-    },
-  });
-
-  return auction;
-}
-
 export const auctionService = Object.freeze({
   createAuction,
-  createPublishedAuctionFromApprovedAsset,
   listAuctions,
   listBrowseAuctions,
   getAuctionById,
@@ -951,7 +1367,9 @@ export const auctionService = Object.freeze({
   suspendAuction,
   reactivateAuction,
   closeAuction,
+  closeExpiredPublishedAuctions,
   deleteAuction,
+  listEligibleAssetsForAuction,
   mapDisplayStatus,
 });
 

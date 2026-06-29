@@ -309,7 +309,7 @@ export function DashboardShell() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, clearSession } = useAuth();
-  const { navigation } = usePermission();
+  const { navigation, canRead, isAuthenticated } = usePermission();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -338,6 +338,11 @@ export function DashboardShell() {
   }, [user, i18n]);
 
   useEffect(() => {
+    if (!isAuthenticated || !canRead('notifications')) {
+      setUnreadCount(0);
+      return undefined;
+    }
+
     let cancelled = false;
 
     async function loadUnreadCount() {
@@ -360,7 +365,7 @@ export function DashboardShell() {
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [isAuthenticated, canRead]);
 
   function handleLanguageChange(code) {
     i18n.changeLanguage(code);

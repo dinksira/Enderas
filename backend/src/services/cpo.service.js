@@ -1,8 +1,13 @@
 import { Op } from 'sequelize';
 import { Cpo, CPO_STATUSES } from '../models/cpo.model.js';
-import { Auction, User, Staff } from '../models/index.js';
+import { Auction, AuctionAsset, User, Staff } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
+import {
+  normalizeLotIdList,
+  computeRequiredCpoAmount,
+  roundMoney,
+} from '../utils/auction-lot.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
 import { paymentService } from './payment.service.js';
@@ -75,6 +80,9 @@ function serializeCpoDetail(cpo) {
   return {
     ...row,
     documentUrl: plain.document_url,
+    selectedAuctionAssetIds: normalizeLotIdList(plain.selected_auction_asset_ids),
+    requiredCpoAmount: plain.required_cpo_amount != null ? Number(plain.required_cpo_amount) : null,
+    declaredCpoAmount: plain.declared_cpo_amount != null ? Number(plain.declared_cpo_amount) : null,
     reviewedByStaffId: plain.reviewed_by_staff_id,
     reviewedByName: buildStaffDisplayName(plain.reviewedByStaff),
     reviewedAt: plain.reviewed_at,
@@ -165,7 +173,10 @@ export async function getCpoById(id, scope = {}) {
   return serializeCpoDetail(cpo);
 }
 
-export async function createCpo({ auctionId, documentUrl }, userId) {
+export async function createCpo(
+  { auctionId, documentUrl, selectedAuctionAssetIds, declaredCpoAmount },
+  userId,
+) {
   const resolvedAuctionId = auctionId;
   const resolvedDocUrl = documentUrl?.trim();
 
@@ -191,10 +202,47 @@ export async function createCpo({ auctionId, documentUrl }, userId) {
 
   const existing = await Cpo.findOne({
     where: { user_id: userId, auction_id: resolvedAuctionId, deleted_at: null },
+    order: [['created_at', 'DESC']],
   });
   if (existing && existing.status !== 'rejected') {
     throw new AppError('CPO already submitted for this auction', 409, 'CPO_EXISTS');
   }
+
+  const lots = await AuctionAsset.findAll({
+    where: { auction_id: resolvedAuctionId },
+    order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
+  });
+
+  let selectedIds = normalizeLotIdList(selectedAuctionAssetIds);
+  const isMultiLot = auction.auction_mode === 'multi' || lots.length > 1;
+
+  if (lots.length === 1 && !selectedIds.length) {
+    selectedIds = [lots[0].id];
+  }
+
+  if (isMultiLot && lots.length > 0 && !selectedIds.length) {
+    throw new AppError('Select at least one lot to bid on', 400, 'LOTS_REQUIRED');
+  }
+
+  const lotIdSet = new Set(lots.map((lot) => lot.id));
+  if (selectedIds.some((id) => !lotIdSet.has(id))) {
+    throw new AppError('One or more selected lots are invalid', 400, 'INVALID_LOTS');
+  }
+
+  let requiredCpoAmount = 0;
+  if (lots.length > 0) {
+    requiredCpoAmount = computeRequiredCpoAmount(lots, selectedIds, auction.cpo_percentage);
+  } else {
+    const reserve = Number(auction.reserve_price);
+    const percentage = Number(auction.cpo_percentage);
+    if (Number.isFinite(reserve) && reserve > 0 && Number.isFinite(percentage) && percentage > 0) {
+      requiredCpoAmount = roundMoney((reserve * percentage) / 100);
+    }
+  }
+
+  const declaredAmount = declaredCpoAmount != null && declaredCpoAmount !== ''
+    ? Number(declaredCpoAmount)
+    : null;
 
   const cpo = await Cpo.create({
     id: generateUuid(),
@@ -202,6 +250,9 @@ export async function createCpo({ auctionId, documentUrl }, userId) {
     auction_id: resolvedAuctionId,
     document_url: resolvedDocUrl,
     status: 'pending',
+    selected_auction_asset_ids: selectedIds.length > 0 ? selectedIds : null,
+    required_cpo_amount: requiredCpoAmount > 0 ? requiredCpoAmount : null,
+    declared_cpo_amount: Number.isFinite(declaredAmount) && declaredAmount > 0 ? declaredAmount : null,
   });
 
   await auditService.writeAuditLog({
@@ -209,7 +260,11 @@ export async function createCpo({ auctionId, documentUrl }, userId) {
     action: AUDIT_ACTIONS.CREATE,
     entityType: 'Cpo',
     entityId: cpo.id,
-    metadata: { auctionId: resolvedAuctionId },
+    metadata: {
+      auctionId: resolvedAuctionId,
+      selectedAuctionAssetIds: selectedIds,
+      requiredCpoAmount,
+    },
   });
 
   return getCpoById(cpo.id, { userId, isStaff: false });
@@ -284,16 +339,25 @@ export async function rejectCpo(id, rejectionReason, staffId) {
   return getCpoById(id, { isStaff: true });
 }
 
-export async function hasApprovedCpo(userId, auctionId) {
-  const cpo = await Cpo.findOne({
+export async function getApprovedCpoRecord(userId, auctionId) {
+  const now = new Date();
+  return Cpo.findOne({
     where: {
       user_id: userId,
       auction_id: auctionId,
       status: 'approved',
       deleted_at: null,
+      [Op.or]: [
+        { expiry_date: null },
+        { expiry_date: { [Op.gte]: now } },
+      ],
     },
+    order: [['created_at', 'DESC']],
   });
-  return Boolean(cpo);
+}
+
+export async function hasApprovedCpo(userId, auctionId) {
+  return Boolean(await getApprovedCpoRecord(userId, auctionId));
 }
 
 export const cpoService = Object.freeze({
@@ -304,6 +368,7 @@ export const cpoService = Object.freeze({
   approveCpo,
   rejectCpo,
   hasApprovedCpo,
+  getApprovedCpoRecord,
 });
 
 export default cpoService;

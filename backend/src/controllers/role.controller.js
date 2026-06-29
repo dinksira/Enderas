@@ -14,6 +14,7 @@ export async function updateRolePermissions(req, res, next) {
         modules: req.body.modules,
         actions: req.body.actions,
         routes: req.body.routes,
+        moduleActions: req.body.moduleActions,
       },
       resolveStaffId(req),
     );

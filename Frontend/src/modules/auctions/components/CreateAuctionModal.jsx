@@ -5,11 +5,16 @@ import { Input } from '../../../components/Input.jsx';
 import { auctionService } from '../services/auction-service.js';
 import {
   AUCTION_CATEGORY_KEYS,
+  AUCTION_MODES,
   AUCTION_STEP_ORDER,
   AUCTION_STEPS,
   buildAuctionPayload,
+  buildFormPrefillFromAsset,
+  buildSelectedLotFromAsset,
+  computeLotsTotalReserve,
   EMPTY_AUCTION_FORM,
   formatFileSize,
+  MAX_LOTS_PER_AUCTION,
   validateAuctionStep,
 } from '../utils/auction-form-utils.js';
 
@@ -21,6 +26,8 @@ function cloneInitialForm() {
     ...EMPTY_AUCTION_FORM,
     images: [],
     documents: [],
+    prefilledImageUrls: [],
+    prefilledDocuments: [],
   };
 }
 
@@ -28,28 +35,43 @@ function cloneInitialForm() {
  * @param {{
  *   open: boolean,
  *   onClose: () => void,
- *   onSuccess: () => void,
+ *   onSuccess: (auction?: { id?: string }) => void,
+ *   initialAssetId?: string|null,
  * }} props
  */
-export function CreateAuctionModal({ open, onClose, onSuccess }) {
+export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = null }) {
   const { t } = useTranslation();
-  const [step, setStep] = useState(AUCTION_STEPS.BASIC);
+  const [step, setStep] = useState(AUCTION_STEPS.ASSET);
   const [form, setForm] = useState(cloneInitialForm);
+  const [auctionMode, setAuctionMode] = useState(AUCTION_MODES.SINGLE);
+  const [selectedLots, setSelectedLots] = useState([]);
+  const [eligibleAssets, setEligibleAssets] = useState([]);
+  const [assetsLoading, setAssetsLoading] = useState(false);
+  const [assetsError, setAssetsError] = useState('');
+  const [assetSearch, setAssetSearch] = useState('');
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [initialAssetApplied, setInitialAssetApplied] = useState(false);
 
   const imageInputRef = useRef(null);
   const documentInputRef = useRef(null);
 
   useEffect(() => {
     if (!open) {
-      setStep(AUCTION_STEPS.BASIC);
+      setStep(AUCTION_STEPS.ASSET);
       setForm(cloneInitialForm());
+      setAuctionMode(AUCTION_MODES.SINGLE);
+      setSelectedLots([]);
+      setEligibleAssets([]);
+      setAssetsLoading(false);
+      setAssetsError('');
+      setAssetSearch('');
       setErrors({});
       setSubmitError('');
       setSubmitting(false);
+      setInitialAssetApplied(false);
       setImagePreviews((current) => {
         current.forEach((preview) => {
           if (preview?.url) {
@@ -62,6 +84,45 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
   }, [open]);
 
   useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      setAssetsLoading(true);
+      setAssetsError('');
+
+      auctionService
+        .getEligibleAssets({
+          search: assetSearch.trim() || undefined,
+          assetId: !assetSearch.trim() && initialAssetId ? initialAssetId : undefined,
+        })
+        .then((items) => {
+          if (!cancelled) {
+            setEligibleAssets(items);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setEligibleAssets([]);
+            setAssetsError(t('auctions.create.assetStep.loadFailed'));
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setAssetsLoading(false);
+          }
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [open, assetSearch, initialAssetId, t]);
+
+  useEffect(() => {
     return () => {
       imagePreviews.forEach((preview) => {
         if (preview?.url) {
@@ -72,6 +133,10 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
   }, [imagePreviews]);
 
   const stepIndex = AUCTION_STEP_ORDER.indexOf(step);
+  const isMultiMode = auctionMode === AUCTION_MODES.MULTI;
+  const categoryLocked = !isMultiMode && selectedLots.length === 1;
+  const lotsTotalReserve = computeLotsTotalReserve(selectedLots);
+  const validationOptions = { auctionMode, selectedLots };
 
   const clearFieldError = (field) => {
     setErrors((current) => {
@@ -87,6 +152,108 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
     clearFieldError(field);
   };
 
+  const applyAssetPrefill = (asset) => {
+    const prefill = buildFormPrefillFromAsset(asset, t);
+    setForm((current) => ({
+      ...current,
+      title: prefill.title || current.title,
+      category: prefill.category || current.category,
+      description: prefill.description || current.description,
+      auctionConditions: prefill.auctionConditions || current.auctionConditions,
+      reservePrice: prefill.reservePrice || current.reservePrice,
+      prefilledImageUrls: prefill.prefilledImageUrls.length
+        ? prefill.prefilledImageUrls
+        : current.prefilledImageUrls,
+      prefilledDocuments: prefill.prefilledDocuments.length
+        ? prefill.prefilledDocuments
+        : current.prefilledDocuments,
+    }));
+    clearFieldError('title');
+    clearFieldError('category');
+    clearFieldError('auctionConditions');
+    clearFieldError('reservePrice');
+    clearFieldError('documents');
+  };
+
+  const clearAssetSelections = () => {
+    setSelectedLots([]);
+    setForm((current) => ({
+      ...cloneInitialForm(),
+      startDate: current.startDate,
+      endDate: current.endDate,
+      documentFee: current.documentFee,
+      cpoPercentage: current.cpoPercentage,
+    }));
+  };
+
+  const toggleAssetSelection = (asset) => {
+    if (isMultiMode) {
+      setSelectedLots((current) => {
+        const exists = current.some((lot) => lot.assetId === asset.id);
+        if (exists) {
+          return current.filter((lot) => lot.assetId !== asset.id);
+        }
+        if (current.length >= MAX_LOTS_PER_AUCTION) {
+          setSubmitError(t('auctions.create.errors.lotLimitReached', { max: MAX_LOTS_PER_AUCTION }));
+          return current;
+        }
+        const nextLots = [...current, buildSelectedLotFromAsset(asset, current.length)];
+        if (current.length === 0) {
+          applyAssetPrefill(asset);
+        }
+        return nextLots;
+      });
+      setSubmitError('');
+      return;
+    }
+
+    const isSelected = selectedLots.some((lot) => lot.assetId === asset.id);
+    if (isSelected) {
+      clearAssetSelections();
+      return;
+    }
+
+    const nextLot = buildSelectedLotFromAsset(asset, 0);
+    setSelectedLots([nextLot]);
+    applyAssetPrefill(asset);
+  };
+
+  const updateLotField = (assetId, field, value) => {
+    setSelectedLots((current) => current.map((lot) => (
+      lot.assetId === assetId ? { ...lot, [field]: value } : lot
+    )));
+    if (field === 'reservePrice') {
+      clearFieldError(`lotReserve_${assetId}`);
+    }
+  };
+
+  const handleAuctionModeChange = (nextMode) => {
+    if (nextMode === auctionMode) {
+      return;
+    }
+    setAuctionMode(nextMode);
+    clearAssetSelections();
+    setErrors({});
+    setSubmitError('');
+  };
+
+  useEffect(() => {
+    if (!open || !initialAssetId || assetsLoading || initialAssetApplied) {
+      return;
+    }
+
+    const asset = eligibleAssets.find((item) => item.id === initialAssetId);
+    if (!asset) {
+      return;
+    }
+
+    const nextLot = buildSelectedLotFromAsset(asset, 0);
+    setSelectedLots([nextLot]);
+    applyAssetPrefill(asset);
+    setStep(AUCTION_STEPS.BASIC);
+    setInitialAssetApplied(true);
+  }, [open, initialAssetId, eligibleAssets, assetsLoading, initialAssetApplied, t]);
+
   const goToStep = (targetStep) => {
     setStep(targetStep);
     setErrors({});
@@ -94,7 +261,7 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
   };
 
   const handleNext = () => {
-    const stepErrors = validateAuctionStep(step, form, t);
+    const stepErrors = validateAuctionStep(step, form, t, validationOptions);
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);
       return;
@@ -150,6 +317,13 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
     });
   };
 
+  const removePrefilledImage = (index) => {
+    setForm((current) => ({
+      ...current,
+      prefilledImageUrls: current.prefilledImageUrls.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleDocumentSelect = (event) => {
     const selected = Array.from(event.target.files || []).filter(
       (file) => file.type === 'application/pdf',
@@ -185,11 +359,19 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
     }));
   };
 
+  const removePrefilledDocument = (id) => {
+    setForm((current) => ({
+      ...current,
+      prefilledDocuments: current.prefilledDocuments.filter((doc) => doc.id !== id),
+    }));
+  };
+
   const handleSubmit = async () => {
     const reviewErrors = {
-      ...validateAuctionStep(AUCTION_STEPS.BASIC, form, t),
-      ...validateAuctionStep(AUCTION_STEPS.SCHEDULE, form, t),
-      ...validateAuctionStep(AUCTION_STEPS.MEDIA, form, t),
+      ...validateAuctionStep(AUCTION_STEPS.ASSET, form, t, validationOptions),
+      ...validateAuctionStep(AUCTION_STEPS.BASIC, form, t, validationOptions),
+      ...validateAuctionStep(AUCTION_STEPS.SCHEDULE, form, t, validationOptions),
+      ...validateAuctionStep(AUCTION_STEPS.MEDIA, form, t, validationOptions),
     };
 
     if (Object.keys(reviewErrors).length > 0) {
@@ -210,16 +392,26 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
         auctionService.uploadFiles(documentFiles, 'auctions/documents'),
       ]);
 
-      const payload = buildAuctionPayload(form);
-      payload.imageUrls = uploadedImages.map((file) => file.fileUrl).filter(Boolean);
-      payload.documents = uploadedDocuments.map((file, index) => ({
-        name: form.documents[index]?.name || file.originalName || file.fileName,
-        url: file.fileUrl,
-        size: file.fileSize || form.documents[index]?.size || 0,
-      }));
+      const payload = buildAuctionPayload(form, { auctionMode, selectedLots });
+      payload.imageUrls = [
+        ...form.prefilledImageUrls,
+        ...uploadedImages.map((file) => file.fileUrl).filter(Boolean),
+      ];
+      payload.documents = [
+        ...form.prefilledDocuments.map((doc) => ({
+          name: doc.name,
+          url: doc.url,
+          size: doc.size || 0,
+        })),
+        ...uploadedDocuments.map((file, index) => ({
+          name: form.documents[index]?.name || file.originalName || file.fileName,
+          url: file.fileUrl,
+          size: file.fileSize || form.documents[index]?.size || 0,
+        })),
+      ];
 
-      await auctionService.create(payload);
-      onSuccess();
+      const auction = await auctionService.create(payload);
+      onSuccess(auction);
       onClose();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : t('auctions.create.errors.submitFailed'));
@@ -228,61 +420,88 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
     }
   };
 
+  const totalImageCount = form.images.length + form.prefilledImageUrls.length;
+  const totalDocumentCount = form.documents.length + form.prefilledDocuments.length;
+
   const reviewRows = useMemo(
-    () => [
-      { label: t('auctions.create.fields.title'), value: form.title, step: AUCTION_STEPS.BASIC },
-      {
-        label: t('auctions.create.fields.category'),
-        value: form.category ? t(`category.${form.category}`) : '—',
-        step: AUCTION_STEPS.BASIC,
-      },
-      {
-        label: t('auctions.create.fields.description'),
-        value: form.description || '—',
-        step: AUCTION_STEPS.BASIC,
-      },
-      {
-        label: t('auctions.create.fields.auctionConditions'),
-        value: form.auctionConditions || '—',
-        step: AUCTION_STEPS.BASIC,
-      },
-      {
-        label: t('auctions.create.fields.startDate'),
-        value: form.startDate ? new Date(form.startDate).toLocaleString() : '—',
-        step: AUCTION_STEPS.SCHEDULE,
-      },
-      {
-        label: t('auctions.create.fields.endDate'),
-        value: form.endDate ? new Date(form.endDate).toLocaleString() : '—',
-        step: AUCTION_STEPS.SCHEDULE,
-      },
-      {
-        label: t('auctions.create.fields.reservePrice'),
-        value: form.reservePrice ? `${form.reservePrice} ETB` : '—',
-        step: AUCTION_STEPS.SCHEDULE,
-      },
-      {
-        label: t('auctions.create.fields.documentFee'),
-        value: form.documentFee !== '' ? `${form.documentFee} ETB` : '—',
-        step: AUCTION_STEPS.SCHEDULE,
-      },
-      {
-        label: t('auctions.create.fields.cpoPercentage'),
-        value: form.cpoPercentage !== '' ? `${form.cpoPercentage}%` : '—',
-        step: AUCTION_STEPS.SCHEDULE,
-      },
-      {
-        label: t('auctions.create.fields.images'),
-        value: t('auctions.create.review.imageCount', { count: form.images.length }),
-        step: AUCTION_STEPS.MEDIA,
-      },
-      {
-        label: t('auctions.create.fields.documents'),
-        value: t('auctions.create.review.documentCount', { count: form.documents.length }),
-        step: AUCTION_STEPS.MEDIA,
-      },
-    ],
-    [form, t],
+    () => {
+      const linkedAssetValue = isMultiMode
+        ? t('auctions.create.review.multiAssetCount', { count: selectedLots.length })
+        : selectedLots[0]?.asset?.title ?? t('auctions.create.review.noAsset');
+
+      const rows = [
+        {
+          label: t('auctions.create.fields.auctionMode'),
+          value: isMultiMode
+            ? t('auctions.create.assetStep.modeMulti')
+            : t('auctions.create.assetStep.modeSingle'),
+          step: AUCTION_STEPS.ASSET,
+        },
+        {
+          label: t('auctions.create.fields.linkedAsset'),
+          value: linkedAssetValue,
+          step: AUCTION_STEPS.ASSET,
+        },
+        { label: t('auctions.create.fields.title'), value: form.title, step: AUCTION_STEPS.BASIC },
+        {
+          label: t('auctions.create.fields.category'),
+          value: form.category ? t(`category.${form.category}`) : '—',
+          step: AUCTION_STEPS.BASIC,
+        },
+        {
+          label: t('auctions.create.fields.description'),
+          value: form.description || '—',
+          step: AUCTION_STEPS.BASIC,
+        },
+        {
+          label: t('auctions.create.fields.auctionConditions'),
+          value: form.auctionConditions || '—',
+          step: AUCTION_STEPS.BASIC,
+        },
+        {
+          label: t('auctions.create.fields.startDate'),
+          value: form.startDate ? new Date(form.startDate).toLocaleString() : '—',
+          step: AUCTION_STEPS.SCHEDULE,
+        },
+        {
+          label: t('auctions.create.fields.endDate'),
+          value: form.endDate ? new Date(form.endDate).toLocaleString() : '—',
+          step: AUCTION_STEPS.SCHEDULE,
+        },
+        {
+          label: isMultiMode
+            ? t('auctions.create.fields.totalReservePrice')
+            : t('auctions.create.fields.reservePrice'),
+          value: isMultiMode
+            ? `${lotsTotalReserve.toLocaleString()} ETB`
+            : (form.reservePrice ? `${form.reservePrice} ETB` : '—'),
+          step: isMultiMode ? AUCTION_STEPS.ASSET : AUCTION_STEPS.SCHEDULE,
+        },
+        {
+          label: t('auctions.create.fields.documentFee'),
+          value: form.documentFee !== '' ? `${form.documentFee} ETB` : '—',
+          step: AUCTION_STEPS.SCHEDULE,
+        },
+        {
+          label: t('auctions.create.fields.cpoPercentage'),
+          value: form.cpoPercentage !== '' ? `${form.cpoPercentage}%` : '—',
+          step: AUCTION_STEPS.SCHEDULE,
+        },
+        {
+          label: t('auctions.create.fields.images'),
+          value: t('auctions.create.review.imageCount', { count: totalImageCount }),
+          step: AUCTION_STEPS.MEDIA,
+        },
+        {
+          label: t('auctions.create.fields.documents'),
+          value: t('auctions.create.review.documentCount', { count: totalDocumentCount }),
+          step: AUCTION_STEPS.MEDIA,
+        },
+      ];
+
+      return rows;
+    },
+    [form, isMultiMode, lotsTotalReserve, selectedLots, t, totalDocumentCount, totalImageCount],
   );
 
   if (!open) {
@@ -347,6 +566,188 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
         </ol>
 
         <div className="auction-create-modal__body">
+          {step === AUCTION_STEPS.ASSET && (
+            <div className="auction-create-modal__asset-step">
+              <fieldset className="auction-create-modal__mode-toggle">
+                <legend className="input-field__label">
+                  {t('auctions.create.fields.auctionMode')}
+                </legend>
+                <label className="auction-create-modal__mode-option">
+                  <input
+                    type="radio"
+                    name="auction-mode"
+                    value={AUCTION_MODES.SINGLE}
+                    checked={!isMultiMode}
+                    onChange={() => handleAuctionModeChange(AUCTION_MODES.SINGLE)}
+                    disabled={submitting}
+                  />
+                  <span>{t('auctions.create.assetStep.modeSingle')}</span>
+                </label>
+                <label className="auction-create-modal__mode-option">
+                  <input
+                    type="radio"
+                    name="auction-mode"
+                    value={AUCTION_MODES.MULTI}
+                    checked={isMultiMode}
+                    onChange={() => handleAuctionModeChange(AUCTION_MODES.MULTI)}
+                    disabled={submitting}
+                  />
+                  <span>{t('auctions.create.assetStep.modeMulti')}</span>
+                </label>
+              </fieldset>
+
+              <p className="auction-create-modal__section-hint">
+                {isMultiMode
+                  ? t('auctions.create.assetStep.multiHint')
+                  : t('auctions.create.assetStep.hint')}
+              </p>
+
+              <label className="input-field__label" htmlFor="auction-asset-search">
+                {t('auctions.create.assetStep.search')}
+              </label>
+              <input
+                id="auction-asset-search"
+                type="search"
+                className="input-field__control"
+                value={assetSearch}
+                onChange={(event) => setAssetSearch(event.target.value)}
+                placeholder={t('auctions.create.assetStep.searchPlaceholder')}
+                disabled={submitting}
+              />
+
+              {assetsError && (
+                <p className="kyc-modal__error" role="alert">
+                  {assetsError}
+                </p>
+              )}
+
+              {errors.assets && (
+                <p className="kyc-modal__error" role="alert">
+                  {errors.assets}
+                </p>
+              )}
+
+              {assetsLoading ? (
+                <p className="auction-create-modal__section-hint">
+                  {t('auctions.create.assetStep.loading')}
+                </p>
+              ) : (
+                <ul className="auction-create-modal__asset-list" role="listbox" aria-label={t('auctions.create.assetStep.search')}>
+                  {eligibleAssets.length === 0 ? (
+                    <li className="auction-create-modal__asset-empty">
+                      {t('auctions.create.assetStep.empty')}
+                    </li>
+                  ) : (
+                    eligibleAssets.map((asset) => {
+                      const isSelected = selectedLots.some((lot) => lot.assetId === asset.id);
+                      const valuation = asset.evaluation?.valuationAmount;
+                      return (
+                        <li key={asset.id}>
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={isSelected}
+                            className={[
+                              'auction-create-modal__asset-item',
+                              isSelected ? 'auction-create-modal__asset-item--selected' : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' ')}
+                            onClick={() => toggleAssetSelection(asset)}
+                            disabled={submitting}
+                          >
+                            <span className="auction-create-modal__asset-title">{asset.title}</span>
+                            <span className="auction-create-modal__asset-meta">
+                              {t(`assets.types.${asset.assetType}`, { defaultValue: asset.assetType })}
+                              {asset.location ? ` · ${asset.location}` : ''}
+                            </span>
+                            {valuation != null && (
+                              <span className="auction-create-modal__asset-valuation">
+                                {t('auctions.create.assetStep.valuation', {
+                                  amount: Number(valuation).toLocaleString(),
+                                })}
+                              </span>
+                            )}
+                          </button>
+                        </li>
+                      );
+                    })
+                  )}
+                </ul>
+              )}
+
+              {selectedLots.length > 0 && (
+                <section className="auction-create-modal__selected-lots">
+                  <h3 className="auction-create-modal__section-title">
+                    {t('auctions.create.assetStep.selectedAssets', { count: selectedLots.length })}
+                  </h3>
+
+                  <ul className="auction-create-modal__lot-list">
+                    {selectedLots.map((lot, index) => (
+                      <li key={lot.assetId} className="auction-create-modal__lot-item">
+                        <div className="auction-create-modal__lot-item-header">
+                          <p className="auction-create-modal__lot-title">
+                            {lot.asset?.title ?? t('auctions.create.assetStep.unnamedAsset')}
+                          </p>
+                          <button
+                            type="button"
+                            className="auction-create-modal__edit-link"
+                            onClick={() => toggleAssetSelection(lot.asset)}
+                            disabled={submitting}
+                          >
+                            {t('auctions.create.assetStep.removeAsset')}
+                          </button>
+                        </div>
+
+                        <div className="auction-create-modal__lot-fields">
+                          <Input
+                            label={t('auctions.create.fields.lotLabel')}
+                            value={lot.lotLabel}
+                            onChange={(event) => updateLotField(lot.assetId, 'lotLabel', event.target.value)}
+                            disabled={submitting}
+                          />
+                          <Input
+                            label={t('auctions.create.fields.lotReservePrice')}
+                            type="number"
+                            min="1"
+                            step="0.01"
+                            value={lot.reservePrice}
+                            onChange={(event) => updateLotField(lot.assetId, 'reservePrice', event.target.value)}
+                            error={errors[`lotReserve_${lot.assetId}`]}
+                            disabled={submitting}
+                          />
+                        </div>
+
+                        <p className="auction-create-modal__lot-meta">
+                          {t('auctions.create.assetStep.lotPosition', { index: index + 1 })}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {isMultiMode && (
+                    <p className="auction-create-modal__section-hint">
+                      {t('auctions.create.assetStep.totalReserve', {
+                        amount: lotsTotalReserve.toLocaleString(),
+                      })}
+                    </p>
+                  )}
+                </section>
+              )}
+
+              {selectedLots.length > 0 && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={clearAssetSelections}
+                  disabled={submitting}
+                >
+                  {t('auctions.create.assetStep.clearSelection')}
+                </Button>
+              )}
+            </div>
+          )}
+
           {step === AUCTION_STEPS.BASIC && (
             <div className="auction-create-modal__grid">
               <Input
@@ -373,7 +774,7 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
                     .join(' ')}
                   value={form.category}
                   onChange={(event) => updateField('category', event.target.value)}
-                  disabled={submitting}
+                  disabled={submitting || categoryLocked}
                   aria-invalid={errors.category ? 'true' : undefined}
                 >
                   <option value="">{t('auctions.create.placeholders.selectCategory')}</option>
@@ -383,6 +784,9 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
                     </option>
                   ))}
                 </select>
+                {categoryLocked && (
+                  <span className="kyc-modal__hint">{t('auctions.create.assetStep.categoryLockedHint')}</span>
+                )}
                 {errors.category && (
                   <span className="input-field__error" role="alert">
                     {errors.category}
@@ -452,17 +856,38 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
                 error={errors.endDate}
                 disabled={submitting}
               />
-              <Input
-                label={t('auctions.create.fields.reservePrice')}
-                name="reservePrice"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.reservePrice}
-                onChange={(event) => updateField('reservePrice', event.target.value)}
-                error={errors.reservePrice}
-                disabled={submitting}
-              />
+              {!isMultiMode ? (
+                <Input
+                  label={t('auctions.create.fields.reservePrice')}
+                  name="reservePrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.reservePrice}
+                  onChange={(event) => updateField('reservePrice', event.target.value)}
+                  error={errors.reservePrice}
+                  disabled={submitting}
+                />
+              ) : (
+                <div className="input-field">
+                  <label className="input-field__label">
+                    {t('auctions.create.fields.totalReservePrice')}
+                  </label>
+                  <p className="auction-create-modal__computed-value">
+                    {lotsTotalReserve > 0
+                      ? `${lotsTotalReserve.toLocaleString()} ETB`
+                      : '—'}
+                  </p>
+                  <span className="kyc-modal__hint">
+                    {t('auctions.create.assetStep.totalReserveHint')}
+                  </span>
+                  {errors.reservePrice && (
+                    <span className="input-field__error" role="alert">
+                      {errors.reservePrice}
+                    </span>
+                  )}
+                </div>
+              )}
               <Input
                 label={t('auctions.create.fields.documentFee')}
                 name="documentFee"
@@ -533,8 +958,22 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
                   />
                 </div>
 
-                {imagePreviews.length > 0 && (
+                {(form.prefilledImageUrls.length > 0 || imagePreviews.length > 0) && (
                   <div className="auction-create-modal__image-grid">
+                    {form.prefilledImageUrls.map((url, index) => (
+                      <div key={`prefill-${url}-${index}`} className="auction-create-modal__image-card">
+                        <img src={url} alt="" />
+                        <button
+                          type="button"
+                          className="auction-create-modal__remove-btn"
+                          onClick={() => removePrefilledImage(index)}
+                          disabled={submitting}
+                          aria-label={t('auctions.create.removeImage', { name: `image-${index + 1}` })}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                     {imagePreviews.map((preview, index) => (
                       <div key={preview.id} className="auction-create-modal__image-card">
                         <img src={preview.url} alt={preview.name} />
@@ -596,8 +1035,29 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
                   </p>
                 )}
 
-                {form.documents.length > 0 && (
+                {(form.prefilledDocuments.length > 0 || form.documents.length > 0) && (
                   <ul className="auction-create-modal__doc-list">
+                    {form.prefilledDocuments.map((doc) => (
+                      <li key={doc.id} className="auction-create-modal__doc-item">
+                        <div>
+                          <p className="auction-create-modal__doc-name">{doc.name}</p>
+                          {doc.size > 0 && (
+                            <p className="auction-create-modal__doc-size">
+                              {formatFileSize(doc.size)}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="auction-create-modal__remove-btn"
+                          onClick={() => removePrefilledDocument(doc.id)}
+                          disabled={submitting}
+                          aria-label={t('auctions.create.removeDocument', { name: doc.name })}
+                        >
+                          ×
+                        </button>
+                      </li>
+                    ))}
                     {form.documents.map((doc) => (
                       <li key={doc.id} className="auction-create-modal__doc-item">
                         <div>
@@ -625,6 +1085,28 @@ export function CreateAuctionModal({ open, onClose, onSuccess }) {
 
           {step === AUCTION_STEPS.REVIEW && (
             <div className="auction-create-modal__review">
+              {isMultiMode && selectedLots.length > 0 && (
+                <section className="auction-create-modal__review-lots">
+                  <h3 className="auction-create-modal__section-title">
+                    {t('auctions.create.review.lotsTitle')}
+                  </h3>
+                  <ul className="auction-create-modal__lot-list">
+                    {selectedLots.map((lot, index) => (
+                      <li key={lot.assetId} className="auction-create-modal__lot-item">
+                        <p className="auction-create-modal__lot-title">
+                          {lot.lotLabel || t('auctions.create.assetStep.lotPosition', { index: index + 1 })}
+                          {' — '}
+                          {lot.asset?.title}
+                        </p>
+                        <p className="auction-create-modal__lot-meta">
+                          {Number(lot.reservePrice || 0).toLocaleString()} ETB
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
               {reviewRows.map((row) => (
                 <div key={row.label} className="auction-create-modal__review-row">
                   <div>

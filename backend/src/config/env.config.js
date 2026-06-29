@@ -68,6 +68,11 @@ export const env = Object.freeze({
     l1TtlMs: Number(optionalEnv('RBAC_L1_TTL_MS', '60000')),
     userCacheTtlSeconds: Number(optionalEnv('RBAC_USER_CACHE_TTL_SECONDS', '300')),
   }),
+
+  auctionAutoClose: Object.freeze({
+    enabled: optionalEnv('AUCTION_AUTO_CLOSE_ENABLED', 'true') === 'true',
+    intervalMs: Number(optionalEnv('AUCTION_AUTO_CLOSE_INTERVAL_MS', '60000')),
+  }),
 });
 
 export default env;

@@ -8,6 +8,8 @@ export const WINNER_STATUSES = Object.freeze([
   'replaced',
 ]);
 
+export const SELECTION_METHODS = Object.freeze(['auto', 'manual']);
+
 export const Winner = sequelize.define(
   'Winner',
   {
@@ -19,7 +21,6 @@ export const Winner = sequelize.define(
     auction_id: {
       type: DataTypes.CHAR(36),
       allowNull: false,
-      unique: true,
     },
     bid_id: {
       type: DataTypes.CHAR(36),
@@ -44,8 +45,17 @@ export const Winner = sequelize.define(
       allowNull: false,
       defaultValue: 'pending_confirmation',
     },
+    selection_method: {
+      type: DataTypes.ENUM(...SELECTION_METHODS),
+      allowNull: false,
+      defaultValue: 'manual',
+    },
     decline_reason: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    declined_at: {
+      type: DataTypes.DATE,
       allowNull: true,
     },
     notification_sent_at: {

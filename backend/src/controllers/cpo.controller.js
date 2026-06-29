@@ -53,6 +53,9 @@ export async function createCpo(req, res, next) {
       {
         auctionId: req.body.auctionId || req.body.auction_id,
         documentUrl: req.body.documentUrl || req.body.document_url,
+        selectedAuctionAssetIds:
+          req.body.selectedAuctionAssetIds || req.body.selected_auction_asset_ids,
+        declaredCpoAmount: req.body.declaredCpoAmount ?? req.body.declared_cpo_amount,
       },
       resolveUserId(req),
     );

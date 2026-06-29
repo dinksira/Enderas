@@ -37,6 +37,7 @@ function MetaField({ label, value, children }) {
  *   onApprove: (evaluation: object) => void,
  *   onReject: (evaluation: object) => void,
  *   onReschedule: (evaluation: object, mode: 'update' | 'reschedule') => void,
+ *   onCreateAuction?: (evaluation: object) => void,
  * }} props
  */
 export function EvaluationDetailDrawer({
@@ -50,10 +51,12 @@ export function EvaluationDetailDrawer({
   onApprove,
   onReject,
   onReschedule,
+  onCreateAuction,
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'am' ? 'am' : 'en';
   const can = useAuthStore((state) => state.can);
+  const roleCode = useAuthStore((state) => state.permissions?.roleCode ?? state.user?.roleCode);
 
   const [evaluation, setEvaluation] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -86,8 +89,8 @@ export function EvaluationDetailDrawer({
   }, [open, evaluationId, refreshTrigger]);
 
   const canUpdate = can(MODULES.EVALUATIONS, ACTIONS.UPDATE);
-  const canApprove = can(MODULES.EVALUATIONS, ACTIONS.APPROVE);
-  const canReject = can(MODULES.EVALUATIONS, ACTIONS.REJECT);
+  const canCreateAuction = can(MODULES.AUCTIONS, ACTIONS.CREATE);
+  const canReviewEvaluation = roleCode === 'super_admin';
   const status = evaluation?.status;
 
   const showValuationSection = ['completed', 'approved', 'rejected'].includes(status);
@@ -117,23 +120,38 @@ export function EvaluationDetailDrawer({
         )}
         {status === 'completed' && (
           <>
-            {canApprove && (
-              <Button variant="primary" disabled={actionLoading} onClick={() => onApprove(evaluation)}>
-                {t('evaluations.management.actions.approve')}
-              </Button>
-            )}
-            {canReject && (
-              <Button variant="danger" disabled={actionLoading} onClick={() => onReject(evaluation)}>
-                {t('evaluations.management.actions.reject')}
-              </Button>
+            {canReviewEvaluation ? (
+              <>
+                <Button variant="primary" disabled={actionLoading} onClick={() => onApprove(evaluation)}>
+                  {t('evaluations.management.actions.approve')}
+                </Button>
+                <Button variant="danger" disabled={actionLoading} onClick={() => onReject(evaluation)}>
+                  {t('evaluations.management.actions.reject')}
+                </Button>
+              </>
+            ) : (
+              <p className="evaluation-drawer__pending-note" role="status">
+                {t('evaluations.management.drawer.awaitingSuperAdmin')}
+              </p>
             )}
           </>
         )}
         {status === 'approved' && (
-          <StatusPill
-            label={t('evaluations.management.status.approved')}
-            variant={getEvaluationStatusVariant('approved')}
-          />
+          <>
+            <StatusPill
+              label={t('evaluations.management.status.approved')}
+              variant={getEvaluationStatusVariant('approved')}
+            />
+            {canCreateAuction && evaluation?.assetId && onCreateAuction && (
+              <Button
+                variant="primary"
+                disabled={actionLoading}
+                onClick={() => onCreateAuction(evaluation)}
+              >
+                {t('evaluations.management.actions.createAuction')}
+              </Button>
+            )}
+          </>
         )}
         {status === 'rejected' && canUpdate && (
           <Button
@@ -155,6 +173,13 @@ export function EvaluationDetailDrawer({
           children: (
             <dl className="admin-drawer__meta-grid">
               <MetaField label={t('evaluations.management.drawer.assetTitle')} value={evaluation.assetTitle} />
+              <MetaField
+                label={t('assets.table.headers.status')}
+                value={t(
+                  `assets.status.${String(evaluation.asset?.status || evaluation.assetDbStatus || 'approved').toLowerCase()}`,
+                  { defaultValue: evaluation.assetStatus || 'Ready for Evaluation' },
+                )}
+              />
               <MetaField
                 label={t('evaluations.management.drawer.assetType')}
                 value={formatAssetCategory(t, evaluation.assetType)}

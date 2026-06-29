@@ -21,10 +21,16 @@ async function unwrapWinner(response) {
 export const winnerService = Object.freeze({
   listWinners: (params = {}) => api.get(`${WINNERS_BASE}${buildQuery(params)}`),
   getWinnerById: async (id) => unwrapWinner(await api.get(`${WINNERS_BASE}/${id}`)),
+  getWinnersForAuction: async (auctionId) => {
+    const response = await api.get(`${WINNERS_BASE}/auction/${auctionId}`);
+    return response?.items ?? [];
+  },
   selectWinner: async (payload) => unwrapWinner(await api.post(WINNERS_BASE, payload)),
   confirmWinner: async (id) => unwrapWinner(await api.post(`${WINNERS_BASE}/${id}/confirm`, {})),
   declineWinner: async (id, declineReason) =>
     unwrapWinner(await api.post(`${WINNERS_BASE}/${id}/decline`, { declineReason })),
+  replaceWinner: async (id, bidId) =>
+    unwrapWinner(await api.post(`${WINNERS_BASE}/${id}/replace`, { bidId })),
 });
 
 export default winnerService;

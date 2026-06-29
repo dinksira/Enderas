@@ -7,11 +7,17 @@ import './src/config/load-env.js';
 import app from './app.js';
 import { env } from './src/config/env.config.js';
 import { sequelize } from './src/config/db.config.js';
+import {
+  startAuctionAutoCloseJob,
+  stopAuctionAutoCloseJob,
+} from './src/jobs/auction-auto-close.job.js';
 
 async function startServer() {
   try {
     await sequelize.authenticate();
     console.log('[db] connection established');
+
+    startAuctionAutoCloseJob();
 
     app.listen(env.port, () => {
       console.log(`[server] listening on port ${env.port}`);
@@ -21,5 +27,13 @@ async function startServer() {
     process.exit(1);
   }
 }
+
+function shutdown() {
+  stopAuctionAutoCloseJob();
+  process.exit(0);
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 
 startServer();

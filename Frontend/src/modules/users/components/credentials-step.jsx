@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../../config/routes.js';
 import {
   AuthFormAlert,
-  AuthInput,
   AuthLoginCard,
+  AuthPasswordInput,
+  AuthPhoneInput,
   AuthStepTitle,
   AuthSubmitButton,
 } from './auth-login-card.jsx';
@@ -18,6 +19,7 @@ const COPY = {
     submit: 'Login',
     loading: 'Logging In...',
     phonePlaceholder: '09123456789',
+    phoneHint: 'Enter your mobile number starting with 09',
   },
   am: {
     title: 'ማንነት ያረጋግጡ',
@@ -26,6 +28,7 @@ const COPY = {
     submit: 'ግባ',
     loading: 'በመግባት ላይ...',
     phonePlaceholder: '09123456789',
+    phoneHint: 'ከ 09 ጀምሮ የሞባይል ቁጥርዎን ያስገቡ',
   },
 };
 
@@ -62,30 +65,29 @@ export function CredentialsStep({
       <form className="auth-login-card__fields" onSubmit={onSubmit} noValidate>
         <AuthFormAlert message={errors.form} />
 
-        <AuthInput
+        <AuthPhoneInput
           label={copy.phoneLabel}
           name="phoneNumber"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
           placeholder={copy.phonePlaceholder}
+          hint={copy.phoneHint}
           value={phoneNumber}
           onChange={onPhoneChange}
           error={errors.phoneNumber}
           disabled={loading}
           required
+          clearLabel={t('auth.clearField')}
         />
 
-        <AuthInput
+        <AuthPasswordInput
           label={copy.passwordLabel}
           name="password"
-          type="password"
-          autoComplete="current-password"
           value={password}
           onChange={onPasswordChange}
           error={errors.password}
           disabled={loading}
           required
+          showPasswordLabel={t('auth.showPassword')}
+          hidePasswordLabel={t('auth.hidePassword')}
         />
 
         <AuthSubmitButton loading={loading} label={copy.submit} loadingLabel={copy.loading} />

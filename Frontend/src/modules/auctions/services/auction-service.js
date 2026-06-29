@@ -30,7 +30,27 @@ export const auctionService = Object.freeze({
 
   getById: (id) => api.get(`${AUCTIONS_BASE}/${id}`),
 
-  create: (payload) => api.post(AUCTIONS_BASE, payload),
+  getEligibleAssets: async (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.search) query.set('search', params.search);
+    if (params.assetId) query.set('assetId', params.assetId);
+    const qs = query.toString();
+    const response = await api.get(
+      qs ? `${AUCTIONS_BASE}/eligible-assets?${qs}` : `${AUCTIONS_BASE}/eligible-assets`,
+    );
+    return response?.items ?? [];
+  },
+
+  getEligibleAssetById: async (assetId) => {
+    if (!assetId) return null;
+    const items = await auctionService.getEligibleAssets({ assetId });
+    return items[0] ?? null;
+  },
+
+  create: async (payload) => {
+    const response = await api.post(AUCTIONS_BASE, payload);
+    return response?.auction ?? response;
+  },
 
   update: (id, payload) => api.put(`${AUCTIONS_BASE}/${id}`, payload),
 

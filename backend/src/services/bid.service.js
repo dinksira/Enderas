@@ -1,10 +1,12 @@
 import { Op } from 'sequelize';
 import { Bid } from '../models/bid.model.js';
-import { Auction, User } from '../models/index.js';
+import { Auction, AuctionAsset, User } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
+import { normalizeLotIdList } from '../utils/auction-lot.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { cpoService } from './cpo.service.js';
+import { paymentService } from './payment.service.js';
 
 const bidInclude = [
   {
@@ -32,6 +34,7 @@ function serializeBidListRow(bid) {
   return {
     id: plain.id,
     auctionId: plain.auction_id,
+    auctionAssetId: plain.auction_asset_id ?? null,
     auctionTitle: plain.auction?.title ?? null,
     userId: plain.user_id,
     bidderName: buildUserDisplayName(plain.user),
@@ -141,7 +144,7 @@ export async function getBidById(id, scope = {}) {
   return serializeBidDetail(bid);
 }
 
-export async function placeBid({ auctionId, amount }, userId) {
+export async function placeBid({ auctionId, auctionAssetId, amount }, userId) {
   if (!auctionId) {
     throw new AppError('Auction is required', 400, 'AUCTION_REQUIRED');
   }
@@ -164,14 +167,83 @@ export async function placeBid({ auctionId, amount }, userId) {
     throw new AppError('Auction is not within the bidding window', 400, 'AUCTION_CLOSED');
   }
 
+  const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, auctionId);
+  if (!hasPayment) {
+    throw new AppError(
+      'Approved document payment required before placing a bid',
+      400,
+      'PAYMENT_REQUIRED',
+    );
+  }
+
+  const cpo = await cpoService.getApprovedCpoRecord(userId, auctionId);
+  if (!cpo) {
+    throw new AppError('Approved CPO required before placing a bid', 400, 'CPO_REQUIRED');
+  }
+
+  const lots = await AuctionAsset.findAll({
+    where: { auction_id: auctionId },
+    order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
+  });
+
+  const selectedLotIds = normalizeLotIdList(cpo.selected_auction_asset_ids);
+  let resolvedLotId = auctionAssetId?.trim() || null;
+
+  if (lots.length === 1 && !resolvedLotId) {
+    resolvedLotId = lots[0].id;
+  }
+
+  if (lots.length > 1 && !resolvedLotId) {
+    throw new AppError('Lot selection is required for multi-asset auctions', 400, 'LOT_REQUIRED');
+  }
+
+  if (lots.length > 0) {
+    const lot = lots.find((entry) => entry.id === resolvedLotId);
+    if (!lot) {
+      throw new AppError('Selected lot not found in this auction', 404, 'LOT_NOT_FOUND');
+    }
+    if (selectedLotIds.length > 0 && !selectedLotIds.includes(resolvedLotId)) {
+      throw new AppError('Your approved CPO does not cover this lot', 400, 'LOT_NOT_IN_CPO');
+    }
+
+    const reservePrice = Number(lot.reserve_price);
+    if (bidAmount < reservePrice) {
+      throw new AppError(`Bid must be at least the reserve price (${reservePrice})`, 400, 'BID_BELOW_RESERVE');
+    }
+
+    const existing = await Bid.findOne({
+      where: { auction_id: auctionId, user_id: userId, auction_asset_id: resolvedLotId },
+    });
+    if (existing) {
+      throw new AppError('You have already placed a bid for this lot', 409, 'BID_EXISTS');
+    }
+
+    const bid = await Bid.create({
+      id: generateUuid(),
+      auction_id: auctionId,
+      auction_asset_id: resolvedLotId,
+      user_id: userId,
+      amount: bidAmount,
+      currency: auction.currency || 'ETB',
+      submitted_at: now,
+      is_valid: true,
+      status: 'submitted',
+    });
+
+    await auditService.writeAuditLog({
+      userId,
+      action: AUDIT_ACTIONS.CREATE,
+      entityType: 'Bid',
+      entityId: bid.id,
+      metadata: { auctionId, auctionAssetId: resolvedLotId, amount: bidAmount },
+    });
+
+    return getBidById(bid.id, { userId, isStaff: false });
+  }
+
   const reservePrice = Number(auction.reserve_price);
   if (bidAmount < reservePrice) {
     throw new AppError(`Bid must be at least the reserve price (${reservePrice})`, 400, 'BID_BELOW_RESERVE');
-  }
-
-  const hasCpo = await cpoService.hasApprovedCpo(userId, auctionId);
-  if (!hasCpo) {
-    throw new AppError('Approved CPO required before placing a bid', 400, 'CPO_REQUIRED');
   }
 
   const existing = await Bid.findOne({ where: { auction_id: auctionId, user_id: userId } });
@@ -236,7 +308,7 @@ export async function invalidateBid(id, reason, staffId) {
 
 export async function getHighestValidBid(auctionId) {
   return Bid.findOne({
-    where: { auction_id: auctionId, is_valid: true },
+    where: { auction_id: auctionId, is_valid: true, status: 'submitted' },
     order: [['amount', 'DESC'], ['submitted_at', 'ASC']],
     include: bidInclude,
   });

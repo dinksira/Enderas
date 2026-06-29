@@ -98,33 +98,6 @@ const STAFF_EDIT_MODAL_STYLES = `
   cursor: not-allowed;
 }
 
-.user-create-modal__lang-toggle {
-  display: inline-flex;
-  gap: var(--core-space-2);
-}
-
-.user-create-modal__lang-btn {
-  padding: var(--core-space-2) var(--core-space-4);
-  border: 1px solid var(--dashboard-border);
-  background: var(--dashboard-surface-bg);
-  color: var(--dashboard-text-primary);
-  font-family: var(--semantic-font-ui);
-  font-size: var(--core-font-size-body-sm);
-  font-weight: var(--core-font-weight-semibold);
-  cursor: pointer;
-  border-radius: var(--semantic-radius-default);
-}
-
-.user-create-modal__lang-btn--active {
-  border-color: var(--semantic-color-brand-primary);
-  background: var(--semantic-color-surface-hover);
-}
-
-.user-create-modal__lang-btn:disabled {
-  opacity: var(--core-opacity-disabled);
-  cursor: not-allowed;
-}
-
 .user-create-modal__hint {
   margin: var(--core-space-2) 0 0;
   font-family: var(--semantic-font-body);
@@ -186,9 +159,6 @@ export function StaffEditModal({ open, staff, loading = false, onClose, onSubmit
     firstName: '',
     lastName: '',
     email: '',
-    employeeId: '',
-    department: '',
-    preferredLanguage: 'en',
     roleId: '',
   });
   const [roles, setRoles] = useState([]);
@@ -215,9 +185,6 @@ export function StaffEditModal({ open, staff, loading = false, onClose, onSubmit
       firstName: staff.user?.firstName || '',
       lastName: staff.user?.lastName || '',
       email: staff.user?.email || '',
-      employeeId: staff.employeeId || '',
-      department: staff.department || '',
-      preferredLanguage: staff.user?.preferredLanguage || 'en',
       roleId: staff.roleId || '',
     });
 
@@ -351,9 +318,6 @@ export function StaffEditModal({ open, staff, loading = false, onClose, onSubmit
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         email: form.email.trim(),
-        employeeId: form.employeeId.trim() || null,
-        department: form.department.trim() || null,
-        preferredLanguage: form.preferredLanguage,
         roleId: form.roleId,
       });
       onClose();
@@ -470,55 +434,6 @@ export function StaffEditModal({ open, staff, loading = false, onClose, onSubmit
                   autoComplete="off"
                 />
                 {renderFieldError('email')}
-              </div>
-
-              <div className="user-create-modal__field">
-                {renderLabel(t('staff.management.editModal.employeeId'))}
-                <input
-                  className="user-create-modal__control"
-                  value={form.employeeId}
-                  onChange={(event) => setField('employeeId', event.target.value)}
-                  disabled={loading}
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="user-create-modal__field">
-                {renderLabel(t('staff.management.editModal.department'))}
-                <input
-                  className="user-create-modal__control"
-                  value={form.department}
-                  onChange={(event) => setField('department', event.target.value)}
-                  disabled={loading}
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="user-create-modal__field user-create-modal__full">
-                {renderLabel(t('staff.management.editModal.preferredLanguage'))}
-                <div className="user-create-modal__lang-toggle" role="group">
-                  {['en', 'am'].map((language) => (
-                    <button
-                      key={language}
-                      type="button"
-                      className={[
-                        'user-create-modal__lang-btn',
-                        form.preferredLanguage === language
-                          ? 'user-create-modal__lang-btn--active'
-                          : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                      onClick={() => setField('preferredLanguage', language)}
-                      disabled={loading}
-                      aria-pressed={form.preferredLanguage === language}
-                    >
-                      {language === 'en'
-                        ? t('common.languages.english')
-                        : t('common.languages.amharic')}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
 

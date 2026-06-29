@@ -1,5 +1,6 @@
 import { ENV } from '../../../config/env.js';
 import { api } from '../../../services/api.js';
+import { END_USER_ROLE_CODES } from '../../../constants/end-user-role.constants.js';
 
 const USERS_BASE = `${ENV.apiV1Prefix}/users`;
 
@@ -16,8 +17,6 @@ function buildQuery(params = {}) {
 
 const AUTH_ME = `${ENV.apiV1Prefix}/auth/me`;
 const ROLES_BASE = `${ENV.apiV1Prefix}/roles`;
-
-const END_USER_ROLE_CODES = Object.freeze(['bidder', 'asset_owner']);
 
 async function unwrapUser(responsePromise) {
   const response = await responsePromise;
