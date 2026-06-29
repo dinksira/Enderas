@@ -1,4 +1,5 @@
 import { formatDate } from '../../users/utils/user-management-utils.js';
+import { formatEtbAmount } from '../../auctions/utils/auction-drawer-utils.js';
 
 export const WINNER_PAGE_SIZE = 20;
 
@@ -7,16 +8,32 @@ export const WINNER_TAB_KEYS = Object.freeze([
   'pending_confirmation',
   'confirmed',
   'declined',
+  'replaced',
 ]);
 
 export const WINNER_TABLE_COLUMNS = Object.freeze([
-  'auction_title',
-  'winner_name',
+  'auction',
+  'category',
+  'winner',
+  'mobile',
+  'amount',
+  'selectedAt',
   'status',
-  'selected_at',
-  'selected_by',
   'actions',
 ]);
+
+const BID_AMOUNT_VIEWER_ROLES = Object.freeze(['super_admin', 'auction_manager']);
+
+export function canViewBidAmounts(roleCode) {
+  return BID_AMOUNT_VIEWER_ROLES.includes(String(roleCode || ''));
+}
+
+export function formatWinnerAmount(amount, roleCode, t) {
+  if (canViewBidAmounts(roleCode) && amount != null) {
+    return formatEtbAmount(amount);
+  }
+  return t('winners.management.amount.restricted');
+}
 
 export function getWinnerStatusVariant(status) {
   switch (status) {

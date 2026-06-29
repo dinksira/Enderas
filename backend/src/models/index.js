@@ -5,6 +5,7 @@ import { RefreshToken } from './refreshToken.model.js';
 import { AuditLog } from './auditLog.model.js';
 import { KYCVerification } from './kyc.model.js';
 import { Auction } from './auction.model.js';
+import { AuctionAsset } from './auctionAsset.model.js';
 import { AssetOwner } from './assetOwner.model.js';
 import { Asset } from './asset.model.js';
 import { Notification } from './notification.model.js';
@@ -54,6 +55,14 @@ Asset.belongsTo(AssetOwner, { foreignKey: 'asset_owner_id', as: 'assetOwner' });
 Staff.hasMany(Asset, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedAssets' });
 Asset.belongsTo(Staff, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedByStaff' });
 
+Auction.belongsTo(Asset, { foreignKey: 'asset_id', as: 'asset' });
+Asset.hasOne(Auction, { foreignKey: 'asset_id', as: 'auction' });
+
+Auction.hasMany(AuctionAsset, { foreignKey: 'auction_id', as: 'auctionAssets' });
+AuctionAsset.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
+AuctionAsset.belongsTo(Asset, { foreignKey: 'asset_id', as: 'asset' });
+Asset.hasMany(AuctionAsset, { foreignKey: 'asset_id', as: 'auctionLots' });
+
 Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
 
@@ -80,10 +89,12 @@ Bid.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(Bid, { foreignKey: 'user_id', as: 'bids' });
 Bid.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
 Auction.hasMany(Bid, { foreignKey: 'auction_id', as: 'bids' });
+Bid.belongsTo(AuctionAsset, { foreignKey: 'auction_asset_id', as: 'auctionAsset' });
+AuctionAsset.hasMany(Bid, { foreignKey: 'auction_asset_id', as: 'bids' });
 
 Winner.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
-Auction.hasOne(Winner, { foreignKey: 'auction_id', as: 'winner' });
-Winner.belongsTo(Bid, { foreignKey: 'bid_id', as: 'bid' });
+Auction.hasMany(Winner, { foreignKey: 'auction_id', as: 'winners' });
+Winner.belongsTo(Bid, { foreignKey: 'bid_id', as: 'winningBid' });
 Bid.hasOne(Winner, { foreignKey: 'bid_id', as: 'winner' });
 Winner.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(Winner, { foreignKey: 'user_id', as: 'wins' });
@@ -98,6 +109,7 @@ export {
   AuditLog,
   KYCVerification,
   Auction,
+  AuctionAsset,
   AssetOwner,
   Asset,
   Notification,
@@ -117,6 +129,7 @@ export default {
   AuditLog,
   KYCVerification,
   Auction,
+  AuctionAsset,
   AssetOwner,
   Asset,
   Notification,

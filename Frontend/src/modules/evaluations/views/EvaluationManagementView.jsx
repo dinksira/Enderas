@@ -10,7 +10,9 @@ import { useRegisterPageSearch } from '../../../contexts/PageSearchContext.jsx';
 import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
 import { useAuthStore } from '../../../stores/auth-store.js';
 import { EvaluationCompleteModal } from '../components/EvaluationCompleteModal.jsx';
+import { CreateAuctionModal } from '../../auctions/components/CreateAuctionModal.jsx';
 import { EvaluationDetailDrawer } from '../components/EvaluationDetailDrawer.jsx';
+import { ReadyForEvaluationPanel } from '../components/ReadyForEvaluationPanel.jsx';
 import { RescheduleEvaluationModal } from '../components/RescheduleEvaluationModal.jsx';
 import { ScheduleEvaluationModal } from '../components/ScheduleEvaluationModal.jsx';
 import { useEvaluations } from '../hooks/use-evaluations.js';
@@ -44,6 +46,8 @@ export function EvaluationManagementView() {
   const locale = i18n.language === 'am' ? 'am' : 'en';
   const isAmharic = locale === 'am';
   const can = useAuthStore((state) => state.can);
+  const roleCode = useAuthStore((state) => state.permissions?.roleCode ?? state.user?.roleCode);
+  const isSuperAdmin = roleCode === 'super_admin';
 
   const {
     activeTab,
@@ -59,7 +63,7 @@ export function EvaluationManagementView() {
     refetch,
     goToPrevPage,
     goToNextPage,
-  } = useEvaluations();
+  } = useEvaluations({ initialTab: isSuperAdmin ? 'completed' : 'all' });
 
   useRegisterPageSearch({
     value: search,
@@ -71,6 +75,8 @@ export function EvaluationManagementView() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerRefreshTrigger, setDrawerRefreshTrigger] = useState(0);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleAssetId, setScheduleAssetId] = useState(null);
+  const [readyQueueRefresh, setReadyQueueRefresh] = useState(0);
   const [completeTarget, setCompleteTarget] = useState(null);
   const [approveTarget, setApproveTarget] = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
@@ -78,6 +84,8 @@ export function EvaluationManagementView() {
   const [rescheduleMode, setRescheduleMode] = useState('update');
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', variant: 'success' });
+  const [createAuctionAssetId, setCreateAuctionAssetId] = useState(null);
+  const [createAuctionOpen, setCreateAuctionOpen] = useState(false);
 
   const canCreate = can(MODULES.EVALUATIONS, ACTIONS.CREATE);
 
@@ -95,6 +103,17 @@ export function EvaluationManagementView() {
   const refreshViews = async () => {
     await refetch();
     setDrawerRefreshTrigger((current) => current + 1);
+    setReadyQueueRefresh((current) => current + 1);
+  };
+
+  const openScheduleModal = (asset = null) => {
+    setScheduleAssetId(asset?.id ?? null);
+    setScheduleOpen(true);
+  };
+
+  const closeScheduleModal = () => {
+    setScheduleOpen(false);
+    setScheduleAssetId(null);
   };
 
   const openDrawer = (id) => {
@@ -115,7 +134,7 @@ export function EvaluationManagementView() {
     setActionLoading(true);
     try {
       await evaluationService.scheduleEvaluation(payload);
-      setScheduleOpen(false);
+      closeScheduleModal();
       await refreshViews();
       showToast(t('evaluations.management.scheduleModal.success'));
     } catch (err) {
@@ -227,13 +246,41 @@ export function EvaluationManagementView() {
 
   return (
     <div className={`kyc-management-page ${isAmharic ? 'kyc-management-page--am' : ''}`}>
+      <section className="evaluation-workflow-banner" aria-label={t('evaluations.management.workflow.title')}>
+        <ol className="evaluation-workflow-banner__steps">
+          <li>{t('evaluations.management.workflow.stepSchedule')}</li>
+          <li>{t('evaluations.management.workflow.stepInspect')}</li>
+          <li>{t('evaluations.management.workflow.stepSubmit')}</li>
+          <li>{t('evaluations.management.workflow.stepSuperAdmin')}</li>
+        </ol>
+      </section>
+
+      <ReadyForEvaluationPanel
+        refreshTrigger={readyQueueRefresh}
+        canSchedule={canCreate}
+        onScheduleAsset={(asset) => openScheduleModal(asset)}
+      />
+
+      {isSuperAdmin && (stats?.completed ?? 0) > 0 && (
+        <section className="evaluation-pending-banner" role="status">
+          <p className="evaluation-pending-banner__text">
+            {t('evaluations.management.pendingApprovalBanner', { count: stats.completed })}
+          </p>
+          <p className="evaluation-pending-banner__hint">
+            {t('evaluations.management.pendingApprovalHint')}
+          </p>
+        </section>
+      )}
+
       {canCreate && (
         <header className="kyc-management-page__header">
-          <Button variant="primary" onClick={() => setScheduleOpen(true)}>
+          <Button variant="primary" onClick={() => openScheduleModal()}>
             {t('evaluations.management.schedule')}
           </Button>
         </header>
       )}
+
+      <h2 className="evaluation-active-section__title">{t('evaluations.management.activeSectionTitle')}</h2>
 
       <AdminDataTable
         tabs={tabs}
@@ -307,12 +354,35 @@ export function EvaluationManagementView() {
         onApprove={(evaluation) => setApproveTarget(evaluation)}
         onReject={(evaluation) => setRejectTarget(evaluation)}
         onReschedule={handleReschedule}
+        onCreateAuction={(evaluation) => {
+          if (evaluation?.assetId) {
+            setCreateAuctionAssetId(evaluation.assetId);
+            setCreateAuctionOpen(true);
+          }
+        }}
+      />
+
+      <CreateAuctionModal
+        open={createAuctionOpen}
+        initialAssetId={createAuctionAssetId}
+        onClose={() => {
+          setCreateAuctionOpen(false);
+          setCreateAuctionAssetId(null);
+        }}
+        onSuccess={() => {
+          setCreateAuctionOpen(false);
+          setCreateAuctionAssetId(null);
+          closeDrawer();
+          refreshViews();
+          showToast(t('auctions.create.success'));
+        }}
       />
 
       <ScheduleEvaluationModal
         open={scheduleOpen}
         loading={actionLoading}
-        onClose={() => setScheduleOpen(false)}
+        initialAssetId={scheduleAssetId}
+        onClose={closeScheduleModal}
         onSubmit={handleSchedule}
       />
 

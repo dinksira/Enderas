@@ -1,6 +1,6 @@
-import { getRedisClient } from '../config/redis.config.js';
 import { env } from '../config/env.config.js';
 import { permissionService } from '../services/permission.service.js';
+import { withRedis } from '../utils/redis-safe.util.js';
 import { verifyAccessToken, signAccessToken } from '../utils/jwt.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import {
@@ -43,6 +43,9 @@ export function createAccessToken({ identity, authz, sessionId }) {
       modules: Array.isArray(authz.modules) ? authz.modules : [],
       actions: Array.isArray(authz.actions) ? authz.actions : [],
       routes: Array.isArray(authz.routes) ? authz.routes : [],
+      moduleActions: authz.moduleActions && typeof authz.moduleActions === 'object'
+        ? authz.moduleActions
+        : {},
     },
   });
 }
@@ -59,29 +62,30 @@ export async function invalidateRolePermissionCache(roleId) {
     throw new Error('roleId is required for permission cache invalidation');
   }
 
-  const redis = getRedisClient();
-  const pointerKey = buildRoleVersionPointerKey(roleId);
-  const versionPattern = buildRoleVersionPattern(roleId);
-
-  const versionKeys = await redis.keys(versionPattern);
-
-  const pipeline = redis.multi().incr(pointerKey);
-
-  if (versionKeys.length > 0) {
-    pipeline.del(...versionKeys);
-  }
-
-  await pipeline.exec();
-
   permissionService.clearL1RoleCache(roleId);
 
-  await redis.publish(
-    env.redis.rbacInvalidateChannel,
-    JSON.stringify({
-      roleId,
-      invalidatedAt: new Date().toISOString(),
-    }),
-  );
+  await withRedis(async (redis) => {
+    const pointerKey = buildRoleVersionPointerKey(roleId);
+    const versionPattern = buildRoleVersionPattern(roleId);
+
+    const versionKeys = await redis.keys(versionPattern);
+
+    const pipeline = redis.multi().incr(pointerKey);
+
+    if (versionKeys.length > 0) {
+      pipeline.del(...versionKeys);
+    }
+
+    await pipeline.exec();
+
+    await redis.publish(
+      env.redis.rbacInvalidateChannel,
+      JSON.stringify({
+        roleId,
+        invalidatedAt: new Date().toISOString(),
+      }),
+    );
+  });
 }
 
 /**
@@ -113,6 +117,10 @@ export function authenticate(req, res, next) {
         modules: decoded.authz?.modules || [],
         actions: decoded.authz?.actions || [],
         routes: decoded.authz?.routes || [],
+        moduleActions: decoded.authz?.moduleActions && typeof decoded.authz.moduleActions === 'object'
+          ? decoded.authz.moduleActions
+          : {},
+        permissionVersion: Number(decoded.authz?.permissionVersion) || 1,
         version: decoded.authz?.permVersion,
         checksum: decoded.authz?.permChecksum,
       },

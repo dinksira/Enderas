@@ -20,6 +20,8 @@ export const assetService = Object.freeze({
 
   create: (payload) => api.post(ASSETS_BASE, payload),
 
+  createBatch: (assets) => api.post(`${ASSETS_BASE}/batch`, { assets }),
+
   update: (id, payload) => api.put(`${ASSETS_BASE}/${id}`, payload),
 
   approve: (id, reviewNotes) => api.post(`${ASSETS_BASE}/${id}/approve`, { reviewNotes }),

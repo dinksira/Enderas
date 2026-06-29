@@ -17,6 +17,9 @@ export function normalizeContext(context = {}) {
     modules: toCapabilityArray(context.modules),
     actions: toCapabilityArray(context.actions),
     routes: toCapabilityArray(context.routes),
+    moduleActions: context.moduleActions && typeof context.moduleActions === 'object'
+      ? context.moduleActions
+      : {},
   };
 }
 

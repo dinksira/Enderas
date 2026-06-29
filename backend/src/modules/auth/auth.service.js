@@ -8,7 +8,7 @@ import { getUserPermissions } from '../../services/user-permission.service.js';
 import { createAccessToken } from '../../middleware/auth.middleware.js';
 import { generateOpaqueToken, generateUuid, hashToken } from '../../utils/crypto.util.js';
 import { hashPassword, verifyPassword } from '../../utils/password.util.js';
-import { getMobileLookupCandidates } from '../../utils/mobile.util.js';
+import { getMobileLookupCandidates, normalizeMobileNumber, resolveMobileForStorage } from '../../utils/mobile.util.js';
 import { withRedis } from '../../utils/redis-safe.util.js';
 import { UnauthorizedError, AppError, InvalidCredentialsError } from '../../utils/error.util.js';
 import { env } from '../../config/env.config.js';
@@ -422,7 +422,9 @@ export async function register(userData) {
     organizationName,
   } = userData;
 
-  const lookupCandidates = getMobileLookupCandidates(mobileNumber);
+  const normalizedMobile = resolveMobileForStorage(mobileNumber);
+
+  const lookupCandidates = getMobileLookupCandidates(normalizedMobile);
   const existingUser = await User.findOne({
     where: {
       mobile_number: { [Op.in]: lookupCandidates },
@@ -447,7 +449,7 @@ export async function register(userData) {
     id: generateUuid(),
     role_id: bidderRole.id,
     user_type: userType,
-    mobile_number: mobileNumber,
+    mobile_number: normalizedMobile,
     email: email || null,
     password: hashedPassword,
     first_name: firstName || null,
@@ -461,12 +463,12 @@ export async function register(userData) {
   });
 
   const otp = generateOTP();
-  await storeOTP(mobileNumber, otp);
+  await storeOTP(normalizedMobile, otp);
 
   if (env.isProduction) {
     console.info('[auth.service] OTP sent to registered mobile (production)');
   } else {
-    console.info('[auth.service] Registration OTP for', mobileNumber, ':', otp);
+    console.info('[auth.service] Registration OTP for', normalizedMobile, ':', otp);
   }
 
   await auditService.writeAuditLog({
@@ -489,13 +491,14 @@ export async function register(userData) {
  * @param {string} otp
  */
 export async function verifyOTP(mobileNumber, otp) {
-  const isValid = await verifyStoredOTP(mobileNumber, otp);
+  const normalizedMobile = normalizeMobileNumber(mobileNumber);
+  const isValid = await verifyStoredOTP(normalizedMobile, otp);
 
   if (!isValid) {
     throw new AppError('Invalid or expired OTP', 400, 'INVALID_OTP');
   }
 
-  const lookupCandidates = getMobileLookupCandidates(mobileNumber);
+  const lookupCandidates = getMobileLookupCandidates(normalizedMobile);
   const user = await User.unscoped().findOne({
     where: {
       mobile_number: { [Op.in]: lookupCandidates },
@@ -530,7 +533,8 @@ export async function verifyOTP(mobileNumber, otp) {
  * @param {string} mobileNumber
  */
 export async function resendOTP(mobileNumber) {
-  const lookupCandidates = getMobileLookupCandidates(mobileNumber);
+  const normalizedMobile = normalizeMobileNumber(mobileNumber);
+  const lookupCandidates = getMobileLookupCandidates(normalizedMobile);
   const user = await User.findOne({
     where: {
       mobile_number: { [Op.in]: lookupCandidates },
@@ -543,12 +547,12 @@ export async function resendOTP(mobileNumber) {
   }
 
   const otp = generateOTP();
-  await storeOTP(mobileNumber, otp);
+  await storeOTP(normalizedMobile, otp);
 
   if (env.isProduction) {
     console.info('[auth.service] OTP resent (production)');
   } else {
-    console.info('[auth.service] Resent OTP for', mobileNumber, ':', otp);
+    console.info('[auth.service] Resent OTP for', normalizedMobile, ':', otp);
   }
 
   return { success: true };

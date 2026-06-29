@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/Button.jsx';
 import { userService } from '../services/user-service.js';
+import { formatMobileNumber, isValidEthiopianMobile } from '../../../utils/mobile-utils.js';
 
 const EMPTY_FORM = {
   mobileNumber: '',
@@ -268,13 +269,6 @@ const USER_CREATE_MODAL_STYLES = `
 }
 `;
 
-function formatMobileNumber(localNumber) {
-  const digits = localNumber.replace(/\D/g, '');
-  if (!digits) return '';
-  if (digits.startsWith('251')) return `+${digits}`;
-  return `+251${digits}`;
-}
-
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
@@ -401,6 +395,9 @@ export function UserCreateModal({ open, loading = false, onClose, onSubmit }) {
       case 'mobileNumber':
         if (!values.mobileNumber.trim()) {
           return t('users.management.createModal.mobileRequired');
+        }
+        if (!isValidEthiopianMobile(values.mobileNumber)) {
+          return t('users.management.createModal.mobileInvalid');
         }
         return '';
       case 'nationalIdNumber':

@@ -25,7 +25,6 @@ function formatAmountInput(value) {
  *   evaluation?: object|null,
  *   onClose: () => void,
  *   onSubmit: (payload: {
- *     valuationAmount: number,
  *     reservePriceRecommendation: number,
  *     photoUrls?: string[],
  *     reportUrl?: string,
@@ -41,7 +40,6 @@ export function EvaluationCompleteModal({
   onSubmit,
 }) {
   const { t } = useTranslation();
-  const [valuationAmount, setValuationAmount] = useState('');
   const [reservePrice, setReservePrice] = useState('');
   const [notes, setNotes] = useState('');
   const [photoUrls, setPhotoUrls] = useState([]);
@@ -51,7 +49,6 @@ export function EvaluationCompleteModal({
 
   useEffect(() => {
     if (!open) {
-      setValuationAmount('');
       setReservePrice('');
       setNotes('');
       setPhotoUrls([]);
@@ -59,12 +56,16 @@ export function EvaluationCompleteModal({
       setError('');
       return;
     }
-    if (evaluation?.valuationAmount != null) {
-      setValuationAmount(formatAmountInput(String(evaluation.valuationAmount)));
+
+    const existingReserve = evaluation?.reservePriceRecommendation ?? evaluation?.valuationAmount;
+    const ownerHint = evaluation?.asset?.desiredReservePrice;
+
+    if (existingReserve != null) {
+      setReservePrice(formatAmountInput(String(existingReserve)));
+    } else if (ownerHint != null) {
+      setReservePrice(formatAmountInput(String(ownerHint)));
     }
-    if (evaluation?.reservePriceRecommendation != null) {
-      setReservePrice(formatAmountInput(String(evaluation.reservePriceRecommendation)));
-    }
+
     if (evaluation?.notes) {
       setNotes(evaluation.notes);
     }
@@ -93,29 +94,27 @@ export function EvaluationCompleteModal({
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const amount = parseAmount(valuationAmount);
     const reserve = parseAmount(reservePrice);
 
-    if (!Number.isFinite(amount) || amount <= 0) {
-      setError(t('evaluations.management.completeModal.valuationRequired'));
-      return;
-    }
     if (!Number.isFinite(reserve) || reserve <= 0) {
       setError(t('evaluations.management.completeModal.reserveRequired'));
       return;
     }
-    if (reserve > amount) {
-      setError(t('evaluations.management.completeModal.reserveTooHigh'));
+    if (!photoUrls.length) {
+      setError(t('evaluations.management.completeModal.photosRequired'));
+      return;
+    }
+    if (!reportUrl?.trim()) {
+      setError(t('evaluations.management.completeModal.reportRequired'));
       return;
     }
 
     setError('');
     try {
       await onSubmit({
-        valuationAmount: amount,
         reservePriceRecommendation: reserve,
-        photoUrls: photoUrls.length ? photoUrls : undefined,
-        reportUrl: reportUrl || undefined,
+        photoUrls,
+        reportUrl: reportUrl.trim(),
         notes: notes.trim() || undefined,
       });
     } catch (err) {
@@ -124,11 +123,12 @@ export function EvaluationCompleteModal({
   };
 
   const busy = loading || uploading;
+  const ownerReserveHint = evaluation?.asset?.desiredReservePrice;
 
   return (
     <div className="kyc-modal-overlay" role="presentation" onClick={busy ? undefined : onClose}>
       <form
-        className="kyc-modal kyc-modal--wide"
+        className="kyc-modal kyc-modal--wide kyc-modal--scrollable"
         role="dialog"
         aria-modal="true"
         aria-labelledby="complete-evaluation-title"
@@ -139,21 +139,6 @@ export function EvaluationCompleteModal({
           {t('evaluations.management.completeModal.title')}
         </h2>
         <p className="kyc-modal__body">{t('evaluations.management.completeModal.subtitle')}</p>
-
-        <h3 className="kyc-modal__section-label">{t('evaluations.management.completeModal.valuationSection')}</h3>
-
-        <label className="kyc-modal__label" htmlFor="complete-valuation-amount">
-          {t('evaluations.management.completeModal.valuationAmount')}
-        </label>
-        <input
-          id="complete-valuation-amount"
-          type="text"
-          inputMode="decimal"
-          className="input-field__control"
-          value={valuationAmount}
-          onChange={(event) => setValuationAmount(formatAmountInput(event.target.value))}
-          disabled={busy}
-        />
 
         <label className="kyc-modal__label" htmlFor="complete-reserve-price">
           {t('evaluations.management.completeModal.reserveRecommendation')}
@@ -167,6 +152,14 @@ export function EvaluationCompleteModal({
           onChange={(event) => setReservePrice(formatAmountInput(event.target.value))}
           disabled={busy}
         />
+        <p className="kyc-modal__hint">{t('evaluations.management.completeModal.reserveHint')}</p>
+        {ownerReserveHint != null && (
+          <p className="kyc-modal__hint">
+            {t('evaluations.management.completeModal.ownerReserveHint', {
+              amount: formatAmountInput(String(ownerReserveHint)),
+            })}
+          </p>
+        )}
 
         <h3 className="kyc-modal__section-label">{t('evaluations.management.completeModal.documentationSection')}</h3>
 
@@ -183,7 +176,7 @@ export function EvaluationCompleteModal({
           disabled={busy}
         />
         {photoUrls.length > 0 && (
-          <div className="admin-drawer__thumbnails">
+          <div className="admin-drawer__thumbnails evaluation-complete-modal__thumbnails">
             {photoUrls.map((url) => (
               <img key={url} src={url} alt="" className="admin-drawer__thumbnail" />
             ))}
@@ -193,7 +186,7 @@ export function EvaluationCompleteModal({
         <FileUpload
           label={t('evaluations.management.completeModal.report')}
           folder="evaluations/reports"
-          accept=".pdf,.doc,.docx,application/pdf"
+          accept=".pdf,application/pdf"
           disabled={busy}
           onUpload={(result) => setReportUrl(result?.fileUrl || result?.url || '')}
         />
@@ -206,7 +199,7 @@ export function EvaluationCompleteModal({
         </label>
         <textarea
           id="complete-evaluation-notes"
-          className="kyc-modal__textarea"
+          className="kyc-modal__textarea evaluation-complete-modal__notes"
           rows={3}
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
@@ -219,7 +212,7 @@ export function EvaluationCompleteModal({
           </p>
         )}
 
-        <div className="kyc-modal__actions">
+        <div className="kyc-modal__actions kyc-modal__actions--sticky">
           <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>
             {t('admin.cancel')}
           </Button>

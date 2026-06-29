@@ -28,9 +28,15 @@ export function resolveParticipationStatus(participation) {
     return 'not_started';
   }
 
-  const { flags, bid, payment, cpo } = participation;
+  const { flags, bid, bids, payment, cpo } = participation;
+  const hasAnyBid = Boolean(flags?.hasBid || bid || (Array.isArray(bids) && bids.length > 0));
 
-  if (bid || flags?.hasBid) return 'bid_submitted';
+  if (flags?.allBidsSubmitted) return 'bid_submitted';
+  if (hasAnyBid && participation?.isMultiLot) {
+    if (participation?.gates?.canPlaceBid) return 'ready_to_bid';
+    return 'bid_submitted';
+  }
+  if (hasAnyBid) return 'bid_submitted';
   if (flags?.cpoApproved || cpo?.status === 'approved') {
     if (participation?.gates?.canPlaceBid) return 'ready_to_bid';
     if (participation?.gates?.biddingWindowStatus === 'after') return 'bidding_closed';
@@ -82,9 +88,24 @@ export function getParticipationStepState(participation) {
     return { currentStep: 'payment', payment: 'active', cpo: 'locked', bid: 'locked' };
   }
 
-  const { flags, gates, bid } = participation;
+  const { flags, gates, bid, bids } = participation;
+  const hasAnyBid = Boolean(flags?.hasBid || bid || (Array.isArray(bids) && bids.length > 0));
+  const allBidsSubmitted = Boolean(flags?.allBidsSubmitted);
 
-  if (bid || flags?.hasBid) {
+  if (allBidsSubmitted || (hasAnyBid && !gates?.canPlaceBid && !participation?.isMultiLot)) {
+    return { currentStep: 'bid', payment: 'complete', cpo: 'complete', bid: 'complete' };
+  }
+
+  if (hasAnyBid && participation?.isMultiLot) {
+    return {
+      currentStep: 'bid',
+      payment: 'complete',
+      cpo: 'complete',
+      bid: gates?.canPlaceBid ? 'active' : 'pending',
+    };
+  }
+
+  if (hasAnyBid) {
     return { currentStep: 'bid', payment: 'complete', cpo: 'complete', bid: 'complete' };
   }
 
@@ -135,8 +156,13 @@ export function canShowBidForm(participation, displayStatus) {
 export function shouldShowBidSection(participation, displayStatus) {
   const status = String(displayStatus || '').toUpperCase();
   if (status !== 'ACTIVE') return false;
+  if (participation?.flags?.allBidsSubmitted) return false;
+  if (!participation?.flags?.cpoApproved) return false;
+  if (participation?.isMultiLot) {
+    return Boolean(participation?.gates?.canPlaceBid || participation?.flags?.hasBid);
+  }
   if (participation?.bid || participation?.flags?.hasBid) return false;
-  return Boolean(participation?.flags?.cpoApproved);
+  return true;
 }
 
 export function getBidStepHintKey(participation, auction) {
@@ -145,6 +171,9 @@ export function getBidStepHintKey(participation, auction) {
   }
 
   if (participation.bid || participation.flags?.hasBid) {
+    if (participation.isMultiLot && participation.gates?.canPlaceBid) {
+      return null;
+    }
     return null;
   }
 

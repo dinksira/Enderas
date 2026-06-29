@@ -3,6 +3,9 @@ import { Evaluation, EVALUATION_STATUSES } from '../models/evaluation.model.js';
 import { Asset, AssetOwner, User, Staff } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
+import { LAUNCH_WORKFLOW_ROLES } from '../constants/staff-role.constants.js';
+import { assertStaffRole } from '../utils/staff-role.util.js';
+import { mapAssetDisplayStatus } from './asset.service.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
 
@@ -334,36 +337,45 @@ export async function completeEvaluation(id, payload, staffId) {
     throw new AppError('Staff profile required', 403, 'STAFF_REQUIRED');
   }
 
+  await assertStaffRole(
+    staffId,
+    LAUNCH_WORKFLOW_ROLES.EVALUATION_WORK,
+    'Only evaluation officers can submit evaluation recommendations',
+    'EVALUATION_OFFICER_REQUIRED',
+  );
+
   const evaluation = await findEvaluationOrThrow(id);
   if (evaluation.status !== 'in_progress') {
     throw new AppError('Evaluation must be in progress to complete', 400, 'INVALID_EVALUATION_STATUS');
   }
 
-  const valuationAmount = Number(payload.valuationAmount ?? evaluation.valuation_amount);
-  if (!Number.isFinite(valuationAmount) || valuationAmount <= 0) {
-    throw new AppError('Valuation amount is required', 400, 'VALUATION_REQUIRED');
-  }
-
   const reservePrice = Number(
-    payload.reservePriceRecommendation ?? evaluation.reserve_price_recommendation,
+    payload.reservePriceRecommendation ?? payload.valuationAmount ?? evaluation.reserve_price_recommendation,
   );
   if (!Number.isFinite(reservePrice) || reservePrice <= 0) {
     throw new AppError('Reserve price recommendation is required', 400, 'RESERVE_PRICE_REQUIRED');
   }
-  if (reservePrice > valuationAmount) {
-    throw new AppError('Reserve price cannot exceed valuation amount', 400, 'RESERVE_PRICE_TOO_HIGH');
+
+  const photoUrls = payload.photoUrls !== undefined
+    ? normalizePhotoUrls(payload.photoUrls)
+    : evaluation.photo_urls;
+  const reportUrl = payload.reportUrl?.trim() || evaluation.report_url;
+
+  if (!photoUrls?.length) {
+    throw new AppError('At least one inspection photo is required', 400, 'EVALUATION_PHOTOS_REQUIRED');
+  }
+  if (!reportUrl) {
+    throw new AppError('Evaluation report is required', 400, 'EVALUATION_REPORT_REQUIRED');
   }
 
   await evaluation.update({
     status: 'completed',
     completed_at: new Date(),
     evaluated_by_staff_id: staffId,
-    valuation_amount: valuationAmount,
+    valuation_amount: reservePrice,
     reserve_price_recommendation: reservePrice,
-    photo_urls: payload.photoUrls !== undefined
-      ? normalizePhotoUrls(payload.photoUrls)
-      : evaluation.photo_urls,
-    report_url: payload.reportUrl?.trim() || evaluation.report_url,
+    photo_urls: photoUrls,
+    report_url: reportUrl,
     notes: payload.notes?.trim() || evaluation.notes,
   });
 
@@ -372,7 +384,14 @@ export async function completeEvaluation(id, payload, staffId) {
     action: AUDIT_ACTIONS.UPDATE,
     entityType: 'Evaluation',
     entityId: id,
-    metadata: { action: 'complete', valuationAmount },
+    metadata: { action: 'complete', reservePrice, valuationAmount: reservePrice },
+  });
+
+  const asset = await Asset.findByPk(evaluation.asset_id, { attributes: ['id', 'title'] });
+  await notificationService.notifySuperAdminsEvaluationPending({
+    id,
+    assetId: asset?.id ?? evaluation.asset_id,
+    assetTitle: asset?.title,
   });
 
   return getEvaluationById(id);
@@ -382,6 +401,13 @@ export async function approveEvaluation(id, reviewNotes, staffId) {
   if (!staffId) {
     throw new AppError('Staff profile required', 403, 'STAFF_REQUIRED');
   }
+
+  await assertStaffRole(
+    staffId,
+    LAUNCH_WORKFLOW_ROLES.EVALUATION_APPROVAL,
+    'Only super admins can approve evaluations',
+    'SUPER_ADMIN_REQUIRED',
+  );
 
   const evaluation = await findEvaluationOrThrow(id);
   if (evaluation.status !== 'completed') {
@@ -425,6 +451,13 @@ export async function rejectEvaluation(id, rejectionReason, staffId) {
   if (!staffId) {
     throw new AppError('Staff profile required', 403, 'STAFF_REQUIRED');
   }
+
+  await assertStaffRole(
+    staffId,
+    LAUNCH_WORKFLOW_ROLES.EVALUATION_APPROVAL,
+    'Only super admins can reject evaluations',
+    'SUPER_ADMIN_REQUIRED',
+  );
 
   const reason = rejectionReason?.trim();
   if (!reason) {
@@ -548,13 +581,13 @@ export async function listEligibleAssets({ search } = {}) {
     where,
     include: [
       ...include,
-      { model: Evaluation, as: 'evaluation', required: false, attributes: ['id'] },
+      { model: Evaluation, as: 'evaluation', required: false, attributes: ['id', 'status'] },
     ],
     order: [['created_at', 'DESC']],
   });
 
   return assets
-    .filter((asset) => !asset.evaluation)
+    .filter((asset) => !asset.evaluation || asset.evaluation.status === 'rejected')
     .map((asset) => {
       const plain = asset.get({ plain: true });
       return {
@@ -564,6 +597,8 @@ export async function listEligibleAssets({ search } = {}) {
         location: plain.location,
         ownerName: buildUserDisplayName(plain.assetOwner?.user),
         submittedAt: plain.created_at,
+        dbStatus: plain.status,
+        status: mapAssetDisplayStatus(plain.status),
       };
     });
 }

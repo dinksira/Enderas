@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AdminDataTable } from '../../../components/admin/AdminDataTable.jsx';
 import { ApproveConfirmModal } from '../../../components/admin/ApproveConfirmModal.jsx';
@@ -6,15 +7,18 @@ import { RejectReasonModal } from '../../../components/admin/RejectReasonModal.j
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
 import { Button } from '../../../components/Button.jsx';
 import { DashboardToast } from '../../../components/DashboardToast.jsx';
+import { ROUTES } from '../../../config/routes.js';
 import { useRegisterPageSearch } from '../../../contexts/PageSearchContext.jsx';
 import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
 import { useAuthStore } from '../../../stores/auth-store.js';
+import { SelectReplacementModal } from '../components/SelectReplacementModal.jsx';
 import { SelectWinnerModal } from '../components/SelectWinnerModal.jsx';
 import { WinnerDetailDrawer } from '../components/WinnerDetailDrawer.jsx';
 import { useWinners } from '../hooks/use-winners.js';
 import { winnerService } from '../services/winner-service.js';
 import {
   formatDate,
+  formatWinnerAmount,
   getWinnerStatusVariant,
   WINNER_PAGE_SIZE,
   WINNER_TAB_KEYS,
@@ -41,6 +45,7 @@ export function WinnerManagementView() {
   const locale = i18n.language === 'am' ? 'am' : 'en';
   const isAmharic = locale === 'am';
   const can = useAuthStore((state) => state.can);
+  const roleCode = useAuthStore((state) => state.permissions?.roleCode ?? state.user?.roleCode);
 
   const {
     activeTab,
@@ -67,6 +72,7 @@ export function WinnerManagementView() {
   const [selectedId, setSelectedId] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
+  const [replaceTarget, setReplaceTarget] = useState(null);
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [declineTarget, setDeclineTarget] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -106,6 +112,27 @@ export function WinnerManagementView() {
       setSelectOpen(false);
       await refetch();
       showToast(t('winners.management.selectModal.success'));
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('winners.management.selectModal.failed'), 'error');
+      throw err;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReplaceWinner = async (bidId) => {
+    if (!replaceTarget) return;
+    setActionLoading(true);
+    try {
+      const created = await winnerService.replaceWinner(replaceTarget.id, bidId);
+      setReplaceTarget(null);
+      setSelectedId(created?.id ?? null);
+      setDrawerOpen(Boolean(created?.id));
+      await refetch();
+      showToast(t('winners.management.replaceModal.success'));
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('winners.management.replaceModal.failed'), 'error');
+      throw err;
     } finally {
       setActionLoading(false);
     }
@@ -190,17 +217,29 @@ export function WinnerManagementView() {
             role="button"
             aria-label={t('winners.management.openDetail', { name: row.winnerName })}
           >
-            <td className="dashboard-table__cell dashboard-table__cell--strong">{row.auctionTitle || '—'}</td>
+            <td className="dashboard-table__cell dashboard-table__cell--strong">
+              {row.auctionId ? (
+                <Link to={ROUTES.APP_AUCTIONS} onClick={(event) => event.stopPropagation()}>
+                  {row.auctionTitle || '—'}
+                </Link>
+              ) : (
+                row.auctionTitle || '—'
+              )}
+            </td>
+            <td className="dashboard-table__cell">{row.auctionCategory || '—'}</td>
             <td className="dashboard-table__cell">{row.winnerName || '—'}</td>
+            <td className="dashboard-table__cell dashboard-table__cell--muted">
+              {row.winnerMobile || '—'}
+            </td>
+            <td className="dashboard-table__cell">
+              {formatWinnerAmount(row.bidAmount, roleCode, t)}
+            </td>
+            <td className="dashboard-table__cell">{formatDate(row.selectedAt, locale)}</td>
             <td className="dashboard-table__cell">
               <StatusPill
                 label={t(`winners.management.status.${row.status}`, { defaultValue: row.status })}
                 variant={getWinnerStatusVariant(row.status)}
               />
-            </td>
-            <td className="dashboard-table__cell">{formatDate(row.selectedAt, locale)}</td>
-            <td className="dashboard-table__cell dashboard-table__cell--muted">
-              {row.selectedByName || '—'}
             </td>
             <td className="dashboard-table__cell">
               <div className="dashboard-actions">
@@ -224,6 +263,7 @@ export function WinnerManagementView() {
         onClose={closeDrawer}
         onConfirm={(winner) => setConfirmTarget(winner)}
         onDecline={(winner) => setDeclineTarget(winner)}
+        onReplace={(winner) => setReplaceTarget(winner)}
         onRefresh={refetch}
       />
 
@@ -234,10 +274,21 @@ export function WinnerManagementView() {
         onSubmit={handleSelectWinner}
       />
 
+      <SelectReplacementModal
+        open={Boolean(replaceTarget)}
+        loading={actionLoading}
+        winner={replaceTarget}
+        onClose={() => setReplaceTarget(null)}
+        onSubmit={handleReplaceWinner}
+      />
+
       <ApproveConfirmModal
         open={Boolean(confirmTarget)}
         title={t('winners.management.confirmModal.title')}
-        body={t('winners.management.confirmModal.body', { name: confirmTarget?.winnerName })}
+        body={t('winners.management.confirmModal.body', {
+          name: confirmTarget?.winnerName,
+          auction: confirmTarget?.auctionTitle,
+        })}
         confirmLabel={t('winners.management.confirmModal.confirm')}
         loading={actionLoading}
         onConfirm={handleConfirmWinner}

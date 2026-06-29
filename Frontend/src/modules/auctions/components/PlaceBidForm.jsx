@@ -7,11 +7,19 @@ import { formatEtbAmount } from '../utils/auction-drawer-utils.js';
 /**
  * @param {{
  *   auctionId: string,
+ *   auctionAssetId?: string|null,
+ *   lotLabel?: string|null,
  *   reservePrice?: number|null,
  *   onSuccess?: () => void,
  * }} props
  */
-export function PlaceBidForm({ auctionId, reservePrice, onSuccess }) {
+export function PlaceBidForm({
+  auctionId,
+  auctionAssetId = null,
+  lotLabel = null,
+  reservePrice,
+  onSuccess,
+}) {
   const { t } = useTranslation();
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +43,11 @@ export function PlaceBidForm({ auctionId, reservePrice, onSuccess }) {
     setSuccess('');
 
     try {
-      await bidService.placeBid({ auctionId, amount: bidAmount });
+      await bidService.placeBid({
+        auctionId,
+        amount: bidAmount,
+        auctionAssetId: auctionAssetId || undefined,
+      });
       setSuccess(t('bidder.browse.placeBid.success'));
       setAmount('');
       onSuccess?.();
@@ -48,14 +60,18 @@ export function PlaceBidForm({ auctionId, reservePrice, onSuccess }) {
 
   return (
     <form className="auction-drawer__bid-form" onSubmit={handleSubmit}>
-      <h3>{t('bidder.browse.placeBid.title')}</h3>
+      <h3>
+        {lotLabel
+          ? t('bidder.browse.placeBid.titleForLot', { lot: lotLabel })
+          : t('bidder.browse.placeBid.title')}
+      </h3>
       <p className="auction-drawer__hint">{t('bidder.browse.placeBid.hint')}</p>
 
-      <label className="kyc-modal__label" htmlFor="place-bid-amount">
+      <label className="kyc-modal__label" htmlFor={`place-bid-amount-${auctionAssetId || 'single'}`}>
         {t('bidder.browse.placeBid.amountLabel')}
       </label>
       <input
-        id="place-bid-amount"
+        id={`place-bid-amount-${auctionAssetId || 'single'}`}
         type="number"
         min="1"
         className="input-field__control"

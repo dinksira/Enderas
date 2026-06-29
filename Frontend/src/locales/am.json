@@ -51,7 +51,7 @@
       "users": "ተጠቃሚዎች",
       "staff": "የሰራተኞች አስተዳደር",
       "staff_roles": "የሰራተኞች አስተዳደር",
-      "assets": "የጨረታ ጥያቄዎች",
+      "assets": "የንብረት ጥያቄዎች",
       "evaluations": "ግምገማዎች",
       "payments": "ክፍያዎች",
       "cpo": "የ CPO አስተዳደር",
@@ -69,8 +69,8 @@
       "mybids": "የኔ ጨረታዎች",
       "mypayments": "የኔ ክፍያዎች",
       "mycpo": "የኔ CPO",
-      "myassets": "የኔ ጥያቄዎች",
-      "submitasset": "ጨረታ ጠይቅ",
+      "myassets": "የኔ የንብረት ጥያቄዎች",
+      "submitasset": "የንብረት ጥያቄ",
       "asset_request": "የንብረት ጥያቄ",
       "notifications": "ማሳወቂያዎች"
     },
@@ -158,6 +158,7 @@
       "stepProgress": "የጨረታ ፍጠራ ደረጃዎች",
       "success": "ጨረታው በተሳካ ሁኔታ ተፈጥሯል እና ለማጽደቅ በመጠባበቅ ላይ ነው።",
       "steps": {
+        "asset": "ንብረት ይምረጡ",
         "basic": "መሠረታዊ መረጃ",
         "schedule": "ጊዜ እና ዋጋ",
         "media": "ሚዲያ እና ሰነዶች",
@@ -168,13 +169,42 @@
         "category": "ምድብ",
         "description": "መግለጫ",
         "auctionConditions": "የጨረታ ሁኔታዎች",
+        "auctionMode": "የጨረታ አይነት",
         "startDate": "የመጀመሪያ ቀን እና ሰዓት",
         "endDate": "የመዝጊያ ቀን እና ሰዓት",
         "reservePrice": "ዝቅተኛ ዋጋ (ብር)",
+        "totalReservePrice": "ጠቅላላ ዝቅተኛ ዋጋ (ብር)",
+        "lotLabel": "የሎት መለያ",
+        "lotReservePrice": "የሎት ዝቅተኛ ዋጋ (ብር)",
         "documentFee": "የሰነድ ክፍያ (ብር)",
         "cpoPercentage": "CPO መቶኛ (%)",
         "images": "የጨረታ ምስሎች",
-        "documents": "የጨረታ ሰነዶች"
+        "documents": "የጨረታ ሰነዶች",
+        "linkedAsset": "የተገናኙ ንብረቶች"
+      },
+      "assetStep": {
+        "search": "የተገመገሙ ንብረቶችን ይፈልጉ",
+        "searchPlaceholder": "በርዕስ ወይም በቦታ ይፈልጉ...",
+        "hint": "ይህን ጨረታ ከአንድ የተገመገመ ንብረት ጋር በአማራጭ ማገናኘት ይቻላል። በሚቀጥሉት ደረጃዎች ያሉ መስኮች በቅድሚያ ይሞላሉ እና ሊቀዩ ይችላሉ።",
+        "multiHint": "ሁለት ወይም ከዚያ በላይ የተገመገሙ ንብረቶችን ይምረጡ። ከመቀጠልዎ በፊት ለእያንዳንዱ ሎት ዝቅተኛ ዋጋ ያስገቡ።",
+        "modeSingle": "አንድ ንብረት ጨረታ",
+        "modeMulti": "ብዙ ንብረት ጨረታ",
+        "selectedAssets": "የተመረጡ ንብረቶች ({{count}})",
+        "removeAsset": "አስወግድ",
+        "lotPosition": "ሎት {{index}}",
+        "unnamedAsset": "ስም የሌለው ንብረት",
+        "totalReserve": "የተጣመረ ዝቅተኛ ዋጋ: {{amount}} ብር",
+        "totalReserveHint": "ጠቅላላ ዝቅተኛ ዋጋ ከእያንዳንዱ ሎት ዝቅተኛ ዋጋ ይሰላል።",
+        "skip": "ንብረት ሳያገናኝ ቀጥል",
+        "clearSelection": "ሁሉንም ምርጫዎች አጽዳ",
+        "loading": "ብቁ ንብረቶች በመጫን ላይ...",
+        "empty": "ለጨረታ ፍጠራ ብቁ የሆኑ የተገመገሙ ንብረቶች የሉም።",
+        "loadFailed": "ብቁ ንብረቶችን መጫን አልተሳካም።",
+        "valuation": "ግምገማ: {{amount}} ብር",
+        "categoryLockedHint": "ምድቡ ከተገናኘው የንብረት አይነት ጋር ይዛመዳል።"
+      },
+      "prefill": {
+        "evaluationReport": "የግምገማ ሪፖርት"
       },
       "placeholders": {
         "selectCategory": "ምድብ ይምረጡ"
@@ -194,7 +224,10 @@
       "review": {
         "edit": "አርትዕ",
         "imageCount": "{{count}} ምስል(ዎች) ተመርጠዋል",
-        "documentCount": "{{count}} ሰነድ(ዎች) ተመርጠዋል"
+        "documentCount": "{{count}} ሰነድ(ዎች) ተመርጠዋል",
+        "noAsset": "ተለይቶ የተፈጠረ ጨረታ (የተገናኘ ንብረት የለም)",
+        "multiAssetCount": "በዚህ ጨረታ ውስጥ {{count}} ንብረቶች",
+        "lotsTitle": "የጨረታ ሎቶች"
       },
       "actions": {
         "back": "ተመለስ",
@@ -217,6 +250,9 @@
         "cpoRange": "CPO መቶኛ በ 1 እና 100 መካከል መሆን አለበት።",
         "documentsRequired": "ቢያንስ አንድ የ PDF ሰነድ ያስፈልጋል።",
         "pdfOnly": "የ PDF ሰነዶች ብቻ ይፈቀዳሉ።",
+        "multiAssetsRequired": "ለብዙ ንብረት ጨረታ ቢያንስ ሁለት ንብረቶችን ይምረጡ።",
+        "lotReserveRequired": "እያንዳንዱ የተመረጠ ንብረት አዎንታዊ ዝቅተኛ ዋጋ ሊኖረው ይገባል።",
+        "lotLimitReached": "በአንድ ጨረታ እስከ {{max}} ንብረቶችን ብቻ ማከል ይችላሉ።",
         "fixBeforeSubmit": "ከማስገባትዎ በፊት የተገለጹትን መስኮች ያርሙ።",
         "submitFailed": "ጨረታ መፍጠር አልተሳካም። እባክዎ እንደገና ይሞክሩ።"
       }
@@ -233,6 +269,10 @@
       "suspendSuccess": "ጨረታው ታግዷል።",
       "reactivateSuccess": "ጨረታው እንደገና ንቁ ሆኗል።",
       "closeSuccess": "ጨረታው ተዘግቷል።",
+      "closingInProgress": "ጨረታን በመዝጋት እና አሸናፊ በመምረጥ ላይ...",
+      "closeWinnerSelected": "ጨረታ ተዘግቷል። አሸናፊ በራስ-ሰር ተመርጧል እና ተሳውቋል።",
+      "closeNoReserveMet": "ጨረታ ተዘግቷል። ምንም ጨረታ ዝቅተኛ ዋጋውን አልሟላም።",
+      "closeNoBids": "ጨረታ ተዘግቷል። ትክክለኛ ጨረታ አልቀረበም።",
       "deleteSuccess": "ጨረታው ተሰርዟል።",
       "edit": "አርትዕ",
       "save": "ለውጦችን አስቀምጥ",
@@ -307,19 +347,21 @@
       "other": "ሌላ የባለቤትነት ሰነድ"
     },
     "status": {
-      "pending_review": "በግምገማ ላይ",
-      "approved": "ጸድቋል",
+      "pending_review": "የባለቤትነት ምርመራ በመጠባበቅ ላይ",
+      "approved": "ለግምገማ ዝግጁ",
       "rejected": "ተቀባይነት አላገኘም",
-      "under_evaluation": "በግምገማ ሂደት",
-      "evaluated": "ተገመግሟል",
+      "under_evaluation": "ግምገማ በሂደት ላይ",
+      "evaluated": "ግምገማ ጸድቋል",
       "in_auction": "በጨረታ ላይ",
       "sold": "ተሸጧል"
     },
     "filters": {
       "all": "ሁሉም",
       "pending_review": "በግምገማ ላይ",
-      "under_evaluation": "በግምገማ ሂደት",
-      "approved": "ጸድቋል",
+      "under_evaluation": "በሂደት ላይ",
+      "approved": "ለግምገማ ዝግጁ",
+      "evaluated": "ግምገማ ጸድቋል",
+      "in_auction": "በጨረታ ላይ",
       "rejected": "ተቀባይነት አላገኘም"
     },
     "table": {
@@ -339,23 +381,23 @@
       }
     },
     "management": {
-      "pageTitle": "የጨረታ ጥያቄዎች",
-      "subtitle": "ከንብረት ባለቤቶች የቀረቡ የጨረታ ጥያቄዎችን ይገምግሙ እና ያጽድቁ።"
+      "pageTitle": "የንብረት ጥያቄዎች",
+      "subtitle": "በጨረታ ተሳታፊዎች የቀረቡ የንብረት ጥያቄዎችን ይገምግሙ እና ያጽድቁ።"
     },
     "submit": {
-      "title": "ጨረታ ጠይቅ",
+      "title": "የንብረት ጥያቄ",
       "subtitle": "ንብረትዎን ለባለቤትነት ግምገማ ያስገቡ። ከጸደቀ በኋላ ወደ ጨረታ ሂደት ይገባል።"
     },
     "my": {
-      "title": "የእኔ የጨረታ ጥያቄዎች",
-      "subtitle": "የጨረታ ጥያቄዎችን ያስገቡ እና ይከታተሉ። ከጸደቀ በኋላ ንብረትዎ በጨረታዎች ውስጥ ይታያል።",
-      "submitNew": "+ ጨረታ ጠይቅ",
-      "empty": "እስካሁን ምንም የጨረታ ጥያቄ አላስገቡም።",
+      "title": "የእኔ የንብረት ጥያቄዎች",
+      "subtitle": "የንብረት ጥያቄዎችን ያስገቡ እና ይከታተሉ። ከጸደቀ በኋላ ንብረትዎ ወደ ግምገማ እና ጨረታ ሂደት ይገባል።",
+      "submitNew": "+ የንብረት ጥያቄ",
+      "empty": "እስካሁን ምንም የንብረት ጥያቄ አላስገቡም።",
       "rejectionReason": "ምክንያት፡ {{reason}}",
       "refresh": "አድስ",
       "drawer": {
-        "title": "የጨረታ ጥያቄ ዝርዝር",
-        "loadFailed": "የጨረታ ጥያቄ ዝርዝር ማስገባት አልተሳካም።",
+        "title": "የንብረት ጥያቄ ዝርዝር",
+        "loadFailed": "የንብረት ጥያቄ ዝርዝር ማስገባት አልተሳካም።",
         "detailsSection": "የጥያቄ መረጃ",
         "rejectionSection": "የመካድ ምክንያት",
         "liveAuctionSection": "ንቁ ጨረታ",
@@ -404,9 +446,9 @@
       }
     },
     "requestWizard": {
-      "title": "ጨረታ ጠይቅ",
-      "subtitle": "ንብረትዎን በቀላል ደረጃዎች ያስገቡ። ቡድናችን ይገመግማል፣ ያጸድቃል ወይም ይተላለፋል።",
-      "stepProgress": "የጨረታ ጥያቄ ሂደት",
+      "title": "የንብረት ጥያቄ",
+      "subtitle": "አንድ ወይም ብዙ ንብረቶችን በተመራ ደረጃዎች ያስገቡ። ቡድናችን እያንዳንዱን ጥያቄ ከጨረታ ሂደት በፊት ይገመግማል።",
+      "stepProgress": "የንብረት ጥያቄ ሂደት",
       "locationHint": "የአካባቢ መረጃ ለግምገማ ይረዳል። አሁን ላለመጋራት የምትመርጡትን መስኮች ማስቀረት ይችላሉ።",
       "reviewIntro": "ለአስተዳዳሪ ቡድን ከመላክዎ በፊት ዝርዝሮችዎን ያረጋግጡ።",
       "landingHint": "ንብረትዎን ለጨረታ ግምገማ ለመላክ የተመራ ሂደቱን ይጀምሩ።",
@@ -423,19 +465,32 @@
         "location": "አካባቢ እና ሁኔታ",
         "photos": "ፎቶዎች",
         "documents": "ሰነዶች",
-        "review": "ግምገማ እና ላክ"
+        "batchReview": "ግምገማ እና ላክ"
+      },
+      "batchReview": {
+        "intro": "ከታች ያሉትን ንብረቶች ይገምግሙ። ተጨማሪ ንብረቶችን ያክሉ ወይም ሁሉንም በአንድ ጊዜ ላኩ።",
+        "empty": "በዝርዝርዎ ውስጥ ንብረት የለም። አንድ ለመጨመር ወደ ኋላ ተመለስ እና ቅጹን ይሙሉ።",
+        "assetLabel": "ንብረት {{index}}",
+        "queuedCount": "{{count}} ንብረት(ዎች) ተደርጎ ተጠቅሷል። ይህን ንብረት ከጨረሱ በኋላ ተጨማሪ ማከል ይችላሉ።",
+        "editing": "በዝርዝር ውስጥ ያለውን ንብረት እያርሙ ነው።",
+        "limitReached": "በአንድ ጥያቄ እስከ {{max}} ንብረቶችን ብቻ ማስገባት ይችላሉ።"
       },
       "actions": {
         "back": "ተመለስ",
         "next": "ቀጥል",
+        "addToQueue": "ወደ ዝርዝር ጨምር",
         "cancel": "ሰርዝ",
         "submit": "ጥያቄ ላክ",
+        "submitAll": "{{count}} ጥያቄዎችን ላክ",
         "submitting": "በመላክ ላይ...",
         "edit": "አርትዕ",
+        "addAnother": "ተጨማሪ ንብረት ጨምር",
+        "removeFromQueue": "አስወግድ",
         "addPhotos": "ፎቶዎች ያክሉ"
       },
       "errors": {
-        "fixBeforeSubmit": "ከመላክዎ በፊት ሁሉንም አስፈላጊ መስኮች ይሙሉ።"
+        "fixBeforeSubmit": "ከመላክዎ በፊት ሁሉንም አስፈላጊ መስኮች ይሙሉ።",
+        "emptyQueue": "ከመላክዎ በፊት ቢያንስ አንድ ንብረት ወደ ዝርዝርዎ ያክሉ።"
       },
       "reserveHint": "የሚፈለገው ዝቅተኛ ዋጋ በአስተዳዳሪ ይገመገማል። የመጨረሻ ዋጋ በመጀመሪያ ይወሰናል።",
       "removePhoto": "ፎቶ {{name}} አስወግድ",
@@ -445,15 +500,16 @@
         "photoCount": "{{count}} ፎቶ(ዎች)"
       },
       "toolbar": {
-        "ariaLabel": "የጨረታ ጥያቄ ድርጊቶች",
-        "title": "ንብረትዎን ለጨረታ ማቅረብ ይፈልጋሉ?",
-        "hint": "ለአስተዳዳሪ ግምገማ ጥያቄ ያስገቡ። የጸደቁ ንብረቶች እንደ ቀጥታ ጨረታ ሊጀመሩ ይችላሉ።",
-        "cta": "+ ጨረታ ጠይቅ"
+        "ariaLabel": "የንብረት ጥያቄ ድርጊቶች",
+        "title": "ንብረት ማስገባት ይፈልጋሉ?",
+        "hint": "ለአስተዳዳሪ ግምገማ የንብረት ጥያቄ ያስገቡ። የጸደቁ ንብረቶች ወደ ግምገማ እና ጨረታ ሊገቡ ይችላሉ።",
+        "cta": "+ የንብረት ጥያቄ"
       },
       "success": {
         "title": "ጥያቄ ተልኳል",
-        "subtitle": "የጨረታ ጥያቄዎ አሁን በአስተዳዳሪ ቡድን ውስጥ ነው።",
+        "subtitle": "የንብረት ጥያቄዎ አሁን በአስተዳዳሪ ቡድን ውስጥ ነው።",
         "body": "የንብረት ዝርዝሮችዎን ተቀብለናል። ግምገማው ሲጠናቀቅ ማሳወቂያ ይደርስዎታል።",
+        "bodyMultiple": "{{count}} የንብረት ጥያቄዎችን ተቀብለናል። እያንዳንዱ ግምገማ ሲጠናቀቅ ማሳወቂያ ይደርስዎታል።",
         "stepReview": "አስተዳዳሪ የባለቤትነት ሰነዶችዎን ይገመግማል",
         "stepEvaluation": "ከጸደቀ በኋላ ንብረቱ ወደ ግምገማ ይሄዳል",
         "stepLaunch": "የጸደቁ ንብረቶች እንደ ጨረታ ሊጀመሩ ይችላሉ",
@@ -495,7 +551,15 @@
       "rejectionReasonRequired": "የካድ ምክንያት ያስፈልጋል።",
       "approveSuccess": "የንብረት ጥያቄ በተሳካ ሁኔታ ጸድቋል።",
       "rejectSuccess": "የንብረት ጥያቄ ተከልክሏል።",
-      "actionFailed": "ድርጊቱ አልተሳካም። እባክዎ እንደገና ይሞክሩ።"
+      "actionFailed": "ድርጊቱ አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+      "evaluationSection": "የጸደቀ ግምገማ",
+      "valuation": "ግምት",
+      "reserveRecommendation": "የሚመከር የሪዘርቭ ዋጋ",
+      "evaluationReport": "የግምገማ ሪፖርት",
+      "viewEvaluationReport": "የግምገማ ሪፖርት ይመልከቱ",
+      "createAuction": "ጨረታ ይፍጠሩ",
+      "alreadyInAuction": "ይህ ንብረት አስቀድሞ ከጨረታ ጋር ተገናኝቷል።",
+      "notEligibleForAuction": "ይህ ንብረት በአሁኑ ጊዜ ለጨረታ ፍጠራ ብቁ አይደለም።"
     }
   },
   "status": {
@@ -558,7 +622,10 @@
     "genericError": "አንድ ስህተት ተከስቷል። እንደገና ይሞክሩ።",
     "invalidCredentials": "ልክ ያልሆኑ የመግቢያ መረጃዎች። ስልክ ቁጥርዎን እና የይለፍ ቃልዎን ያረጋግጡ።",
     "networkError": "አገልጋዩን ማግኘት አልተቻለም። እንደገና ይሞክሩ።",
-    "validationError": "ግቤትዎን ያረጋግጡ እና እንደገና ይሞክሩ።"
+    "validationError": "ግቤትዎን ያረጋግጡ እና እንደገና ይሞክሩ።",
+    "showPassword": "የይለፍ ቃል አሳይ",
+    "hidePassword": "የይለፍ ቃል ደብቅ",
+    "clearField": "አጽዳ"
   },
   "kyc": {
     "pendingBanner": "ሁሉንም የጨረታ ባህሪዎች ለመጠቀም KYC ማረጋገጫዎን ያጠናቅቁ።",
@@ -724,7 +791,8 @@
       "bidComingSoon": "የመስመር ላይ ጨረታ በቅርቡ ይገኛል። ለመሳተፍ ደጋፊዎን ያግኙ።",
       "placeBid": {
         "title": "ጨረታ ያስገቡ",
-        "hint": "በአንድ ጨረታ አንድ ጨረታ ብቻ። መጠኑ ከመጠበቂያ ዋጋ በላይ መሆን አለበት።",
+        "titleForLot": "በ {{lot}} ላይ ጨረታ ያስገቡ",
+        "hint": "በእያንዳንዱ ሎት አንድ ጨረታ። መጠኑ ከሎት መጠበቂያ ዋጋ በላይ መሆን አለበት።",
         "amountLabel": "የጨረታ መጠን (ETB)",
         "amountRequired": "ትክክለኛ የጨረታ መጠን ያስገቡ።",
         "belowReserve": "ጨረታው ቢያንስ {{amount}} መሆን አለበት።",
@@ -754,7 +822,7 @@
       "paymentCopy": "የሰነድ ክፍያ {{amount}} ይክፈሉ እና የክፍያ ደረሰኝ ይስቀሉ።",
       "cpoCopy": "የሰነድ ክፍያ ከጸደቀ በኋላ የተረጋገጠ የክፍያ ትዕዛዝ (CPO) ይስቀሉ።",
       "cpoNextAction": "ይህ የአሁኑ ደረጃዎ ነው። ወደ ጨረታ ለመቀጠል CPO ያስገቡ።",
-      "bidCopy": "CPO ከጸደቀ በኋላ ከመጠበቂያ ዋጋ በላይ አንድ የታሸገ ጨረታ ያስገቡ።",
+      "bidCopy": "CPO ከጸደቀ በኋላ በእያንዳንዱ የተመረጠ ሎት ከመጠበቂያ ዋጋ በላይ አንድ የታሸገ ጨረታ ያስገቡ።",
       "bidLocked": {
         "notRegistered": "መጀመሪያ የሰነድ ክፍያ ያጠናቅቁ እና ማጽደቅ ይጠብቁ።",
         "submitCpo": "ተመዝግበዋል፣ ነገር ግን CPO እንዲጸድቅ ድረስ ጨረታ ተቆልፏል።",
@@ -767,13 +835,16 @@
       "bidCard": {
         "eyebrow": "ደረጃ 3 — ጨረታ አስገባ",
         "titleOpen": "የታሸገ ጨረታ ያስገቡ",
+        "titleOpenMulti": "ለተመረጡት ሎቶች ጨረታ ያስገቡ",
         "titleWaiting": "ጨረታ በቅርቡ ይከፈታል",
         "titleClosed": "የጨረታ ጊዜ አልቋል",
         "leadOpen": "ከመጠበቂያ ዋጋ {{amount}} በላይ መጠን ያስገቡ።",
+        "leadOpenMulti": "{{count}} ሎት(ዎች) ጨረታ ይፈልጋሉ። በእያንዳንዱ ሎት መጠበቂያ ዋጋ በላይ መጠን ያስገቡ።",
         "leadWaiting": "ጨረታ በ {{start}} ይከፈታል እና በ {{end}} ይዘጋል (የምሥራቅ አፍሪካ ሰዓት)።",
         "leadClosed": "የጨረታ ጊዜው {{start}} እስከ {{end}} ነበር (የምሥራቅ አፍሪካ ሰዓት)።",
         "waitingHint": "CPO ጸድቋል። በ {{start}} እና {{end}} መካከል ተመልሰው ጨረታዎን እዚህ ያስገቡ።",
         "closedHint": "CPO ጸድቋል፣ ነገር ግን የዚህ ጨረታ ጊዜ አልቋል። ለዚህ ጨረታ ጨረታ ማስገባት አይቻልም።",
+        "lotBidSubmitted": "{{lot}}: {{amount}} ጨረታ ተልኳል።",
         "scrollHint": "ከዚህ ፓነል ላይታ የሚገኘውን የጨረታ ቅጽ ይጠቀሙ።"
       },
       "paymentRejected": "ክፍያዎ ተቀባይነት አላገኘም። ምክንያቱን ይመልከቱ እና እንደገና ያስገቡ።",
@@ -781,6 +852,8 @@
       "paymentPending": "ክፍያዎ ለማረጋገጥ በመጠባበቅ ላይ ነው። ከተገመገመ በኋላ ይነገርዎታል።",
       "cpoPending": "CPO ለግምገማ በመጠባበቅ ላይ ነው። ከጸደቀ በኋላ ይነገርዎታል።",
       "bidSubmitted": "{{amount}} የጨረታ አስገብተዋል።",
+      "allBidsSubmitted": "ለሁሉም የተመረጡ ሎቶች ጨረታ አስገብተዋል።",
+      "partialBidsSubmitted": "{{total}} ሎት(ዎች) ውስጥ {{submitted}} ጨረታ(ዎች) አስገብተዋል። የጨረታ ጊዜ ከመዘጋቱ በፊት የቀሩትን ያጠናቅቁ።",
       "steps": {
         "payment": "የሰነድ ክፍያ",
         "cpo": "CPO ማስገባት",
@@ -796,6 +869,13 @@
       "actions": {
         "payDocumentFee": "የሰነድ ክፍያ ይክፈሉ",
         "submitCpo": "CPO አስገባ"
+      },
+      "kycGate": {
+        "title": "ለመሳተፍ KYC ያጠናቁ",
+        "body": "የሰነድ ክፍያ፣ CPO ማስገባት ወይም ቅደም ተከተል ብድር ከመስጠትዎ በፊት ማንነትዎን ያረጋግጡ።",
+        "action": "KYC ያጠናቁ",
+        "underReviewTitle": "KYC በግምገማ ላይ",
+        "underReviewBody": "ማረጋገጫዎ በሰራተኞች እየተገመገመ ነው። ከጸደቀ በኋላ መሳተፍ ይችላሉ።"
       },
       "status": {
         "not_started": {
@@ -866,8 +946,14 @@
       },
       "cpoModal": {
         "title": "CPO አስገባ",
-        "subtitle": "የተረጋገጠ የክፍያ ትዕዛዝ ሰነድ ይስቀሉ።",
+        "subtitle": "ለመጫረት የሚፈልጓቸውን ሎቶች ይምረጡ፣ ከዚያ የተረጋገጠ የክፍያ ትዕዛዝ ሰነድ ይስቀሉ።",
         "auction": "ጨረታ",
+        "cpoPercentage": "የ CPO መቶኛ",
+        "requiredAmount": "የሚፈለግ የ CPO መጠን",
+        "selectLots": "ለመጫረት የሚመረጡ ሎቶች",
+        "selectLotsHint": "የሚፈለግ CPO = የተመረጡ ሎቶች ጠቅላላ መጠበቂያ × {{percentage}}%።",
+        "lotFallback": "ሎት",
+        "lotsRequired": "ለመጫረት ቢያንስ አንድ ሎት ይምረጡ።",
         "document": "CPO ሰነድ",
         "documentRequired": "CPO ሰነድ ይስቀሉ።",
         "documentUploaded": "ሰነድ ተስቅሏል።",
@@ -881,7 +967,27 @@
   "evaluations": {
     "management": {
       "pageTitle": "ግምገማዎች",
-      "subtitle": "የንብረት ግምገማዎችን ያቅዱ እና ያስተዳድሩ",
+      "subtitle": "ምርመራ ያቅዱ፣ ምክር ያስረክቡ፣ ከዚያ ሱፐር አድሚን ከጨረታ ፍጠም በፊት ያጽድቃል።",
+      "workflow": {
+        "title": "የግምገማ ሂደት",
+        "stepSchedule": "1. ዝግጁ ንብረት ያቅዱ",
+        "stepInspect": "2. ፎቶ፣ ሪፖርት፣ ግምት እና ማስታወሻዎችን ይመዝግቡ",
+        "stepSubmit": "3. ምክር ለሱፐር አድሚን ያስረክቡ",
+        "stepSuperAdmin": "4. ሱፐር አድሚን ያጽድቅ ወይም ይተው"
+      },
+      "pendingApprovalBanner": "{{count}} የግምገማ ምክር(ዎች) ለማጽደቅዎ በመጠባበቅ ላይ ናቸው።",
+      "pendingApprovalHint": "ከታች ያለውን ረድፍ ይክፈቱ ለፎቶዎች፣ ሪፖርት እና የሪዘርቭ ዋጋ ይገምግሙ — ከዚያ ያጽድቁ ወይም ይተው።",
+      "readyQueue": {
+        "title": "ለግምገማ ዝግጁ",
+        "subtitle": "ባለቤትነት በCSO ጸድቋል። ምርመራ ያቅዱ፣ ከዚያ ፎቶ እና ሪፖርት ጋር ምክር ያስረክቡ።",
+        "count": "{{count}} ለማቅድ በመጠባበቅ ላይ",
+        "empty": "ለግምገማ ማቅድ የሚጠብቁ ንብረቶች የሉም።",
+        "loading": "ለግምገማ ዝግጁ ንብረቶች በመጫን ላይ…",
+        "loadFailed": "ለግምገማ ዝግጁ ንብረቶችን ማስገባት አልተሳካም።",
+        "retry": "እንደገና ይሞክሩ",
+        "scheduleAction": "ያቅዱ"
+      },
+      "activeSectionTitle": "የተታቀዱ እና በሂደት ላይ ያሉ ግምገማዎች",
       "schedule": "ግምገማ ያቅዱ",
       "searchPlaceholder": "በንብረት ርዕስ ወይም ባለቤት ይፈልጉ...",
       "empty": "ምንም ግምገማ አልተገኘም።",
@@ -898,8 +1004,8 @@
       "status": {
         "scheduled": "የተታቀደ",
         "in_progress": "በሂደት ላይ",
-        "completed": "ተጠናቋል",
-        "approved": "ጸድቋል",
+        "completed": "ምክር ቀርቧል",
+        "approved": "ግምገማ ጸድቋል",
         "rejected": "ተቀባይነት አላገኘም"
       },
       "table": {
@@ -917,10 +1023,11 @@
       "actions": {
         "start": "ግምገማ ይጀምሩ",
         "reschedule": "እንደገና ያቅዱ",
-        "complete": "ግምገማ ያጠናቅቁ",
+        "complete": "ምክር ያስረክቡ",
         "approve": "ያጽድቁ",
         "reject": "አትቀበል",
-        "reSchedule": "እንደገና ያቅዱ"
+        "reSchedule": "እንደገና ያቅዱ",
+        "createAuction": "ጨረታ ይፍጠሩ"
       },
       "drawer": {
         "title": "የግምገማ ዝርዝር",
@@ -947,11 +1054,12 @@
         "report": "የግምገማ ሪፖርት",
         "viewReport": "ሪፖርት ያውርዱ",
         "startSuccess": "ግምገማ በሂደት ላይ ተለይቷል።",
-        "startFailed": "ግምገማ መጀመር አልተሳካም።"
+        "startFailed": "ግምገማ መጀመር አልተሳካም።",
+        "awaitingSuperAdmin": "ምክር ቀርቧል። የሱፐር አድሚን ፍቃድ በመጠባበቅ ላይ ነው።"
       },
       "scheduleModal": {
         "title": "ግምገማ ያቅዱ",
-        "subtitle": "የጸደቀ ንብረት ይምረጡ እና ቀን ያስቀምጡ።",
+        "subtitle": "በCSO የባለቤትነት ሰነድ የጸደቀ ንብረት ይምረጡ። የአካል ግምገማ ገና አልተጀመረም።",
         "assetSearch": "ንብረቶችን ይፈልጉ",
         "assetSearchPlaceholder": "በርዕስ ወይም ባለቤት ይፈልጉ...",
         "asset": "ንብረት",
@@ -983,23 +1091,24 @@
         "dateFutureRequired": "የታቀደ ቀን በወደፊት መሆን አለበት።"
       },
       "completeModal": {
-        "title": "ግምገማ ያጠናቅቁ",
-        "subtitle": "የግምት ዝርዝሮችን ያስገቡ እና ፋይሎችን ይስቀሉ።",
-        "valuationSection": "ግምት",
-        "documentationSection": "ሰነዶች",
-        "valuationAmount": "የግምት መጠን (ETB)",
-        "reserveRecommendation": "የመጠበቂያ ዋጋ ምክር (ETB)",
-        "notes": "ተጨማሪ ማስታወሻዎች",
+        "title": "የግምገማ ምክር ያስረክቡ",
+        "subtitle": "የምርመራ ፎቶዎችን እና ሪፖርት ይስቀሉ፣ የመጠበቂያ ዋጋ ምክር ያስገቡ፣ ለሱፐር አድሚን ግምገማ ማስታወሻዎችን ያክሉ።",
+        "documentationSection": "የምርመራ ፋይሎች",
+        "reserveRecommendation": "የሚመከር የመጠበቂያ ዋጋ (ETB)",
+        "reserveHint": "ንብረቱን ከመመለከትዎ በኋላ የሚመክሩት ዝቅተኛ የመክፈቻ ጨረታ። የጨረታ አስተዳዳሪ ይህን ይጠቀማል።",
+        "ownerReserveHint": "ባለቤቱ የጠየቀው መጠበቂያ፡ {{amount}} ETB (ማጣቀሻ ብቻ)።",
+        "notes": "የምርመራ ማስታወሻዎች",
         "photos": "የምርመራ ፎቶዎች",
         "report": "የግምገማ ሪፖርት",
         "reportUploaded": "ሪፖርት በተሳካ ሁኔታ ተስቀልቷል።",
-        "submit": "እንደተጠናቀቀ ምልክት አድርግ",
-        "submitting": "በማስቀመጥ ላይ...",
-        "success": "ግምገማ ተጠናቋል።",
-        "failed": "ግምገማ ማጠናቀቅ አልተሳካም።",
-        "valuationRequired": "የግምት መጠን ያስፈልጋል እና አዎንታዊ መሆን አለበት።",
-        "reserveRequired": "የመጠበቂያ ዋጋ ምክር ያስፈልጋል እና አዎንታዊ መሆን አለበት።",
-        "reserveTooHigh": "የመጠበቂያ ዋጋ ከግምት መጠን በላይ ሊሆን አይችልም።"
+        "submit": "ምክር ያስረክቡ",
+        "submitting": "በማስረከብ ላይ...",
+        "success": "ምክር ለፍቃድ ቀርቧል።",
+        "failed": "የግምገማ ምክር ማስረከብ አልተሳካም።",
+        "reserveRequired": "የሚመከር የመጠበቂያ ዋጋ ያስፈልጋል እና አዎንታዊ መሆን አለበት።",
+        "reserveTooHigh": "የመጠበቂያ ዋጋ ከግምት መጠን በላይ ሊሆን አይችልም።",
+        "photosRequired": "ቢያንስ አንድ የምርመራ ፎቶ ይስቀሉ።",
+        "reportRequired": "የግምገማ ሪፖርት ይስቀሉ።"
       },
       "approveModal": {
         "title": "ግምገማ ያጽድቁ",
@@ -1258,17 +1367,22 @@
   "winners": {
     "management": {
       "pageTitle": "አሸናፊዎች",
-      "subtitle": "የጨረታ አሸናፊዎችን ያስተዳድሩ።",
+      "subtitle": "የጨረታ አሸናፊ ምርጫዎችን እና ማረጋገጫዎችን ያስተዳድሩ።",
       "selectWinner": "አሸናፊ ይምረጡ",
-      "searchPlaceholder": "በአሸናፊ ስም ወይም ሞባይል ይፈልጉ...",
-      "empty": "ምንም አሸናፊ መዝገብ አልተገኘም።",
+      "searchPlaceholder": "በአሸናፊ ስም፣ ሞባይል ወይም የጨረታ ርዕስ ይፈልጉ...",
+      "empty": "እስካሁን ምንም አሸናፊ መዝገብ የለም። ጨረታዎች ሲዘጉ አሸናፊዎች በራስ-ሰር ይፈጠራሉ።",
+      "noReserveMet": "አሸናፊ የለም — ዝቅተኛ ዋጋ አልተሟላም",
       "openDetail": "አሸናፊ መዝገብ ለ {{name}} ይክፈቱ",
       "viewAction": "ዝርዝር ይመልከቱ",
+      "amount": {
+        "restricted": "***"
+      },
       "tabs": {
         "all": "ሁሉም",
-        "pending_confirmation": "በመጠባበቅ ላይ",
+        "pending_confirmation": "ማረጋገጫ በመጠባበቅ",
         "confirmed": "ተረጋግጧል",
-        "declined": "ተቀባይነት አላገኘም"
+        "declined": "ተቀባይነት አልተሰጠም",
+        "replaced": "ተተክሏል"
       },
       "status": {
         "pending_confirmation": "ማረጋገጫ በመጠባበቅ ላይ",
@@ -1277,29 +1391,73 @@
         "replaced": "ተተክሏል"
       },
       "table": {
-        "footer": "{{from}}–{{to}} ከ {{total}} አሸናፊዎች ታይቷል",
+        "footer": "{{from}}–{{to}} ከ {{total}} አሸናፊዎች",
         "headers": {
+          "auction": "የጨረታ ርዕስ",
+          "category": "ምድብ",
+          "winner": "አሸናፊ",
+          "mobile": "ሞባይል",
+          "amount": "አሸናፊ ጨረታ",
+          "selectedAt": "ተመርጧል",
+          "status": "ሁኔታ",
+          "actions": "ድርጊቶች",
           "auction_title": "ጨረታ",
           "winner_name": "አሸናፊ",
-          "status": "ሁኔታ",
           "selected_at": "ተመርጧል",
-          "selected_by": "ያመረጠው",
-          "actions": "ድርጊቶች"
+          "selected_by": "ያመረጠው"
         }
+      },
+      "auctionSection": {
+        "title": "የጨረታ መረጃ",
+        "winnerBlockTitle": "አሸናፊ",
+        "auctionTitle": "የጨረታ ርዕስ",
+        "category": "ምድብ",
+        "closingDate": "የመዝጊያ ቀን",
+        "reservePrice": "ዝቅተኛ ዋጋ"
+      },
+      "winnerSection": {
+        "title": "የአሸናፊ መረጃ",
+        "fullName": "ሙሉ ስም",
+        "mobile": "ሞባይል",
+        "userType": "የተጠቃሚ አይነት",
+        "organization": "የድርጅት ስም"
+      },
+      "bidSection": {
+        "title": "አሸናፊ ጨረታ",
+        "amount": "የጨረታ መጠን",
+        "restricted": "የተገደበ",
+        "submittedAt": "የተላከበት",
+        "validationStatus": "የማረጋገጫ ሁኔታ",
+        "valid": "ትክክለኛ",
+        "invalid": "ልክ ያልሆነ",
+        "historyTitle": "የጨረታ ታሪክ",
+        "totalValidBids": "ጠቅላላ ትክክለኛ ጨረታዎች",
+        "secondHighest": "ሁለተኛ ከፍተኛ ጨረታ"
       },
       "drawer": {
         "title": "የአሸናፊ ዝርዝር",
         "loadFailed": "የአሸናፊ ዝርዝር ማስገባት አልተሳካም።",
+        "selectionSection": "የምርጫ ዝርዝር",
+        "declineSection": "የመተው ዝርዝር",
         "winnerSection": "አሸናፊ መዝገብ",
         "auction": "ጨረታ",
         "winner": "አሸናፊ",
         "bidAmount": "አሸናፊ ጨረታ",
         "selectedAt": "የተመረጠበት",
         "selectedBy": "ያመረጠው",
+        "selectionMethod": "የምርጫ ዘዴ",
+        "selectionMethodValues": {
+          "auto": "ራስ-ሰር",
+          "manual": "በእጅ"
+        },
+        "notificationSentAt": "ማሳወቂያ የተላከበት",
         "declineReason": "የመተው ምክንያት",
+        "declinedAt": "በ {{date}} ተተው",
         "confirm": "አሸናፊ ያረጋግጡ",
         "decline": "አሸናፊ አትቀበል",
-        "refresh": "አድስ"
+        "selectReplacement": "ሌላ አሸናፊ ይምረጡ",
+        "refresh": "አድስ",
+        "viewDetails": "የአሸናፊ ዝርዝር ይመልከቱ"
       },
       "selectModal": {
         "title": "አሸናፊ ይምረጡ",
@@ -1316,7 +1474,7 @@
       },
       "confirmModal": {
         "title": "አሸናፊ ያረጋግጡ",
-        "body": "{{name}}ን እንደ አሸናፊ ያረጋግጡ?",
+        "body": "{{name}}ን ለ {{auction}} እንደ አሸናፊ ያረጋግጡ? ቅርጸ-ባሕሪ ማሳወቂያ ለአሸናፊው ይላክባቸዋል።",
         "confirm": "ያረጋግጡ",
         "success": "አሸናፊ ተረጋግጧል።",
         "failed": "አሸናፊ ማረጋገጥ አልተሳካም።"
@@ -1328,6 +1486,17 @@
         "confirm": "መተው አረጋግጥ",
         "success": "አሸናፊ ተቀባይነት አላገኘም።",
         "failed": "አሸናፊ መተው አልተሳካም።"
+      },
+      "replaceModal": {
+        "title": "ተተክለ አሸናፊ ይምረጡ",
+        "subtitle": "ለ {{auction}} ቀጣይ ትክክለኛ ጨረታ ይምረጡ።",
+        "bidListLabel": "ተተክለ ጨረታ አማራጮች",
+        "noBids": "ለዚህ ጨረታ ሌላ ትክክለኛ ጨረታ የለም።",
+        "submit": "እንደ አሸናፊ ይምረጡ",
+        "submitting": "በመምረጥ ላይ...",
+        "success": "ተተክለ አሸናፊ ተመርጧል እና ተሳውቋል።",
+        "failed": "ተተክለ አሸናፊ መምረጥ አልተሳካም።",
+        "required": "ተተክለ ጨረታ ይምረጡ።"
       }
     }
   },
@@ -1390,7 +1559,7 @@
   "users": {
     "management": {
       "pageTitle": "የተጠቃሚ አስተዳደር",
-      "subtitle": "የጨረታ ተሳታፊዎችን እና የንብረት ባለቤቶችን መለያዎችን ያስተዳድሩ።",
+      "subtitle": "የጨረታ ተሳታፊዎችን መለያዎችን ያስተዳድሩ።",
       "createUser": "ተጠቃሚ ፍጠር",
       "searchPlaceholder": "በስም፣ ስልክ ወይም ኢሜይል ይፈልጉ...",
       "empty": "ለተመረጡት ማጣሪያዎች ተጠቃሚዎች አልተገኙም።",
@@ -1524,7 +1693,7 @@
         "subtitle": "የተጠቃሚ መለያ በእጅ ፍጠር እና ሚና መድብ",
         "accountType": "የመለያ አይነት",
         "accountTypeHints": {
-          "individual": "የግል ጨረታ ተሳታፊ ወይም የንብረት ባለቤት መለያ",
+          "individual": "የግል ጨረታ ተሳታፊ መለያ",
           "organization": "የተመዘገበ ድርጅት መለያ"
         },
         "accountSettings": "የመለያ ቅንብሮች",
@@ -1543,7 +1712,7 @@
         "role": "ሚና",
         "roleOptions": {
           "bidder": "ጨረታ ተሳታፊ",
-          "asset_owner": "የንብረት ባለቤት"
+          "asset_owner": "ጨረታ ተሳታፊ"
         },
         "selectRole": "ሚና ይምረጡ",
         "firstName": "የመጀመሪያ ስም",
@@ -1557,6 +1726,7 @@
         "success": "ተጠቃሚ በተሳካ ሁኔታ ተፈጥሯል።",
         "failed": "ተጠቃሚ መፍጠር አልተሳካም።",
         "mobileRequired": "ስልክ ቁጥር ያስፈልጋል።",
+        "mobileInvalid": "ትክክለኛ ስልክ ቁጥር ያስገቡ (ለምሳሌ 0912345678 ወይም +251912345678)።",
         "firstNameRequired": "የመጀመሪያ ስም ያስፈልጋል።",
         "lastNameRequired": "የአባት ስም ያስፈልጋል።",
         "nationalIdRequired": "የብሔራዊ መታወቂያ ቁጥር ያስፈልጋል።",
@@ -1672,8 +1842,16 @@
         "cancelEdit": "የፍቃድ አርትዖት ሰርዝ",
         "save": "ፍቃዶችን አስቀምጥ",
         "saving": "በማስቀመጥ ላይ...",
-        "warning": "ለውጦቹ ይህን ሚና ላላቸው ሁሉም ሰራተኞች ይተገበራሉ። ለውጦቹ እንዲተገበሩ ሰራተኞች እንደገና መግባት አለባቸው።",
+        "warning": "ለውጦቹ ይህን ሚና ላላቸው ሁሉም ሰራተኞች ይተገበራሉ። የAPI መዳረሻ በሚቀጥለው ጥያቄ ይዘመናል፤ ተጽዕኖ የተደረሰባቸው ሰራተኞች ለማይነት እና ቁልፎች ለማዛመድ ገጹን እንደገና መጫን ወይም እንደገና መግባት አለባቸው።",
         "readOnly": "ይህ የፍቃድ ማትሪክስ ለንባብ ብቻ ነው።",
+        "editableNote": "ከታች ያሉትን ሞጁሎች እና ድርጊቶች ይቀይሩ። የተመረጡት ፍቃዶች ብቻ ለዚህ ሚና በሳይድባር፣ ገጾች እና API ውስጥ ይገኛሉ።",
+        "roleSummary": "የ{{role}} መዳረሻ",
+        "grantedSummary": "{{granted}} ከ{{total}} ፍቃዶች ተሰጥተዋል",
+        "affectedStaff": "{{count}} ሰራተኞች ተጽዕኖ ይደርሳቸዋል",
+        "fullAccess": "ሙሉ የሞጁል መዳረሻ",
+        "partialAccess": "{{count}} ድርጊቶች ነቅተዋል",
+        "noAccess": "መዳረሻ የለም",
+        "toggleModule": "ለ{{module}} ሁሉንም ፍቃዶች ቀይር",
         "superAdmin": "ዋና አስተዳዳሪዎች በሁሉም ሞጁሎች እና ድርጊቶች ላይ ሙሉ ፍቃድ አላቸው።",
         "confirmTitle": "የሚና ፍቃዶችን አዘምን",
         "confirmBody": "የ{{role}} ፍቃዶችን ማዘመን ይፈልጋሉ? ይህ በ{{count}} ሰራተኞች ላይ ይተገበራል።",
@@ -1756,6 +1934,7 @@
         "firstNameRequired": "የመጀመሪያ ስም ያስፈልጋል።",
         "lastNameRequired": "የአባት ስም ያስፈልጋል።",
         "mobileRequired": "ስልክ ቁጥር ያስፈልጋል።",
+        "mobileInvalid": "ትክክለኛ ስልክ ቁጥር ያስገቡ (ለምሳሌ 0912345678 ወይም +251912345678)።",
         "emailRequired": "ኢሜይል ያስፈልጋል።",
         "emailInvalid": "ትክክለኛ ኢሜይል ያስገቡ።",
         "passwordRequired": "የይለፍ ቃል ያስፈልጋል።",
@@ -1936,3 +2115,4 @@
     }
   }
 }
+

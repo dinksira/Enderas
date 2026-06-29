@@ -26,6 +26,16 @@ export async function createAsset(req, res, next) {
   }
 }
 
+export async function createAssetsBatch(req, res, next) {
+  try {
+    const { assets } = req.body ?? {};
+    const result = await assetService.createAssetsBatch(resolveUserId(req), assets);
+    return sendSuccess(res, result, 201);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export async function listAssets(req, res, next) {
   try {
     const { status, search, includeStats } = req.query;
@@ -110,6 +120,7 @@ export async function rejectAsset(req, res, next) {
 
 export const assetController = Object.freeze({
   createAsset,
+  createAssetsBatch,
   listAssets,
   listMyAssets,
   getAssetById,

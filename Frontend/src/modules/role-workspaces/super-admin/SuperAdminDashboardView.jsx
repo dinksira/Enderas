@@ -98,13 +98,18 @@ export function SuperAdminDashboardView() {
     });
   }, [normalizedRecords, activeFilter]);
 
-  const handleCreateSuccess = () => {
+  const handleCreateSuccess = (auction) => {
     setToast({
       open: true,
       message: t('auctions.create.success'),
       variant: 'success',
     });
     refetch();
+    setCreateModalOpen(false);
+    if (auction?.id) {
+      setSelectedAuctionId(auction.id);
+      setDrawerOpen(true);
+    }
   };
 
   const handleRowClick = (record) => {

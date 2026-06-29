@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/Button.jsx';
 import { ImageViewer } from '../../../components/ImageViewer.jsx';
+import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
+import { useAuthStore } from '../../../stores/auth-store.js';
 import { kycService } from '../services/kyc.service.js';
 import {
   formatDate,
@@ -37,6 +39,10 @@ export function KYCManagementDetailDrawer({
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'am' ? 'am' : 'en';
+  const can = useAuthStore((state) => state.can);
+  const canApproveKyc = can(MODULES.KYC, ACTIONS.APPROVE);
+  const canRejectKyc = can(MODULES.KYC, ACTIONS.REJECT);
+  const canUpdateKyc = can(MODULES.KYC, ACTIONS.UPDATE);
 
   const [detail, setDetail] = useState(null);
   const [auditTrail, setAuditTrail] = useState([]);
@@ -327,21 +333,21 @@ export function KYCManagementDetailDrawer({
                 {t('kyc.management.close')}
               </Button>
 
-              {detail.status === 'pending' && !detail.under_review_at && (
+              {detail.status === 'pending' && !detail.under_review_at && canUpdateKyc && (
                 <Button variant="secondary" onClick={handleMarkUnderReview} disabled={actionLoading || loading}>
                   {t('kyc.management.markUnderReview')}
                 </Button>
               )}
 
-              {detail.status === 'pending' && (
-                <>
-                  <Button variant="secondary" onClick={() => onReject(detail)} disabled={actionLoading}>
-                    {t('kyc.reject')}
-                  </Button>
-                  <Button variant="primary" onClick={() => onApprove(detail)} disabled={actionLoading}>
-                    {t('kyc.approve')}
-                  </Button>
-                </>
+              {detail.status === 'pending' && canRejectKyc && (
+                <Button variant="secondary" onClick={() => onReject(detail)} disabled={actionLoading}>
+                  {t('kyc.reject')}
+                </Button>
+              )}
+              {detail.status === 'pending' && canApproveKyc && (
+                <Button variant="primary" onClick={() => onApprove(detail)} disabled={actionLoading}>
+                  {t('kyc.approve')}
+                </Button>
               )}
             </footer>
           )}

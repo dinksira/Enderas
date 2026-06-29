@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { ImageViewer } from '../../../components/ImageViewer.jsx';
 import { useAuthStore } from '../../../stores/auth-store.js';
 import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
+import { auctionService } from '../../auctions/services/auction-service.js';
 import { assetService } from '../services/asset-service.js';
-import { normalizeAssetStatus, statusPillClass, normalizeAssetDetail } from '../utils/asset-form-utils.js';
+import { normalizeAssetStatus, statusPillClass, normalizeAssetDetail, formatReserveAmount } from '../utils/asset-form-utils.js';
 
 function formatFileSize(bytes) {
   const size = Number(bytes);
@@ -21,6 +22,7 @@ function formatFileSize(bytes) {
  *   onClose: () => void,
  *   onApprove: (asset: object) => void,
  *   onReject: (asset: object) => void,
+ *   onCreateAuction?: (asset: object) => void,
  *   actionLoading?: boolean,
  * }} props
  */
@@ -30,6 +32,7 @@ export function AssetRequestDetailDrawer({
   onClose,
   onApprove,
   onReject,
+  onCreateAuction,
   actionLoading = false,
 }) {
   const { t } = useTranslation();
@@ -40,11 +43,20 @@ export function AssetRequestDetailDrawer({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [viewerSrc, setViewerSrc] = useState(null);
+  const [eligibleAsset, setEligibleAsset] = useState(null);
+  const [eligibleLoading, setEligibleLoading] = useState(false);
 
   const canApprove = can(MODULES.ASSETS, ACTIONS.APPROVE);
   const canReject = can(MODULES.ASSETS, ACTIONS.REJECT);
+  const canCreateAuction = can(MODULES.AUCTIONS, ACTIONS.CREATE);
   const displayStatus = detail ? normalizeAssetStatus(detail.status) : '';
   const isPending = detail?.dbStatus === 'pending_review';
+  const isEvaluated = detail?.dbStatus === 'evaluated';
+  const isInAuction = detail?.dbStatus === 'in_auction';
+  const showCreateAuction = Boolean(isEvaluated && canCreateAuction && eligibleAsset && onCreateAuction);
+  const showFooter = Boolean(
+    (detail && isPending && (canApprove || canReject)) || showCreateAuction,
+  );
 
   useEffect(() => {
     if (open) {
@@ -89,6 +101,40 @@ export function AssetRequestDetailDrawer({
       cancelled = true;
     };
   }, [open, assetId, t]);
+
+  useEffect(() => {
+    if (!open || !assetId || !isEvaluated || !canCreateAuction) {
+      setEligibleAsset(null);
+      setEligibleLoading(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const loadEligibleAsset = async () => {
+      setEligibleLoading(true);
+      try {
+        const asset = await auctionService.getEligibleAssetById(assetId);
+        if (!cancelled) {
+          setEligibleAsset(asset);
+        }
+      } catch {
+        if (!cancelled) {
+          setEligibleAsset(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setEligibleLoading(false);
+        }
+      }
+    };
+
+    loadEligibleAsset();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, assetId, isEvaluated, canCreateAuction]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -155,7 +201,7 @@ export function AssetRequestDetailDrawer({
           </button>
         </header>
 
-        <div className={`auction-drawer__body${detail && isPending && (canApprove || canReject) ? ' auction-drawer__body--with-footer' : ''}`}>
+        <div className={`auction-drawer__body${showFooter ? ' auction-drawer__body--with-footer' : ''}`}>
           {loading && <p className="dashboard-table__empty">{t('common.loading')}</p>}
 
           {error && (
@@ -238,6 +284,54 @@ export function AssetRequestDetailDrawer({
                 <section className="kyc-drawer__section">
                   <h3 className="kyc-drawer__section-title">{t('assets.form.fields.auctionConditions')}</h3>
                   <p className="auction-drawer__text-block">{detail.auctionConditions}</p>
+                </section>
+              )}
+
+              {isEvaluated && (
+                <section className="kyc-drawer__section">
+                  <h3 className="kyc-drawer__section-title">{t('assets.review.evaluationSection')}</h3>
+                  {eligibleLoading && (
+                    <p className="auction-drawer__text-block">{t('common.loading')}</p>
+                  )}
+                  {!eligibleLoading && eligibleAsset?.evaluation && (
+                    <dl className="kyc-drawer__meta">
+                      <div>
+                        <dt>{t('assets.review.valuation')}</dt>
+                        <dd>{formatReserveAmount(eligibleAsset.evaluation.valuationAmount)}</dd>
+                      </div>
+                      <div>
+                        <dt>{t('assets.review.reserveRecommendation')}</dt>
+                        <dd>{formatReserveAmount(eligibleAsset.evaluation.reservePriceRecommendation)}</dd>
+                      </div>
+                      {eligibleAsset.evaluation.reportUrl && (
+                        <div>
+                          <dt>{t('assets.review.evaluationReport')}</dt>
+                          <dd>
+                            <a
+                              href={eligibleAsset.evaluation.reportUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {t('assets.review.viewEvaluationReport')}
+                            </a>
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                  )}
+                  {!eligibleLoading && !eligibleAsset && canCreateAuction && (
+                    <p className="auction-drawer__text-block" role="status">
+                      {t('assets.review.notEligibleForAuction')}
+                    </p>
+                  )}
+                </section>
+              )}
+
+              {isInAuction && (
+                <section className="kyc-drawer__section">
+                  <p className="auction-drawer__text-block" role="status">
+                    {t('assets.review.alreadyInAuction')}
+                  </p>
                 </section>
               )}
 
@@ -340,6 +434,19 @@ export function AssetRequestDetailDrawer({
                 {t('assets.review.approve')}
               </button>
             )}
+          </footer>
+        )}
+
+        {showCreateAuction && (
+          <footer className="auction-drawer__footer">
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => onCreateAuction(detail)}
+              disabled={actionLoading || eligibleLoading}
+            >
+              {t('assets.review.createAuction')}
+            </button>
           </footer>
         )}
       </aside>

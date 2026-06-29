@@ -32,6 +32,8 @@ const FILTER_STATUS_MAP = Object.freeze({
   approved: 'APPROVED',
   rejected: 'REJECTED',
   under_evaluation: 'UNDER_EVALUATION',
+  evaluated: 'EVALUATED',
+  in_auction: 'IN_AUCTION',
 });
 
 export function resolveApiStatus(filterKey) {
@@ -42,10 +44,10 @@ export function statusPillClass(status) {
   const key = String(status || 'PENDING_REVIEW').toUpperCase();
   const map = {
     PENDING_REVIEW: 'asset-status-pill--pending',
+    APPROVED: 'asset-status-pill--pending',
     UNDER_EVALUATION: 'asset-status-pill--evaluating',
-    EVALUATED: 'asset-status-pill--evaluating',
+    EVALUATED: 'asset-status-pill--approved',
     IN_AUCTION: 'asset-status-pill--approved',
-    APPROVED: 'asset-status-pill--approved',
     REJECTED: 'asset-status-pill--rejected',
     SOLD: 'asset-status-pill--approved',
   };
@@ -124,7 +126,7 @@ export const ASSET_REQUEST_STEPS = Object.freeze({
   LOCATION: 'location',
   PHOTOS: 'photos',
   DOCUMENTS: 'documents',
-  REVIEW: 'review',
+  BATCH_REVIEW: 'batchReview',
 });
 
 export const ASSET_REQUEST_STEP_ORDER = Object.freeze([
@@ -132,8 +134,33 @@ export const ASSET_REQUEST_STEP_ORDER = Object.freeze([
   ASSET_REQUEST_STEPS.LOCATION,
   ASSET_REQUEST_STEPS.PHOTOS,
   ASSET_REQUEST_STEPS.DOCUMENTS,
-  ASSET_REQUEST_STEPS.REVIEW,
+  ASSET_REQUEST_STEPS.BATCH_REVIEW,
 ]);
+
+export const MAX_ASSETS_PER_BATCH = 25;
+
+export function cloneAssetFormDraft(form) {
+  return {
+    ...form,
+    photoFiles: [...(form.photoFiles || [])],
+    additionalDocuments: [...(form.additionalDocuments || [])],
+  };
+}
+
+/**
+ * @param {object} form
+ * @param {(key: string, options?: object) => string} t
+ */
+export function summarizeAssetDraft(form, t) {
+  return {
+    title: form.title?.trim() || '—',
+    assetTypeLabel: form.assetType ? t(`assets.types.${form.assetType}`) : '—',
+    location: form.location?.trim() || '—',
+    reserve: formatReserveAmount(form.desiredReservePrice),
+    photoCount: form.photoFiles?.length ?? 0,
+    documentCount: (form.additionalDocuments?.length ?? 0) + (form.ownershipDocumentUrl ? 1 : 0),
+  };
+}
 
 /**
  * @param {string} step
@@ -195,7 +222,7 @@ export function validateAssetStep(step, form, t) {
  */
 export function validateAssetForm(form, t) {
   return ASSET_REQUEST_STEP_ORDER.reduce((errors, stepKey) => {
-    if (stepKey === ASSET_REQUEST_STEPS.REVIEW) {
+    if (stepKey === ASSET_REQUEST_STEPS.BATCH_REVIEW) {
       return errors;
     }
     return { ...errors, ...validateAssetStep(stepKey, form, t) };
@@ -227,14 +254,17 @@ export default {
   ASSET_TYPE_KEYS,
   ASSET_REQUEST_STEPS,
   ASSET_REQUEST_STEP_ORDER,
+  MAX_ASSETS_PER_BATCH,
   buildAssetPayload,
   buildEmptyAssetForm,
+  cloneAssetFormDraft,
   formatReserveAmount,
   getOwnershipDocType,
   normalizeAssetDetail,
   normalizeAssetStatus,
   resolveApiStatus,
   statusPillClass,
+  summarizeAssetDraft,
   toArray,
   validateAssetForm,
   validateAssetStep,

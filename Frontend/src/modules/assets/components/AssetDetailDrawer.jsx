@@ -24,8 +24,8 @@ function MetaField({ label, value, children }) {
 function assetStatusVariant(status) {
   const key = normalizeAssetStatus(status);
   if (key === 'REJECTED') return 'rejected';
-  if (['APPROVED', 'IN_AUCTION', 'SOLD', 'EVALUATED'].includes(key)) return 'active';
-  if (['PENDING_REVIEW', 'UNDER_EVALUATION'].includes(key)) return 'pending';
+  if (['EVALUATED', 'IN_AUCTION', 'SOLD'].includes(key)) return 'active';
+  if (['PENDING_REVIEW', 'UNDER_EVALUATION', 'APPROVED'].includes(key)) return 'pending';
   return 'default';
 }
 

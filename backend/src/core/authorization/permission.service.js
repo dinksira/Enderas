@@ -27,6 +27,7 @@ export function buildPermissionContext(principal) {
     modules: principal.modules,
     actions: principal.actions,
     routes: principal.routes,
+    moduleActions: principal.moduleActions,
   });
 }
 

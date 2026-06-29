@@ -44,6 +44,18 @@ export const Cpo = sequelize.define(
       type: DataTypes.DATEONLY,
       allowNull: true,
     },
+    selected_auction_asset_ids: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    required_cpo_amount: {
+      type: DataTypes.DECIMAL(18, 2),
+      allowNull: true,
+    },
+    declared_cpo_amount: {
+      type: DataTypes.DECIMAL(18, 2),
+      allowNull: true,
+    },
   },
   {
     tableName: 'cpos',

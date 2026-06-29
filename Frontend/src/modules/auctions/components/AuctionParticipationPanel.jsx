@@ -1,6 +1,9 @@
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/Button.jsx';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
+import { ROUTES } from '../../../config/routes.js';
+import { useAuthStore } from '../../../stores/auth-store.js';
 import { AuctionDocumentsBlock } from './AuctionDocumentsBlock.jsx';
 import { AuctionBidSection } from './AuctionBidSection.jsx';
 import { formatEtbAmount } from '../utils/auction-drawer-utils.js';
@@ -12,6 +15,7 @@ import {
   PARTICIPATION_STEPS,
   resolveParticipationStatus,
   getBidStepHintKey,
+  shouldShowBidSection,
 } from '../utils/participation-utils.js';
 
 function stepClass(state) {
@@ -65,6 +69,36 @@ export function AuctionParticipationPanel({
   onBidSuccess,
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const canParticipate = useAuthStore((state) => state.canParticipateInAuctions());
+  const requiresKyc = useAuthStore((state) => state.requiresKYC());
+  const kycUnderReview = user?.status === 'kyc_under_review';
+
+  if (!canParticipate) {
+    return (
+      <section className="auction-participation" aria-label={t('bidder.participation.panelTitle')}>
+        <div className="auction-participation__kyc-gate">
+          <h3 className="auction-participation__title">
+            {kycUnderReview
+              ? t('bidder.participation.kycGate.underReviewTitle')
+              : t('bidder.participation.kycGate.title')}
+          </h3>
+          <p className="auction-participation__lead">
+            {kycUnderReview
+              ? t('bidder.participation.kycGate.underReviewBody')
+              : t('bidder.participation.kycGate.body')}
+          </p>
+          {requiresKyc && !kycUnderReview && (
+            <Button variant="primary" onClick={() => navigate(ROUTES.KYC_VERIFICATION)}>
+              {t('bidder.participation.kycGate.action')}
+            </Button>
+          )}
+        </div>
+      </section>
+    );
+  }
+
   const stepState = getParticipationStepState(participation);
   const participationStatus = resolveParticipationStatus(participation);
   const statusVariant = getParticipationStatusVariant(participationStatus);
@@ -75,9 +109,7 @@ export function AuctionParticipationPanel({
   const showDocuments = isRegistered || documentAccess;
   const bidLockedHintKey = stepState.bid === 'locked' ? getBidStepHintKey(participation, auction) : null;
   const canPlaceBid = Boolean(participation?.gates?.canPlaceBid);
-  const showBidSection = Boolean(
-    participation?.flags?.cpoApproved && !participation?.flags?.hasBid && !participation?.bid,
-  );
+  const showBidSection = shouldShowBidSection(participation, auction?.status);
 
   return (
     <section className="auction-participation" aria-label={t('bidder.participation.panelTitle')}>
@@ -211,7 +243,24 @@ export function AuctionParticipationPanel({
       {!loading && participation?.cpo?.status === 'pending' && (
         <p className="auction-participation__hint">{t('bidder.participation.cpoPending')}</p>
       )}
-      {!loading && participation?.bid && (
+      {!loading && participation?.flags?.allBidsSubmitted && (
+        <p className="auction-participation__hint">
+          {participation.isMultiLot
+            ? t('bidder.participation.allBidsSubmitted')
+            : t('bidder.participation.bidSubmitted', {
+                amount: formatEtbAmount(participation.bid?.amount ?? participation.bids?.[0]?.amount),
+              })}
+        </p>
+      )}
+      {!loading && participation?.flags?.hasBid && !participation?.flags?.allBidsSubmitted && participation?.isMultiLot && (
+        <p className="auction-participation__hint">
+          {t('bidder.participation.partialBidsSubmitted', {
+            submitted: (participation.bids || []).length,
+            total: (participation.cpo?.selectedAuctionAssetIds || []).length,
+          })}
+        </p>
+      )}
+      {!loading && participation?.bid && !participation?.isMultiLot && (
         <p className="auction-participation__hint">
           {t('bidder.participation.bidSubmitted', {
             amount: formatEtbAmount(participation.bid.amount),

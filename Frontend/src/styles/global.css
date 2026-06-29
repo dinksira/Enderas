@@ -802,6 +802,126 @@ select {
   border-radius: var(--component-auth-input-radius);
 }
 
+.auth-login-card__phone-wrap {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--component-input-border);
+  background: var(--component-input-bg);
+  border-radius: var(--component-auth-input-radius);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-login-card__phone-wrap:focus-within {
+  border-color: var(--component-input-border-focus);
+  box-shadow: var(--component-input-focus-ring);
+}
+
+.auth-login-card__phone-wrap--error {
+  border-color: var(--component-input-border-error);
+}
+
+.auth-login-card__phone-wrap--error:focus-within {
+  box-shadow: var(--component-input-error-focus-ring);
+}
+
+.auth-login-card__phone-prefix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--core-space-3);
+  border-right: 1px solid var(--dashboard-border);
+  font-family: var(--semantic-font-ui);
+  font-size: var(--core-font-size-body-sm);
+  font-weight: var(--core-font-weight-semibold);
+  color: var(--dashboard-text-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.auth-login-card__phone-input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--component-input-height);
+  padding: 0 var(--core-space-3);
+  border: none;
+  background: transparent;
+  color: var(--component-input-text);
+  font-family: var(--component-input-font-family);
+  font-size: var(--component-input-font-size);
+}
+
+.auth-login-card__phone-input:focus {
+  outline: none;
+}
+
+.auth-login-card__phone-input:disabled {
+  opacity: var(--core-opacity-disabled);
+  cursor: not-allowed;
+}
+
+.auth-login-card__phone-input::placeholder {
+  color: var(--component-input-placeholder);
+}
+
+.auth-login-card__password-wrap {
+  position: relative;
+}
+
+.auth-login-card__password-wrap .auth-login-card__input {
+  width: 100%;
+  padding-right: calc(var(--core-space-3) + 28px);
+}
+
+.auth-login-card__field-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--dashboard-text-subtle);
+  cursor: pointer;
+  padding: var(--core-space-2);
+  border-radius: var(--semantic-radius-default);
+  line-height: 0;
+  transition: color 0.15s ease;
+}
+
+.auth-login-card__phone-wrap .auth-login-card__field-action {
+  margin-right: var(--core-space-1);
+}
+
+.auth-login-card__field-action--password {
+  position: absolute;
+  top: 50%;
+  right: var(--core-space-2);
+  transform: translateY(-50%);
+  margin-right: 0;
+}
+
+.auth-login-card__field-action:hover {
+  color: var(--dashboard-text-primary);
+}
+
+.auth-login-card__field-action:focus-visible {
+  outline: 2px solid var(--component-input-border-focus);
+  outline-offset: 2px;
+}
+
+.auth-login-card__field-action:disabled {
+  opacity: var(--core-opacity-disabled);
+  cursor: not-allowed;
+}
+
+.auth-login-card__field-hint {
+  display: block;
+  margin-top: var(--core-space-1);
+  font-family: var(--semantic-font-body);
+  font-size: 12px;
+  line-height: var(--core-line-height-normal);
+  color: var(--dashboard-text-subtle);
+}
+
 .auth-login-card__instruction {
   margin: 0;
   text-align: center;

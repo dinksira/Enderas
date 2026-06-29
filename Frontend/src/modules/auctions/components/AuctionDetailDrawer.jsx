@@ -8,6 +8,13 @@ import { ROUTES } from '../../../config/routes.js';
 import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
 import { useAuthStore } from '../../../stores/auth-store.js';
 import { auctionService } from '../services/auction-service.js';
+import { winnerService } from '../../winners/services/winner-service.js';
+import {
+  canViewBidAmounts,
+  formatWinnerAmount,
+  getWinnerStatusVariant,
+} from '../../winners/utils/winner-management-utils.js';
+import { StatusPill } from '../../../components/admin/StatusPill.jsx';
 import { validateAuctionStep, AUCTION_STEPS } from '../utils/auction-form-utils.js';
 import {
   AUCTION_CATEGORY_KEYS,
@@ -80,9 +87,12 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
   const navigate = useNavigate();
   const can = useAuthStore((state) => state.can);
   const isStaff = useAuthStore((state) => state.user?.isStaff);
+  const roleCode = useAuthStore((state) => state.permissions?.roleCode ?? state.user?.roleCode);
 
   const [visible, setVisible] = useState(false);
   const [detail, setDetail] = useState(null);
+  const [winnerSummary, setWinnerSummary] = useState(null);
+  const [winnerLoading, setWinnerLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
@@ -122,8 +132,25 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
       try {
         const response = await auctionService.getById(auctionId);
         if (cancelled) return;
-        const auctionData = response?.auction || response;
-        setDetail(normalizeAuctionDetail(auctionData));
+        const auctionData = normalizeAuctionDetail(response?.auction || response);
+        setDetail(auctionData);
+
+        if (normalizeAuctionStatus(auctionData?.status) === 'CLOSED') {
+          setWinnerLoading(true);
+          try {
+            const summary = await winnerService.getWinnersForAuction(auctionId);
+            const active = summary.find((row) =>
+              ['pending_confirmation', 'confirmed'].includes(row.status),
+            );
+            setWinnerSummary(active || null);
+          } catch {
+            setWinnerSummary(null);
+          } finally {
+            setWinnerLoading(false);
+          }
+        } else {
+          setWinnerSummary(null);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : t('auctions.drawer.loadFailed'));
@@ -312,6 +339,42 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
     }
   };
 
+  const handleCloseAuction = async () => {
+    if (!detail) return;
+
+    setActionLoading(true);
+    setError('');
+
+    try {
+      onToast(t('auctions.drawer.closingInProgress'), 'success');
+      const response = await auctionService.close(detail.id);
+      const updated = normalizeAuctionDetail(response?.auction || response);
+      const selection = response?.winnerSelection;
+
+      if (updated?.id) {
+        setDetail(updated);
+        onRefresh();
+      }
+
+      if (selection?.winner) {
+        setWinnerSummary(selection.winner);
+        onToast(t('auctions.drawer.closeWinnerSelected'), 'success');
+      } else if (selection?.noReserveMet) {
+        setWinnerSummary(null);
+        onToast(t('auctions.drawer.closeNoReserveMet'), 'success');
+      } else if (selection?.noBids) {
+        setWinnerSummary(null);
+        onToast(t('auctions.drawer.closeNoBids'), 'success');
+      } else {
+        onToast(t('auctions.drawer.closeSuccess'), 'success');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('auctions.drawer.actionFailed'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleNewImages = (event) => {
     const selected = Array.from(event.target.files || []);
     if (!selected.length || !editForm) return;
@@ -470,6 +533,39 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
                   </dl>
                 </section>
 
+                {detail.lots?.length > 0 && (
+                  <section className="kyc-drawer__section">
+                    <h3 className="kyc-drawer__section-title">
+                      {t('auctions.create.review.lotsTitle')}
+                      {detail.auctionMode === 'multi' && detail.lotCount > 1
+                        ? ` (${detail.lotCount})`
+                        : ''}
+                    </h3>
+                    <ul className="auction-create-modal__lot-list">
+                      {detail.lots.map((lot, index) => (
+                        <li key={lot.id || lot.assetId} className="auction-create-modal__lot-item">
+                          <p className="auction-create-modal__lot-title">
+                            {lot.lotLabel || t('auctions.create.assetStep.lotPosition', { index: index + 1 })}
+                            {' — '}
+                            {lot.assetTitle || lot.assetId}
+                          </p>
+                          <p className="auction-create-modal__lot-meta">
+                            {formatEtbAmount(lot.reservePrice)}
+                            {lot.assetLocation ? ` · ${lot.assetLocation}` : ''}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                    {detail.auctionMode === 'multi' && detail.totalReservePrice != null && (
+                      <p className="auction-create-modal__section-hint">
+                        {t('auctions.create.assetStep.totalReserve', {
+                          amount: Number(detail.totalReservePrice).toLocaleString(),
+                        })}
+                      </p>
+                    )}
+                  </section>
+                )}
+
                 {toArray(images).length > 0 && (
                   <section className="kyc-drawer__section">
                     <h3 className="kyc-drawer__section-title">{t('auctions.drawer.sections.images')}</h3>
@@ -525,6 +621,53 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
                   <section className="kyc-drawer__section">
                     <h3 className="kyc-drawer__section-title">{t('auctions.drawer.sections.conditions')}</h3>
                     <p className="auction-drawer__text-block">{detail.auctionConditions}</p>
+                  </section>
+                )}
+
+                {displayStatus === 'CLOSED' && (
+                  <section className="kyc-drawer__section">
+                    <h3 className="kyc-drawer__section-title">{t('winners.management.auctionSection.winnerBlockTitle')}</h3>
+                    {winnerLoading && (
+                      <p className="auction-drawer__text-block">{t('dashboard.table.loading')}</p>
+                    )}
+                    {!winnerLoading && winnerSummary && (
+                      <dl className="kyc-drawer__meta">
+                        <div>
+                          <dt>{t('winners.management.winnerSection.fullName')}</dt>
+                          <dd>{winnerSummary.winnerName || '—'}</dd>
+                        </div>
+                        <div>
+                          <dt>{t('winners.management.bidSection.amount')}</dt>
+                          <dd>{formatWinnerAmount(winnerSummary.bidAmount, roleCode, t)}</dd>
+                        </div>
+                        <div>
+                          <dt>{t('winners.management.table.headers.status')}</dt>
+                          <dd>
+                            <StatusPill
+                              label={t(`winners.management.status.${winnerSummary.status}`, {
+                                defaultValue: winnerSummary.status,
+                              })}
+                              variant={getWinnerStatusVariant(winnerSummary.status)}
+                            />
+                          </dd>
+                        </div>
+                      </dl>
+                    )}
+                    {!winnerLoading && !winnerSummary && (
+                      <p className="asset-page__rejection-reason" role="status">
+                        {(detail.bids ?? detail.bidCount ?? 0) === 0
+                          ? t('auctions.drawer.closeNoBids')
+                          : t('winners.management.noReserveMet')}
+                      </p>
+                    )}
+                    {winnerSummary?.id && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => navigate(`${ROUTES.APP_WINNERS}?winner=${winnerSummary.id}`)}
+                      >
+                        {t('winners.management.drawer.viewDetails')}
+                      </Button>
+                    )}
                   </section>
                 )}
               </>
@@ -766,10 +909,12 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
                       {canClose && (
                         <Button
                           variant="secondary"
-                          onClick={() => runAction(auctionService.close, 'auctions.drawer.closeSuccess')}
+                          onClick={handleCloseAuction}
                           disabled={actionLoading}
                         >
-                          {t('auctions.drawer.actions.close')}
+                          {actionLoading
+                            ? t('auctions.drawer.closingInProgress')
+                            : t('auctions.drawer.actions.close')}
                         </Button>
                       )}
                     </>
@@ -789,10 +934,12 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
                       {canClose && (
                         <Button
                           variant="secondary"
-                          onClick={() => runAction(auctionService.close, 'auctions.drawer.closeSuccess')}
+                          onClick={handleCloseAuction}
                           disabled={actionLoading}
                         >
-                          {t('auctions.drawer.actions.close')}
+                          {actionLoading
+                            ? t('auctions.drawer.closingInProgress')
+                            : t('auctions.drawer.actions.close')}
                         </Button>
                       )}
                     </>

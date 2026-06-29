@@ -210,6 +210,14 @@ v1Router.get(
   assetController.getAssetById,
 );
 v1Router.post(
+  '/assets/batch',
+  authenticate,
+  attachDataScope(MODULES.ASSETS),
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.CREATE }),
+  requireKYCVerified,
+  assetController.createAssetsBatch,
+);
+v1Router.post(
   '/assets',
   authenticate,
   attachDataScope(MODULES.ASSETS),
@@ -337,6 +345,13 @@ v1Router.get(
   attachDataScope(MODULES.BIDS),
   authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
   auctionController.getBrowseAuctionById,
+);
+v1Router.get(
+  '/auctions/eligible-assets',
+  authenticate,
+  attachDataScope(MODULES.AUCTIONS),
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.READ }),
+  auctionController.listEligibleAssetsForAuction,
 );
 v1Router.get(
   '/auctions',
@@ -521,13 +536,23 @@ v1Router.get(
   authenticate,
   attachDataScope(MODULES.WINNERS),
   authorize({ module: MODULES.WINNERS, action: ACTIONS.READ }),
+  requireStaff,
   winnerController.listWinners,
+);
+v1Router.get(
+  '/winners/auction/:auctionId',
+  authenticate,
+  attachDataScope(MODULES.WINNERS),
+  authorize({ module: MODULES.WINNERS, action: ACTIONS.READ }),
+  requireStaff,
+  winnerController.getWinnersForAuction,
 );
 v1Router.get(
   '/winners/:id',
   authenticate,
   attachDataScope(MODULES.WINNERS),
   authorize({ module: MODULES.WINNERS, action: ACTIONS.READ }),
+  requireStaff,
   winnerController.getWinnerById,
 );
 v1Router.post(
@@ -553,6 +578,14 @@ v1Router.post(
   authorize({ module: MODULES.WINNERS, action: ACTIONS.UPDATE }),
   requireStaff,
   winnerController.declineWinner,
+);
+v1Router.post(
+  '/winners/:id/replace',
+  authenticate,
+  attachDataScope(MODULES.WINNERS),
+  authorize({ module: MODULES.WINNERS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  winnerController.replaceWinner,
 );
 
 // Notifications
@@ -750,6 +783,7 @@ v1Router.get('/auth/me', authenticate, async (req, res) => {
       modules: principal.modules,
       actions: principal.actions,
       routes: principal.routes,
+      moduleActions: principal.moduleActions ?? {},
     },
     identity: {
       displayName: principal.displayName,

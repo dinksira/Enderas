@@ -7,8 +7,7 @@ import { authApi } from '../../users/services/authApi.js';
 import { resolveAuthError } from '../../users/utils/resolve-auth-error.js';
 import { useAuthStore } from '../../../stores/auth-store.js';
 import { ROUTES } from '../../../config/routes.js';
-
-const PHONE_PATTERN = /^09\d{8}$/;
+import { isValidEthiopianMobile } from '../../../utils/mobile-utils.js';
 
 function splitFullName(fullName) {
   const trimmed = fullName.trim();
@@ -50,7 +49,9 @@ export function RegisterView() {
     const nextErrors = {};
     const normalizedPhone = phoneNumber.trim();
 
-    if (!PHONE_PATTERN.test(normalizedPhone)) {
+    if (!normalizedPhone) {
+      nextErrors.phoneNumber = t('auth.invalidPhone');
+    } else if (!isValidEthiopianMobile(normalizedPhone)) {
       nextErrors.phoneNumber = t('auth.invalidPhone');
     }
 

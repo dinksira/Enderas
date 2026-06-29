@@ -10,8 +10,9 @@ import { normalizeAssetStatus, resolveApiStatus, statusPillClass } from '../util
 import { AssetRequestDetailDrawer } from '../components/AssetRequestDetailDrawer.jsx';
 import { AssetApproveConfirmModal } from '../components/AssetApproveConfirmModal.jsx';
 import { AssetRejectModal } from '../components/AssetRejectModal.jsx';
+import { CreateAuctionModal } from '../../auctions/components/CreateAuctionModal.jsx';
 
-const STATUS_FILTERS = ['all', 'pending_review', 'under_evaluation', 'approved', 'rejected'];
+const STATUS_FILTERS = ['all', 'pending_review', 'approved', 'under_evaluation', 'evaluated', 'in_auction', 'rejected'];
 
 const TABLE_HEADER_KEYS = [
   'request_id',
@@ -36,6 +37,8 @@ export function AssetRequestsView() {
   const [actionLoading, setActionLoading] = useState(false);
   const [modalError, setModalError] = useState('');
   const [toast, setToast] = useState({ open: false, message: '', variant: 'success' });
+  const [createAuctionAssetId, setCreateAuctionAssetId] = useState(null);
+  const [createAuctionOpen, setCreateAuctionOpen] = useState(false);
 
   const apiStatus = resolveApiStatus(activeFilter);
   const { records, stats, loading, error, refetch } = useAssets({
@@ -62,6 +65,8 @@ export function AssetRequestsView() {
       pending_review: stats.pending_review ?? 0,
       under_evaluation: stats.under_evaluation ?? 0,
       approved: stats.approved ?? 0,
+      evaluated: stats.evaluated ?? 0,
+      in_auction: stats.in_auction ?? 0,
       rejected: stats.rejected ?? 0,
     };
   }, [stats, records.length]);
@@ -303,7 +308,27 @@ export function AssetRequestsView() {
           setModalError('');
           setRejectTarget(asset);
         }}
+        onCreateAuction={(asset) => {
+          setCreateAuctionAssetId(asset.id);
+          setCreateAuctionOpen(true);
+        }}
         actionLoading={actionLoading}
+      />
+
+      <CreateAuctionModal
+        open={createAuctionOpen}
+        initialAssetId={createAuctionAssetId}
+        onClose={() => {
+          setCreateAuctionOpen(false);
+          setCreateAuctionAssetId(null);
+        }}
+        onSuccess={() => {
+          setCreateAuctionOpen(false);
+          setCreateAuctionAssetId(null);
+          closeDrawer();
+          refetch();
+          showToast(t('auctions.create.success'));
+        }}
       />
 
       <AssetApproveConfirmModal

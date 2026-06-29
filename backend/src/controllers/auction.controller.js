@@ -106,8 +106,23 @@ export async function reactivateAuction(req, res, next) {
 
 export async function closeAuction(req, res, next) {
   try {
-    const auction = await auctionService.closeAuction(req.params.id, resolveStaffId(req));
-    return sendSuccess(res, { auction });
+    const result = await auctionService.closeAuction(req.params.id, resolveStaffId(req));
+    return sendSuccess(res, {
+      auction: result,
+      winnerSelection: result.winnerSelection ?? null,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function listEligibleAssetsForAuction(req, res, next) {
+  try {
+    const items = await auctionService.listEligibleAssetsForAuction({
+      search: req.query.search,
+      assetId: req.query.assetId,
+    });
+    return sendSuccess(res, { items });
   } catch (error) {
     return next(error);
   }
@@ -134,6 +149,7 @@ export const auctionController = Object.freeze({
   suspendAuction,
   reactivateAuction,
   closeAuction,
+  listEligibleAssetsForAuction,
   deleteAuction,
 });
 

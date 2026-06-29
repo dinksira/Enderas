@@ -74,6 +74,7 @@ export async function placeBid(req, res, next) {
     const bid = await bidService.placeBid(
       {
         auctionId: req.body.auctionId || req.body.auction_id,
+        auctionAssetId: req.body.auctionAssetId || req.body.auction_asset_id,
         amount: req.body.amount,
       },
       resolveUserId(req),

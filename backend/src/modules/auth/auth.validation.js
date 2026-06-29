@@ -1,4 +1,23 @@
 import { AppError } from '../../utils/error.util.js';
+import { isValidEthiopianMobile, normalizeMobileNumber } from '../../utils/mobile.util.js';
+
+function assignNormalizedMobile(req, sourceValue, targetKeys) {
+  const normalized = normalizeMobileNumber(sourceValue);
+
+  if (!isValidEthiopianMobile(normalized)) {
+    throw new AppError(
+      'Enter a valid Ethiopian mobile number (e.g. 0912345678 or +251912345678)',
+      400,
+      'INVALID_MOBILE_NUMBER',
+    );
+  }
+
+  targetKeys.forEach((key) => {
+    req.body[key] = normalized;
+  });
+
+  return normalized;
+}
 
 /**
  * Validates login request body.
@@ -22,7 +41,12 @@ export function validateLoginBody(req, res, next) {
     return next(new AppError(errors.join('; '), 400, 'VALIDATION_ERROR'));
   }
 
-  req.body.mobile_number = mobileNumber.trim();
+  try {
+    assignNormalizedMobile(req, mobileNumber, ['mobile_number', 'phoneNumber', 'mobileNumber']);
+  } catch (error) {
+    return next(error);
+  }
+
   req.body.password = password;
 
   return next();
@@ -62,7 +86,12 @@ export function validateRegistrationBody(req, res, next) {
     return next(new AppError(errors.join('; '), 400, 'VALIDATION_ERROR'));
   }
 
-  req.body.mobileNumber = resolvedMobile.trim();
+  try {
+    assignNormalizedMobile(req, resolvedMobile, ['mobileNumber', 'phoneNumber', 'mobile_number']);
+  } catch (error) {
+    return next(error);
+  }
+
   req.body.userType = userType;
 
   return next();
@@ -86,8 +115,29 @@ export function validateOTPBody(req, res, next) {
     return next(new AppError(errors.join('; '), 400, 'VALIDATION_ERROR'));
   }
 
-  req.body.mobileNumber = mobileNumber.trim();
+  try {
+    assignNormalizedMobile(req, mobileNumber, ['mobileNumber', 'phoneNumber', 'mobile_number']);
+  } catch (error) {
+    return next(error);
+  }
+
   req.body.otp = otp;
+
+  return next();
+}
+
+export function validateResendOTPBody(req, res, next) {
+  const mobileNumber = req.body?.mobileNumber ?? req.body?.mobile_number ?? req.body?.phoneNumber;
+
+  if (!mobileNumber || typeof mobileNumber !== 'string' || !mobileNumber.trim()) {
+    return next(new AppError('mobileNumber is required', 400, 'VALIDATION_ERROR'));
+  }
+
+  try {
+    assignNormalizedMobile(req, mobileNumber, ['mobileNumber', 'phoneNumber', 'mobile_number']);
+  } catch (error) {
+    return next(error);
+  }
 
   return next();
 }
@@ -96,4 +146,5 @@ export default {
   validateLoginBody,
   validateRegistrationBody,
   validateOTPBody,
+  validateResendOTPBody,
 };

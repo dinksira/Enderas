@@ -8,8 +8,6 @@ export const STAFF_TAB_KEYS = Object.freeze(['all', 'active', 'inactive']);
 
 export const STAFF_TABLE_COLUMNS = Object.freeze([
   'display_name',
-  'employee_id',
-  'department',
   'role',
   'status',
   'created_at',

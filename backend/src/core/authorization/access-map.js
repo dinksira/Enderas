@@ -71,6 +71,7 @@ export const API_ACCESS_MAP = Object.freeze({
   'GET /api/v1/assets': { module: MODULES.ASSETS, action: ACTIONS.READ },
   'GET /api/v1/assets/:id': { module: MODULES.ASSETS, action: ACTIONS.READ },
   'POST /api/v1/assets': { module: MODULES.ASSETS, action: ACTIONS.CREATE },
+  'POST /api/v1/assets/batch': { module: MODULES.ASSETS, action: ACTIONS.CREATE },
   'PUT /api/v1/assets/:id': { module: MODULES.ASSETS, action: ACTIONS.UPDATE },
   'DELETE /api/v1/assets/:id': { module: MODULES.ASSETS, action: ACTIONS.DELETE },
   'POST /api/v1/assets/:id/approve': { module: MODULES.ASSETS, action: ACTIONS.APPROVE },
@@ -92,6 +93,7 @@ export const API_ACCESS_MAP = Object.freeze({
   'GET /api/v1/auctions/browse': { module: MODULES.BIDS, action: ACTIONS.READ },
   'GET /api/v1/auctions/browse/:id/participation': { module: MODULES.BIDS, action: ACTIONS.READ },
   'GET /api/v1/auctions/browse/:id': { module: MODULES.BIDS, action: ACTIONS.READ },
+  'GET /api/v1/auctions/eligible-assets': { module: MODULES.AUCTIONS, action: ACTIONS.READ },
   'GET /api/v1/auctions': { module: MODULES.AUCTIONS, action: ACTIONS.READ },
   'GET /api/v1/auctions/:id': { module: MODULES.AUCTIONS, action: ACTIONS.READ },
   'POST /api/v1/auctions': { module: MODULES.AUCTIONS, action: ACTIONS.CREATE },
@@ -104,7 +106,10 @@ export const API_ACCESS_MAP = Object.freeze({
 
   // Documents
   'GET /api/v1/documents': { module: MODULES.DOCUMENTS, action: ACTIONS.READ },
+  'GET /api/v1/documents/:id': { module: MODULES.DOCUMENTS, action: ACTIONS.READ },
   'POST /api/v1/documents': { module: MODULES.DOCUMENTS, action: ACTIONS.CREATE },
+  'PUT /api/v1/documents/:id': { module: MODULES.DOCUMENTS, action: ACTIONS.UPDATE },
+  'DELETE /api/v1/documents/:id': { module: MODULES.DOCUMENTS, action: ACTIONS.DELETE },
 
   // Payments
   'GET /api/v1/payments': { module: MODULES.PAYMENTS, action: ACTIONS.READ },
@@ -133,6 +138,8 @@ export const API_ACCESS_MAP = Object.freeze({
   'POST /api/v1/winners': { module: MODULES.WINNERS, action: ACTIONS.CREATE },
   'POST /api/v1/winners/:id/confirm': { module: MODULES.WINNERS, action: ACTIONS.UPDATE },
   'POST /api/v1/winners/:id/decline': { module: MODULES.WINNERS, action: ACTIONS.UPDATE },
+  'POST /api/v1/winners/:id/replace': { module: MODULES.WINNERS, action: ACTIONS.UPDATE },
+  'GET /api/v1/winners/auction/:auctionId': { module: MODULES.WINNERS, action: ACTIONS.READ },
 
   // Notifications
   'GET /api/v1/notifications/unread-count': { module: MODULES.NOTIFICATIONS, action: ACTIONS.READ },
@@ -155,6 +162,7 @@ export const API_ACCESS_MAP = Object.freeze({
   'POST /api/v1/staff/:id/deactivate': { module: MODULES.STAFF, action: ACTIONS.UPDATE },
   'DELETE /api/v1/staff/:id': { module: MODULES.STAFF, action: ACTIONS.DELETE },
   'GET /api/v1/roles': { module: MODULES.ROLES, action: ACTIONS.READ },
+  'GET /api/v1/roles/:id': { module: MODULES.ROLES, action: ACTIONS.READ },
   'PUT /api/v1/roles/:id': { module: MODULES.ROLES, action: ACTIONS.UPDATE },
   'GET /api/v1/audit-logs': { module: MODULES.ROLES, action: ACTIONS.READ },
   'GET /api/v1/audit-logs/entity/:entityType/:entityId': { module: MODULES.ROLES, action: ACTIONS.READ },
@@ -181,8 +189,8 @@ export const PAGE_ACCESS_REGISTRY = Object.freeze([
   { id: 'settings', label: 'Settings', path: '/app/settings', module: MODULES.SETTINGS, action: ACTIONS.READ, group: 'admin' },
 
   { id: 'kyc', label: 'KYC', path: '/app/kyc', module: MODULES.KYC, action: ACTIONS.READ, group: 'operations' },
-  { id: 'assets', label: 'Auction Requests', path: '/app/assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'operations' },
-  { id: 'my-assets', label: 'My Auction Requests', path: '/app/my-assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'owner' },
+  { id: 'assets', label: 'Asset Requests', path: '/app/assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'operations' },
+  { id: 'my-assets', label: 'My Asset Requests', path: '/app/my-assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'owner' },
   { id: 'evaluations', label: 'Evaluations', path: '/app/evaluations', module: MODULES.EVALUATIONS, action: ACTIONS.READ, group: 'operations' },
 
   { id: 'auctions', label: 'Auctions', path: '/app/auctions', module: MODULES.AUCTIONS, action: ACTIONS.READ, group: 'auction' },

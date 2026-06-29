@@ -2,6 +2,7 @@
  * Frontend permission evaluation — mirrors backend policy.engine.js
  */
 import { canAccess, hasWildcardAccess } from '../utils/permissions.js';
+import { normalizeEndUserRoleCode } from '../constants/end-user-role.constants.js';
 
 export const MODULES = Object.freeze({
   USERS: 'users',
@@ -95,7 +96,7 @@ export const PAGE_REGISTRY = Object.freeze([
   },
   {
     id: 'assets',
-    label: 'Auction Requests',
+    label: 'Asset Requests',
     path: '/app/assets',
     module: MODULES.ASSETS,
     action: ACTIONS.READ,
@@ -263,7 +264,7 @@ export const PAGE_REGISTRY = Object.freeze([
   },
   {
     id: 'my-assets',
-    label: 'My Auction Requests',
+    label: 'My Asset Requests',
     path: '/app/my-assets',
     module: MODULES.ASSETS,
     action: ACTIONS.READ,
@@ -314,7 +315,6 @@ export const EXTRA_PAGE_REGISTRY = Object.freeze([
 /** Nav groups shown per end-user role (staff roles use STAFF_NAV_GROUPS). */
 export const ROLE_NAV_GROUPS = Object.freeze({
   bidder: ['bidder', 'owner', 'account'],
-  asset_owner: ['owner', 'account'],
 });
 
 export const STAFF_NAV_GROUPS = Object.freeze([
@@ -332,11 +332,10 @@ export const STAFF_NAV_GROUPS = Object.freeze([
 export const ROLE_DEFAULT_ROUTES = Object.freeze({
   super_admin: '/app/auctions',
   auction_manager: '/app/auctions',
-  evaluation_officer: '/app/auctions',
+  evaluation_officer: '/app/evaluations',
   finance_officer: '/app/auctions',
   customer_service_officer: '/app/auctions',
   bidder: '/app/browse-auctions',
-  asset_owner: '/app/my-assets',
 });
 
 /**
@@ -362,7 +361,7 @@ export function resolveNavigation(permissions, registry = PAGE_REGISTRY) {
     ? [...registry]
     : registry.filter((item) => canAccess(permissions, item.module, item.action));
 
-  const roleCode = permissions.roleCode;
+  const roleCode = normalizeEndUserRoleCode(permissions.roleCode);
   const allowedGroups = ROLE_NAV_GROUPS[roleCode] ?? STAFF_NAV_GROUPS;
   items = items.filter((item) => !item.group || allowedGroups.includes(item.group));
 
@@ -374,7 +373,8 @@ export function resolveNavigation(permissions, registry = PAGE_REGISTRY) {
  * @param {string} roleCode
  */
 export function resolveDefaultRoute(roleCode) {
-  return ROLE_DEFAULT_ROUTES[roleCode] ?? '/app/dashboard';
+  const normalizedRoleCode = normalizeEndUserRoleCode(roleCode);
+  return ROLE_DEFAULT_ROUTES[normalizedRoleCode] ?? '/app/dashboard';
 }
 
 const PAGE_META_ENTRIES = [...PAGE_REGISTRY, ...EXTRA_PAGE_REGISTRY].sort(

@@ -4,6 +4,7 @@ import { AppError } from '../utils/error.util.js';
 import { normalizeRolePermissions, safeParseRoleDescription } from '../schemas/permission.schema.js';
 import { canAccess } from '../utils/permission-eval.util.js';
 import { invalidateRolePermissionCache } from '../middleware/auth.middleware.js';
+import { authorizationPermissionService } from '../core/authorization/permission.service.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 
 const AVAILABLE_ACTIONS = Object.freeze(Object.values(ACTIONS));
@@ -43,11 +44,43 @@ export function getPermissionCatalog() {
   const actions = AVAILABLE_ACTIONS.filter((action) =>
     modules.some((moduleName) => routesByModuleAction[moduleName]?.[action]?.length > 0));
 
+  const moduleActions = Object.fromEntries(
+    modules.map((moduleName) => {
+      const actionMap = routesByModuleAction[moduleName] ?? {};
+      const moduleActionList = actions.filter((actionName) => (actionMap[actionName]?.length ?? 0) > 0);
+      return [moduleName, moduleActionList];
+    }),
+  );
+
   return {
     modules,
     actions,
+    moduleActions,
     routesByModuleAction,
   };
+}
+
+function applyPermissionDependencies(moduleActions) {
+  return Object.fromEntries(
+    Object.entries(moduleActions)
+      .map(([moduleName, grantedActions]) => {
+        const actions = new Set(grantedActions);
+        const hasNonRead = [...actions].some((action) => action !== 'read');
+        if (hasNonRead) {
+          actions.add('read');
+        }
+        return [moduleName, [...actions]];
+      })
+      .filter(([, grantedActions]) => grantedActions.length > 0),
+  );
+}
+
+function getModuleCatalogActions(catalog, moduleName) {
+  const moduleActions = catalog?.moduleActions?.[moduleName];
+  if (Array.isArray(moduleActions) && moduleActions.length > 0) {
+    return moduleActions;
+  }
+  return catalog?.actions ?? [];
 }
 
 function normalizeModuleActions(moduleActions, catalog) {
@@ -55,15 +88,18 @@ function normalizeModuleActions(moduleActions, catalog) {
     return {};
   }
 
-  return Object.fromEntries(
+  const normalized = Object.fromEntries(
     Object.entries(moduleActions)
       .filter(([moduleName]) => catalog.modules.includes(moduleName))
       .map(([moduleName, grantedActions]) => [
         moduleName,
-        uniqueStrings(grantedActions).filter((action) => catalog.actions.includes(action)),
+        uniqueStrings(grantedActions).filter((action) =>
+          getModuleCatalogActions(catalog, moduleName).includes(action)),
       ])
       .filter(([, grantedActions]) => grantedActions.length > 0),
   );
+
+  return applyPermissionDependencies(normalized);
 }
 
 function buildModuleActionsFromLegacy(modules, actions, catalog) {
@@ -147,14 +183,32 @@ export function buildRolePermissionProfile(role, affectedStaffCount = 0) {
     catalog: {
       modules: catalog.modules,
       actions: catalog.actions,
+      moduleActions: catalog.moduleActions,
     },
-    matrix: catalog.modules.map((moduleName) => ({
-      module: moduleName,
-      actions: Object.fromEntries(
-        catalog.actions.map((actionName) => [actionName, canAccess(context, moduleName, actionName)]),
-      ),
-    })),
+    matrix: catalog.modules.map((moduleName) => {
+      const moduleCatalogActions = getModuleCatalogActions(catalog, moduleName);
+      return {
+        module: moduleName,
+        actions: Object.fromEntries(
+          moduleCatalogActions.map((actionName) => [
+            actionName,
+            canAccess(context, moduleName, actionName),
+          ]),
+        ),
+      };
+    }),
   };
+}
+
+async function invalidateAffectedStaffPermissionCaches(roleId) {
+  const staffRows = await Staff.findAll({
+    where: { role_id: roleId },
+    attributes: ['user_id'],
+    raw: true,
+  });
+
+  const userIds = [...new Set(staffRows.map((row) => row.user_id).filter(Boolean))];
+  await Promise.all(userIds.map((userId) => authorizationPermissionService.invalidateUserPermissions(userId)));
 }
 
 /**
@@ -206,6 +260,7 @@ export async function updateRolePermissions(roleId, payload, staffId) {
 
   await role.update({ description: JSON.stringify(nextDescription) });
   await invalidateRolePermissionCache(roleId);
+  await invalidateAffectedStaffPermissionCaches(roleId);
 
   await auditService.writeAuditLog({
     staffId,

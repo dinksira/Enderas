@@ -4,13 +4,12 @@ import { User, Staff, Role } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import { hashPassword } from '../utils/password.util.js';
-import { getMobileLookupCandidates } from '../utils/mobile.util.js';
+import { getMobileLookupCandidates, resolveMobileForStorage } from '../utils/mobile.util.js';
 import { invalidateRolePermissionCache } from '../middleware/auth.middleware.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { USER_STATUSES } from './kyc.service.js';
 import { buildRolePermissionProfile, getPermissionCatalog } from './role-admin.service.js';
-
-const NON_STAFF_ROLE_CODES = Object.freeze(['bidder', 'asset_owner']);
+import { NON_STAFF_END_USER_ROLE_CODES } from '../constants/end-user-role.constants.js';
 
 function buildDisplayName(user) {
   if (!user) return null;
@@ -24,7 +23,7 @@ export async function assertStaffRole(roleId) {
     throw new AppError('Role not found or inactive', 404, 'ROLE_NOT_FOUND');
   }
 
-  if (NON_STAFF_ROLE_CODES.includes(role.code)) {
+  if (NON_STAFF_END_USER_ROLE_CODES.includes(role.code)) {
     throw new AppError('Selected role cannot be assigned to staff', 400, 'INVALID_STAFF_ROLE');
   }
 
@@ -259,7 +258,9 @@ export async function createStaff(payload, actorStaffId) {
 
   await assertStaffRole(roleId);
 
-  const lookupCandidates = getMobileLookupCandidates(mobileNumber);
+  const normalizedMobile = resolveMobileForStorage(mobileNumber);
+
+  const lookupCandidates = getMobileLookupCandidates(normalizedMobile);
   const existingUser = await User.unscoped().findOne({
     where: {
       mobile_number: { [Op.in]: lookupCandidates },
@@ -269,6 +270,20 @@ export async function createStaff(payload, actorStaffId) {
 
   if (existingUser) {
     throw new AppError('Mobile number already registered', 400, 'DUPLICATE_MOBILE');
+  }
+
+  const normalizedEmail = email?.trim() || null;
+  if (normalizedEmail) {
+    const existingEmailUser = await User.unscoped().findOne({
+      where: {
+        email: normalizedEmail,
+        deleted_at: null,
+      },
+    });
+
+    if (existingEmailUser) {
+      throw new AppError('Email address already registered', 400, 'DUPLICATE_EMAIL');
+    }
   }
 
   if (employeeId) {
@@ -289,8 +304,8 @@ export async function createStaff(payload, actorStaffId) {
         id: generateUuid(),
         role_id: roleId,
         user_type: 'individual',
-        mobile_number: mobileNumber,
-        email: email || null,
+        mobile_number: normalizedMobile,
+        email: normalizedEmail,
         password: hashedPassword,
         first_name: firstName || null,
         last_name: lastName || null,
@@ -327,7 +342,7 @@ export async function createStaff(payload, actorStaffId) {
     entityType: 'Staff',
     entityId: result,
     newValues: {
-      mobile_number: mobileNumber,
+      mobile_number: normalizedMobile,
       role_id: roleId,
       employee_id: employeeId || null,
       department: department || null,
@@ -365,7 +380,21 @@ export async function updateStaff(id, payload, actorStaffId) {
   }
 
   if (payload.email !== undefined) {
-    userUpdates.email = payload.email || null;
+    const normalizedEmail = payload.email?.trim() || null;
+    if (normalizedEmail) {
+      const duplicateEmail = await User.unscoped().findOne({
+        where: {
+          email: normalizedEmail,
+          id: { [Op.ne]: staff.user_id },
+          deleted_at: null,
+        },
+      });
+
+      if (duplicateEmail) {
+        throw new AppError('Email address already registered', 400, 'DUPLICATE_EMAIL');
+      }
+    }
+    userUpdates.email = normalizedEmail;
   }
 
   if (payload.preferredLanguage !== undefined) {
@@ -508,7 +537,7 @@ export async function listAssignableRoles() {
   const roles = await Role.findAll({
     where: {
       is_active: true,
-      code: { [Op.notIn]: NON_STAFF_ROLE_CODES },
+      code: { [Op.notIn]: NON_STAFF_END_USER_ROLE_CODES },
     },
     attributes: ['id', 'name', 'code', 'description', 'is_active'],
     order: [['name', 'ASC']],

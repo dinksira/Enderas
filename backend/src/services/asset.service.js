@@ -10,6 +10,8 @@ import { User, Staff } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import { Auction } from '../models/auction.model.js';
+import { LAUNCH_WORKFLOW_ROLES } from '../constants/staff-role.constants.js';
+import { assertStaffRole } from '../utils/staff-role.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
 import { auctionService } from './auction.service.js';
@@ -26,13 +28,19 @@ const DISPLAY_STATUS_MAP = Object.freeze({
 
 const STATUS_FILTER_GROUPS = Object.freeze({
   PENDING_REVIEW: ['pending_review'],
-  APPROVED: ['approved', 'in_auction'],
+  APPROVED: ['approved'],
   REJECTED: ['rejected'],
-  UNDER_EVALUATION: ['under_evaluation', 'evaluated', 'in_auction'],
+  UNDER_EVALUATION: ['under_evaluation'],
+  EVALUATED: ['evaluated'],
+  IN_AUCTION: ['in_auction'],
 });
 
-function mapDisplayStatus(dbStatus) {
+export function mapAssetDisplayStatus(dbStatus) {
   return DISPLAY_STATUS_MAP[dbStatus] || String(dbStatus || '').toUpperCase();
+}
+
+function mapDisplayStatus(dbStatus) {
+  return mapAssetDisplayStatus(dbStatus);
 }
 
 function formatDateForList(date) {
@@ -274,6 +282,7 @@ function serializeAsset(asset) {
     ownerName: buildUserDisplayName(ownerUser),
     ownerMobile: ownerUser?.mobile_number ?? null,
     ownerId: plain.asset_owner_id,
+    submissionBatchId: plain.submission_batch_id ?? null,
     submittedAt: plain.created_at,
     submittedAtFormatted: formatDateForList(plain.created_at),
     reviewedAt: plain.reviewed_at,
@@ -348,7 +357,12 @@ async function findAssetOrThrow(id) {
  * @param {string} userId
  * @param {object} payload
  */
-export async function createAsset(userId, payload) {
+/**
+ * @param {string} userId
+ * @param {object} payload
+ * @param {{ submissionBatchId?: string | null }} [options]
+ */
+async function createAssetRecord(userId, payload, { submissionBatchId = null } = {}) {
   const {
     title,
     assetType,
@@ -385,6 +399,7 @@ export async function createAsset(userId, payload) {
   const asset = await Asset.create({
     id: generateUuid(),
     asset_owner_id: owner.id,
+    submission_batch_id: submissionBatchId,
     asset_type: assetType,
     title: title.trim(),
     description: description.trim(),
@@ -405,10 +420,50 @@ export async function createAsset(userId, payload) {
     action: AUDIT_ACTIONS.CREATE,
     entityType: 'Asset',
     entityId: asset.id,
-    metadata: { title: asset.title, assetType: asset.asset_type },
+    metadata: {
+      title: asset.title,
+      assetType: asset.asset_type,
+      submissionBatchId,
+    },
   });
 
   return serializeAsset(await findAssetOrThrow(asset.id));
+}
+
+const MAX_ASSETS_PER_BATCH = 25;
+
+/**
+ * @param {string} userId
+ */
+export async function createAsset(userId, payload) {
+  return createAssetRecord(userId, payload);
+}
+
+/**
+ * @param {string} userId
+ * @param {object[]} assets
+ */
+export async function createAssetsBatch(userId, assets) {
+  if (!Array.isArray(assets) || assets.length === 0) {
+    throw new AppError('At least one asset is required', 400, 'ASSETS_REQUIRED');
+  }
+
+  if (assets.length > MAX_ASSETS_PER_BATCH) {
+    throw new AppError(
+      `Maximum ${MAX_ASSETS_PER_BATCH} assets per request`,
+      400,
+      'ASSETS_BATCH_LIMIT',
+    );
+  }
+
+  const batchId = generateUuid();
+  const items = [];
+
+  for (const payload of assets) {
+    items.push(await createAssetRecord(userId, payload, { submissionBatchId: batchId }));
+  }
+
+  return { batchId, count: items.length, items };
 }
 
 /**
@@ -473,6 +528,8 @@ function buildEmptyStats() {
     approved: 0,
     rejected: 0,
     under_evaluation: 0,
+    evaluated: 0,
+    in_auction: 0,
   };
 }
 
@@ -504,9 +561,9 @@ async function computeStats(scope) {
     if (row.status === 'pending_review') stats.pending_review++;
     else if (row.status === 'approved') stats.approved++;
     else if (row.status === 'rejected') stats.rejected++;
-    else if (['under_evaluation', 'evaluated', 'in_auction'].includes(row.status)) {
-      stats.under_evaluation++;
-    }
+    else if (row.status === 'under_evaluation') stats.under_evaluation++;
+    else if (row.status === 'evaluated') stats.evaluated++;
+    else if (row.status === 'in_auction') stats.in_auction++;
   });
 
   return stats;
@@ -602,6 +659,13 @@ export async function approveAsset(id, staffId, reviewNotes = null) {
     throw new AppError('Staff profile required', 403, 'STAFF_REQUIRED');
   }
 
+  await assertStaffRole(
+    staffId,
+    LAUNCH_WORKFLOW_ROLES.OWNERSHIP_REVIEW,
+    'Only customer service officers can approve asset ownership',
+    'CSO_REQUIRED',
+  );
+
   const asset = await findAssetOrThrow(id);
 
   if (asset.status !== 'pending_review') {
@@ -610,14 +674,11 @@ export async function approveAsset(id, staffId, reviewNotes = null) {
 
   const now = new Date();
   await asset.update({
+    status: 'approved',
     reviewed_by_staff_id: staffId,
     reviewed_at: now,
     rejection_reason: null,
   });
-
-  const auction = await auctionService.createPublishedAuctionFromApprovedAsset(asset, staffId);
-
-  await asset.update({ status: 'in_auction' });
 
   const owner = await AssetOwner.findByPk(asset.asset_owner_id, { attributes: ['user_id'] });
 
@@ -627,13 +688,18 @@ export async function approveAsset(id, staffId, reviewNotes = null) {
     action: AUDIT_ACTIONS.APPROVE,
     entityType: 'Asset',
     entityId: asset.id,
-    metadata: { reviewNotes, auctionId: auction.id },
-    newValues: { status: 'in_auction' },
+    metadata: { reviewNotes },
+    newValues: { status: 'approved' },
   });
 
   if (owner?.user_id) {
     await notificationService.sendAssetApproved(owner.user_id);
   }
+
+  await notificationService.notifyEvaluationOfficersAssetReady({
+    id: asset.id,
+    title: asset.title,
+  });
 
   return getAssetById(id, { isStaff: true }, null);
 }
@@ -647,6 +713,13 @@ export async function rejectAsset(id, staffId, rejectionReason) {
   if (!staffId) {
     throw new AppError('Staff profile required', 403, 'STAFF_REQUIRED');
   }
+
+  await assertStaffRole(
+    staffId,
+    LAUNCH_WORKFLOW_ROLES.OWNERSHIP_REVIEW,
+    'Only customer service officers can reject asset ownership',
+    'CSO_REQUIRED',
+  );
 
   const reason = rejectionReason?.trim();
   if (!reason) {
@@ -689,6 +762,7 @@ export async function rejectAsset(id, staffId, rejectionReason) {
 export const assetService = Object.freeze({
   findOrCreateAssetOwner,
   createAsset,
+  createAssetsBatch,
   listAssets,
   getAssetById,
   updateAsset,

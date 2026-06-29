@@ -51,7 +51,7 @@
       "users": "Users",
       "staff": "Staff Management",
       "staff_roles": "Staff Management",
-      "assets": "Auction Requests",
+      "assets": "Asset Requests",
       "evaluations": "Evaluations",
       "payments": "Payments",
       "cpo": "CPO Management",
@@ -69,8 +69,8 @@
       "mybids": "My Bids",
       "mypayments": "My Payments",
       "mycpo": "My CPO",
-      "myassets": "My Requests",
-      "submitasset": "Request Auction",
+      "myassets": "My Asset Requests",
+      "submitasset": "Asset Request",
       "asset_request": "Asset Request",
       "notifications": "Notifications"
     },
@@ -158,6 +158,7 @@
       "stepProgress": "Auction creation steps",
       "success": "Auction created successfully and is pending approval.",
       "steps": {
+        "asset": "Select Asset",
         "basic": "Basic Info",
         "schedule": "Schedule & Pricing",
         "media": "Media & Documents",
@@ -168,13 +169,42 @@
         "category": "Category",
         "description": "Description",
         "auctionConditions": "Auction Conditions",
+        "auctionMode": "Auction Type",
         "startDate": "Start Date & Time",
         "endDate": "Closing Date & Time",
         "reservePrice": "Reserve Price (ETB)",
+        "totalReservePrice": "Total Reserve Price (ETB)",
+        "lotLabel": "Lot Label",
+        "lotReservePrice": "Lot Reserve (ETB)",
         "documentFee": "Document Fee (ETB)",
         "cpoPercentage": "CPO Percentage (%)",
         "images": "Auction Images",
-        "documents": "Auction Documents"
+        "documents": "Auction Documents",
+        "linkedAsset": "Linked Assets"
+      },
+      "assetStep": {
+        "search": "Search evaluated assets",
+        "searchPlaceholder": "Search by title or location...",
+        "hint": "Optionally link this auction to one evaluated asset. Fields on later steps will be pre-filled and remain editable.",
+        "multiHint": "Select two or more evaluated assets. Set a reserve price for each lot before continuing.",
+        "modeSingle": "Single-asset auction",
+        "modeMulti": "Multi-asset auction",
+        "selectedAssets": "Selected assets ({{count}})",
+        "removeAsset": "Remove",
+        "lotPosition": "Lot {{index}}",
+        "unnamedAsset": "Unnamed asset",
+        "totalReserve": "Combined reserve: {{amount}} ETB",
+        "totalReserveHint": "Total reserve is calculated from the reserve price of each selected lot.",
+        "skip": "Continue without linking an asset",
+        "clearSelection": "Clear all selections",
+        "loading": "Loading eligible assets...",
+        "empty": "No evaluated assets are available for auction creation.",
+        "loadFailed": "Failed to load eligible assets.",
+        "valuation": "Valuation: {{amount}} ETB",
+        "categoryLockedHint": "Category matches the linked asset type."
+      },
+      "prefill": {
+        "evaluationReport": "Evaluation Report"
       },
       "placeholders": {
         "selectCategory": "Select a category"
@@ -194,7 +224,10 @@
       "review": {
         "edit": "Edit",
         "imageCount": "{{count}} image(s) selected",
-        "documentCount": "{{count}} document(s) selected"
+        "documentCount": "{{count}} document(s) selected",
+        "noAsset": "Standalone auction (no linked asset)",
+        "multiAssetCount": "{{count}} assets in this auction",
+        "lotsTitle": "Auction lots"
       },
       "actions": {
         "back": "Back",
@@ -217,6 +250,9 @@
         "cpoRange": "CPO percentage must be between 1 and 100.",
         "documentsRequired": "At least one PDF document is required.",
         "pdfOnly": "Only PDF documents are allowed.",
+        "multiAssetsRequired": "Select at least two assets for a multi-asset auction.",
+        "lotReserveRequired": "Each selected asset needs a positive reserve price.",
+        "lotLimitReached": "You can add up to {{max}} assets per auction.",
         "fixBeforeSubmit": "Please fix the highlighted fields before submitting.",
         "submitFailed": "Failed to create auction. Please try again."
       }
@@ -233,6 +269,10 @@
       "suspendSuccess": "Auction suspended successfully.",
       "reactivateSuccess": "Auction reactivated successfully.",
       "closeSuccess": "Auction closed successfully.",
+      "closingInProgress": "Closing auction and selecting winner...",
+      "closeWinnerSelected": "Auction closed. Winner has been automatically selected and notified.",
+      "closeNoReserveMet": "Auction closed. No bids met the reserve price.",
+      "closeNoBids": "Auction closed. No valid bids were submitted.",
       "deleteSuccess": "Auction deleted successfully.",
       "edit": "Edit",
       "save": "Save Changes",
@@ -307,19 +347,21 @@
       "other": "Other ownership document"
     },
     "status": {
-      "pending_review": "Pending Review",
-      "approved": "Approved",
+      "pending_review": "Pending Ownership Review",
+      "approved": "Ready for Evaluation",
       "rejected": "Rejected",
-      "under_evaluation": "Under Evaluation",
-      "evaluated": "Evaluated",
+      "under_evaluation": "Evaluation In Progress",
+      "evaluated": "Evaluation Approved",
       "in_auction": "In Auction",
       "sold": "Sold"
     },
     "filters": {
       "all": "All",
       "pending_review": "Pending Review",
-      "under_evaluation": "Under Evaluation",
-      "approved": "Approved",
+      "under_evaluation": "In Progress",
+      "approved": "Ready for Evaluation",
+      "evaluated": "Evaluation Approved",
+      "in_auction": "In Auction",
       "rejected": "Rejected"
     },
     "table": {
@@ -339,23 +381,23 @@
       }
     },
     "management": {
-      "pageTitle": "Auction Requests",
-      "subtitle": "Review and approve auction requests submitted by asset owners."
+      "pageTitle": "Asset Requests",
+      "subtitle": "Review and approve asset requests submitted by bidders."
     },
     "submit": {
-      "title": "Request an Auction",
+      "title": "Asset Request",
       "subtitle": "Submit your asset for ownership review. Once approved, it can enter the auction pipeline."
     },
     "my": {
-      "title": "My Auction Requests",
-      "subtitle": "Submit and track auction requests. Once approved, your asset appears in Browse Auctions.",
-      "submitNew": "+ Request Auction",
-      "empty": "You have not submitted any auction requests yet.",
+      "title": "My Asset Requests",
+      "subtitle": "Submit and track asset requests. Once approved, your asset enters the evaluation and auction pipeline.",
+      "submitNew": "+ Asset Request",
+      "empty": "You have not submitted any asset requests yet.",
       "rejectionReason": "Reason: {{reason}}",
       "refresh": "Refresh",
       "drawer": {
-        "title": "Auction Request Details",
-        "loadFailed": "Failed to load auction request details.",
+        "title": "Asset Request Details",
+        "loadFailed": "Failed to load asset request details.",
         "detailsSection": "Request Information",
         "rejectionSection": "Rejection Reason",
         "liveAuctionSection": "Live auction",
@@ -404,9 +446,9 @@
       }
     },
     "requestWizard": {
-      "title": "Request an Auction",
-      "subtitle": "Submit your asset in a few guided steps. Our team will review, approve, or decline before launch.",
-      "stepProgress": "Auction request progress",
+      "title": "Asset Request",
+      "subtitle": "Submit one or more assets in guided steps. Our team will review each request before it enters the auction pipeline.",
+      "stepProgress": "Asset request progress",
       "locationHint": "Location details help evaluators verify your asset. You can skip fields you prefer not to share yet.",
       "reviewIntro": "Confirm your details before sending the request to the admin team.",
       "landingHint": "Start the guided request flow to submit your asset for auction review.",
@@ -423,19 +465,32 @@
         "location": "Location & Terms",
         "photos": "Photos",
         "documents": "Documents",
-        "review": "Review & Submit"
+        "batchReview": "Review & Submit"
+      },
+      "batchReview": {
+        "intro": "Review every asset below. Add more assets or submit them together when you are ready.",
+        "empty": "No assets in your list yet. Go back and complete the form to add one.",
+        "assetLabel": "Asset {{index}}",
+        "queuedCount": "{{count}} asset(s) already queued. You can add more after this one.",
+        "editing": "You are editing a queued asset.",
+        "limitReached": "You can submit up to {{max}} assets per request."
       },
       "actions": {
         "back": "Back",
         "next": "Continue",
+        "addToQueue": "Add to List",
         "cancel": "Cancel",
         "submit": "Submit Request",
+        "submitAll": "Submit {{count}} Requests",
         "submitting": "Submitting...",
         "edit": "Edit",
+        "addAnother": "Add Another Asset",
+        "removeFromQueue": "Remove",
         "addPhotos": "Add Photos"
       },
       "errors": {
-        "fixBeforeSubmit": "Please complete all required fields before submitting."
+        "fixBeforeSubmit": "Please complete all required fields before submitting.",
+        "emptyQueue": "Add at least one asset to your list before submitting."
       },
       "reserveHint": "Suggested reserve price is reviewed by admin. Final reserve is set at launch.",
       "removePhoto": "Remove photo {{name}}",
@@ -445,15 +500,16 @@
         "photoCount": "{{count}} photo(s)"
       },
       "toolbar": {
-        "ariaLabel": "Request auction actions",
-        "title": "Want to auction your asset?",
-        "hint": "Submit a request for admin review. Approved assets can be launched as live auctions.",
-        "cta": "+ Request Auction"
+        "ariaLabel": "Asset request actions",
+        "title": "Want to submit an asset?",
+        "hint": "Submit an asset request for admin review. Approved assets can enter evaluation and be launched as auctions.",
+        "cta": "+ Asset Request"
       },
       "success": {
         "title": "Request Submitted",
-        "subtitle": "Your auction request is now with the admin team.",
+        "subtitle": "Your asset request is now with the admin team.",
         "body": "We received your asset details. You will be notified when the review is complete.",
+        "bodyMultiple": "We received {{count}} asset requests. You will be notified as each review is completed.",
         "stepReview": "Admin reviews your ownership documents",
         "stepEvaluation": "Asset moves to evaluation if approved",
         "stepLaunch": "Approved assets can be launched as auctions",
@@ -495,7 +551,15 @@
       "rejectionReasonRequired": "Rejection reason is required.",
       "approveSuccess": "Asset request approved successfully.",
       "rejectSuccess": "Asset request rejected.",
-      "actionFailed": "Action failed. Please try again."
+      "actionFailed": "Action failed. Please try again.",
+      "evaluationSection": "Approved Evaluation",
+      "valuation": "Valuation",
+      "reserveRecommendation": "Recommended Reserve Price",
+      "evaluationReport": "Evaluation Report",
+      "viewEvaluationReport": "View Evaluation Report",
+      "createAuction": "Create Auction",
+      "alreadyInAuction": "This asset is already linked to an auction.",
+      "notEligibleForAuction": "This asset is not currently eligible for auction creation."
     }
   },
   "status": {
@@ -558,7 +622,10 @@
     "genericError": "Something went wrong. Please try again.",
     "invalidCredentials": "Invalid credentials. Please check your phone number and password.",
     "networkError": "Unable to reach the server. Please try again.",
-    "validationError": "Please check your input and try again."
+    "validationError": "Please check your input and try again.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "clearField": "Clear field"
   },
   "kyc": {
     "pendingBanner": "Complete your KYC verification to access all auction features.",
@@ -723,7 +790,8 @@
       "bidComingSoon": "Online bidding will be available in a future update. Contact support for participation steps.",
       "placeBid": {
         "title": "Place Your Bid",
-        "hint": "One bid per auction. Amount must meet or exceed the reserve price.",
+        "titleForLot": "Bid on {{lot}}",
+        "hint": "One bid per lot. Amount must meet or exceed the lot reserve price.",
         "amountLabel": "Bid Amount (ETB)",
         "amountRequired": "Enter a valid bid amount.",
         "belowReserve": "Bid must be at least {{amount}}.",
@@ -753,7 +821,7 @@
       "paymentCopy": "Pay the document fee of {{amount}} and upload your payment receipt.",
       "cpoCopy": "Upload your Certified Payment Order (CPO) after document payment is approved.",
       "cpoNextAction": "This is your current step. Submit your CPO to move toward bidding.",
-      "bidCopy": "Submit one sealed bid at or above the reserve price once your CPO is approved.",
+      "bidCopy": "Submit one sealed bid per selected lot at or above each lot reserve once your CPO is approved.",
       "bidLocked": {
         "notRegistered": "Complete document payment and get it approved first.",
         "submitCpo": "You are registered, but bidding stays locked until you submit and get CPO approved.",
@@ -766,13 +834,16 @@
       "bidCard": {
         "eyebrow": "Step 3 — Place bid",
         "titleOpen": "Submit your sealed bid",
+        "titleOpenMulti": "Submit bids for your selected lots",
         "titleWaiting": "Bidding opens soon",
         "titleClosed": "Bidding window closed",
         "leadOpen": "Enter an amount at or above the reserve price of {{amount}}.",
+        "leadOpenMulti": "{{count}} lot(s) still need a bid. Enter an amount at or above each lot reserve.",
         "leadWaiting": "Bidding opens at {{start}} and closes at {{end}} (East Africa Time).",
         "leadClosed": "The bidding window was {{start}} to {{end}} (East Africa Time).",
         "waitingHint": "Your CPO is approved. Come back between {{start}} and {{end}} to place your bid here.",
         "closedHint": "Your CPO is approved, but this auction's bidding window has ended. You can no longer place a bid for this auction.",
+        "lotBidSubmitted": "{{lot}}: bid of {{amount}} submitted.",
         "scrollHint": "Use the bid form at the top of this panel."
       },
       "paymentRejected": "Your payment was rejected. Review the reason and submit again.",
@@ -780,6 +851,8 @@
       "paymentPending": "Your payment is pending verification. You will be notified once it is reviewed.",
       "cpoPending": "Your CPO is pending review. You will be notified once it is approved.",
       "bidSubmitted": "You submitted a bid of {{amount}}.",
+      "allBidsSubmitted": "You submitted bids for all selected lots.",
+      "partialBidsSubmitted": "You submitted {{submitted}} of {{total}} lot bid(s). Complete the remaining lots before the bidding window closes.",
       "steps": {
         "payment": "Document Payment",
         "cpo": "CPO Submission",
@@ -795,6 +868,13 @@
       "actions": {
         "payDocumentFee": "Pay Document Fee",
         "submitCpo": "Submit CPO"
+      },
+      "kycGate": {
+        "title": "Complete KYC to participate",
+        "body": "Verify your identity before paying document fees, submitting CPO, or placing bids.",
+        "action": "Complete KYC",
+        "underReviewTitle": "KYC under review",
+        "underReviewBody": "Your verification is being reviewed by staff. You can participate once it is approved."
       },
       "status": {
         "not_started": {
@@ -865,8 +945,14 @@
       },
       "cpoModal": {
         "title": "Submit CPO",
-        "subtitle": "Upload your Certified Payment Order document.",
+        "subtitle": "Select the lots you want to bid on, then upload your Certified Payment Order document.",
         "auction": "Auction",
+        "cpoPercentage": "CPO percentage",
+        "requiredAmount": "Required CPO amount",
+        "selectLots": "Lots to bid on",
+        "selectLotsHint": "Required CPO = total reserve of selected lots × {{percentage}}%.",
+        "lotFallback": "Lot",
+        "lotsRequired": "Select at least one lot to bid on.",
         "document": "CPO Document",
         "documentRequired": "Upload your CPO document.",
         "documentUploaded": "Document uploaded.",
@@ -880,7 +966,27 @@
   "evaluations": {
     "management": {
       "pageTitle": "Evaluations",
-      "subtitle": "Schedule and manage asset evaluations",
+      "subtitle": "Schedule inspections, submit recommendations, then super admin approves before auction creation.",
+      "workflow": {
+        "title": "Evaluation workflow",
+        "stepSchedule": "1. Schedule a ready asset",
+        "stepInspect": "2. Start and record inspection photos, report, valuation, and notes",
+        "stepSubmit": "3. Submit recommendation to super admin",
+        "stepSuperAdmin": "4. Super admin approves or rejects"
+      },
+      "pendingApprovalBanner": "{{count}} evaluation recommendation(s) awaiting your approval.",
+      "pendingApprovalHint": "Open a row below to review photos, report, and reserve price — then Approve or Reject.",
+      "readyQueue": {
+        "title": "Ready for Evaluation",
+        "subtitle": "Ownership approved by CSO. Schedule an inspection, then submit your recommendation with photos and report.",
+        "count": "{{count}} awaiting schedule",
+        "empty": "No assets are waiting for evaluation scheduling.",
+        "loading": "Loading assets ready for evaluation…",
+        "loadFailed": "Failed to load assets ready for evaluation.",
+        "retry": "Retry",
+        "scheduleAction": "Schedule"
+      },
+      "activeSectionTitle": "Scheduled & in-progress evaluations",
       "schedule": "Schedule Evaluation",
       "searchPlaceholder": "Search by asset title or owner...",
       "empty": "No evaluations found.",
@@ -897,8 +1003,8 @@
       "status": {
         "scheduled": "Scheduled",
         "in_progress": "In Progress",
-        "completed": "Completed",
-        "approved": "Approved",
+        "completed": "Recommendation Submitted",
+        "approved": "Evaluation Approved",
         "rejected": "Rejected"
       },
       "table": {
@@ -916,10 +1022,11 @@
       "actions": {
         "start": "Start Evaluation",
         "reschedule": "Reschedule",
-        "complete": "Complete Evaluation",
+        "complete": "Submit Recommendation",
         "approve": "Approve",
         "reject": "Reject",
-        "reSchedule": "Re-schedule"
+        "reSchedule": "Re-schedule",
+        "createAuction": "Create Auction"
       },
       "drawer": {
         "title": "Evaluation Details",
@@ -946,11 +1053,12 @@
         "report": "Evaluation Report",
         "viewReport": "Download report",
         "startSuccess": "Evaluation marked in progress.",
-        "startFailed": "Failed to start evaluation."
+        "startFailed": "Failed to start evaluation.",
+        "awaitingSuperAdmin": "Recommendation submitted. Awaiting super admin approval."
       },
       "scheduleModal": {
         "title": "Schedule Evaluation",
-        "subtitle": "Select an approved asset and schedule date.",
+        "subtitle": "Select an asset whose ownership was approved by CSO. Physical evaluation has not started yet.",
         "assetSearch": "Search assets",
         "assetSearchPlaceholder": "Search by title or owner...",
         "asset": "Asset",
@@ -982,27 +1090,28 @@
         "dateFutureRequired": "Scheduled date must be in the future."
       },
       "completeModal": {
-        "title": "Complete Evaluation",
-        "subtitle": "Enter valuation details and upload supporting files.",
-        "valuationSection": "Valuation",
-        "documentationSection": "Documentation",
-        "valuationAmount": "Valuation Amount (ETB)",
-        "reserveRecommendation": "Reserve Price Recommendation (ETB)",
-        "notes": "Additional Notes",
+        "title": "Submit Evaluation Recommendation",
+        "subtitle": "Upload inspection photos and report, recommend a reserve price, and add notes for super admin review.",
+        "documentationSection": "Inspection files",
+        "reserveRecommendation": "Recommended reserve price (ETB)",
+        "reserveHint": "Minimum opening bid you recommend after inspecting the asset. The auction manager uses this when creating the auction.",
+        "ownerReserveHint": "Owner requested reserve: {{amount}} ETB (for reference only).",
+        "notes": "Inspection notes",
         "photos": "Inspection Photos",
         "report": "Evaluation Report",
         "reportUploaded": "Report uploaded successfully.",
-        "submit": "Mark as Complete",
-        "submitting": "Saving...",
-        "success": "Evaluation completed.",
-        "failed": "Failed to complete evaluation.",
-        "valuationRequired": "Valuation amount is required and must be positive.",
-        "reserveRequired": "Reserve price recommendation is required and must be positive.",
-        "reserveTooHigh": "Reserve price cannot exceed valuation amount."
+        "submit": "Submit Recommendation",
+        "submitting": "Submitting...",
+        "success": "Recommendation submitted for approval.",
+        "failed": "Failed to submit evaluation recommendation.",
+        "reserveRequired": "Recommended reserve price is required and must be positive.",
+        "reserveTooHigh": "Reserve price cannot exceed valuation amount.",
+        "photosRequired": "Upload at least one inspection photo.",
+        "reportRequired": "Upload the evaluation report."
       },
       "approveModal": {
         "title": "Approve Evaluation",
-        "body": "Approve this evaluation? The asset will be marked as evaluated and eligible for auction.",
+        "body": "Approve this evaluation recommendation? The asset will be marked as evaluated and eligible for auction creation.",
         "confirm": "Approve",
         "success": "Evaluation approved.",
         "failed": "Failed to approve evaluation."
@@ -1257,17 +1366,22 @@
   "winners": {
     "management": {
       "pageTitle": "Winners",
-      "subtitle": "Manage auction winners and confirmations.",
+      "subtitle": "Manage auction winner selections and confirmations.",
       "selectWinner": "Select Winner",
-      "searchPlaceholder": "Search by winner name or mobile...",
-      "empty": "No winner records found.",
+      "searchPlaceholder": "Search by winner name, mobile, or auction title...",
+      "empty": "No winner records yet. Winners are created automatically when auctions close, or you can select one manually.",
+      "noReserveMet": "No Winner — Reserve Price Not Met",
       "openDetail": "Open winner record for {{name}}",
       "viewAction": "View details",
+      "amount": {
+        "restricted": "***"
+      },
       "tabs": {
         "all": "ALL",
-        "pending_confirmation": "PENDING",
+        "pending_confirmation": "PENDING CONFIRMATION",
         "confirmed": "CONFIRMED",
-        "declined": "DECLINED"
+        "declined": "DECLINED",
+        "replaced": "REPLACED"
       },
       "status": {
         "pending_confirmation": "Pending Confirmation",
@@ -1278,27 +1392,71 @@
       "table": {
         "footer": "Showing {{from}}–{{to}} of {{total}} winners",
         "headers": {
+          "auction": "Auction Title",
+          "category": "Category",
+          "winner": "Winner Name",
+          "mobile": "Mobile Number",
+          "amount": "Winning Bid",
+          "selectedAt": "Selected At",
+          "status": "Status",
+          "actions": "Actions",
           "auction_title": "Auction",
           "winner_name": "Winner",
-          "status": "Status",
           "selected_at": "Selected",
-          "selected_by": "Selected By",
-          "actions": "Actions"
+          "selected_by": "Selected By"
         }
+      },
+      "auctionSection": {
+        "title": "Auction Information",
+        "winnerBlockTitle": "Winner",
+        "auctionTitle": "Auction Title",
+        "category": "Category",
+        "closingDate": "Closing Date",
+        "reservePrice": "Reserve Price"
+      },
+      "winnerSection": {
+        "title": "Winner Information",
+        "fullName": "Full Name",
+        "mobile": "Mobile Number",
+        "userType": "User Type",
+        "organization": "Organization Name"
+      },
+      "bidSection": {
+        "title": "Winning Bid",
+        "amount": "Bid Amount",
+        "restricted": "Restricted",
+        "submittedAt": "Submitted At",
+        "validationStatus": "Validation Status",
+        "valid": "Valid",
+        "invalid": "Invalid",
+        "historyTitle": "Bid History",
+        "totalValidBids": "Total Valid Bids",
+        "secondHighest": "Second Highest Bid"
       },
       "drawer": {
         "title": "Winner Details",
         "loadFailed": "Failed to load winner details.",
+        "selectionSection": "Selection Details",
+        "declineSection": "Decline Details",
         "winnerSection": "Winner Record",
         "auction": "Auction",
         "winner": "Winner",
         "bidAmount": "Winning Bid",
         "selectedAt": "Selected At",
         "selectedBy": "Selected By",
+        "selectionMethod": "Selection Method",
+        "selectionMethodValues": {
+          "auto": "Automatic",
+          "manual": "Manual"
+        },
+        "notificationSentAt": "Notification Sent At",
         "declineReason": "Decline Reason",
+        "declinedAt": "Declined at {{date}}",
         "confirm": "Confirm Winner",
         "decline": "Decline Winner",
-        "refresh": "Refresh"
+        "selectReplacement": "Select Replacement",
+        "refresh": "Refresh",
+        "viewDetails": "View Winner Details"
       },
       "selectModal": {
         "title": "Select Winner",
@@ -1315,7 +1473,7 @@
       },
       "confirmModal": {
         "title": "Confirm Winner",
-        "body": "Confirm {{name}} as the auction winner?",
+        "body": "Confirm {{name}} as the winner of {{auction}}? A formal notification will be sent to the winner.",
         "confirm": "Confirm",
         "success": "Winner confirmed.",
         "failed": "Failed to confirm winner."
@@ -1327,6 +1485,17 @@
         "confirm": "Confirm Decline",
         "success": "Winner declined.",
         "failed": "Failed to decline winner."
+      },
+      "replaceModal": {
+        "title": "Select Replacement Winner",
+        "subtitle": "Choose the next valid bid for {{auction}}.",
+        "bidListLabel": "Replacement bid options",
+        "noBids": "No other valid bids are available for this auction.",
+        "submit": "Select as Winner",
+        "submitting": "Selecting...",
+        "success": "Replacement winner selected and notified.",
+        "failed": "Failed to select replacement winner.",
+        "required": "Select a replacement bid."
       }
     }
   },
@@ -1389,7 +1558,7 @@
   "users": {
     "management": {
       "pageTitle": "User Management",
-      "subtitle": "Manage bidder and asset owner accounts, status, and access.",
+      "subtitle": "Manage bidder accounts, status, and access.",
       "createUser": "Create User",
       "searchPlaceholder": "Search by name, mobile, or email...",
       "empty": "No users found for the selected filters.",
@@ -1523,7 +1692,7 @@
         "subtitle": "Manually create a user account and assign their role",
         "accountType": "Account Type",
         "accountTypeHints": {
-          "individual": "Personal bidder or asset owner account",
+          "individual": "Personal bidder account",
           "organization": "Registered organization account"
         },
         "accountSettings": "Account Settings",
@@ -1542,7 +1711,7 @@
         "role": "Role",
         "roleOptions": {
           "bidder": "Bidder",
-          "asset_owner": "Asset Owner"
+          "asset_owner": "Bidder"
         },
         "selectRole": "Select role",
         "firstName": "First Name",
@@ -1556,6 +1725,7 @@
         "success": "User created successfully.",
         "failed": "Failed to create user.",
         "mobileRequired": "Mobile number is required.",
+        "mobileInvalid": "Enter a valid mobile number (e.g. 0912345678 or +251912345678).",
         "firstNameRequired": "First name is required.",
         "lastNameRequired": "Last name is required.",
         "nationalIdRequired": "National ID number is required.",
@@ -1671,8 +1841,16 @@
         "cancelEdit": "Cancel Permission Edit",
         "save": "Save Permissions",
         "saving": "Saving...",
-        "warning": "Changes affect ALL staff members with this role. Staff must re-login for changes to take effect.",
+        "warning": "Changes apply to every staff member with this role. API access updates on the next request; affected staff should refresh the page or sign in again for sidebar and buttons to match.",
         "readOnly": "This permission matrix is read only.",
+        "editableNote": "Toggle modules and actions below. Only checked permissions will be available in the sidebar, pages, and API for this role.",
+        "roleSummary": "{{role}} access",
+        "grantedSummary": "{{granted}} of {{total}} permissions granted",
+        "affectedStaff": "{{count}} staff affected",
+        "fullAccess": "Full module access",
+        "partialAccess": "{{count}} actions enabled",
+        "noAccess": "No access",
+        "toggleModule": "Toggle all permissions for {{module}}",
         "superAdmin": "Super administrators have wildcard access to all modules and actions.",
         "confirmTitle": "Update Role Permissions",
         "confirmBody": "Update permissions for {{role}}? This affects {{count}} staff members.",
@@ -1755,6 +1933,7 @@
         "firstNameRequired": "First name is required.",
         "lastNameRequired": "Last name is required.",
         "mobileRequired": "Mobile number is required.",
+        "mobileInvalid": "Enter a valid mobile number (e.g. 0912345678 or +251912345678).",
         "emailRequired": "Email is required.",
         "emailInvalid": "Enter a valid email address.",
         "passwordRequired": "Password is required.",

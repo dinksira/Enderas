@@ -1,4 +1,5 @@
 import { api } from '../../../services/api.js';
+import { formatMobileNumber, isValidEthiopianMobile } from '../../../utils/mobile-utils.js';
 
 const AUTH_ENDPOINTS = Object.freeze({
   LOGIN: '/auth/login',
@@ -7,11 +8,30 @@ const AUTH_ENDPOINTS = Object.freeze({
   RESEND_OTP: '/auth/resend-otp',
 });
 
+function normalizeAuthMobile(value) {
+  const normalized = formatMobileNumber(value);
+
+  if (!isValidEthiopianMobile(normalized)) {
+    const error = new Error('Enter a valid Ethiopian mobile number (e.g. 0912345678 or +251912345678).');
+    error.code = 'INVALID_MOBILE_NUMBER';
+    throw error;
+  }
+
+  return normalized;
+}
+
 /**
  * @param {{ phoneNumber: string, password: string }} credentials
  */
 export async function login(credentials) {
-  return api.post(AUTH_ENDPOINTS.LOGIN, credentials);
+  const phoneNumber = normalizeAuthMobile(credentials.phoneNumber);
+
+  return api.post(AUTH_ENDPOINTS.LOGIN, {
+    phoneNumber,
+    mobileNumber: phoneNumber,
+    mobile_number: phoneNumber,
+    password: credentials.password,
+  });
 }
 
 /**
@@ -27,7 +47,7 @@ export async function login(credentials) {
  * }} payload
  */
 export async function register(payload) {
-  const mobileNumber = payload.mobileNumber ?? payload.phoneNumber;
+  const mobileNumber = normalizeAuthMobile(payload.mobileNumber ?? payload.phoneNumber);
 
   return api.post(AUTH_ENDPOINTS.REGISTER, {
     userType: payload.userType ?? 'individual',
@@ -45,7 +65,7 @@ export async function register(payload) {
  * @param {{ phoneNumber?: string, mobileNumber?: string, otp: string }} payload
  */
 export async function verifyOtp(payload) {
-  const mobileNumber = payload.mobileNumber ?? payload.phoneNumber;
+  const mobileNumber = normalizeAuthMobile(payload.mobileNumber ?? payload.phoneNumber);
 
   return api.post(AUTH_ENDPOINTS.VERIFY_OTP, {
     mobileNumber,
@@ -58,7 +78,7 @@ export async function verifyOtp(payload) {
  * @param {{ phoneNumber?: string, mobileNumber?: string }} payload
  */
 export async function resendOtp(payload) {
-  const mobileNumber = payload.mobileNumber ?? payload.phoneNumber;
+  const mobileNumber = normalizeAuthMobile(payload.mobileNumber ?? payload.phoneNumber);
 
   return api.post(AUTH_ENDPOINTS.RESEND_OTP, {
     mobileNumber,

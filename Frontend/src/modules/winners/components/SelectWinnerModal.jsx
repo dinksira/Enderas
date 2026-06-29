@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/Button.jsx';
+import { useAuthStore } from '../../../stores/auth-store.js';
+import { canViewBidAmounts } from '../../winners/utils/winner-management-utils.js';
 import { formatEtbAmount } from '../../auctions/utils/auction-drawer-utils.js';
 import { auctionService } from '../../auctions/services/auction-service.js';
 import { bidService } from '../../bid-management/services/bid-service.js';
@@ -15,6 +17,8 @@ import { bidService } from '../../bid-management/services/bid-service.js';
  */
 export function SelectWinnerModal({ open, loading = false, onClose, onSubmit }) {
   const { t } = useTranslation();
+  const roleCode = useAuthStore((state) => state.permissions?.roleCode ?? state.user?.roleCode);
+  const canViewAmounts = canViewBidAmounts(roleCode);
   const [auctions, setAuctions] = useState([]);
   const [bids, setBids] = useState([]);
   const [auctionId, setAuctionId] = useState('');
@@ -118,7 +122,8 @@ export function SelectWinnerModal({ open, loading = false, onClose, onSubmit }) 
           <option value="">{t('winners.management.selectModal.selectBid')}</option>
           {bids.map((bid) => (
             <option key={bid.id} value={bid.id}>
-              {bid.bidderName} — {formatEtbAmount(bid.amount)}
+              {bid.bidderName} —{' '}
+              {canViewAmounts ? formatEtbAmount(bid.amount) : t('winners.management.amount.restricted')}
             </option>
           ))}
         </select>

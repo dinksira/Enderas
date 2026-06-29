@@ -10,11 +10,10 @@ import {
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import { hashPassword } from '../utils/password.util.js';
-import { getMobileLookupCandidates } from '../utils/mobile.util.js';
+import { getMobileLookupCandidates, resolveMobileForStorage } from '../utils/mobile.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { USER_STATUSES } from './kyc.service.js';
-
-const END_USER_ROLE_CODES = Object.freeze(['bidder', 'asset_owner']);
+import { isAssignableEndUserRoleCode } from '../constants/end-user-role.constants.js';
 
 const STAFF_ROLE_CODES = Object.freeze([
   'super_admin',
@@ -331,7 +330,9 @@ export async function createUser(payload, actorStaffId) {
     throw new AppError('Mobile number, password, and role are required', 400, 'VALIDATION_ERROR');
   }
 
-  const lookupCandidates = getMobileLookupCandidates(mobileNumber);
+  const normalizedMobile = resolveMobileForStorage(mobileNumber);
+
+  const lookupCandidates = getMobileLookupCandidates(normalizedMobile);
   const existingUser = await User.unscoped().findOne({
     where: {
       mobile_number: { [Op.in]: lookupCandidates },
@@ -348,9 +349,9 @@ export async function createUser(payload, actorStaffId) {
     throw new AppError('Role not found or inactive', 404, 'ROLE_NOT_FOUND');
   }
 
-  if (STAFF_ROLE_CODES.includes(role.code) || !END_USER_ROLE_CODES.includes(role.code)) {
+  if (STAFF_ROLE_CODES.includes(role.code) || !isAssignableEndUserRoleCode(role.code)) {
     throw new AppError(
-      'Only end-user roles (bidder or asset owner) can be assigned to new users',
+      'Only the bidder role can be assigned to new users',
       400,
       'INVALID_USER_ROLE',
     );
@@ -361,7 +362,7 @@ export async function createUser(payload, actorStaffId) {
     id: generateUuid(),
     role_id: roleId,
     user_type: userType,
-    mobile_number: mobileNumber,
+    mobile_number: normalizedMobile,
     email: email || null,
     password: hashedPassword,
     first_name: firstName || null,
@@ -424,8 +425,12 @@ export async function updateUser(id, payload, actorStaffId) {
 
   if (payload.roleId !== undefined && payload.roleId !== user.role_id) {
     const role = await Role.findOne({ where: { id: payload.roleId, is_active: true } });
-    if (!role) {
-      throw new AppError('Role not found or inactive', 404, 'ROLE_NOT_FOUND');
+    if (!role || !isAssignableEndUserRoleCode(role.code)) {
+      throw new AppError(
+        'Only the bidder role can be assigned to end users',
+        400,
+        'INVALID_USER_ROLE',
+      );
     }
     updates.role_id = payload.roleId;
   }

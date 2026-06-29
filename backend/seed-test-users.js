@@ -41,12 +41,7 @@ const TEST_USERS = Object.freeze({
   }),
 });
 
-const EXTERNAL_ROLE_CODES = Object.freeze([
-  'bidder',
-  'customer',
-  'user',
-  'asset_owner',
-]);
+const EXTERNAL_ROLE_CODES = Object.freeze(['bidder']);
 
 const DEFAULT_BIDDER_ROLE = Object.freeze({
   id: '3f64293e-93eb-4bc0-8839-5dadbfb12a5a',
