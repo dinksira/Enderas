@@ -1,0 +1,699 @@
+{
+  "onboarding": {
+    "languageTitle": "Choose Your Language",
+    "selectLanguage": "Select your preferred language to continue",
+    "english": "English",
+    "amharic": "አማርኛ",
+    "continue": "Continue",
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip",
+    "getStarted": "Get Started",
+    "welcome": {
+      "title": "Welcome to Enderas",
+      "subtitle": "Ethiopia's Premier Digital Auction Platform",
+      "body": "Enderas brings modern auctions to your fingertips — simple, transparent and secure."
+    },
+    "howItWorks": {
+      "title": "How Auctions Work",
+      "step1Title": "Register & Verify Identity",
+      "step1Desc": "Create an account and submit your KYC documents for verification.",
+      "step2Title": "Browse Auctions",
+      "step2Desc": "Explore live listings and review detailed asset information.",
+      "step3Title": "Pay & Download Documents",
+      "step3Desc": "Purchase auction documents and upload your CPO to become eligible.",
+      "step4Title": "Submit Your Bid",
+      "step4Desc": "Place your sealed bid before the auction closes."
+    },
+    "forOwners": {
+      "title": "For Asset Owners",
+      "feature1": "Submit assets and upload ownership documents",
+      "feature2": "Track review, evaluation and approval status",
+      "feature3": "Monitor the auction process from listing to sale"
+    },
+    "forBidders": {
+      "title": "For Bidders",
+      "feature1": "Browse and filter live premium auctions",
+      "feature2": "Purchase documents and upload your CPO securely",
+      "feature3": "Submit sealed bids with confidence",
+      "loginLink": "Already have an account? Log in"
+    },
+    "illustrations": {
+      "welcomeA11y": "Illustration of an auction gavel",
+      "howItWorksA11y": "Illustration of an auction podium with a bid card",
+      "forOwnersA11y": "Illustration of assets ready for auction",
+      "forBiddersA11y": "Illustration of a bidder winning a trophy"
+    }
+  },
+  "auth": {
+    "login": "Log In",
+    "register": "Register",
+    "logout": "Log Out",
+    "loginSubtitle": "Welcome Back",
+    "loginBody": "Sign in to continue bidding and managing your assets.",
+    "registerSubtitle": "Create Account",
+    "registerBody": "Join Enderas to participate in premium digital auctions.",
+    "verifySubtitle": "Verify Your Mobile",
+    "verifyBody": "Enter the 6-digit code we sent to your phone to complete registration.",
+    "verifyCta": "Verify & Continue",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "Minimum 8 characters with at least one letter and one number",
+    "mobileNumber": "Mobile Number",
+    "verifyOTP": "Verify OTP",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "otpSent": "OTP sent to your phone",
+    "identifier": "Email or Mobile Number",
+    "identifierPlaceholder": "email@example.com or +251...",
+    "confirmPassword": "Confirm Password",
+    "newPassword": "New Password",
+    "fullName": "Full Name",
+    "nationalIdNumber": "National ID Number",
+    "organizationName": "Organization Name",
+    "tinNumber": "TIN Number",
+    "userTypeIndividual": "Individual",
+    "userTypeIndividualDesc": "Personal account for bidding and asset ownership",
+    "userTypeOrganization": "Organization",
+    "userTypeOrganizationDesc": "Business or company account",
+    "selectUserType": "Choose your account type",
+    "noAccount": "Don't have an account? Register",
+    "hasAccount": "Already have an account? Log in",
+    "backToLogin": "Back to Login",
+    "backToOnboarding": "Back to Welcome",
+    "resendOtp": "Resend OTP",
+    "resendPrompt": "Didn't receive a code?",
+    "resendIn": "Resend in {{time}}",
+    "resendNotAvailable": "Resend OTP is not available yet. Please try again later.",
+    "staffLoginBlocked": "Staff accounts must use the admin portal. This app is for auction participants only.",
+    "otpDescription": "Enter the 6-digit code sent to {{mobileNumber}}",
+    "forgotDescription": "Enter your registered mobile number to receive a reset code",
+    "resetDescription": "Enter the code sent to {{mobileNumber}} and choose a new password",
+    "mobilePlaceholder": "+251...",
+    "invalidOtp": "Invalid OTP",
+    "continueAsGuest": "Continue without signing in",
+    "errors": {
+      "invalidCredentials": "Invalid credentials. Please check your phone number and password.",
+      "invalidPhone": "Enter a valid phone number (e.g. 0912345678 or +251912345678).",
+      "phoneRequired": "Phone number is required.",
+      "passwordRequired": "Password is required.",
+      "passwordMinLength": "Password must be at least 6 characters.",
+      "passwordMismatch": "Passwords do not match.",
+      "fullNameRequired": "Full name is required.",
+      "organizationRequired": "Organization name is required.",
+      "tinRequired": "TIN number is required.",
+      "otpIncomplete": "Enter the complete 6-digit verification code.",
+      "loginFailed": "Unable to sign in. Please try again.",
+      "registerFailed": "Unable to register. Please try again."
+    }
+  },
+  "authRequired": {
+    "loginCta": "Log In",
+    "noAccountHint": "New to Enderas?",
+    "bidsMessage": "Please log in to view and manage your bids.",
+    "assetsMessage": "Please log in to view and manage your assets.",
+    "profileMessage": "Please log in to view your profile and account settings."
+  },
+  "common": {
+    "currency": "ETB",
+    "viewAll": "View All",
+    "viewDetails": "View Details",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "done": "Done",
+    "search": "Search",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "empty": "Nothing here yet"
+  },
+  "tabs": {
+    "dashboard": "Dashboard",
+    "bids": "My Bids",
+    "assets": "My Assets",
+    "profile": "Profile"
+  },
+  "header": {
+    "notifications": "Notifications",
+    "language": "Language",
+    "markAllRead": "Mark All Read",
+    "markAsRead": "Mark as Read",
+    "noNotifications": "No notifications yet",
+    "unread": "unread"
+  },
+  "dashboard": {
+    "greeting": "Welcome back",
+    "subtitle": "Discover live auctions and premium assets",
+    "stats": {
+      "activeAuctions": "Active Auctions",
+      "myBids": "Active Bids",
+      "won": "Won",
+      "watchlist": "Watching"
+    },
+    "sections": {
+      "liveNow": "Live Now",
+      "endingSoon": "Ending Soon",
+      "featured": "Featured Auctions",
+      "categories": "Categories",
+      "recentActivity": "Recent Activity"
+    },
+    "categories": {
+      "vehicle": "Vehicles",
+      "land": "Land",
+      "building": "Buildings",
+      "machinery": "Machinery",
+      "equipment": "Equipment",
+      "salvage": "Salvage",
+      "other": "Other",
+      "vehicles": "Vehicles",
+      "buildings": "Buildings",
+      "salvage_assets": "Salvage Assets",
+      "other_assets": "Other Assets",
+      "realEstate": "Real Estate",
+      "jewelry": "Jewelry",
+      "art": "Art & Antiques",
+      "electronics": "Electronics"
+    },
+    "timeLeft": "Time Left",
+    "currentBid": "Current Bid",
+    "bidsCount": "{{count}} Bids",
+    "placeBid": "Place Bid",
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "closed": "Closed",
+      "suspended": "Suspended"
+    },
+    "a11y": {
+      "statusFilters": "Auction status filters"
+    },
+    "browse": {
+      "searchPlaceholder": "Search auctions by title",
+      "empty": "No auctions match your filters",
+      "emptyHint": "Try a different search term or filter",
+      "results": "{{count}} auctions",
+      "ends": "Ends",
+      "category": "Category",
+      "openDetail": "Open auction {{title}}",
+      "detailEyebrow": "Auction details",
+      "detailTitle": "Auction",
+      "detailError": "Could not load auction details",
+      "description": "Description",
+      "error": "Failed to load auctions: {{message}}"
+    }
+  },
+  "auction": {
+    "participation": {
+      "actions": "Participation",
+      "buyDoc": "Buy Auction Document",
+      "viewDoc": "View Document",
+      "placeBids": "Place Bids",
+      "documentFee": "Document Fee",
+      "lots": "Lots",
+      "viewDocLocked": "Purchase and get your payment approved to unlock the auction document.",
+      "viewDocLockedTitle": "Document locked",
+      "bidDocLocked": "Purchase and get your document payment approved before placing bids.",
+      "bidKycLocked": "Complete KYC verification before placing bids.",
+      "bidLockedTitle": "Bidding locked",
+      "docPendingTitle": "Payment under review",
+      "docPendingBody": "Your receipt has been submitted. View Document and Place Bids unlock once finance approves your payment.",
+      "docApprovedTitle": "Document access granted",
+      "docApprovedBody": "Your payment was approved. You can now view the auction document and select lots to bid on.",
+      "docRejectedTitle": "Payment rejected",
+      "docRejectedBody": "Your payment was not approved. Upload a new receipt to try again.",
+      "docUnderReview": "Payment Under Review",
+      "buyDocHint": "Pay the document fee to access auction information and become eligible to bid.",
+      "paymentMethod": "Payment Method",
+      "manualTransfer": "Bank transfer (manual)",
+      "addisPay": "Addis Pay",
+      "paymentReceipt": "Payment Receipt",
+      "paymentReceiptHint": "Upload a clear photo or PDF of your transfer receipt.",
+      "submitPayment": "Submit Payment",
+      "uploadReceipt": "Upload receipt",
+      "uploadReceiptHint": "JPG, PNG, or PDF",
+      "receiptReady": "Receipt attached",
+      "uploadErrorTitle": "Upload failed",
+      "uploadErrorBody": "Could not pick the file. Please try again.",
+      "simulateHint": "Simulation: tap to approve as staff",
+      "simulateApprove": "Approve",
+      "pdfDocument": "PDF document",
+      "downloadDoc": "Download",
+      "openExternal": "Open in browser",
+      "viewerFallback": "Could not render the document here. Open it in your browser instead.",
+      "downloadCompleteTitle": "Download complete",
+      "downloadCompleteBody": "Saved to {{path}}",
+      "downloadErrorTitle": "Download failed",
+      "downloadErrorBody": "Could not download the document. Try opening it in your browser.",
+      "bidSummary": "Bid summary",
+      "selectedLots": "Selected lots",
+      "totalBidAmount": "Total bid amount",
+      "cpoAmount": "CPO ({{percent}}%)",
+      "selectLotsHint": "Select lots and enter your bid for each. Bids must meet or exceed the reserve price.",
+      "bidsLockedHint": "Your lot selections and bids are locked while your CPO payment is under review.",
+      "reserve": "Reserve",
+      "yourBid": "Your bid",
+      "uploadCpo": "Upload CPO Receipt",
+      "uploadCpoTitle": "Upload CPO receipt",
+      "uploadCpoBody": "Upload proof of payment for your CPO of {{amount}}. After submission, your bids will be locked for review.",
+      "cpoReceipt": "CPO receipt",
+      "cpoReceiptHint": "Upload your bank transfer or payment proof for the CPO amount.",
+      "submitCpo": "Submit CPO",
+      "reuploadCpo": "Re-upload CPO",
+      "cpoPendingTitle": "CPO under review",
+      "cpoPendingBody": "Your CPO receipt is being reviewed. Lot selections and bids are locked until approval.",
+      "cpoApprovedTitle": "CPO approved",
+      "cpoApprovedBody": "Your CPO was approved. Your sealed bids are registered for the selected lots.",
+      "cpoRejectedTitle": "CPO rejected",
+      "cpoRejectedBody": "Your CPO was not approved. Update your bids and upload a new receipt.",
+      "noLots": "No lots are available for this auction yet.",
+      "bidErrors": {
+        "invalid": "Enter a valid bid amount.",
+        "belowReserve": "Bid must be at least {{reserve}}."
+      },
+      "demoSteps": {
+        "not_started": "Demo · Not started",
+        "doc_pending": "Demo · Doc payment pending",
+        "doc_approved": "Demo · Document approved",
+        "bids_draft": "Demo · Bids drafted",
+        "cpo_pending": "Demo · CPO under review",
+        "cpo_approved": "Demo · CPO approved"
+      }
+    }
+  },
+  "bids": {
+    "title": "My Bids",
+    "subtitle": "Track your auction bids and see where you stand.",
+    "tabs": {
+      "all": "All",
+      "active": "Active",
+      "winning": "Winning",
+      "outbid": "Outbid",
+      "won": "Won",
+      "lost": "Lost"
+    },
+    "currentBid": "Current Bid",
+    "yourBid": "Your Bid",
+    "timeLeft": "Time Left",
+    "ended": "Ended",
+    "increaseBid": "Increase Bid",
+    "viewAuction": "View Auction",
+    "untitledAuction": "Untitled Auction",
+    "empty": "No bids in this category yet",
+    "emptyTitle": "No bids yet",
+    "loadError": "Failed to load bids: {{message}}",
+    "results": "{{count}} bids",
+    "status": {
+      "submitted": "Submitted",
+      "winning": "Winning",
+      "lost": "Lost",
+      "invalid": "Invalid"
+    },
+    "summary": {
+      "totalBids": "Total Bids",
+      "activeBids": "Active",
+      "winningBids": "Winning",
+      "wonBids": "Won"
+    }
+  },
+  "assets": {
+    "title": "My Assets",
+    "subtitle": "Submit and track your asset requests. Once approved, they enter the evaluation and auction pipeline.",
+    "tabs": {
+      "listed": "Listed",
+      "pending": "Pending",
+      "sold": "Sold",
+      "draft": "Drafts"
+    },
+    "addAsset": "Add Asset",
+    "currentBid": "Current Bid",
+    "reservePrice": "Reserve Price",
+    "submitted": "Submitted",
+    "reserveMet": "Reserve Met",
+    "views": "Views",
+    "watchers": "Watchers",
+    "bids": "Bids",
+    "viewDetails": "View Details",
+    "editAsset": "Edit Asset",
+    "empty": "No assets in this category yet",
+    "emptyTitle": "No assets yet",
+    "emptyHint": "Submit your first asset to start the ownership review process.",
+    "rejectionReason": "Reason: {{reason}}",
+    "loadError": "Failed to load assets: {{message}}",
+    "detail": {
+      "title": "Asset Details",
+      "eyebrow": "My Asset",
+      "notFound": "This asset could not be found.",
+      "allPhotos": "All Photos",
+      "photoCount": "{{count}} photos",
+      "reviewed": "Reviewed",
+      "auction": "Auction",
+      "location": "Location",
+      "documents": "Documents",
+      "noDocuments": "No documents attached.",
+      "tapToOpen": "Tap to open",
+      "rejection": "Rejection Reason"
+    },
+    "status": {
+      "PENDING_REVIEW": "Pending Review",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "UNDER_EVALUATION": "Under Evaluation",
+      "EVALUATED": "Evaluated",
+      "IN_AUCTION": "In Auction"
+    },
+    "ownershipDocs": {
+      "vehicleRegistrationBook": "Vehicle Registration Book",
+      "titleDeed": "Title Deed",
+      "ownershipCertificate": "Ownership Certificate",
+      "purchaseDocuments": "Purchase Documents",
+      "other": "Other Ownership Document"
+    },
+    "kycRequired": {
+      "title": "Verification Required",
+      "message": "Complete KYC verification before submitting assets for review.",
+      "banner": "KYC verification is required before you can submit assets."
+    },
+    "form": {
+      "submit": "Submit for Review",
+      "submitting": "Submitting...",
+      "submitFailed": "Failed to submit asset. Please try again.",
+      "fields": {
+        "title": "Asset Title",
+        "assetType": "Asset Category",
+        "description": "Asset Description",
+        "conditionNotes": "Asset Condition Notes",
+        "location": "Location of the Asset",
+        "address": "Asset Address (optional)",
+        "desiredReservePrice": "Desired Reserve Price (ETB)",
+        "auctionConditions": "Special Auction Conditions or Notes",
+        "photos": "Asset Photos",
+        "ownershipDocument": "Ownership Document",
+        "additionalDocuments": "Supporting Documents"
+      },
+      "hints": {
+        "ownershipDoc": "Required document for this category: {{document}}",
+        "additionalDocumentsPdf": "Upload at least one supporting document (PDF or image).",
+        "photos": "Upload clear photos of the asset from different angles."
+      },
+      "errors": {
+        "titleRequired": "Asset title is required.",
+        "assetTypeRequired": "Please select an asset category.",
+        "descriptionRequired": "Asset description is required.",
+        "conditionNotesRequired": "Asset condition notes are required.",
+        "locationRequired": "Asset location is required.",
+        "reservePriceRequired": "Enter a valid desired reserve price greater than zero.",
+        "auctionConditionsRequired": "Special auction conditions or notes are required.",
+        "photosRequired": "Upload at least one photo of the asset.",
+        "ownershipDocRequired": "Ownership document is required.",
+        "supportingDocsRequired": "Upload at least one supporting document."
+      }
+    },
+    "requestWizard": {
+      "title": "Asset Request",
+      "stepProgress": "Step {{current}} of {{total}}",
+      "steps": {
+        "details": "Asset Details",
+        "location": "Location & Terms",
+        "photos": "Photos",
+        "documents": "Documents",
+        "batchReview": "Review & Submit"
+      },
+      "placeholders": {
+        "description": "Describe the asset, key features, and relevant details...",
+        "conditionNotes": "Describe current condition, damage, maintenance history, or defects...",
+        "location": "e.g. Addis Ababa, Bole",
+        "reservePrice": "e.g. 2500000",
+        "auctionConditions": "Any terms, viewing rules, payment expectations, or special notes..."
+      },
+      "reserveHint": "Suggested reserve price is reviewed by admin. Final reserve is set at launch.",
+      "batchReview": {
+        "intro": "Review every asset below. Add more assets or submit them together when you are ready.",
+        "empty": "No assets in your list yet. Go back and complete the form to add one.",
+        "assetLabel": "Asset {{index}}",
+        "queuedCount": "{{count}} asset(s) already queued. You can add more after this one.",
+        "editing": "You are editing a queued asset.",
+        "limitReached": "You can submit up to {{max}} assets per request."
+      },
+      "actions": {
+        "back": "Back",
+        "next": "Continue",
+        "addToQueue": "Add to List",
+        "addDocument": "Add Document",
+        "submit": "Submit Request",
+        "submitAll": "Submit {{count}} Requests",
+        "edit": "Edit",
+        "addAnother": "Add Another Asset",
+        "removeFromQueue": "Remove",
+        "addPhotos": "Add Photos"
+      },
+      "errors": {
+        "fixBeforeSubmit": "Please complete all required fields before submitting.",
+        "emptyQueue": "Add at least one asset to your list before submitting."
+      },
+      "review": {
+        "photoCount": "{{count}} photo(s)",
+        "documentCount": "{{count}} document(s)"
+      },
+      "success": {
+        "title": "Request Submitted",
+        "body": "{{count}} asset request(s) submitted for review. Our team will review each one shortly.",
+        "backToAssets": "Back to My Assets"
+      }
+    },
+    "summary": {
+      "totalAssets": "Total Assets",
+      "listed": "Listed",
+      "pending": "Pending",
+      "sold": "Sold"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "guestName": "Auction Participant",
+    "verified": "Verified",
+    "editProfile": "Edit Profile",
+    "memberSince": "Member since {{date}}",
+    "stats": {
+      "bids": "Bids",
+      "won": "Won",
+      "assets": "Assets",
+      "rating": "Rating"
+    },
+    "menu": {
+      "settings": "Settings",
+      "myAssets": "My Assets",
+      "myBids": "My Bids",
+      "paymentMethods": "Payment Methods",
+      "transactionHistory": "Transaction History",
+      "kycVerification": "KYC Verification",
+      "helpCenter": "Help & Support",
+      "about": "About Enderas",
+      "logout": "Log Out"
+    },
+    "badges": {
+      "topBidder": "Top Bidder",
+      "verifiedOwner": "Verified Owner",
+      "elite": "Elite Member"
+    },
+    "kycStatus": {
+      "title": "Verification Status",
+      "approved": "Verified",
+      "not_submitted": "Not Submitted",
+      "under_review": "Under Review",
+      "rejected": "Rejected",
+      "hints": {
+        "approved": "Your identity has been verified. You can participate in auctions.",
+        "not_submitted": "Submit your documents to verify your identity and join auctions.",
+        "under_review": "Your documents are being reviewed. We'll notify you once complete.",
+        "rejected": "Your submission was rejected. Tap to review feedback and resubmit."
+      }
+    },
+    "editProfileScreen": {
+      "photoHint": "Profile Photo",
+      "photoSub": "Tap the camera icon to change your photo (mock)",
+      "personalInfo": "Personal Information",
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "Enter your full name",
+      "email": "Email Address",
+      "emailPlaceholder": "you@example.com",
+      "mobile": "Mobile Number",
+      "mobilePlaceholder": "+251 9XX XXX XXXX",
+      "city": "City",
+      "cityPlaceholder": "Your city",
+      "bio": "Bio",
+      "bioPlaceholder": "Tell others about your interests",
+      "save": "Save Changes",
+      "saved": "Profile updated successfully"
+    },
+    "helpScreen": {
+      "intro": "Find answers to common questions or reach our support team for personalized help.",
+      "faqTitle": "Frequently Asked Questions",
+      "contactTitle": "Contact Support",
+      "faq": {
+        "bidding": {
+          "question": "How do I place a bid?",
+          "answer": "Browse live auctions on the dashboard, open an auction detail page, and tap Place Bid. Enter your amount and confirm. You'll receive alerts if you're outbid."
+        },
+        "kyc": {
+          "question": "Why is KYC verification required?",
+          "answer": "Identity verification protects all participants and ensures only verified users can bid on high-value assets. Submit your documents from your profile."
+        },
+        "payments": {
+          "question": "What payment methods are accepted?",
+          "answer": "Enderas supports bank transfer, mobile money, and major cards. Payment details are shared after you win an auction."
+        },
+        "assets": {
+          "question": "How do I list an asset for auction?",
+          "answer": "Go to My Assets, tap Submit Asset, and fill in the details with photos. Our team reviews submissions before listing."
+        }
+      },
+      "contact": {
+        "email": "Email",
+        "phone": "Phone",
+        "hours": "Support Hours"
+      }
+    },
+    "aboutScreen": {
+      "tagline": "Premium Auctions Platform",
+      "description": "Enderas connects collectors, investors, and sellers through a trusted digital auction experience. Discover rare assets, place competitive bids, and manage your portfolio — all in one golden marketplace.",
+      "statsTitle": "Platform Highlights",
+      "stats": {
+        "auctions": "Auctions",
+        "users": "Users",
+        "assets": "Assets Listed"
+      },
+      "legalTitle": "Legal & Resources",
+      "links": {
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy",
+        "licenses": "Open Source Licenses"
+      },
+      "copyright": "© 2026 Enderas. All rights reserved."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "appearance": "Appearance",
+      "notifications": "Notifications",
+      "language": "Language & Region",
+      "account": "Account",
+      "privacy": "Privacy & Security",
+      "about": "About"
+    },
+    "theme": {
+      "label": "Theme",
+      "description": "Choose dark, light, or match your device",
+      "dark": "Dark",
+      "light": "Light",
+      "automatic": "System"
+    },
+    "language": {
+      "label": "App Language",
+      "description": "Choose your preferred language"
+    },
+    "notifications": {
+      "push": "Push Notifications",
+      "pushDesc": "Receive alerts on this device",
+      "email": "Email Notifications",
+      "emailDesc": "Receive updates via email",
+      "bidAlerts": "Bid Alerts",
+      "bidAlertsDesc": "Notify me when outbid or auction ends",
+      "reminders": "Auction Reminders",
+      "remindersDesc": "Remind me before auctions close",
+      "marketing": "Marketing",
+      "marketingDesc": "News, tips and promotional offers"
+    },
+    "account": {
+      "changePassword": "Change Password",
+      "changePasswordDesc": "Update your account password",
+      "twoFactor": "Two-Factor Authentication",
+      "twoFactorDesc": "Add an extra layer of security",
+      "linkedAccounts": "Linked Accounts",
+      "linkedAccountsDesc": "Manage connected accounts"
+    },
+    "privacy": {
+      "dataPrivacy": "Data Privacy",
+      "dataPrivacyDesc": "Manage how your data is used",
+      "blockedUsers": "Blocked Users",
+      "blockedUsersDesc": "Manage blocked accounts"
+    },
+    "about": {
+      "version": "Version",
+      "versionNumber": "1.0.0",
+      "termsOfService": "Terms of Service",
+      "privacyPolicy": "Privacy Policy",
+      "rateApp": "Rate Enderas",
+      "shareApp": "Share App"
+    },
+    "logoutConfirm": {
+      "title": "Log Out",
+      "message": "Are you sure you want to log out of your account?",
+      "confirm": "Log Out",
+      "cancel": "Cancel"
+    }
+  },
+  "kyc": {
+    "title": "KYC Verification",
+    "loginRequired": "Please log in to submit your KYC documents.",
+    "verificationSubtitle": "Choose your document type and upload clear photos for verification",
+    "selectDocumentType": "Document Type",
+    "accountTypeIndividual": "Individual Account",
+    "accountTypeOrganization": "Organization Account",
+    "passportNumber": "Passport Number",
+    "licenseNumber": "License Number",
+    "passportBioPage": "Passport Bio Page",
+    "documentFront": "Document (Front)",
+    "documentBack": "Document (Back)",
+    "documentTypes": {
+      "nationalId": "National ID",
+      "passport": "Passport",
+      "drivingLicense": "Driving License",
+      "tradeLicense": "Trade License",
+      "tinCertificate": "TIN Certificate",
+      "businessRegistration": "Business Registration"
+    },
+    "underReviewTitle": "Verification Under Review",
+    "underReviewBanner": "Your KYC documents are under review. Please wait to participate in auctions.",
+    "underReviewNotificationInfo": "You will receive an SMS and email notification once your KYC is reviewed.",
+    "rejectedBanner": "Your KYC was rejected. Please review the feedback and resubmit your documents.",
+    "goToDashboard": "Go to Dashboard",
+    "nationalIdNumber": "National ID Number",
+    "nationalIdFront": "National ID (Front)",
+    "nationalIdBack": "National ID (Back)",
+    "tinNumber": "TIN Number",
+    "tradeLicense": "Trade License",
+    "tinCertificate": "TIN Certificate",
+    "businessRegistration": "Business Registration",
+    "uploadFile": "Upload File",
+    "changeFile": "Tap to change file",
+    "fileReady": "File ready",
+    "submit": "Submit for Review",
+    "resubmit": "Resubmit Documents",
+    "submitting": "Submitting...",
+    "submissionFailed": "KYC submission failed. Please try again.",
+    "uploadFailed": "File upload failed. Please try again.",
+    "participation": {
+      "loginPrefix": "Not signed in — ",
+      "loginLink": "log in",
+      "loginSuffix": " to participate in auctions.",
+      "submitPrefix": "KYC not submitted — ",
+      "submitLink": "submit your documents",
+      "submitSuffix": " to verify your identity and start bidding.",
+      "pending": "KYC under review — we're verifying your documents. You'll be notified once approved.",
+      "rejectedPrefix": "KYC rejected —",
+      "rejectedLink": "review feedback and resubmit",
+      "rejectedSuffix": " your documents to participate."
+    },
+    "errors": {
+      "documentNumberRequired": "Document number is required.",
+      "documentFrontRequired": "Document front image is required.",
+      "documentBackRequired": "Document back image is required.",
+      "tradeLicenseRequired": "Trade license document is required.",
+      "tinCertificateRequired": "TIN certificate document is required.",
+      "businessRegistrationRequired": "Business registration document is required."
+    }
+  }
+}

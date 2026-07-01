@@ -1,0 +1,699 @@
+{
+  "onboarding": {
+    "languageTitle": "ቋንቋ ይምረጡ",
+    "selectLanguage": "ለመቀጠል እርስዎ የሚመርጡትን ቋንቋ ይምረጡ",
+    "english": "English",
+    "amharic": "አማርኛ",
+    "continue": "ቀጥል",
+    "next": "ቀጣይ",
+    "back": "ተመለስ",
+    "skip": "ዝለል",
+    "getStarted": "ጀምር",
+    "welcome": {
+      "title": "እንኳን ወደ እንደራስ በደህና መጡ",
+      "subtitle": "የኢትዮጵያ ኀላፊ ዲጂታል የጨረታ መድረክ",
+      "body": "እንደራስ ዘመናዊ የጨረታ አገልግሎትን በቀላሉ፣ በግልጽነት እና በደህንነት ይደርስልዎታል።"
+    },
+    "howItWorks": {
+      "title": "ጨረታዎች እንዴት ይሠራሉ",
+      "step1Title": "ይመዝገቡ እና ማንነትዎን ያረጋግጡ",
+      "step1Desc": "መለያ ይፍጠሩ እና የKYC ሰነዶችዎን ለማረጋገጫ ያስገቡ።",
+      "step2Title": "ጨረታዎችን ያስሱ",
+      "step2Desc": "በቀጥታ የሚታዩ ጨረታዎችን ይመልከቱ እና ዝርዝር የንብረት መረጃ ይገምግሙ።",
+      "step3Title": "ይክፈሉ እና ሰነዶችን ያውርዱ",
+      "step3Desc": "የጨረታ ሰነዶችን ይግዙ እና ብቁ ለመሆን CPO ዎን ይስቀሉ።",
+      "step4Title": "ጨረታዎን ያስገቡ",
+      "step4Desc": "ጨረታው ከመዘጋቱ በፊት የተዘጉ ጨረታዎችን ያስገቡ።"
+    },
+    "forOwners": {
+      "title": "ለንብረት ባለቤቶች",
+      "feature1": "ንብረት ያስገቡ እና የባለቤትነት ሰነዶችን ይስቀሉ",
+      "feature2": "የግምገማ፣ የግምት እና የማረጋገጫ ሁኔታን ይከታተሉ",
+      "feature3": "ከዝርዝር እስከ ሽያጭ የጨረታ ሂደቱን ይከታተሉ"
+    },
+    "forBidders": {
+      "title": "ለተጫራቾች",
+      "feature1": "በቀጥታ የሚታዩ ግሩም ጨረታዎችን ያስሱ እና ያጣሩ",
+      "feature2": "ሰነዶችን በደህንነት ይግዙ እና CPO ዎን ይስቀሉ",
+      "feature3": "የተዘጉ ጨረታዎችን በመተማመን ያስገቡ",
+      "loginLink": "መለያ አለዎት? ይግቡ"
+    },
+    "illustrations": {
+      "welcomeA11y": "የጨረታ መወቅሪያ ስዕል",
+      "howItWorksA11y": "የጨረታ መድረክ እና የቢድ ካርድ ስዕል",
+      "forOwnersA11y": "ለጨረታ የተዘጋጁ ንብረቶች ስዕል",
+      "forBiddersA11y": "የጨራቹ ድል ዋንጫ ስዕል"
+    }
+  },
+  "auth": {
+    "login": "ግባ",
+    "register": "ተመዝገብ",
+    "logout": "ውጣ",
+    "loginSubtitle": "እንኳን በደህና መጡ",
+    "loginBody": "ለመቀጠል መግቢያ ይፈጹ።",
+    "registerSubtitle": "መለያ ይፍጠሩ",
+    "registerBody": "ለመሳተፍ ይመዝገቡ።",
+    "verifySubtitle": "ስልክዎን ያረጋግጡ",
+    "verifyBody": "ወደ ስልክዎ የተላከውን 6-አሃዝ ኮድ ያስገቡ።",
+    "verifyCta": "አረጋግጥ እና ቀጥል",
+    "email": "ኢሜይል",
+    "password": "የይለፍ ቃል",
+    "passwordHint": "ቢያንስ 8 ቁምፊዎች እና አንድ ፊደል እና አንድ ቁጥር ይይዙ",
+    "mobileNumber": "ስልክ ቁጥር",
+    "verifyOTP": "OTP አረጋግጥ",
+    "forgotPassword": "የይለፍ ቃል ዘነጉ?",
+    "resetPassword": "የይለፍ ቃል ዳግም አስገባ",
+    "otpSent": "OTP ወደ ስልክዎ ተልኳል",
+    "identifier": "ኢሜይል ወይም ስልክ ቁጥር",
+    "identifierPlaceholder": "email@example.com ወይም +251...",
+    "confirmPassword": "የይለፍ ቃል ያረጋግጡ",
+    "newPassword": "አዲስ የይለፍ ቃል",
+    "fullName": "ሙሉ ስም",
+    "nationalIdNumber": "የብሔራዊ መለያ ቁጥር",
+    "organizationName": "የድርጅት ስም",
+    "tinNumber": "የTIN ቁጥር",
+    "userTypeIndividual": "ግለሰብ",
+    "userTypeIndividualDesc": "ለመጫራት እና ለንብረት ባለቤትነት የግል መለያ",
+    "userTypeOrganization": "ድርጅት",
+    "userTypeOrganizationDesc": "የንግድ ድርጅት ወይም የኩባንያ መለያ",
+    "selectUserType": "የመለያ ዓይነትዎን ይምረጡ",
+    "noAccount": "መለያ የለዎትም? ይመዝገቡ",
+    "hasAccount": "መለያ አለዎት? ይግቡ",
+    "backToLogin": "ወደ መግቢያ ተመለስ",
+    "backToOnboarding": "ወደ ሰላም ተመለስ",
+    "resendOtp": "OTP ዳግም ላክ",
+    "resendPrompt": "ኮድ አልደረስዎትም?",
+    "resendIn": "በ{{time}} ዳግም ይላክ",
+    "resendNotAvailable": "OTP ዳግም መላክ አሁን አይቻልም። እባክዎ ቆይተው እንደገና ይሞክሩ።",
+    "staffLoginBlocked": "የሰራተኛ መለያዎች የአስተዳዳሪ መድረክ መጠቀም አለባቸው። ይህ መተግበሪያ ለጨረታ ተሳታፊዎች ብቻ ነው።",
+    "otpDescription": "ወደ {{mobileNumber}} የተላከውን 6-አሃዝ ኮድ ያስገቡ",
+    "forgotDescription": "የተመዘገበብዎትን ስልክ ቁጥር ያስገቡ የዳግም ማስታወሻ ኮድ ለመቀበል",
+    "resetDescription": "ወደ {{mobileNumber}} የተላከውን ኮድ ያስገቡ እና አዲስ የይለፍ ቃል ይምረጡ",
+    "mobilePlaceholder": "+251...",
+    "invalidOtp": "ትክክል ያልሆነ OTP",
+    "continueAsGuest": "ያለመግቢያ ቀጥል",
+    "errors": {
+      "invalidCredentials": "ትክክል ያልሆነ መለያ። ስልክ ቁጥርዎን እና የይለፍ ቃልዎን ያረጋግጡ።",
+      "invalidPhone": "ትክክለኛ ስልክ ቁጥር ያስገቡ (ለምሳሌ 0912345678 ወይም +251912345678)።",
+      "phoneRequired": "ስልክ ቁጥር ያስፈልጋል።",
+      "passwordRequired": "የይለፍ ቃል ያስፈልጋል።",
+      "passwordMinLength": "የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት።",
+      "passwordMismatch": "የይለፍ ቃሎች አይዛመዱም።",
+      "fullNameRequired": "ሙሉ ስም ያስፈልጋል።",
+      "organizationRequired": "የድርጅት ስም ያስፈልጋል።",
+      "tinRequired": "የTIN ቁጥር ያስፈልጋል።",
+      "otpIncomplete": "ሙሉውን 6-አሃዝ ኮድ ያስገቡ።",
+      "loginFailed": "መግባት አልተቻለም። እንደገና ይሞክሩ።",
+      "registerFailed": "መመዝገብ አልተቻለም። እንደገና ይሞክሩ።"
+    }
+  },
+  "authRequired": {
+    "loginCta": "ግባ",
+    "noAccountHint": "አዲስ ተጠቃሚ ነዎት?",
+    "bidsMessage": "ጨረታዎችዎን ለማየት እና ለማስተዳደር እባክዎ ይግቡ።",
+    "assetsMessage": "ንብረቶችዎን ለማየት እና ለማስተዳደር እባክዎ ይግቡ።",
+    "profileMessage": "መገለጫዎን እና የመለያ ቅንብሮችዎን ለማየት እባክዎ ይግቡ።"
+  },
+  "common": {
+    "currency": "ETB",
+    "viewAll": "ሁሉንም እይ",
+    "viewDetails": "ዝርዝር እይ",
+    "cancel": "ይቅር",
+    "save": "አስቀምጥ",
+    "edit": "አርትዕ",
+    "delete": "ሰርዝ",
+    "close": "ዝጋ",
+    "done": "ተከናውኖ",
+    "search": "ፈልግ",
+    "loading": "በመጫን ላይ...",
+    "retry": "እንደገና ሞክር",
+    "empty": "እዚህ ምንም የለም"
+  },
+  "tabs": {
+    "dashboard": "ዳሽቦርድ",
+    "bids": "የእኔ ጨረታዎች",
+    "assets": "የእኔ ንብረቶች",
+    "profile": "መገለጫ"
+  },
+  "header": {
+    "notifications": "ማሳወቂያዎች",
+    "language": "ቋንቋ",
+    "markAllRead": "ሁሉንም አንብቦ ምልክት አድርግ",
+    "markAsRead": "አንብቦ ምልክት አድርግ",
+    "noNotifications": "እስካሁን ማሳወቂያ የለም",
+    "unread": "ያልተነበቡ"
+  },
+  "dashboard": {
+    "greeting": "እንኳን በደህና መጡ",
+    "subtitle": "ቀጥታ ጨረታዎችን እና ግሩም ንብረቶችን ያግኙ",
+    "stats": {
+      "activeAuctions": "ንቁ ጨረታዎች",
+      "myBids": "ንቁ ጨረታዎቼ",
+      "won": "የወሰንኩ",
+      "watchlist": "እየተከታተልኩ"
+    },
+    "sections": {
+      "liveNow": "አሁን ቀጥታ",
+      "endingSoon": "በቅርቡ ይዘጋል",
+      "featured": "ተለይተው የቀረቡ",
+      "categories": "ምድቦች",
+      "recentActivity": "የቅርብ ጊዜ እንቅስቃሴ"
+    },
+    "categories": {
+      "vehicle": "ተሽከርካሪዎች",
+      "land": "መሬት",
+      "building": "ሕንጻዎች",
+      "machinery": "ማሽናሪ",
+      "equipment": "መሳሪያዎች",
+      "salvage": "የጥገና ንብረት",
+      "other": "ሌላ",
+      "vehicles": "ተሽከርካሪዎች",
+      "buildings": "ሕንጻዎች",
+      "salvage_assets": "የጥገና ንብረቶች",
+      "other_assets": "ሌላ ንብረቶች",
+      "realEstate": "ሪል እስቴት",
+      "jewelry": "ጌጣጌጥ",
+      "art": "ጥበብ እና ጥንታዊ",
+      "electronics": "ኤሌክትሮኒክስ"
+    },
+    "timeLeft": "ቀርቶት",
+    "currentBid": "ወቅታዊ ጨረታ",
+    "bidsCount": "{{count}} ጨረታዎች",
+    "placeBid": "ጨረታ ያስገቡ",
+    "filters": {
+      "all": "ሁሉም",
+      "active": "ንቁ",
+      "closed": "ዝግ",
+      "suspended": "ታግዷል"
+    },
+    "a11y": {
+      "statusFilters": "የጨረታ ሁኔታ ማጣሪያዎች"
+    },
+    "browse": {
+      "searchPlaceholder": "ጨረታዎችን በርዕስ ይፈልጉ",
+      "empty": "ከማጣሪያዎ ጋር የሚዛመዱ ጨረታዎች የሉም",
+      "emptyHint": "ሌላ የፍለጋ ቃል ወይም ማጣሪያ ይሞክሩ",
+      "results": "{{count}} ጨረታዎች",
+      "ends": "ይዘጋል",
+      "category": "ምድብ",
+      "openDetail": "ጨረታ {{title}} ክፈት",
+      "detailEyebrow": "የጨረታ ዝርዝሮች",
+      "detailTitle": "ጨረታ",
+      "detailError": "የጨረታ ዝርዝሮችን መጫን አልተቻለም",
+      "description": "መግለጫ",
+      "error": "ጨረታዎችን መጫን አልተሳካም፦ {{message}}"
+    }
+  },
+  "auction": {
+    "participation": {
+      "actions": "ተሳትፎ",
+      "buyDoc": "የጨረታ ሰነድ ይግዙ",
+      "viewDoc": "ሰነድ ይመልከቱ",
+      "placeBids": "ጨረታ ያስገቡ",
+      "documentFee": "የሰነድ ክፍያ",
+      "lots": "ዕቃዎች",
+      "viewDocLocked": "የጨረታ ሰነዱን ለመክፈት ክፍያዎ እንዲጸድቅ ይጠብቁ።",
+      "viewDocLockedTitle": "ሰነድ ተቆልፏል",
+      "bidDocLocked": "ጨረታ ከመስጠት በፊት የሰነድ ክፍያዎ እንዲጸድቅ ይጠብቁ።",
+      "bidKycLocked": "ጨረታ ከመስጠት በፊት KYC ማረጋገጥ ያስፈልጋል።",
+      "bidLockedTitle": "ጨረታ ተቆልፏል",
+      "docPendingTitle": "ክፍያ በግምገማ ላይ",
+      "docPendingBody": "ደረሰኝዎ ቀርቧል። ክፍያው ከጸደቀ በኋላ ሰነድ እና ጨረታ ይከፈታሉ።",
+      "docApprovedTitle": "የሰነድ መዳረሻ ተሰጥቷል",
+      "docApprovedBody": "ክፍያዎ ጸድቋል። አሁን ሰነድ ማየት እና ዕቃዎችን መምረጥ ይችላሉ።",
+      "docRejectedTitle": "ክፍያ ተቀባይነት አላገኘም",
+      "docRejectedBody": "ክፍያዎ አልጸደቀም። አዲስ ደረሰኝ ይስቀሉ።",
+      "docUnderReview": "ክፍያ በግምገማ ላይ",
+      "buyDocHint": "የጨረታ መረጃ ለመድረስ እና ለመጫረት ብቁ ለመሆን የሰነድ ክፍያ ይክፈሉ።",
+      "paymentMethod": "የክፍያ ዘዴ",
+      "manualTransfer": "ባንክ ማስተላለፍ (እጅ)",
+      "addisPay": "አዲስ ፔይ",
+      "paymentReceipt": "የክፍያ ደረሰኝ",
+      "paymentReceiptHint": "የማስተላለፊያ ደረሰኝ ፎቶ ወይም PDF ይስቀሉ።",
+      "submitPayment": "ክፍያ አስገባ",
+      "uploadReceipt": "ደረሰኝ ይስቀሉ",
+      "uploadReceiptHint": "JPG, PNG, ወይም PDF",
+      "receiptReady": "ደረሰኝ ተያይዟል",
+      "uploadErrorTitle": "ስርጭት አልተሳካም",
+      "uploadErrorBody": "ፋይሉን መምረጥ አልተቻለም። እንደገና ይሞክሩ።",
+      "simulateHint": "ማስመሳሚያ፦ እንደ ሰራተኛ ለመጽደቅ ይጫኑ",
+      "simulateApprove": "ጽድቅ",
+      "pdfDocument": "PDF ሰነድ",
+      "downloadDoc": "አውርድ",
+      "openExternal": "በአሳሽ ይክፈቱ",
+      "viewerFallback": "ሰነዱን እዚህ ማሳየት አልተቻለም። በአሳሽ ይክፈቱ።",
+      "downloadCompleteTitle": "ማውረድ ተጠናቋል",
+      "downloadCompleteBody": "ወደ {{path}} ተቀምጧል",
+      "downloadErrorTitle": "ማውረድ አልተሳካም",
+      "downloadErrorBody": "ሰነዱን ማውረድ አልተቻለም። በአሳሽ ይሞክሩ።",
+      "bidSummary": "የጨረታ ማጠቃለያ",
+      "selectedLots": "የተመረጡ ዕቃዎች",
+      "totalBidAmount": "ጠቅላላ የጨረታ መጠን",
+      "cpoAmount": "CPO ({{percent}}%)",
+      "selectLotsHint": "ዕቃዎችን ይምረጡ እና ጨረታ ያስገቡ። ጨረታ ከዝቅተኛ ዋጋ በላይ መሆን አለበት።",
+      "bidsLockedHint": "CPO ክፍያዎ በግምገማ ላይ ስላለ ጨረታዎ ተቆልፏል።",
+      "reserve": "ዝቅተኛ ዋጋ",
+      "yourBid": "የእርስዎ ጨረታ",
+      "uploadCpo": "CPO ደረሰኝ ይስቀሉ",
+      "uploadCpoTitle": "CPO ደረሰኝ ይስቀሉ",
+      "uploadCpoBody": "ለ {{amount}} CPO የክፍያ ማስረጃ ይስቀሉ። ከማስገባት በኋላ ጨረታዎ ተቆልፏል።",
+      "cpoReceipt": "CPO ደረሰኝ",
+      "cpoReceiptHint": "ለ CPO መጠን የክፍያ ማስረጃ ይስቀሉ።",
+      "submitCpo": "CPO አስገባ",
+      "reuploadCpo": "CPO እንደገና ይስቀሉ",
+      "cpoPendingTitle": "CPO በግምገማ ላይ",
+      "cpoPendingBody": "CPO ደረሰኝዎ በግምገማ ላይ ነው። ጨረታ ተቆልፏል።",
+      "cpoApprovedTitle": "CPO ጸድቋል",
+      "cpoApprovedBody": "CPOዎ ጸድቋል። የተመረጡ ዕቃዎች ላይ ጨረታዎ ተመዝግቧል።",
+      "cpoRejectedTitle": "CPO ተቀባይነት አላገኘም",
+      "cpoRejectedBody": "CPOዎ አልጸደቀም። ጨረታዎን ያዘምኑ እና አዲስ ደረሰኝ ይስቀሉ።",
+      "noLots": "ለዚህ ጨረታ ዕቃዎች አልተገኙም።",
+      "bidErrors": {
+        "invalid": "ትክክለኛ የጨረታ መጠን ያስገቡ።",
+        "belowReserve": "ጨረታ ቢያንስ {{reserve}} መሆን አለበት።"
+      },
+      "demoSteps": {
+        "not_started": "ማስመሳሪያ · አልተጀመረም",
+        "doc_pending": "ማስመሳሪያ · የሰነድ ክፍያ በግምገማ",
+        "doc_approved": "ማስመሳሪያ · ሰነድ ጸድቋል",
+        "bids_draft": "ማስመሳሪያ · ጨረታ ተዘጋጅቷል",
+        "cpo_pending": "ማስመሳሪያ · CPO በግምገማ",
+        "cpo_approved": "ማስመሳሪያ · CPO ጸድቋል"
+      }
+    }
+  },
+  "bids": {
+    "title": "የእኔ ጨረታዎች",
+    "subtitle": "የጨረታ ጥያቄዎችዎን ይከታተሉ እና ሁኔታዎን ይመልከቱ።",
+    "tabs": {
+      "all": "ሁሉም",
+      "active": "ንቁ",
+      "winning": "እየወሰንኩ",
+      "outbid": "ወጥቶብኛ",
+      "won": "ያሸነፍኩ",
+      "lost": "ያሸነፍኩ"
+    },
+    "currentBid": "ወቅታዊ ጨረታ",
+    "yourBid": "የእኔ ጨረታ",
+    "timeLeft": "ቀርቶት",
+    "ended": "ተጠናቋል",
+    "increaseBid": "ጨረታ ጨምር",
+    "viewAuction": "ጨረታ እይ",
+    "untitledAuction": "ርዕስ የሌለው ጨረታ",
+    "empty": "በዚህ ምድብ ምንም ጨረታ የለም",
+    "emptyTitle": "ገና ጨረታ የለም",
+    "loadError": "ጨረታዎችን መጫን አልተሳካም፦ {{message}}",
+    "results": "{{count}} ጨረታዎች",
+    "status": {
+      "submitted": "ተላልፏል",
+      "winning": "እየወሰንኩ",
+      "lost": "ተሸንፏል",
+      "invalid": "ልክ ያልሆነ"
+    },
+    "summary": {
+      "totalBids": "ጠቅላላ ጨረታዎች",
+      "activeBids": "ንቁ",
+      "winningBids": "እየወሰንኩ",
+      "wonBids": "ያሸነፍኩ"
+    }
+  },
+  "assets": {
+    "title": "የእኔ ንብረቶች",
+    "subtitle": "የንብረት ጥያቄዎችዎን ያስገቡ እና ይከታተሉ። ከጸደቁ በኋላ ወደ ግምገማ እና ጨረታ ሂደት ይገባሉ።",
+    "tabs": {
+      "listed": "የቀረቡ",
+      "pending": "በመጠበቅ ላይ",
+      "sold": "የተሸጡ",
+      "draft": "ንድፎች"
+    },
+    "addAsset": "ንብረት ጨምር",
+    "currentBid": "ወቅታዊ ጨረታ",
+    "reservePrice": "ዝቅተኛ ዋጋ",
+    "submitted": "የቀረበ",
+    "reserveMet": "ትንሹ ተሞልቷል",
+    "views": "ዕይታዎች",
+    "watchers": "ተከታተዎች",
+    "bids": "ጨረታዎች",
+    "viewDetails": "ዝርዝር እይ",
+    "editAsset": "አርትዕ",
+    "empty": "በዚህ ምድብ ምንም ንብረት የለም",
+    "emptyTitle": "ገና ንብረት የለም",
+    "emptyHint": "የባለቤትነት ማረጋገጫ ሂደቱን ለመጀመር የመጀመሪያ ንብረትዎን ያስገቡ።",
+    "rejectionReason": "ምክንያት፦ {{reason}}",
+    "loadError": "ንብረቶችን መጫን አልተሳካም፦ {{message}}",
+    "detail": {
+      "title": "የንብረት ዝርዝር",
+      "eyebrow": "የእኔ ንብረት",
+      "notFound": "ይህ ንብረት አልተገኘም።",
+      "allPhotos": "ሁሉም ፎቶዎች",
+      "photoCount": "{{count}} ፎቶዎች",
+      "reviewed": "ተገምገመ",
+      "auction": "ጨረታ",
+      "location": "ቦታ",
+      "documents": "ሰነዶች",
+      "noDocuments": "ምንም ሰነድ አልተያዘም።",
+      "tapToOpen": "ለመክፈት ይንኩ",
+      "rejection": "የመቀባት አለመቻል ምክንያት"
+    },
+    "status": {
+      "PENDING_REVIEW": "በግምገማ ላይ",
+      "APPROVED": "ጸድቋል",
+      "REJECTED": "ተቀባይነት አላገኘም",
+      "UNDER_EVALUATION": "ግምገማ በሂደት ላይ",
+      "EVALUATED": "ተገመገመ",
+      "IN_AUCTION": "በጨረታ ላይ"
+    },
+    "ownershipDocs": {
+      "vehicleRegistrationBook": "የተሽከርካሪ ምዝገባ መጽሐፍ",
+      "titleDeed": "የባለቤትነት ሰነድ",
+      "ownershipCertificate": "የባለቤትነት ማረጋገጫ",
+      "purchaseDocuments": "የግዢ ሰነዶች",
+      "other": "ሌላ የባለቤትነት ሰነድ"
+    },
+    "kycRequired": {
+      "title": "ማረጋገጫ ያስፈልጋል",
+      "message": "ንብረቶችን ከመላክዎ በፊት የKYC ማረጋገጫ ያጠናቅቁ።",
+      "banner": "ንብረቶችን ከመላክዎ በፊት የKYC ማረጋገጫ ያስፈልጋል።"
+    },
+    "form": {
+      "submit": "ለግምገማ ላክ",
+      "submitting": "በመላክ ላይ...",
+      "submitFailed": "ንብረት ማስገባት አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+      "fields": {
+        "title": "የንብረት ርዕስ",
+        "assetType": "የንብረት ምድብ",
+        "description": "የንብረት መግለጫ",
+        "conditionNotes": "የንብረት ሁኔታ ማስታወሻ",
+        "location": "የንብረቱ ቦታ",
+        "address": "የንብረት አድራሻ (አማራጭ)",
+        "desiredReservePrice": "የሚፈለግ ዝቅተኛ ዋጋ (ETB)",
+        "auctionConditions": "ልዩ የጨረታ ሁኔታዎች ወይም ማስታወሻ",
+        "photos": "የንብረት ፎቶዎች",
+        "ownershipDocument": "የባለቤትነት ሰነድ",
+        "additionalDocuments": "የድጋፍ ሰነዶች"
+      },
+      "hints": {
+        "ownershipDoc": "ለዚህ ምድብ የሚፈለግ ሰነድ፦ {{document}}",
+        "additionalDocumentsPdf": "ቢያንስ አንድ የድጋፍ ሰነድ (PDF ወይም ምስል) ይስቀሉ።",
+        "photos": "ከተለያዩ ማዕዘኖች የንብረቱን ግልጽ ፎቶዎች ይስቀሉ።"
+      },
+      "errors": {
+        "titleRequired": "የንብረት ርዕስ ያስፈልጋል።",
+        "assetTypeRequired": "እባክዎ የንብረት ምድብ ይምረጡ።",
+        "descriptionRequired": "የንብረት መግለጫ ያስፈልጋል።",
+        "conditionNotesRequired": "የንብረት ሁኔታ ማስታወሻ ያስፈልጋል።",
+        "locationRequired": "የንብረት ቦታ ያስፈልጋል።",
+        "reservePriceRequired": "ከዜሮ በላይ ትክክለኛ የሚፈለግ ዝቅተኛ ዋጋ ያስገቡ።",
+        "auctionConditionsRequired": "ልዩ የጨረታ ሁኔታዎች ወይም ማስታወሻ ያስፈልጋል።",
+        "photosRequired": "ቢያንስ አንድ ፎቶ ይስቀሉ።",
+        "ownershipDocRequired": "የባለቤትነት ሰነድ ያስፈልጋል።",
+        "supportingDocsRequired": "ቢያንስ አንድ የድጋፍ ሰነድ ይስቀሉ።"
+      }
+    },
+    "requestWizard": {
+      "title": "የንብረት ጥያቄ",
+      "stepProgress": "ደረጃ {{current}} ከ {{total}}",
+      "steps": {
+        "details": "የንብረት ዝርዝሮች",
+        "location": "ቦታ እና ውሎች",
+        "photos": "ፎቶዎች",
+        "documents": "ሰነዶች",
+        "batchReview": "ግምገማ እና ላክ"
+      },
+      "placeholders": {
+        "description": "ንብረቱን፣ ዋና መለያዎች እና አስፈላጊ ዝርዝሮች ይግለጹ...",
+        "conditionNotes": "የአሁኑ ሁኔታ፣ ጉዳት፣ የጥገና ታሪክ ወይም ጉድለቶች ይግለጹ...",
+        "location": "ለምሳሌ አዲስ አበባ፣ ቦሌ",
+        "reservePrice": "ለምሳሌ 2500000",
+        "auctionConditions": "ማንኛውም ውሎች፣ የእይታ ህጎች፣ የክፍያ ግብረመልሶች ወይም ልዩ ማስታወሻዎች..."
+      },
+      "reserveHint": "የሚፈለግ ዝቅተኛ ዋጋ በአስተዳዳሪ ይገመገማል። የመጨረሻ ዝቅተኛ ዋጋ በመጀመሪያ ይወሰናል።",
+      "batchReview": {
+        "intro": "ከታች ያሉትን ንብረቶች ይገምግሙ። ተጨማሪ ንብረቶችን ይጨምሩ ወይም ዝግጁ ሲሆኑ አብረው ይላኩ።",
+        "empty": "ገና በዝርዝርዎ ውስጥ ንብረት የለም። ተመለስ እና አንድ ለመጨመር ቅጹን ይሙሉ።",
+        "assetLabel": "ንብረት {{index}}",
+        "queuedCount": "{{count}} ንብረት(ዎች) ተጨምረዋል። ከዚህ በኋላ ተጨማሪ መጨመር ይችላሉ።",
+        "editing": "በዝርዝር ውስጥ ያለ ንብረት እያርሙ ነው።",
+        "limitReached": "በአንድ ጥያቄ እስከ {{max}} ንብረቶችን ማስገባት ይችላሉ።"
+      },
+      "actions": {
+        "back": "ተመለስ",
+        "next": "ቀጥል",
+        "addToQueue": "ወደ ዝርዝር ጨምር",
+        "addDocument": "ሰነድ ጨምር",
+        "submit": "ጥያቄ ላክ",
+        "submitAll": "{{count}} ጥያቄዎችን ላክ",
+        "edit": "አርትዕ",
+        "addAnother": "ሌላ ንብረት ጨምር",
+        "removeFromQueue": "አስወግድ",
+        "addPhotos": "ፎቶ ጨምር"
+      },
+      "errors": {
+        "fixBeforeSubmit": "ከመላክዎ በፊት ሁሉንም አስፈላጊ መስኮች ይሙሉ።",
+        "emptyQueue": "ከመላክዎ በፊት ቢያንስ አንድ ንብረት ወደ ዝርዝርዎ ይጨምሩ።"
+      },
+      "review": {
+        "photoCount": "{{count}} ፎቶ(ዎች)",
+        "documentCount": "{{count}} ሰነድ(ዎች)"
+      },
+      "success": {
+        "title": "ጥያቄ ተልኳል",
+        "body": "{{count}} የንብረት ጥያቄ(ዎች) ለግምገማ ቀርቧል። ቡድናችን በቅርቡ እያንዳንዱን ይገመግማል።",
+        "backToAssets": "ወደ ንብረቶቼ ተመለስ"
+      }
+    },
+    "summary": {
+      "totalAssets": "ጠቅላላ ንብረቶች",
+      "listed": "የቀረቡ",
+      "pending": "በመጠበቅ ላይ",
+      "sold": "የተሸጡ"
+    }
+  },
+  "profile": {
+    "title": "መገለጫ",
+    "guestName": "የጨረታ ተሳታፊ",
+    "verified": "ተረጋግጧል",
+    "editProfile": "መገለጫ አርትዕ",
+    "memberSince": "ከ{{date}} ጀምሮ አባል",
+    "stats": {
+      "bids": "ጨረታዎች",
+      "won": "የወሰንኩ",
+      "assets": "ንብረቶች",
+      "rating": "ደረጃ"
+    },
+    "menu": {
+      "settings": "ቅንብሮች",
+      "myAssets": "የእኔ ንብረቶች",
+      "myBids": "የእኔ ጨረታዎች",
+      "paymentMethods": "የክፍያ ዘዴዎች",
+      "transactionHistory": "የግብይት ታሪክ",
+      "kycVerification": "የKYC ማረጋገጫ",
+      "helpCenter": "እገዛ እና ድጋፍ",
+      "about": "ስለ እንደራስ",
+      "logout": "ውጣ"
+    },
+    "badges": {
+      "topBidder": "ከፍተኛ ጨራቹ",
+      "verifiedOwner": "ተረጋግጧል ባለቤት",
+      "elite": "ክብረ አባል"
+    },
+    "kycStatus": {
+      "title": "የማረጋገጫ ሁኔታ",
+      "approved": "ተረጋግጧል",
+      "not_submitted": "አልተላከም",
+      "under_review": "በማጣራት ላይ",
+      "rejected": "ተተርፏል",
+      "hints": {
+        "approved": "ማንነትዎ ተረጋግጧል። በጨረታዎች ለመሳተፍ ይችላሉ።",
+        "not_submitted": "ማንነትዎን ለማረጋገጥ ሰነዶችዎን ያስገቡ እና በጨረታዎች ይሳተፉ።",
+        "under_review": "ሰነዶችዎ በማጣራት ላይ ናቸው። ሲጠናቀቅ ማሳወቂያ ይደርስዎታል።",
+        "rejected": "ማስረከብዎ ተተርፏል። ግብረመልስን ለመመልከት እና እንደገና ለመላክ ይንኩ።"
+      }
+    },
+    "editProfileScreen": {
+      "photoHint": "የመገለጫ ፎቶ",
+      "photoSub": "ፎቶዎን ለመቀየር የካሜራ አዶን ይንኩ (ሙከራ)",
+      "personalInfo": "የግል መረጃ",
+      "fullName": "ሙሉ ስም",
+      "fullNamePlaceholder": "ሙሉ ስምዎን ያስገቡ",
+      "email": "የኢሜይል አድራሻ",
+      "emailPlaceholder": "you@example.com",
+      "mobile": "የሞባይል ቁጥር",
+      "mobilePlaceholder": "+251 9XX XXX XXXX",
+      "city": "ከተማ",
+      "cityPlaceholder": "ከተማዎ",
+      "bio": "ባዮግራፊ",
+      "bioPlaceholder": "ስለ ፍላጎቶችዎ ይንገሩ",
+      "save": "ለውጦችን አስቀምጥ",
+      "saved": "መገለጫ በተሳካ ሁኔታ ተዘምኗል"
+    },
+    "helpScreen": {
+      "intro": "ለተደጋጋሚ ጥያቄዎች መልሶችን ያግኙ ወይም ለግል እገዛ የድጋፍ ቡድናችንን ያግኙ።",
+      "faqTitle": "ተደጋጋሚ ጥያቄዎች",
+      "contactTitle": "ድጋፍ ያግኙ",
+      "faq": {
+        "bidding": {
+          "question": "ጨረታ እንዴት እቀርባለሁ?",
+          "answer": "በዳሽቦርድ ላይ ቀጣይ ጨረታዎችን ያስሱ፣ የጨረታ ዝርዝር ገጹን ይክፈቱ እና ጨረታ አቀርብ የሚለውን ይንኩ። መጠንዎን ያስገቡ እና ያረጋግጡ። ከእርስዎ በላይ ሲቀርብ ማሳወቂያ ይደርስዎታል።"
+        },
+        "kyc": {
+          "question": "KYC ማረጋገጫ ለምን ያስፈልጋል?",
+          "answer": "የማንነት ማረጋገጫ ሁሉንም ተሳታፊዎች ይጠብቃል እና የተረጋገጡ ተጠቃሚዎች ብቻ ከፍተኛ ዋጋ ያላቸውን ንብረቶች ላይ ጨረታ እንዲያቀርቡ ያረጋግጣል። ሰነዶችዎን ከመገለጫዎ ያስገቡ።"
+        },
+        "payments": {
+          "question": "ምን ዓይነት የክፍያ ዘዴዎች ይቀበላሉ?",
+          "answer": "እንደራስ የባንክ ማስተላለፍ፣ የሞባይል ገንዘብ እና ዋና ካርዶችን ይደግፋል። ጨረታ ካሸነፉ በኋላ የክፍያ ዝርዝሮች ይሰጣሉ።"
+        },
+        "assets": {
+          "question": "ንብረት ለጨረታ እንዴት እቀርባለሁ?",
+          "answer": "ወደ ንብረቶቼ ይሂዱ፣ ንብረት አቀርብ የሚለውን ይንኩ እና ከፎቶዎች ጋር ዝርዝሮቹን ይሙሉ። ቡድናችን ከመዘርዘር በፊት ማስረከቦችን ያጣራል።"
+        }
+      },
+      "contact": {
+        "email": "ኢሜይል",
+        "phone": "ስልክ",
+        "hours": "የድጋፍ ሰዓቶች"
+      }
+    },
+    "aboutScreen": {
+      "tagline": "የፕሪሚየም ጨረታዎች መድረክ",
+      "description": "እንደራስ ሰብሳቢዎችን፣ ተበዳሪዎችን እና ሻጮችን በታመነ ዲጂታል የጨረታ ልምድ ያገናኛል። አልባላዊ ንብረቶችን ያግኙ፣ ተወዳዳሪ ጨረታዎችን ያቀርቡ እና ፖርትፎሊዎን ያስተዳድሩ — ሁሉም በአንድ ወርቃማ ገበያ።",
+      "statsTitle": "የመድረክ ማዕከላዊ ነጥቦች",
+      "stats": {
+        "auctions": "ጨረታዎች",
+        "users": "ተጠቃሚዎች",
+        "assets": "የተዘረዘሩ ንብረቶች"
+      },
+      "legalTitle": "ህጋዊ እና ሀብቶች",
+      "links": {
+        "terms": "የአገልግሎት ውሎች",
+        "privacy": "የግላዊነት ፖሊሲ",
+        "licenses": "የክፍት ምንጭ ፈቃዶች"
+      },
+      "copyright": "© 2026 እንደራስ። ሁሉም መብቶች የተጠበቁ ናቸው።"
+    }
+  },
+  "settings": {
+    "title": "ቅንብሮች",
+    "sections": {
+      "appearance": "አቀማመጥ",
+      "notifications": "ማሳወቂያዎች",
+      "language": "ቋንቋ እና ክልል",
+      "account": "መለያ",
+      "privacy": "ግላዊነት እና ደህንነት",
+      "about": "ስለ"
+    },
+    "theme": {
+      "label": "ጭብጥ",
+      "description": "ጨለማ፣ ብርሃን ወይም የመሣሪያዎን ቅንብር ይምረጡ",
+      "dark": "ጨለማ",
+      "light": "ብርሃን",
+      "automatic": "ሲስተም"
+    },
+    "language": {
+      "label": "የመተግበሪያ ቋንቋ",
+      "description": "የሚመርጡትን ቋንቋ ይምረጡ"
+    },
+    "notifications": {
+      "push": "ፈጣን ማሳወቂያዎች",
+      "pushDesc": "በዚህ መሣሪያ ላይ ማሳወቂያ ይቀበሉ",
+      "email": "የኢሜይል ማሳወቂያዎች",
+      "emailDesc": "በኢሜይል ዝመናዎችን ይቀበሉ",
+      "bidAlerts": "የጨረታ ማንቂያዎች",
+      "bidAlertsDesc": "ጨረታ ሲወጣብኝ ወይም ጨረታ ሲያበቃ ይንቀሳቀሱኝ",
+      "reminders": "የጨረታ ተከታተዎች",
+      "remindersDesc": "ጨረታ ከመዘጋቱ በፊት ያስታውሱኝ",
+      "marketing": "ግብይት",
+      "marketingDesc": "ዜና፣ ምክሮች እና ምስመራዎች"
+    },
+    "account": {
+      "changePassword": "የይለፍ ቃል ቀይር",
+      "changePasswordDesc": "የመለያዎን የይለፍ ቃል ያዘምኑ",
+      "twoFactor": "ሁለት-ደረጃ ማረጋገጫ",
+      "twoFactorDesc": "ተጨማሪ ደህንነት ይጨምሩ",
+      "linkedAccounts": "የተገናኙ መለያዎች",
+      "linkedAccountsDesc": "የተገናኙ መለያዎችን ያስተዳድሩ"
+    },
+    "privacy": {
+      "dataPrivacy": "የውሂብ ግላዊነት",
+      "dataPrivacyDesc": "ውሂብዎ እንዴት እንደሚጠቀም ያስተዳድሩ",
+      "blockedUsers": "የታገዱ ተጠቃሚዎች",
+      "blockedUsersDesc": "የታገዱ መለያዎችን ያስተዳድሩ"
+    },
+    "about": {
+      "version": "እትም",
+      "versionNumber": "1.0.0",
+      "termsOfService": "የአገልግሎት ውሎች",
+      "privacyPolicy": "የግላዊነት ፖሊሲ",
+      "rateApp": "እንደራስን ደረጃ ይስጡ",
+      "shareApp": "መተግበሪያ ያጋሩ"
+    },
+    "logoutConfirm": {
+      "title": "ውጣ",
+      "message": "ከመለያዎ መውጣት ይፈልጋሉ?",
+      "confirm": "ውጣ",
+      "cancel": "ይቅር"
+    }
+  },
+  "kyc": {
+    "title": "KYC ማረጋገጫ",
+    "loginRequired": "KYC ሰነዶችዎን ለመስቀል እባክዎ ይግቡ።",
+    "verificationSubtitle": "የሰነድ አይነትዎን ይምረጡ እና ለማረጋገጫ ግልጽ ፎቶዎችን ይስቀሉ",
+    "selectDocumentType": "የሰነድ አይነት",
+    "accountTypeIndividual": "የግል መለያ",
+    "accountTypeOrganization": "የድርጅት መለያ",
+    "passportNumber": "የፓስፖርት ቁጥር",
+    "licenseNumber": "የፍቃድ ቁጥር",
+    "passportBioPage": "የፓስፖርት ባዮ ገጽ",
+    "documentFront": "ሰነድ (ፊት)",
+    "documentBack": "ሰነድ (ጀርባ)",
+    "documentTypes": {
+      "nationalId": "ብሄራዊ መታወቂያ",
+      "passport": "ፓስፖርት",
+      "drivingLicense": "የመንጃ ፍቃድ",
+      "tradeLicense": "የንግድ ፈቃድ",
+      "tinCertificate": "የትን ሰርተፊኬት",
+      "businessRegistration": "የንግድ ምዝገባ"
+    },
+    "underReviewTitle": "ማረጋገጫ በማጣራት ላይ",
+    "underReviewBanner": "KYC ሰነዶችዎ በማረጋገጥ ላይ ናቸው። በጨረታዎች ለመሳተፍ እባክዎ ይጠብቁ።",
+    "underReviewNotificationInfo": "KYCዎ ከተገነጸለ በኋላ በኤስኤምኤስ እና በኢሜይል ማሳወቂያ ይደርስዎታል።",
+    "rejectedBanner": "KYCዎ ተተርፏል። ግምገማውን ይመልከቱ እና ሰነዶችዎን እንደገና ይስቀሉ።",
+    "goToDashboard": "ወደ ዳሽቦርድ ይሂዱ",
+    "nationalIdNumber": "የብሄራዊ መታወቂያ ቁጥር",
+    "nationalIdFront": "ብሄራዊ መታወቂያ (ፊት)",
+    "nationalIdBack": "ብሄራዊ መታወቂያ (ጀርባ)",
+    "tinNumber": "የትን ቁጥር",
+    "tradeLicense": "የንግድ ፈቃድ",
+    "tinCertificate": "የትን ሰርተፊኬት",
+    "businessRegistration": "የንግድ ምዝገባ",
+    "uploadFile": "ፋይል ይስቀሉ",
+    "changeFile": "ፋይል ለመቀየር ይንኩ",
+    "fileReady": "ፋይል ዝግጁ ነው",
+    "submit": "ለማረጋገጥ ይስቀሉ",
+    "resubmit": "ሰነዶችን እንደገና ይስቀሉ",
+    "submitting": "በመስቀል ላይ...",
+    "submissionFailed": "KYC ስርጭት አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+    "uploadFailed": "ፋይል ስርጭት አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+    "participation": {
+      "loginPrefix": "አልገቡም — በጨረታዎች ለመሳተፍ ",
+      "loginLink": "ይግቡ",
+      "loginSuffix": "።",
+      "submitPrefix": "KYC አልተላከም — ማንነትዎን ለማረጋገጥ ",
+      "submitLink": "ሰነዶችዎን ያስገቡ",
+      "submitSuffix": " እና ጨረታ ላይ ይሳተፉ።",
+      "pending": "KYC በግምገማ ላይ — ሰነዶችዎን እያረጋገጥን ነው። ሲጸድቁ ይነገርዎታል።",
+      "rejectedPrefix": "KYC ተተርፏል —",
+      "rejectedLink": "ግብረመልስ ይመልከቱ እና እንደገና ያስገቡ",
+      "rejectedSuffix": " በጨረታዎች ለመሳተፍ።"
+    },
+    "errors": {
+      "documentNumberRequired": "የሰነድ ቁጥር ያስፈልጋል።",
+      "documentFrontRequired": "የሰነድ ፊት ምስል ያስፈልጋል።",
+      "documentBackRequired": "የሰነድ ጀርባ ምስል ያስፈልጋል።",
+      "tradeLicenseRequired": "የንግድ ፈቃድ ሰነድ ያስፈልጋል።",
+      "tinCertificateRequired": "የትን ሰርተፊኬት ሰነድ ያስፈልጋል።",
+      "businessRegistrationRequired": "የንግድ ምዝገባ ሰነድ ያስፈልጋል።"
+    }
+  }
+}
