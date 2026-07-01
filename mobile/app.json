@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "Enderas Auction",
+    "slug": "enderas-auction",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "enderas-auction",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0A0A0F",
+    "ios": {
+      "backgroundColor": "#0A0A0F",
+      "icon": "./assets/expo.icon"
+    },
+    "android": {
+      "backgroundColor": "#0A0A0F",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-system-ui",
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0A0A0F",
+          "dark": {
+            "backgroundColor": "#0A0A0F",
+            "image": "./assets/splash-icon.png",
+            "imageWidth": 76
+          },
+          "light": {
+            "backgroundColor": "#FBF6E9",
+            "image": "./assets/splash-icon.png",
+            "imageWidth": 76,
+            "resizeMode": "contain"
+          },
+          "android": {
+            "image": "./assets/splash-icon.png",
+            "imageWidth": 76
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
