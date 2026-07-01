@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../../config/routes.js';
 import { resolveDefaultRoute } from '../../../config/navigation.config.js';
@@ -81,6 +81,7 @@ function OtpCells({ value, onChange, disabled }) {
 export function PublicAuthView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const setSession = useAuthStore((state) => state.setSession);
   const setPendingOtpVerification = useAuthStore((state) => state.setPendingOtpVerification);
@@ -175,7 +176,8 @@ export function PublicAuthView() {
         navigate(ROUTES.KYC_VERIFICATION, { replace: true });
         return;
       }
-      navigate(resolveDefaultRoute(roleCode), { replace: true });
+      const returnPath = location.state?.from;
+      navigate(returnPath || resolveDefaultRoute(roleCode), { replace: true });
     } catch (err) {
       setErrors({ form: resolveAuthError(err, t) });
     } finally {

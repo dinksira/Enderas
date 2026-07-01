@@ -1,0 +1,28 @@
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY packages/shared packages/shared
+COPY admin admin
+
+RUN npm ci
+
+ARG VITE_API_BASE_URL=https://api.example.com/api
+ARG VITE_API_V1_PREFIX=/v1
+ARG VITE_PUBLIC_APP_URL=https://www.example.com
+ARG VITE_APP_KIND=admin
+
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_API_V1_PREFIX=$VITE_API_V1_PREFIX
+ENV VITE_PUBLIC_APP_URL=$VITE_PUBLIC_APP_URL
+ENV VITE_APP_KIND=$VITE_APP_KIND
+
+RUN npm run build -w admin
+
+FROM nginx:1.27-alpine
+
+COPY docker/nginx/admin.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/admin/dist /usr/share/nginx/html
+
+EXPOSE 80

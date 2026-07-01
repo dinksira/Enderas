@@ -26,4 +26,5 @@ export {
 export { assetService } from './asset-service.js';
 export { notificationService } from './notification-service.js';
 export { dashboardService } from './dashboard-service.js';
+export { publicLandingService } from './public-landing-service.js';
 export { userService, listCreateRoles } from './user-service.js';

@@ -632,7 +632,7 @@ function serializeAuction(auction, bidCount = 0, extras = {}) {
     categoryKey: plain.category,
     description: plain.description,
     auctionConditions: plain.auction_conditions,
-    imageUrls: plain.image_urls || [],
+    imageUrls: normalizeAssetImageUrls(plain.image_urls),
     documents: plain.document_files || [],
     status: mapDisplayStatus(plain.status),
     dbStatus: plain.status,
@@ -1118,6 +1118,25 @@ export async function getAuctionById(id) {
  */
 export async function updateAuction(id, payload) {
   const auction = await findAuctionOrThrow(id);
+
+  if (auction.status === 'published') {
+    if (payload.imageUrls === undefined) {
+      throw new AppError('Auction cannot be edited in its current status', 400, 'AUCTION_NOT_EDITABLE');
+    }
+
+    const images = normalizeImageUrls(payload.imageUrls);
+    await auction.update({ image_urls: images.length > 0 ? images : null });
+
+    await auditService.writeAuditLog({
+      action: AUDIT_ACTIONS.UPDATE,
+      entityType: 'Auction',
+      entityId: auction.id,
+      metadata: { title: auction.title, imageOnly: true },
+    });
+
+    return getAuctionById(id);
+  }
+
   assertEditableStatus(auction.status);
 
   validateAuctionFields(payload, { requireDocuments: false });

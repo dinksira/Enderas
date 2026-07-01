@@ -588,6 +588,7 @@
       "auctions": "ጨረታዎች",
       "howItWorks": "እንዴት ይሰራል",
       "about": "ስለ እኛ",
+      "getApp": "መተግበሪያ ያግኙ",
       "contact": "እውቂያ"
     },
     "header": {
@@ -599,15 +600,25 @@
       "title": "ተቋማዊ ጨረታዎች። የተረጋገጡ ተሳታፊዎች። ግልጽ ውጤቶች።",
       "lead": "እንደራስ ባንኮችን፣ መንግስታዊ አካላትን፣ ኤንጂኦዎችን እና የግል ተቋማትን ከብቁ ተሳታፊዎች ጋር ያገናኛል — በታሸገ ጨረታ፣ በተመዘገበ ሂደት እና በደህንነት ደረጃ።",
       "ctaPrimary": "ጨረታዎችን ይመልከቱ",
-      "ctaSecondary": "ለመጫረት ይመዝገቡ",
-      "liveLabel": "ቀጥታ ሎት"
+      "ctaSecondary": "እንዴት ይሰራል",
+      "ctaRegister": "ለመጫረት ይመዝገቡ",
+      "liveLabel": "ቀጥታ ሎት",
+      "sellerPrompt": "ተቋማዊ ንብረት ለመሸጥ?",
+      "sellerLink": "በእንደራስ እንዴት እንደሚዘረዝር ይወቁ"
+    },
+    "forSellers": {
+      "title": "ንብረት ለሚያስወጡ ተቋማት",
+      "body": "ባንኮች፣ መንግስታዊ አካላት እና ኤንጂኦዎች ንብረት መቀበል፣ ግምገማ እና ለተረጋገጡ ተሳታፊዎች በታሸገ ጨረታ ማስተዋወቅ ይጠቀማሉ።",
+      "cta": "የንብረት ጥያቄ ይጀምሩ"
     },
     "stats": {
       "label": "የመድረክ ስታትስቲክስ",
       "activeAuctions": "ንቁ ጨረታዎች",
       "registeredBidders": "የተመዘገቡ ተሳታፊዎች",
       "totalValue": "ጠቅላላ የተገባዘ መጠን",
-      "institutions": "የተካተቱ ተቋማት"
+      "institutions": "የተካተቱ ተቋማት",
+      "loading": "ስታትስቲክስ በመጫን ላይ…",
+      "unavailable": "ስታትስቲክስ ጊዜያዊ አይገኝም"
     },
     "flow": {
       "title": "እንዴት ይሰራል",
@@ -621,14 +632,24 @@
       }
     },
     "auctions": {
-      "title": "ተለይተው የቀረቡ ንቁ ጨረታዎች",
-      "subtitle": "ለብቁ ተሳታፊዎች ክፍት የሆኑ ከፍተኛ ዋጋ ያላቸው ንብረቶች።",
+      "title": "የቀጥታ ጨረታ ዝርዝሮች",
+      "subtitle": "ለብቁ ተሳታፊዎች ክፍት የታተሙ ሎቶች — መጠበቂያ ዋጋ እና የጨረታ ጊዜ ለእያንዳንዱ ይታያል።",
       "viewAll": "ሁሉንም ጨረታዎች ይመልከቱ →",
-      "reserve": "መጠበቂያ"
+      "reserve": "መጠበቂያ",
+      "empty": "አሁን ንቁ ጨረታ የለም። ቆይተው ይመለሱ ወይም አዲስ ሎቶች ሲታተሙ ለማሳወቅ ይመዝገቡ።",
+      "loading": "ጨረታዎች በመጫን ላይ…",
+      "ended": "ተዘጋ",
+      "countdownLabel": "የቀረ ጊዜ",
+      "loginToBid": "ዝርዝር ለማየት ይግቡ",
+      "error": "ጨረታዎችን መጫን አልተሳካም። አገልጋዩ እየሰራ ነው ያረጋግጡና እንደገና ይሞክሩ።",
+      "bidCount": "{{count}} ጨረታዎች ቀርበዋል"
     },
     "categories": {
-      "title": "በንብረት አይነት ይፈልጉ",
-      "subtitle": "ከተረጋገጡ ተቋማት ተሽከርካሪዎች፣ መሬት፣ ሕንፃዎች እና ማሽነሪዎች።",
+      "title": "በንብረት አይነት ያጣሩ",
+      "subtitle": "ወደ የተለየ ምድብ የታተሙ ጨረታዎች ይሂዱ — ከመግባት በኋላ የተጣራ ካታሎግ ይከፈታል።",
+      "filterHint": "{{category}} ጨረታዎችን ይመልከቱ",
+      "activeCount": "{{count}} ንቁ",
+      "empty": "እስካሁን በምድብ የታተሙ ጨረታዎች የሉም።",
       "vehicle": "ተሽከርካሪ",
       "vehicles": "ተሽከርካሪዎች",
       "land": "መሬት",
@@ -646,9 +667,35 @@
         "payments": { "code": "PAY", "title": "የተረጋገጡ ክፍያዎች", "desc": "ጨረታ ከመከፈትዎ በፊት የሰነድ ክፍያ እና CPO ይገመገማሉ።" }
       }
     },
+    "getApp": {
+      "eyebrow": "ሞባይል",
+      "title": "እንደራስን ይወሰዱ",
+      "subtitle": "ጨረታዎችን ይከታተሉ፣ ይጫሩ እና ማሳወቂያዎችን ከስልክዎ ይቀበሉ — አሁን በ iOS እና Android ይገኛል።",
+      "downloadHeading": "መተግበሪያውን ያውርዱ",
+      "comingSoonNotice": "የሞባይል መተግበሪያዎች በቅርቡ ይጀምራሉ። ኢሜይልዎን ይተዉ እና በመጀመሪያው ቀን እናሳውቃለን።",
+      "emailLabel": "ለመጀመሪያ ማሳወቂያ ኢሜይል",
+      "emailPlaceholder": "you@example.com",
+      "notifyCta": "ያሳውቁኝ",
+      "thanks": "አመሰግናለሁ — መተግበሪያው ሲጀምር እናሳውቃለን።",
+      "webCta": "በድር ይቀጥሉ",
+      "badgeSoon": "በቅርቡ",
+      "appStoreSublabel": "ከ",
+      "playStoreSublabel": "ከ",
+      "appStore": "App Store ያውርዱ",
+      "playStore": "Google Play ያግኙ",
+      "appStoreAria": "እንደራስን ከ Apple App Store ያውርዱ",
+      "playStoreAria": "እንደራስን ከ Google Play ያግኙ",
+      "phonePreviewTitle": "ቀጥታ ጨረታዎች",
+      "phonePreviewLot": "ዋና ሎት",
+      "features": {
+        "browse": "የታተሙ ጨረታዎችን እና የሎት ዝርዝሮችን ይመልከቱ",
+        "bids": "በ CPO ማረጋገጫ ታሸገ ጨረታ ያቀርቡ",
+        "notify": "ቆጠራ እና ውጤት ማሳወቂያዎች በመሣሪያዎ"
+      }
+    },
     "footer": {
       "about": "ለተቋማዊ የንብረት ሽያጭ እና የተረጋገጠ ተሳታፊ ተሳትፎ የኢትዮጵያ ብሔራዊ ዲጂታል የጨረታ አስተዳደር መድረክ።",
-      "partners": "ተቋማዊ አጋሮች",
+      "liveCategories": "በምድብ ንቁ ዝርዝሮች",
       "contact": "እውቂያ",
       "legal": "ሕጋዊ",
       "privacy": "የግላዊነት ፖሊሲ",

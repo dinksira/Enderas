@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useRegisterPageSearch } from '@enderass/shared/contexts';
 import { useBrowseAuctions } from '../hooks/use-browse-auctions.js';
@@ -18,6 +19,8 @@ const STATUS_FILTERS = ['', 'ACTIVE', 'CLOSED', 'SUSPENDED'];
 
 export function BrowseAuctionsView() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const categoryFilter = searchParams.get('category') || '';
 
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
@@ -28,6 +31,16 @@ export function BrowseAuctionsView() {
     search: search.trim() || undefined,
   });
 
+  const filteredRecords = useMemo(() => {
+    if (!categoryFilter) {
+      return records;
+    }
+    return records.filter(
+      (record) =>
+        record.category === categoryFilter || record.categoryKey === categoryFilter,
+    );
+  }, [records, categoryFilter]);
+
   useRegisterPageSearch({
     value: search,
     onChange: setSearch,
@@ -35,8 +48,8 @@ export function BrowseAuctionsView() {
   });
 
   const sortedRecords = useMemo(
-    () => [...records].sort((a, b) => new Date(b.startDate) - new Date(a.startDate)),
-    [records],
+    () => [...filteredRecords].sort((a, b) => new Date(b.startDate) - new Date(a.startDate)),
+    [filteredRecords],
   );
 
   return (
