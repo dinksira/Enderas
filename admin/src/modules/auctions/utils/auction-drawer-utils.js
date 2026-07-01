@@ -33,7 +33,11 @@ export function toDatetimeLocalValue(iso) {
 
 export function canEditAuction(status) {
   const key = normalizeAuctionStatus(status);
-  return key === 'PENDING' || key === 'SUSPENDED';
+  return key === 'PENDING' || key === 'SUSPENDED' || key === 'ACTIVE';
+}
+
+export function isImagesOnlyAuctionEdit(status) {
+  return normalizeAuctionStatus(status) === 'ACTIVE';
 }
 
 /**
@@ -87,6 +91,13 @@ export function buildUpdatePayload(form) {
 
 export { AUCTION_CATEGORY_KEYS };
 
+export function buildImagesOnlyUpdatePayload(form) {
+  const newImageUrls = form.newImages.map((entry) => entry.url).filter(Boolean);
+  return {
+    imageUrls: [...form.existingImageUrls, ...newImageUrls],
+  };
+}
+
 export default {
   normalizeAuctionStatus,
   statusPillClass,
@@ -94,7 +105,9 @@ export default {
   formatFileSize,
   toDatetimeLocalValue,
   canEditAuction,
+  isImagesOnlyAuctionEdit,
   buildEditFormFromAuction,
   buildUpdatePayload,
+  buildImagesOnlyUpdatePayload,
   AUCTION_CATEGORY_KEYS,
 };

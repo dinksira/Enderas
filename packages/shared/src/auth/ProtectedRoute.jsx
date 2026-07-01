@@ -31,7 +31,8 @@ export function ProtectedRoute({
   }
 
   if (status !== 'authenticated') {
-    return <Navigate to={redirectTo} replace state={{ from: location.pathname }} />;
+    const returnPath = `${location.pathname}${location.search}`;
+    return <Navigate to={redirectTo} replace state={{ from: returnPath }} />;
   }
 
   if (!user?.isStaff) {

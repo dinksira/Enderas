@@ -8,6 +8,7 @@ import enderasLogo from '../../../assets/images/logo2.png';
 const NAV_ITEMS = [
   { key: 'auctions', href: '#featured-auctions' },
   { key: 'howItWorks', href: '#how-it-works' },
+  { key: 'getApp', href: '#get-app' },
   { key: 'about', href: '#trust' },
   { key: 'contact', href: '#footer' },
 ];
@@ -17,6 +18,7 @@ export function PublicHeader() {
   const location = useLocation();
   const onLanding = location.pathname === ROUTES.LANDING;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -29,10 +31,24 @@ export function PublicHeader() {
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    if (!onLanding) {
+      return undefined;
+    }
+
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+    };
+
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [onLanding]);
+
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <header className="pub-header">
+    <header className={`pub-header${scrolled ? ' pub-header--scrolled' : ''}`}>
       <div className="pub-header__inner">
         <Link to={ROUTES.LANDING} className="pub-header__brand" onClick={closeMenu}>
           <img
@@ -76,46 +92,44 @@ export function PublicHeader() {
         </div>
       </div>
 
-      {onLanding && (
-        <div
-          id="pub-mobile-nav"
-          className={`pub-header__mobile-nav ${menuOpen ? 'pub-header__mobile-nav--open' : ''}`}
-          hidden={!menuOpen}
-        >
-          <nav className="pub-header__mobile-links" aria-label={t('public.nav.label')}>
-            {NAV_ITEMS.map((item) => (
-              <a
-                key={item.key}
-                href={item.href}
-                className="pub-header__mobile-link"
+      {onLanding && menuOpen && (
+        <>
+          <div
+            id="pub-mobile-nav"
+            className="pub-header__mobile-nav pub-header__mobile-nav--open"
+          >
+            <nav className="pub-header__mobile-links" aria-label={t('public.nav.label')}>
+              {NAV_ITEMS.map((item) => (
+                <a
+                  key={item.key}
+                  href={item.href}
+                  className="pub-header__mobile-link"
+                  onClick={closeMenu}
+                >
+                  {t(`public.nav.${item.key}`)}
+                </a>
+              ))}
+            </nav>
+            <div className="pub-header__mobile-cta">
+              <Link to={ROUTES.LOGIN} className="pub-btn pub-btn--ghost" onClick={closeMenu}>
+                {t('public.header.login')}
+              </Link>
+              <Link
+                to={`${ROUTES.LOGIN}?tab=register`}
+                className="pub-btn pub-btn--primary"
                 onClick={closeMenu}
               >
-                {t(`public.nav.${item.key}`)}
-              </a>
-            ))}
-          </nav>
-          <div className="pub-header__mobile-cta">
-            <Link to={ROUTES.LOGIN} className="pub-btn pub-btn--ghost" onClick={closeMenu}>
-              {t('public.header.login')}
-            </Link>
-            <Link
-              to={`${ROUTES.LOGIN}?tab=register`}
-              className="pub-btn pub-btn--primary"
-              onClick={closeMenu}
-            >
-              {t('public.header.register')}
-            </Link>
+                {t('public.header.register')}
+              </Link>
+            </div>
           </div>
-        </div>
-      )}
-
-      {menuOpen && (
-        <button
-          type="button"
-          className="pub-header__backdrop"
-          aria-label="Close menu"
-          onClick={closeMenu}
-        />
+          <button
+            type="button"
+            className="pub-header__backdrop"
+            aria-label="Close menu"
+            onClick={closeMenu}
+          />
+        </>
       )}
     </header>
   );

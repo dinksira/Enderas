@@ -14,7 +14,7 @@ import {
 } from '@enderass/shared/utils';
 import { validateAuctionStep, AUCTION_STEPS } from '../utils/auction-form-utils.js';
 import { formatEtbAmount, normalizeAuctionStatus, statusPillClass } from '@enderass/shared/utils';
-import { AUCTION_CATEGORY_KEYS, buildEditFormFromAuction, buildUpdatePayload, canEditAuction, formatFileSize } from '../utils/auction-drawer-utils.js';
+import { AUCTION_CATEGORY_KEYS, buildEditFormFromAuction, buildImagesOnlyUpdatePayload, buildUpdatePayload, canEditAuction, formatFileSize, isImagesOnlyAuctionEdit } from '../utils/auction-drawer-utils.js';
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp';
 const PDF_ACCEPT = 'application/pdf';
 
@@ -197,6 +197,7 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
 
   const displayStatus = normalizeAuctionStatus(detail?.status);
   const editable = detail ? canEditAuction(detail.status) : false;
+  const imagesOnlyEdit = detail ? isImagesOnlyAuctionEdit(detail.status) : false;
 
   const canUpdate = can(MODULES.AUCTIONS, ACTIONS.UPDATE);
   const canPublish = can(MODULES.AUCTIONS, ACTIONS.PUBLISH);
@@ -232,21 +233,23 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
   const handleSaveEdit = async () => {
     if (!detail || !editForm) return;
 
-    const validationErrors = {
-      ...validateAuctionStep(AUCTION_STEPS.BASIC, editForm, t),
-      ...validateAuctionStep(AUCTION_STEPS.SCHEDULE, editForm, t),
-    };
+    if (!imagesOnlyEdit) {
+      const validationErrors = {
+        ...validateAuctionStep(AUCTION_STEPS.BASIC, editForm, t),
+        ...validateAuctionStep(AUCTION_STEPS.SCHEDULE, editForm, t),
+      };
 
-    const existingDocuments = toArray(editForm.existingDocuments);
-    const newDocuments = toArray(editForm.newDocuments);
-    const totalDocs = existingDocuments.length + newDocuments.length;
-    if (totalDocs === 0) {
-      validationErrors.documents = t('auctions.create.errors.documentsRequired');
-    }
+      const existingDocuments = toArray(editForm.existingDocuments);
+      const newDocuments = toArray(editForm.newDocuments);
+      const totalDocs = existingDocuments.length + newDocuments.length;
+      if (totalDocs === 0) {
+        validationErrors.documents = t('auctions.create.errors.documentsRequired');
+      }
 
-    if (Object.keys(validationErrors).length > 0) {
-      setEditErrors(validationErrors);
-      return;
+      if (Object.keys(validationErrors).length > 0) {
+        setEditErrors(validationErrors);
+        return;
+      }
     }
 
     setActionLoading(true);
@@ -267,7 +270,7 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
         };
       }
 
-      if (toArray(editForm.newDocuments).length > 0) {
+      if (!imagesOnlyEdit && toArray(editForm.newDocuments).length > 0) {
         const files = toArray(editForm.newDocuments).map((entry) => entry.file);
         const uploaded = await auctionService.uploadFiles(files, 'auctions/documents');
         formForPayload = {
@@ -280,7 +283,9 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
         };
       }
 
-      const payload = buildUpdatePayload(formForPayload);
+      const payload = imagesOnlyEdit
+        ? buildImagesOnlyUpdatePayload(formForPayload)
+        : buildUpdatePayload(formForPayload);
       const response = await auctionService.update(detail.id, payload);
       const updated = normalizeAuctionDetail(response?.auction || response);
 
@@ -663,6 +668,16 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
 
             {!loading && detail && editMode && editForm && (
               <div className="auction-drawer__edit-form">
+                {imagesOnlyEdit && (
+                  <p className="auction-create-modal__section-hint">
+                    {t('auctions.drawer.imagesOnlyHint', {
+                      defaultValue: 'Published auctions can only update listing photos. Other fields stay locked.',
+                    })}
+                  </p>
+                )}
+
+                {!imagesOnlyEdit && (
+                  <>
                 <Input
                   label={t('auctions.create.fields.title')}
                   value={editForm.title}
@@ -786,6 +801,8 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
                     </span>
                   )}
                 </div>
+                  </>
+                )}
 
                 <section className="auction-drawer__edit-upload">
                   <h3 className="kyc-drawer__section-title">{t('auctions.drawer.addImages')}</h3>
@@ -807,6 +824,23 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
                   />
                 </section>
 
+                {toArray(images).length > 0 && (
+                  <div className="auction-drawer__thumbnails" role="list">
+                    {toArray(images).map((url, index) => (
+                      <button
+                        key={`${url}-${index}`}
+                        type="button"
+                        className="auction-drawer__thumbnail"
+                        onClick={() => setViewerSrc(url)}
+                        aria-label={t('auctions.drawer.viewImage', { index: index + 1 })}
+                      >
+                        <img src={url} alt="" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {!imagesOnlyEdit && (
                 <section className="auction-drawer__edit-upload">
                   <h3 className="kyc-drawer__section-title">{t('auctions.drawer.addDocuments')}</h3>
                   <button
@@ -831,6 +865,7 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
                     </span>
                   )}
                 </section>
+                )}
               </div>
             )}
           </div>

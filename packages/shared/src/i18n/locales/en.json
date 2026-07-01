@@ -588,6 +588,7 @@
       "auctions": "Auctions",
       "howItWorks": "How It Works",
       "about": "About",
+      "getApp": "Get the App",
       "contact": "Contact"
     },
     "header": {
@@ -599,15 +600,25 @@
       "title": "Institutional auctions. Verified bidders. Transparent outcomes.",
       "lead": "Enderas connects banks, government agencies, NGOs, and private institutions with qualified bidders across Ethiopia — with sealed bids, audited workflows, and settlement-grade security.",
       "ctaPrimary": "Browse Auctions",
-      "ctaSecondary": "Register to Bid",
-      "liveLabel": "Live lot"
+      "ctaSecondary": "How It Works",
+      "ctaRegister": "Register to Bid",
+      "liveLabel": "Live lot",
+      "sellerPrompt": "Selling institutional assets?",
+      "sellerLink": "Learn how to list with Enderas"
+    },
+    "forSellers": {
+      "title": "For institutions disposing assets",
+      "body": "Banks, government agencies, and NGOs use Enderas to intake assets, run compliant evaluations, and reach verified bidders through a sealed-bid process with full audit trails.",
+      "cta": "Start asset intake"
     },
     "stats": {
       "label": "Platform statistics",
       "activeAuctions": "Active Auctions",
       "registeredBidders": "Registered Bidders",
       "totalValue": "Total Value Transacted",
-      "institutions": "Institutions Onboarded"
+      "institutions": "Institutions Onboarded",
+      "loading": "Loading platform statistics…",
+      "unavailable": "Statistics temporarily unavailable"
     },
     "flow": {
       "title": "How It Works",
@@ -621,14 +632,24 @@
       }
     },
     "auctions": {
-      "title": "Featured Live Auctions",
-      "subtitle": "High-value assets currently open for qualified bidder participation.",
+      "title": "Live Auction Listings",
+      "subtitle": "Published lots open to qualified bidders — reserve prices and bidding windows shown for each listing.",
       "viewAll": "View all auctions →",
-      "reserve": "Reserve"
+      "reserve": "Reserve",
+      "empty": "No active auctions right now. Check back soon or register to be notified when new lots publish.",
+      "loading": "Loading live auctions…",
+      "ended": "Closed",
+      "countdownLabel": "Time remaining",
+      "loginToBid": "Sign in to view details",
+      "error": "Unable to load auctions. Ensure the backend is running and try again.",
+      "bidCount": "{{count}} bids placed"
     },
     "categories": {
-      "title": "Browse by Asset Class",
-      "subtitle": "Vehicles, land, buildings, and machinery from verified institutional sellers.",
+      "title": "Filter by Asset Class",
+      "subtitle": "Jump to published auctions in a category — each tile opens the filtered catalog after sign-in.",
+      "filterHint": "Browse {{category}} auctions",
+      "activeCount": "{{count}} active",
+      "empty": "No published auctions by category yet.",
       "vehicle": "Vehicle",
       "vehicles": "Vehicles",
       "land": "Land",
@@ -646,9 +667,35 @@
         "payments": { "code": "PAY", "title": "Verified Payments", "desc": "Document fees and CPO reviewed before bidding unlocks." }
       }
     },
+    "getApp": {
+      "eyebrow": "Mobile",
+      "title": "Take Enderas with you",
+      "subtitle": "Bid, track lots, and receive alerts from your phone — available now on iOS and Android.",
+      "downloadHeading": "Download the app",
+      "comingSoonNotice": "Native apps are launching soon. Leave your email and we will notify you on day one.",
+      "emailLabel": "Email for launch notification",
+      "emailPlaceholder": "you@example.com",
+      "notifyCta": "Notify me",
+      "thanks": "Thank you — we will notify you when the app launches.",
+      "webCta": "Continue on web",
+      "badgeSoon": "Soon",
+      "appStoreSublabel": "Download on the",
+      "playStoreSublabel": "Get it on",
+      "appStore": "App Store",
+      "playStore": "Google Play",
+      "appStoreAria": "Download Enderas on the Apple App Store",
+      "playStoreAria": "Download Enderas on Google Play",
+      "phonePreviewTitle": "Live auctions",
+      "phonePreviewLot": "Featured lot",
+      "features": {
+        "browse": "Browse published auctions and lot details",
+        "bids": "Submit sealed bids with CPO verification",
+        "notify": "Countdown and outcome alerts on your device"
+      }
+    },
     "footer": {
       "about": "Ethiopia's national digital auction management platform for institutional asset disposition and verified bidder participation.",
-      "partners": "Institutional partners",
+      "liveCategories": "Live listings by class",
       "contact": "Contact",
       "legal": "Legal",
       "privacy": "Privacy Policy",
