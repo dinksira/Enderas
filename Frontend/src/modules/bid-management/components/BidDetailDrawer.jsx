@@ -1,9 +1,8 @@
+import { StatusPill, AdminDetailDrawer } from '@enderass/shared/ui-admin';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AdminDetailDrawer } from '../../../components/admin/AdminDetailDrawer.jsx';
-import { StatusPill } from '../../../components/admin/StatusPill.jsx';
-import { formatEtbAmount } from '../../auctions/utils/auction-drawer-utils.js';
-import { bidService } from '../services/bid-service.js';
+import { formatEtbAmount } from '@enderass/shared/utils';
+import { bidService } from '@enderass/shared/services';
 import { formatDate, getBidStatusVariant } from '../utils/bid-management-utils.js';
 
 function MetaField({ label, value }) {
@@ -31,7 +30,7 @@ export function BidDetailDrawer({ bidId, open, onClose }) {
       const detail = await bidService.getBidById(bidId);
       setBid(detail);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('bids.management.drawer.loadFailed'));
+      setError(err instanceof Error ? err.message : t('bids.myBids.drawer.loadFailed', { defaultValue: t('bids.management.drawer.loadFailed') }));
     } finally {
       setLoading(false);
     }
@@ -51,10 +50,9 @@ export function BidDetailDrawer({ bidId, open, onClose }) {
     ? [
         {
           key: 'bid',
-          title: t('bids.management.drawer.bidSection'),
+          title: t('bids.myBids.drawer.section', { defaultValue: t('bids.management.drawer.bidSection') }),
           children: (
             <dl className="admin-drawer__meta-grid">
-              <MetaField label={t('bids.management.drawer.bidder')} value={bid.bidderName} />
               <MetaField label={t('bids.management.drawer.auction')} value={bid.auctionTitle} />
               <MetaField label={t('bids.management.drawer.amount')} value={formatEtbAmount(bid.amount)} />
               <MetaField
@@ -78,8 +76,8 @@ export function BidDetailDrawer({ bidId, open, onClose }) {
     <AdminDetailDrawer
       open={open}
       onClose={onClose}
-      title={bid?.bidderName || t('bids.management.drawer.title')}
-      subtitle={bid?.auctionTitle}
+      title={bid?.auctionTitle || t('bids.myBids.drawer.title', { defaultValue: t('bids.management.drawer.title') })}
+      subtitle={bid ? formatEtbAmount(bid.amount) : undefined}
       status={
         bid ? (
           <StatusPill

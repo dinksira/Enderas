@@ -1,1 +1,1 @@
-export { PaymentManagementView } from './PaymentManagementView.jsx';
+export { MyPaymentsView } from './MyPaymentsView.jsx';

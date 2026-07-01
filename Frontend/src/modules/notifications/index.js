@@ -1,2 +1,2 @@
 export { NotificationCenterView } from './views/NotificationCenterView.jsx';
-export { notificationService } from './services/notification-service.js';
+export { notificationService } from '@enderass/shared/services';

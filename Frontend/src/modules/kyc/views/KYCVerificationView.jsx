@@ -5,7 +5,7 @@ import { Button } from '../../../components/Button.jsx';
 import { Input } from '../../../components/Input.jsx';
 import { FileUpload } from '../../../components/FileUpload.jsx';
 import { kycService } from '../services/kyc.service.js';
-import { useAuthStore } from '../../../stores/auth-store.js';
+import { useAuthStore } from '@enderass/shared/auth';
 import { ROUTES } from '../../../config/routes.js';
 
 export function KYCVerificationView() {

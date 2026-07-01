@@ -1,0 +1,568 @@
+
+## MODULE 1 — User Registration & Authentication
+
+### FR-AUTH-001 — Mobile OTP Registration
+
+- [ ] User can register with mobile number
+- [ ] OTP is sent to mobile number on registration
+- [ ] OTP verification blocks account creation until verified
+- [ ] OTP expires after a set time window
+- [ ] Resend OTP option available
+
+### FR-AUTH-002 — Duplicate Prevention
+
+- [ ] System blocks duplicate mobile number registration
+- [ ] System blocks duplicate National ID number
+- [ ] System blocks duplicate TIN number (for organizations)
+- [ ] Error message clearly tells user which field is duplicated
+
+### FR-AUTH-003 — Organization Document Upload
+
+- [ ] Organization users can upload Trade License
+- [ ] Organization users can upload TIN Certificate
+- [ ] Organization users can upload Business Registration Certificate
+- [ ] All three documents required before KYC submission for org users
+
+### FR-AUTH-004 — Login
+
+- [ ] User can log in with mobile number + password
+- [ ] User can log in with email + password
+- [ ] Invalid credentials return clear error message
+
+### FR-AUTH-005 — Password Reset
+
+- [ ] Forgot password flow sends OTP to mobile
+- [ ] OTP verification required before new password is accepted
+- [ ] Password reset confirmation shown after success
+
+### FR-AUTH-006 — Password Security
+
+- [ ] Passwords stored using bcrypt or equivalent secure hash
+- [ ] Plain text passwords never stored or logged
+
+---
+
+## MODULE 2 — Basic KYC Verification
+
+### FR-KYC-001 — Document Upload
+
+- [ ] Individual users can upload National ID document
+- [ ] Organization users can upload required business documents
+- [ ] File type validation enforced (PDF, image)
+- [ ] File size validation enforced
+
+### FR-KYC-002 — Staff Review
+
+- [ ] Staff can view all submitted KYC documents
+- [ ] Staff can open/preview each uploaded document
+- [ ] KYC list shows pending, approved, rejected tabs
+- [ ] Staff can search/filter KYC submissions
+
+### FR-KYC-003 — Approve / Reject
+
+- [ ] Staff can approve KYC submission
+- [ ] Staff can reject KYC submission with reason
+- [ ] User status changes to `active` on approval
+- [ ] User status changes to `kyc_rejected` on rejection
+- [ ] Rejected user can resubmit KYC documents
+
+### FR-KYC-004 — Notifications
+
+- [ ] User receives in-app notification on KYC approval
+- [ ] User receives in-app notification on KYC rejection with reason
+- [ ] User receives SMS notification on KYC status change
+- [ ] User receives email notification on KYC status change
+
+---
+
+## MODULE 3 — Asset Owner Management
+
+### FR-OWNER-001 — Profile
+
+- [ ] Asset owner can view and edit their profile information
+- [ ] Profile shows account type (individual / organization)
+
+### FR-OWNER-002 — View Submitted Assets
+
+- [ ] Asset owner can see list of all their submitted auction requests
+- [ ] Each asset shows current pipeline status clearly
+
+### FR-OWNER-003 — Track Approval Status
+
+- [ ] Asset owner can see status at each stage (pending review, ready for evaluation, under evaluation, evaluation approved, in auction)
+- [ ] Asset owner is notified on every status change
+
+---
+
+## MODULE 4 — Asset Submission & Ownership Verification
+
+### FR-ASSET-001 — Submit Asset Information
+
+- [ ] Asset owner can submit asset title, type, description, location, condition notes
+- [ ] Asset type selector covers all types (vehicle, land, building, machinery, equipment, salvage, other)
+- [ ] Desired reserve price field available
+- [ ] Auction conditions field available
+- [ ] At least one photo required
+
+### FR-ASSET-002 — Ownership Document Upload
+
+- [ ] Vehicle owners can upload Vehicle Registration Book
+- [ ] Land owners can upload Title Deed
+- [ ] Building owners can upload Ownership Certificate
+- [ ] Machinery owners can upload Purchase Documents
+- [ ] Supporting PDF documents uploadable
+- [ ] Bidder file upload scoped to allowed folders only
+
+### FR-ASSET-003 — Staff Review of Ownership Documents
+
+- [ ] CSO can view all pending asset submissions
+- [ ] CSO can preview ownership documents
+- [ ] CSO can view asset photos
+- [ ] CSO can view all supporting documents
+
+### FR-ASSET-004 — Approve / Reject Before Evaluation
+
+- [ ] CSO can approve asset ownership → status becomes `approved` (Ready for Evaluation)
+- [ ] CSO can reject asset with written reason → status becomes `rejected`
+- [ ] Approved asset does NOT auto-create auction
+- [ ] Rejected asset owner can resubmit
+
+### FR-ASSET-005 — Notifications
+
+- [ ] Asset owner notified on ownership approval (in-app)
+- [ ] Asset owner notified on ownership rejection with reason (in-app)
+- [ ] Asset owner notified via SMS on status change
+- [ ] Asset owner notified via email on status change
+- [ ] Evaluation officers notified when asset is ready for evaluation
+
+---
+
+## MODULE 5 — Asset Evaluation Management
+
+### FR-EVAL-001 — Schedule Inspection
+
+- [ ] Evaluation officer can see list of assets ready for evaluation (status `approved`, no existing evaluation)
+- [ ] Evaluation officer can schedule inspection with date and notes
+- [ ] Asset status changes to `under_evaluation` on scheduling
+- [ ] Assets with rejected evaluations reappear in eligible list
+
+### FR-EVAL-002 — Record Valuation
+
+- [ ] Evaluation officer can record valuation amount
+- [ ] Evaluation officer can record reserve price recommendation
+- [ ] Currency field recorded (ETB)
+
+### FR-EVAL-003 — Upload Photographs
+
+- [ ] Evaluation officer can upload multiple photos
+- [ ] Photos stored and viewable in evaluation record
+
+### FR-EVAL-004 — Upload Evaluation Report
+
+- [ ] Evaluation officer can upload evaluation report PDF
+- [ ] Report stored and accessible in evaluation record
+
+### FR-EVAL-005 — Recommend Approval or Rejection
+
+- [ ] Evaluation officer can submit recommendation (approve or reject)
+- [ ] Submitting recommendation sets evaluation to `completed`
+- [ ] Asset status does NOT change to `evaluated` at this point
+- [ ] Super admin notified when evaluation hits `completed`
+
+### FR-EVAL-006 — Super Admin Final Approval
+
+- [ ] Super admin can approve completed evaluation → asset becomes `evaluated`
+- [ ] Super admin can reject completed evaluation → asset returns to `approved` for re-evaluation
+- [ ] Evaluation officer cannot approve their own evaluation (RBAC enforced)
+- [ ] Only `evaluated` assets can proceed to auction creation
+
+---
+
+## MODULE 6 — Auction Management
+
+### FR-AUC-001 — Create Auction
+
+- [ ] Auction manager can create auction
+- [ ] Auction manager cannot publish auction (super admin only)
+- [ ] Auction starts in `pending_approval` status
+
+### FR-AUC-002 — Link Assets
+
+- [ ] Single asset auction: one evaluated asset linked via asset picker
+- [ ] Multi-asset auction: multiple evaluated assets linked with individual reserve prices
+- [ ] Only `evaluated` assets appear in eligible assets picker
+- [ ] Assets already in active auction excluded from picker
+- [ ] All linked assets move to `in_auction` on publish
+
+### FR-AUC-003 — Define Auction Fields
+
+- [ ] Auction Title (required)
+- [ ] Auction Description
+- [ ] Start Date and Time (required)
+- [ ] End Date and Time (required, must be after start)
+- [ ] Reserve Price per asset (required)
+- [ ] Document Price / Fee (required)
+- [ ] CPO Percentage (required, 1-100)
+- [ ] Auction Category
+- [ ] Auction Conditions
+
+### FR-AUC-004 — Published After Approval
+
+- [ ] Super admin reviews auction in `pending_approval`
+- [ ] Super admin publishes → auction becomes `published`
+- [ ] Super admin notified when new auction enters `pending_approval`
+- [ ] Auction manager notified when auction is published
+
+### FR-AUC-005 — Visible to Bidders
+
+- [ ] Published auctions appear in bidder browse list
+- [ ] Browse list defaults to published only
+- [ ] Auction detail shows title, description, dates, reserve, document fee, images, documents (gated)
+
+### FR-AUC-006 — Suspended Auction
+
+- [ ] Staff can suspend a published auction
+- [ ] Suspended auction prevents new payments, CPO submissions, and bids
+- [ ] Suspended auctions not shown in default browse list
+
+---
+
+## MODULE 7 — Auction Document Management
+
+### FR-DOC-001 — Staff Upload Documents
+
+- [ ] Staff can upload auction documents (PDF only)
+- [ ] Multiple documents supported per auction
+- [ ] Documents stored with name and size metadata
+
+### FR-DOC-002 — Download After Payment Only
+
+- [ ] Documents hidden from bidder until payment approved
+- [ ] Document URLs not exposed in API response until payment verified
+- [ ] Locked document UI shown to unpaid bidders
+
+### FR-DOC-003 — Track Downloads
+
+- [ ] System records when a bidder downloads a document
+- [ ] Download log accessible to staff
+
+### FR-DOC-004 — PDF Format
+
+- [ ] Only PDF format accepted for auction documents
+- [ ] File type validation enforced on upload
+
+---
+
+## MODULE 8 — Payment Management
+
+### FR-PAY-001 — Addis Pay Integration
+
+- [ ] System can initiate payment through Addis Pay gateway
+- [ ] System receives payment confirmation webhook from Addis Pay
+- [ ] Transaction reference recorded
+- [ ] Payment status updated automatically on confirmation
+
+### FR-PAY-002 — Manual Receipt Upload
+
+- [ ] Bidder can upload payment receipt image/PDF
+- [ ] Receipt stored in `payments/receipts` folder
+- [ ] Bidder can submit manual payment for any published auction
+
+### FR-PAY-003 — Finance Officer Review
+
+- [ ] Finance officer can see all pending payment receipts
+- [ ] Finance officer can preview uploaded receipt
+- [ ] Finance officer can filter payments by status
+
+### FR-PAY-004 — Approve / Reject Payment
+
+- [ ] Finance officer can approve payment
+- [ ] Finance officer can reject payment with reason
+- [ ] Only finance officer can approve/reject payments (RBAC enforced at service layer)
+
+### FR-PAY-005 — Payment Statuses
+
+- [ ] `pending` status on creation
+- [ ] `approved` status after finance approval
+- [ ] `rejected` status after finance rejection
+
+### FR-PAY-006 — Payment Notifications
+
+- [ ] Bidder notified in-app on payment approval
+- [ ] Bidder notified in-app on payment rejection with reason
+- [ ] Bidder notified via SMS on payment status change
+- [ ] Bidder notified via email on payment status change
+
+### FR-PAY-007 — Transaction Reports
+
+- [ ] Staff can generate payment reports
+- [ ] Reports filterable by date range
+- [ ] Reports exportable to PDF
+- [ ] Reports exportable to Excel
+
+### FR-PAY-008 — Payment Unlocks Documents
+
+- [ ] Approved payment grants access to auction documents immediately
+- [ ] `gates.documentAccess` returns true after approval
+- [ ] CPO submission unlocked after payment approved
+
+---
+
+## MODULE 9 — CPO Management
+
+### FR-CPO-001 — Upload CPO Document
+
+- [ ] Bidder can select assets they want to bid on before uploading CPO
+- [ ] System calculates required CPO amount = `cpo_percentage × SUM(selected asset reserve prices)`
+- [ ] Required CPO amount shown clearly to bidder before upload
+- [ ] Bidder uploads CPO document (PDF or image)
+- [ ] Selected asset IDs stored on CPO record
+- [ ] Required CPO amount stored on CPO record
+
+### FR-CPO-002 — Staff Review
+
+- [ ] CSO can view all pending CPO submissions
+- [ ] CSO can preview CPO document
+- [ ] CSO can see required CPO amount vs declared amount
+- [ ] CSO can see which assets bidder selected
+
+### FR-CPO-003 — Approve / Reject
+
+- [ ] CSO can approve CPO with expiry date
+- [ ] CSO can reject CPO with reason
+- [ ] Only CSO can approve/reject CPOs (RBAC enforced at service layer)
+- [ ] Expired CPOs do not pass bid gate
+
+### FR-CPO-004 — CPO Statuses
+
+- [ ] `pending` on submission
+- [ ] `approved` after CSO approval
+- [ ] `rejected` after CSO rejection
+
+### FR-CPO-005 — CPO Notifications
+
+- [ ] Bidder notified in-app on CPO approval
+- [ ] Bidder notified in-app on CPO rejection with reason
+- [ ] Bidder notified via SMS on CPO status change
+- [ ] Bidder notified via email on CPO status change
+
+---
+
+## MODULE 10 — Closed Bid Submission
+
+### FR-BID-001 — Submit Bid Before Close
+
+- [ ] Bidder with approved KYC, payment, and CPO can submit bid
+- [ ] Bid submission blocked before auction start date
+- [ ] Bid submission blocked after auction end date
+- [ ] For multi-asset auctions: bidder submits one bid per selected asset
+- [ ] Bid amount must meet or exceed asset reserve price
+
+### FR-BID-002 — Bidder Sees Own Bids Only
+
+- [ ] Bidder can view their own bids at `GET /bids/my`
+- [ ] Bidder cannot access another bidder's bid details
+- [ ] Staff can see all bids across all auctions
+
+### FR-BID-003 — Bid Immutable
+
+- [ ] No edit route exists for bids
+- [ ] No delete route exists for bids (for bidders)
+- [ ] Bid cannot be modified after submission
+
+### FR-BID-004 — Auto-Close Bid Submission
+
+- [ ] Auto-close job runs every 60 seconds
+- [ ] Job closes all auctions past `end_date`
+- [ ] Bid submission disabled immediately on close
+- [ ] Close-time invalidation: bidders who did not bid on all CPO-selected assets have bids marked invalid
+
+### FR-BID-005 — Record Timestamp
+
+- [ ] `submitted_at` recorded on every bid
+- [ ] Timestamp used for tie-breaking (earliest wins)
+
+---
+
+## MODULE 11 — Winner Selection
+
+### FR-WIN-001 — Staff Review After Closure
+
+- [ ] Staff can view all bids after auction closes
+- [ ] Bids viewable per asset/lot for multi-asset auctions
+- [ ] Post-closure review screen available
+
+### FR-WIN-002 — Identify Highest Valid Bid
+
+- [ ] System identifies highest valid bid per asset
+- [ ] Reserve price check enforced (bid must meet asset reserve)
+- [ ] Tie resolved by earliest `submitted_at` timestamp (BR-008)
+- [ ] Invalidated bids excluded from winner selection
+
+### FR-WIN-003 — Record Winner
+
+- [ ] Winner record created per asset for multi-asset auctions
+- [ ] Winner record stores auction, asset, bid, user, staff, method
+- [ ] `outcome_status` on `auction_assets` updated to `sold` or `unsold`
+- [ ] Auction status changes to `closed` at end time regardless of outcomes
+
+### FR-WIN-004 — Winner Notifications
+
+- [ ] Winner notified in-app automatically
+- [ ] Winner notified via SMS
+- [ ] Winner notified via email
+- [ ] If winner declines, next highest valid bidder can be selected (BR-009)
+
+---
+
+## MODULE 12 — Notification Management
+
+### FR-NOT-001 — Notification Triggers
+
+- [ ] Registration confirmation
+- [ ] KYC approval and rejection
+- [ ] Asset ownership approval and rejection
+- [ ] Evaluation ready (to evaluation officers)
+- [ ] Evaluation pending approval (to super admin)
+- [ ] Auction pending approval (to super admin)
+- [ ] Payment approval and rejection
+- [ ] CPO approval and rejection
+- [ ] Auction publication
+- [ ] Winner announcement
+- [ ] Bid invalidation at close
+
+### FR-NOT-002 — Delivery Channels
+
+- [ ] In-app notification center implemented
+- [ ] SMS gateway integrated and sending
+- [ ] Email service integrated and sending
+- [ ] All three channels fire for each trigger
+
+---
+
+## MODULE 13 — Reporting & Dashboard
+
+### FR-REP-001 — Dashboard Summaries
+
+- [ ] Total active auctions count
+- [ ] Total closed auctions count
+- [ ] Total registered bidders count
+- [ ] Total payments processed
+- [ ] Total CPOs pending review
+- [ ] Total assets in pipeline
+
+### FR-REP-002 — Report Types
+
+- [ ] Active auctions report
+- [ ] Closed auctions report
+- [ ] Asset reports (by status, by type)
+- [ ] Bidder reports
+- [ ] Payment reports
+- [ ] CPO reports
+
+### FR-REP-003 — Report Filters and Export
+
+- [ ] Date range filter on all reports
+- [ ] Export to PDF working
+- [ ] Export to Excel working
+
+---
+
+## MODULE 14 — Staff Management
+
+### FR-STAFF-001 — Create Staff Accounts
+
+- [ ] Super admin can create staff accounts
+- [ ] Staff account requires name, email, role, mobile
+
+### FR-STAFF-002 — Activate / Deactivate
+
+- [ ] Super admin can activate staff account
+- [ ] Super admin can deactivate staff account
+- [ ] Deactivated staff cannot log in
+
+### FR-STAFF-003 — Assign Roles
+
+- [ ] Super admin can assign role to staff member
+- [ ] Role determines all access permissions
+
+---
+
+## MODULE 15 — Role-Based Access Control
+
+### FR-RBAC-001/002 — Permission Enforcement
+
+- [ ] All routes require authentication
+- [ ] All routes enforce role-based authorization
+- [ ] Unauthorized access returns 403 not 404
+
+### FR-RBAC-003 — All Roles Implemented
+
+- [ ] Super Administrator — full access + evaluation approve + auction publish
+- [ ] Auction Manager — create auctions, manage bid/winner views
+- [ ] Evaluation Officer — schedule, complete evaluations only (no approve)
+- [ ] Finance Officer — approve/reject payments only
+- [ ] Customer Service Officer — KYC review, asset ownership review, CPO approve/reject
+- [ ] Bidder — browse, pay, CPO upload, bid submit
+- [ ] Asset Owner — submit auction requests, track status
+
+---
+
+## Security Requirements
+
+- [ ] SEC-001 — All communication over HTTPS
+- [ ] SEC-002 — Passwords bcrypt hashed
+- [ ] SEC-003 — RBAC enforced on every route
+- [ ] SEC-004 — Failed login attempts logged
+- [ ] SEC-005 — All user actions recorded in audit log
+- [ ] SEC-006 — Uploaded files validated for type and size
+- [ ] SEC-007 — Session timeout after inactivity enforced
+
+---
+
+## Business Rules
+
+- [ ] BR-001 — Only KYC-approved users can participate
+- [ ] BR-002 — Only evaluated assets can be auctioned
+- [ ] BR-003 — Only verified payments grant document access
+- [ ] BR-004 — Only approved CPO allows bid submission
+- [ ] BR-005 — Bids after auction close are rejected
+- [ ] BR-006 — Highest valid bid wins per asset
+- [ ] BR-007 — Reserve price must be met per asset
+- [ ] BR-008 — Tie bids resolved by earliest timestamp
+- [ ] BR-009 — If winner declines, next highest bidder selected
+
+---
+
+## Mobile Application
+
+- [ ] Android app supports Android 10 and above
+- [ ] iOS app supports iOS 15 and above
+- [ ] User registration on mobile
+- [ ] Login on mobile
+- [ ] Profile management on mobile
+- [ ] Asset submission on mobile
+- [ ] Document upload on mobile
+- [ ] Auction browsing on mobile
+- [ ] Auction document purchase on mobile
+- [ ] Payment tracking on mobile
+- [ ] CPO upload on mobile
+- [ ] Bid submission on mobile
+- [ ] Notifications on mobile
+- [ ] Dashboard access on mobile
+
+---
+
+## Non-Functional Requirements
+
+- [ ] Page load time under 5 seconds under normal load
+- [ ] Bid submission completes within 5 seconds
+- [ ] Payment status updates reflected within 1 minute of confirmation
+- [ ] 99% system uptime
+- [ ] Daily database backup running
+- [ ] Daily document backup running
+- [ ] Architecture supports future expansion without major redesign
+
+---
+
+This is every single requirement from the SRS turned into a verifiable checklist item. Go through this with your dev and mark each one. Anything unchecked is either a gap, a pending client decision, or deferred to a future phase — and you'll know exactly which category each falls into.

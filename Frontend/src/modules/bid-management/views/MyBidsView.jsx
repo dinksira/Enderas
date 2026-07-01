@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdminDataTable } from '../../../components/admin/AdminDataTable.jsx';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
-import { formatEtbAmount } from '../../auctions/utils/auction-drawer-utils.js';
+import { formatEtbAmount } from '@enderass/shared/utils';
 import { BidDetailDrawer } from '../components/BidDetailDrawer.jsx';
 import { useMyBids } from '../hooks/use-bids.js';
 import {

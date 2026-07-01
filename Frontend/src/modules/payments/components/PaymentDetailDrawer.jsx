@@ -4,8 +4,8 @@ import { Button } from '../../../components/Button.jsx';
 import { AdminDetailDrawer } from '../../../components/admin/AdminDetailDrawer.jsx';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
 import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
-import { useAuthStore } from '../../../stores/auth-store.js';
-import { formatEtbAmount } from '../../auctions/utils/auction-drawer-utils.js';
+import { useAuthStore } from '@enderass/shared/auth';
+import { formatEtbAmount } from '@enderass/shared/utils';
 import { paymentService } from '../services/payment-service.js';
 import { formatDate, getPaymentStatusVariant } from '../utils/payment-management-utils.js';
 

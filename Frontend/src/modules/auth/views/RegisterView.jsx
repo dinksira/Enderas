@@ -5,9 +5,9 @@ import { AuthBrandPanel } from '../../users/components/auth-brand-panel.jsx';
 import { RegisterStep } from '../../users/components/register-step.jsx';
 import { authApi } from '../../users/services/authApi.js';
 import { resolveAuthError } from '../../users/utils/resolve-auth-error.js';
-import { useAuthStore } from '../../../stores/auth-store.js';
+import { useAuthStore } from '@enderass/shared/auth';
 import { ROUTES } from '../../../config/routes.js';
-import { isValidEthiopianMobile } from '../../../utils/mobile-utils.js';
+import { isValidEthiopianMobile } from '@enderass/shared/utils';
 
 function splitFullName(fullName) {
   const trimmed = fullName.trim();
@@ -82,7 +82,7 @@ export function RegisterView() {
     try {
       const nameParts = splitFullName(fullName);
 
-      await authApi.register({
+      const response = await authApi.register({
         userType,
         mobileNumber: normalizedPhone,
         phoneNumber: normalizedPhone,
@@ -95,10 +95,16 @@ export function RegisterView() {
       setPendingOtpVerification(normalizedPhone, {
         userType,
         tinNumber: userType === 'organization' ? tinNumber.trim() : null,
+        otpExpiresIn: response.otpExpiresIn,
+        otpExpiresAt: response.otpExpiresAt,
       });
 
       navigate(ROUTES.OTP_VERIFICATION, {
-        state: { mobileNumber: normalizedPhone },
+        state: {
+          mobileNumber: normalizedPhone,
+          otpExpiresIn: response.otpExpiresIn,
+          otpExpiresAt: response.otpExpiresAt,
+        },
       });
     } catch (err) {
       setErrors({ form: resolveAuthError(err, t) });

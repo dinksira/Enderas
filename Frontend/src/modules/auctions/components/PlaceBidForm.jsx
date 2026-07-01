@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/Button.jsx';
 import { bidService } from '../../bid-management/services/bid-service.js';
-import { formatEtbAmount } from '../utils/auction-drawer-utils.js';
+import { formatEtbAmount } from '@enderass/shared/utils';
 
 /**
  * @param {{

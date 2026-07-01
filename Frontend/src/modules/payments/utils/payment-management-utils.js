@@ -1,4 +1,4 @@
-import { formatDate } from '../../users/utils/user-management-utils.js';
+import { formatDate } from '@enderass/shared/utils';
 
 export const PAYMENT_PAGE_SIZE = 20;
 

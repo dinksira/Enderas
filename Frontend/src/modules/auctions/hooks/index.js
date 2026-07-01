@@ -1,2 +1,2 @@
-export { useAuctions } from './use-auctions.js';
-export { default } from './use-auctions.js';
+export { useBrowseAuctions } from './use-browse-auctions.js';
+export { default } from './use-browse-auctions.js';

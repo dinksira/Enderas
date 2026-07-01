@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useAuthStore } from '../../../stores/auth-store.js';
+import { useAuthStore } from '@enderass/shared/auth';
 import { auctionService } from '../services/auction-service.js';
 
 function normalizeAuctionList(data) {

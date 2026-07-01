@@ -1,6 +1,7 @@
 @import './variables.css';
 @import './dashboard.css';
 @import './admin.css';
+@import './public-site.css';
 
 /* ─── RESET & BASE ─────────────────────────────────────────────────────────── */
 
@@ -945,6 +946,18 @@ select {
   font-family: var(--semantic-font-body);
   font-size: var(--core-font-size-body-sm);
   color: var(--component-auth-timer-color);
+}
+
+.auth-login-card__hint {
+  margin: 0;
+  font-family: var(--semantic-font-body);
+  font-size: var(--core-font-size-body-sm);
+  color: var(--component-auth-timer-color);
+  text-align: center;
+}
+
+.auth-login-card__hint--warning {
+  color: var(--semantic-color-danger, #b42318);
 }
 
 .auth-login-card__resend-button {

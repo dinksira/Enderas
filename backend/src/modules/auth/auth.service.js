@@ -13,6 +13,7 @@ import { withRedis } from '../../utils/redis-safe.util.js';
 import { UnauthorizedError, AppError, InvalidCredentialsError } from '../../utils/error.util.js';
 import { env } from '../../config/env.config.js';
 import { auditService, AUDIT_ACTIONS } from '../../services/audit.service.js';
+import { settingsService } from '../../services/settings.service.js';
 import {
   USER_STATUSES,
   LOGIN_ALLOWED_STATUSES,
@@ -351,8 +352,29 @@ export async function completeLogin(userId, sessionContext = {}) {
   };
 }
 
-const OTP_TTL_SECONDS = 300;
+const DEFAULT_OTP_TTL_SECONDS = 300;
 const otpMemoryFallback = new Map();
+
+function normalizeOtpTtlSeconds(value) {
+  const ttl = Number(value);
+  if (!Number.isFinite(ttl) || ttl < 60 || ttl > 3600) {
+    return DEFAULT_OTP_TTL_SECONDS;
+  }
+  return Math.floor(ttl);
+}
+
+async function resolveOtpTtlSeconds() {
+  try {
+    const configured = await settingsService.getSetting('otp.ttl_seconds');
+    return normalizeOtpTtlSeconds(configured);
+  } catch {
+    return DEFAULT_OTP_TTL_SECONDS;
+  }
+}
+
+function buildOtpExpiry(issuedAt, ttlSeconds) {
+  return new Date(issuedAt.getTime() + ttlSeconds * 1000).toISOString();
+}
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -363,49 +385,67 @@ function buildOtpKey(mobileNumber) {
   return `otp:${candidates[0] || mobileNumber}`;
 }
 
-async function storeOTP(mobileNumber, otp, expiresIn = OTP_TTL_SECONDS) {
+async function storeOTP(mobileNumber, otp, expiresIn = DEFAULT_OTP_TTL_SECONDS) {
+  const ttlSeconds = normalizeOtpTtlSeconds(expiresIn);
   const key = buildOtpKey(mobileNumber);
+  const issuedAt = new Date();
 
   const stored = await withRedis(async (client) => {
-    await client.setex(key, expiresIn, otp);
+    await client.setex(key, ttlSeconds, otp);
     return true;
   }, false);
 
   if (!stored) {
     otpMemoryFallback.set(key, {
       otp,
-      expiresAt: Date.now() + expiresIn * 1000,
+      expiresAt: issuedAt.getTime() + ttlSeconds * 1000,
     });
   }
+
+  return {
+    otpExpiresIn: ttlSeconds,
+    otpExpiresAt: buildOtpExpiry(issuedAt, ttlSeconds),
+  };
 }
 
+/**
+ * @returns {Promise<'valid' | 'expired' | 'invalid'>}
+ */
 async function verifyStoredOTP(mobileNumber, otp) {
   const key = buildOtpKey(mobileNumber);
 
-  const redisValid = await withRedis(async (client) => {
+  const redisResult = await withRedis(async (client) => {
     const storedOTP = await client.get(key);
-    if (!storedOTP || storedOTP !== otp) {
-      return false;
+    if (!storedOTP) {
+      return 'expired';
+    }
+    if (storedOTP !== otp) {
+      return 'invalid';
     }
     await client.del(key);
-    return true;
+    return 'valid';
   }, null);
 
-  if (redisValid === true) {
-    return true;
-  }
-
-  if (redisValid === false) {
-    return false;
+  if (redisResult === 'valid' || redisResult === 'invalid' || redisResult === 'expired') {
+    return redisResult;
   }
 
   const memoryEntry = otpMemoryFallback.get(key);
-  if (!memoryEntry || memoryEntry.expiresAt < Date.now() || memoryEntry.otp !== otp) {
-    return false;
+  if (!memoryEntry) {
+    return 'expired';
+  }
+
+  if (memoryEntry.expiresAt < Date.now()) {
+    otpMemoryFallback.delete(key);
+    return 'expired';
+  }
+
+  if (memoryEntry.otp !== otp) {
+    return 'invalid';
   }
 
   otpMemoryFallback.delete(key);
-  return true;
+  return 'valid';
 }
 
 /**
@@ -463,7 +503,8 @@ export async function register(userData) {
   });
 
   const otp = generateOTP();
-  await storeOTP(normalizedMobile, otp);
+  const otpTtlSeconds = await resolveOtpTtlSeconds();
+  const otpExpiry = await storeOTP(normalizedMobile, otp, otpTtlSeconds);
 
   if (env.isProduction) {
     console.info('[auth.service] OTP sent to registered mobile (production)');
@@ -476,13 +517,15 @@ export async function register(userData) {
     action: AUDIT_ACTIONS.CREATE,
     entityType: 'User',
     entityId: user.id,
-    metadata: { userType, action: 'register' },
+    metadata: { userType, action: 'register', otpExpiresIn: otpExpiry.otpExpiresIn },
   });
 
   return {
     userId: user.id,
     mobileNumber: user.mobile_number,
     requiresOTPVerification: true,
+    otpExpiresIn: otpExpiry.otpExpiresIn,
+    otpExpiresAt: otpExpiry.otpExpiresAt,
   };
 }
 
@@ -492,10 +535,14 @@ export async function register(userData) {
  */
 export async function verifyOTP(mobileNumber, otp) {
   const normalizedMobile = normalizeMobileNumber(mobileNumber);
-  const isValid = await verifyStoredOTP(normalizedMobile, otp);
+  const otpStatus = await verifyStoredOTP(normalizedMobile, otp);
 
-  if (!isValid) {
-    throw new AppError('Invalid or expired OTP', 400, 'INVALID_OTP');
+  if (otpStatus === 'expired') {
+    throw new AppError('OTP has expired. Request a new code.', 400, 'OTP_EXPIRED');
+  }
+
+  if (otpStatus === 'invalid') {
+    throw new AppError('Invalid OTP', 400, 'INVALID_OTP');
   }
 
   const lookupCandidates = getMobileLookupCandidates(normalizedMobile);
@@ -508,6 +555,10 @@ export async function verifyOTP(mobileNumber, otp) {
 
   if (!user) {
     throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+  }
+
+  if (user.is_mobile_verified) {
+    throw new AppError('Mobile number already verified', 400, 'ALREADY_VERIFIED');
   }
 
   const oldStatus = user.status;
@@ -546,8 +597,13 @@ export async function resendOTP(mobileNumber) {
     throw new AppError('User not found', 404, 'USER_NOT_FOUND');
   }
 
+  if (user.is_mobile_verified) {
+    throw new AppError('Mobile number already verified', 400, 'ALREADY_VERIFIED');
+  }
+
   const otp = generateOTP();
-  await storeOTP(normalizedMobile, otp);
+  const otpTtlSeconds = await resolveOtpTtlSeconds();
+  const otpExpiry = await storeOTP(normalizedMobile, otp, otpTtlSeconds);
 
   if (env.isProduction) {
     console.info('[auth.service] OTP resent (production)');
@@ -555,7 +611,11 @@ export async function resendOTP(mobileNumber) {
     console.info('[auth.service] Resent OTP for', normalizedMobile, ':', otp);
   }
 
-  return { success: true };
+  return {
+    success: true,
+    otpExpiresIn: otpExpiry.otpExpiresIn,
+    otpExpiresAt: otpExpiry.otpExpiresAt,
+  };
 }
 
 export const authService = Object.freeze({

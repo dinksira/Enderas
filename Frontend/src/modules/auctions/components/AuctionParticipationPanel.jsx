@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/Button.jsx';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
 import { ROUTES } from '../../../config/routes.js';
-import { useAuthStore } from '../../../stores/auth-store.js';
+import { useAuthStore } from '@enderass/shared/auth';
 import { AuctionDocumentsBlock } from './AuctionDocumentsBlock.jsx';
 import { AuctionBidSection } from './AuctionBidSection.jsx';
-import { formatEtbAmount } from '../utils/auction-drawer-utils.js';
+import { formatEtbAmount } from '@enderass/shared/utils';
 import {
   canShowCpoButton,
   canShowPaymentButton,
