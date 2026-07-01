@@ -1,40 +1,22 @@
-import type {
-  AuctionCpoState,
-  AuctionDocumentPayment,
-  AuctionParticipationRecord,
-  LotBidDraft,
-} from '@/types/auctionParticipation';
 import type { AuctionLot } from '@/types/auctionParticipation';
+import type { AuctionParticipationApi } from '@/types/auctionApi';
 
-export const SIMULATED_CPO_PERCENTAGE = 20;
+/** True when the bidder should see the buy-document CTA (matches web participation panel). */
+export function canShowBuyDocButton(participation: AuctionParticipationApi | null): boolean {
+  if (!participation) {
+    return true;
+  }
 
-export function createEmptyParticipation(auctionId: string): AuctionParticipationRecord {
-  return {
-    auctionId,
-    documentPayment: { status: 'none' },
-    cpo: {
-      status: 'none',
-      selectedLotIds: [],
-      bids: [],
-      locked: false,
-    },
-  };
-}
+  if (participation.gates?.canSubmitPayment) {
+    return true;
+  }
 
-export function hasDocumentAccess(payment: AuctionDocumentPayment): boolean {
-  return payment.status === 'approved';
-}
+  if (participation.flags?.paymentRejected) {
+    return true;
+  }
 
-export function canEnterBidFlow(
-  payment: AuctionDocumentPayment,
-  isKycVerified: boolean,
-): boolean {
-  return hasDocumentAccess(payment) && isKycVerified;
-}
-
-export function calculateCpoAmount(bids: LotBidDraft[]): number {
-  const total = bids.reduce((sum, bid) => sum + (Number.isFinite(bid.amount) ? bid.amount : 0), 0);
-  return Math.round((total * SIMULATED_CPO_PERCENTAGE) / 100);
+  const status = participation.payment?.status;
+  return !status || status === 'rejected';
 }
 
 export function validateLotBid(amount: number, lot: AuctionLot): string | null {
@@ -47,44 +29,23 @@ export function validateLotBid(amount: number, lot: AuctionLot): string | null {
   return null;
 }
 
-export function getParticipationSummary(
-  record: AuctionParticipationRecord,
-  lots: AuctionLot[],
-): {
-  selectedLots: AuctionLot[];
-  cpoAmount: number;
-  totalBidAmount: number;
-} {
-  const selectedLots = lots.filter((lot) => record.cpo.selectedLotIds.includes(lot.id));
-  const bids = record.cpo.bids.filter((bid) => record.cpo.selectedLotIds.includes(bid.lotId));
-  const totalBidAmount = bids.reduce((sum, bid) => sum + bid.amount, 0);
+export type LotBidFeedbackKind = 'hint' | 'error' | 'valid';
 
-  return {
-    selectedLots,
-    cpoAmount: calculateCpoAmount(bids),
-    totalBidAmount,
-  };
-}
+/** Real-time bid field feedback while the user types. */
+export function getLotBidFeedback(
+  bidText: string,
+  lot: AuctionLot,
+  { forceShow = false } = {},
+): { kind: LotBidFeedbackKind; errorKey?: string } {
+  const digits = bidText.replace(/[^\d]/g, '');
+  if (!digits) {
+    return forceShow ? { kind: 'error', errorKey: 'invalid' } : { kind: 'hint' };
+  }
 
-export function syncBidsWithSelection(
-  selectedLotIds: string[],
-  existingBids: LotBidDraft[],
-  lots: AuctionLot[],
-): LotBidDraft[] {
-  return selectedLotIds.map((lotId) => {
-    const existing = existingBids.find((bid) => bid.lotId === lotId);
-    const lot = lots.find((item) => item.id === lotId);
-    return {
-      lotId,
-      amount: existing?.amount ?? lot?.reservePrice ?? 0,
-    };
-  });
-}
+  const errorKey = validateLotBid(Number(digits), lot);
+  if (errorKey) {
+    return { kind: 'error', errorKey };
+  }
 
-export function getCpoStatusLabel(status: AuctionCpoState['status'], locked: boolean): string {
-  if (locked && status === 'pending') return 'underReview';
-  if (status === 'approved') return 'approved';
-  if (status === 'rejected') return 'rejected';
-  if (status === 'pending') return 'pending';
-  return 'draft';
+  return { kind: 'valid' };
 }

@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
+import { resolveAuctionDocumentHref } from '../utils/auction-document-utils.js';
+
 function resolveDocument(doc, t) {
   if (typeof doc === 'string') {
     return { url: doc, name: t('bidder.participation.document') };
@@ -12,12 +14,18 @@ function resolveDocument(doc, t) {
 
 /**
  * @param {{
+ *   auctionId?: string,
  *   documents?: Array<string|object>,
  *   unlocked?: boolean,
  *   compact?: boolean,
  * }} props
  */
-export function AuctionDocumentsBlock({ documents = [], unlocked = false, compact = false }) {
+export function AuctionDocumentsBlock({
+  auctionId,
+  documents = [],
+  unlocked = false,
+  compact = false,
+}) {
   const { t } = useTranslation();
   const items = documents
     .map((doc) => resolveDocument(doc, t))
@@ -65,19 +73,28 @@ export function AuctionDocumentsBlock({ documents = [], unlocked = false, compac
         <p className="auction-documents__empty">{t('bidder.participation.documentsEmpty')}</p>
       ) : (
         <ul className="auction-documents__list">
-          {items.map((doc) => (
-            <li key={doc.url} className="auction-documents__item">
-              <a href={doc.url} target="_blank" rel="noreferrer" className="auction-documents__link">
-                <span className="auction-documents__link-icon" aria-hidden="true">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" />
-                  </svg>
-                </span>
-                <span className="auction-documents__link-text">{doc.name}</span>
-                <span className="auction-documents__link-action">{t('bidder.participation.downloadDocument')}</span>
-              </a>
-            </li>
-          ))}
+          {items.map((doc, index) => {
+            const href = resolveAuctionDocumentHref({
+              auctionId,
+              doc,
+              docIndex: index,
+              unlocked,
+            });
+
+            return (
+              <li key={`${doc.url}-${index}`} className="auction-documents__item">
+                <a href={href} target="_blank" rel="noreferrer" className="auction-documents__link">
+                  <span className="auction-documents__link-icon" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" />
+                    </svg>
+                  </span>
+                  <span className="auction-documents__link-text">{doc.name}</span>
+                  <span className="auction-documents__link-action">{t('bidder.participation.downloadDocument')}</span>
+                </a>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

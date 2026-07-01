@@ -93,9 +93,11 @@ export async function invalidateRolePermissionCache(roleId) {
  */
 export function authenticate(req, res, next) {
   const header = req.headers.authorization || '';
-  const [scheme, token] = header.split(' ');
+  const [scheme, headerToken] = header.split(' ');
+  const queryToken = typeof req.query?.access_token === 'string' ? req.query.access_token : '';
+  const token = scheme === 'Bearer' && headerToken ? headerToken : queryToken;
 
-  if (scheme !== 'Bearer' || !token) {
+  if (!token) {
     return next(new UnauthorizedError('Missing or invalid authorization header', 'AUTH_HEADER_INVALID'));
   }
 
@@ -149,8 +151,28 @@ export function authenticate(req, res, next) {
   }
 }
 
+/**
+ * Attach user context when a bearer token is present; continue anonymously otherwise.
+ */
+export function optionalAuthenticate(req, res, next) {
+  const header = req.headers.authorization || '';
+  const [scheme, token] = header.split(' ');
+
+  if (scheme !== 'Bearer' || !token) {
+    return next();
+  }
+
+  authenticate(req, res, (error) => {
+    if (error) {
+      return next();
+    }
+    return next();
+  });
+}
+
 export const authMiddleware = Object.freeze({
   authenticate,
+  optionalAuthenticate,
   createAccessToken,
   invalidateRolePermissionCache,
 });

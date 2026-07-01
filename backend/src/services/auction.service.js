@@ -1,4 +1,6 @@
 import { Op, QueryTypes } from 'sequelize';
+import fs from 'fs';
+import path from 'path';
 import { sequelize } from '../config/db.config.js';
 import { Auction, AUCTION_CATEGORIES, AUCTION_STATUSES } from '../models/auction.model.js';
 import { AuctionAsset } from '../models/auctionAsset.model.js';
@@ -15,7 +17,10 @@ import { assertStaffRole } from '../utils/staff-role.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { winnerService } from './winner.service.js';
 import { paymentService } from './payment.service.js';
-import { normalizeLotIdList } from '../utils/auction-lot.util.js';
+import { BidDraft } from '../models/bidDraft.model.js';
+import { normalizeLotIdList, computeRequiredCpoFromBidAmounts } from '../utils/auction-lot.util.js';
+import { env } from '../config/env.config.js';
+import { resolvePublicUploadUrl } from '../utils/media-url.util.js';
 
 const DISPLAY_STATUS_MAP = Object.freeze({
   published: 'ACTIVE',
@@ -134,7 +139,9 @@ function normalizeAssetImageUrls(urls) {
   if (!Array.isArray(urls)) {
     return [];
   }
-  return urls.filter((url) => typeof url === 'string' && url.trim().length > 0);
+  return urls
+    .filter((url) => typeof url === 'string' && url.trim().length > 0)
+    .map((url) => resolvePublicUploadUrl(url.trim()));
 }
 
 function normalizeAssetAdditionalDocuments(documents) {
@@ -181,7 +188,36 @@ function formatDateForList(date) {
   });
 }
 
+function hasStoredJsonArray(value) {
+  if (!value) {
+    return false;
+  }
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) && parsed.length > 0;
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
 function normalizeDocumentFiles(documents) {
+  if (!documents) {
+    return [];
+  }
+  if (typeof documents === 'string') {
+    try {
+      const parsed = JSON.parse(documents);
+      return normalizeDocumentFiles(parsed);
+    } catch {
+      return [];
+    }
+  }
   if (!Array.isArray(documents)) {
     return [];
   }
@@ -190,7 +226,7 @@ function normalizeDocumentFiles(documents) {
     .filter((doc) => doc && typeof doc.url === 'string' && doc.url.length > 0)
     .map((doc) => ({
       name: doc.name || doc.fileName || 'document.pdf',
-      url: doc.url,
+      url: resolvePublicUploadUrl(doc.url),
       size: Number(doc.size) || 0,
     }));
 }
@@ -632,8 +668,8 @@ function serializeAuction(auction, bidCount = 0, extras = {}) {
     categoryKey: plain.category,
     description: plain.description,
     auctionConditions: plain.auction_conditions,
-    imageUrls: plain.image_urls || [],
-    documents: plain.document_files || [],
+    imageUrls: normalizeAssetImageUrls(plain.image_urls),
+    documents: normalizeDocumentFiles(plain.document_files),
     status: mapDisplayStatus(plain.status),
     dbStatus: plain.status,
     startDate: plain.start_date,
@@ -889,7 +925,7 @@ export async function getAuctionParticipation(auctionId, userId) {
   const auction = await getBrowseAuctionById(auctionId, userId);
   const lots = auction.lots || [];
 
-  const [payment, cpo, bids] = await Promise.all([
+  const [payment, cpo, bids, bidDraftRecords] = await Promise.all([
     Payment.findOne({
       where: { user_id: userId, auction_id: auctionId, deleted_at: null },
       order: [['created_at', 'DESC']],
@@ -899,6 +935,14 @@ export async function getAuctionParticipation(auctionId, userId) {
       order: [['created_at', 'DESC']],
     }),
     Bid.findAll({ where: { auction_id: auctionId, user_id: userId } }),
+    BidDraft.findAll({
+      where: {
+        user_id: userId,
+        auction_id: auctionId,
+        status: { [Op.in]: ['draft', 'locked'] },
+      },
+      order: [['created_at', 'ASC']],
+    }),
   ]);
 
   const paymentApproved = payment?.status === 'approved';
@@ -967,6 +1011,46 @@ export async function getAuctionParticipation(auctionId, userId) {
   const canPlaceBid = lotParticipation.some((lot) => lot.canPlaceBid)
     || Boolean(cpoApproved && !legacyBid && lots.length === 0 && auctionOpen && inWindow);
 
+  const editableDrafts = bidDraftRecords.filter((draft) => draft.status === 'draft');
+  const lockedDrafts = bidDraftRecords.filter((draft) => draft.status === 'locked');
+  const hasEditableDrafts = editableDrafts.length > 0;
+  const hasLockedDrafts = lockedDrafts.length > 0;
+  const canEditBidDrafts = Boolean(
+    paymentApproved && !cpoPending && !cpoApproved && auctionOpen && inWindow,
+  );
+  const canSubmitCpoWithBids = Boolean(
+    canEditBidDrafts && hasEditableDrafts,
+  );
+  const bidsLocked = Boolean(cpoPending || cpoApproved || hasBid || hasLockedDrafts);
+
+  const draftCpoPreview = editableDrafts.length > 0 || lockedDrafts.length > 0
+    ? computeRequiredCpoFromBidAmounts(
+        [...editableDrafts, ...lockedDrafts].map((draft) => ({
+          auctionAssetId: draft.auction_asset_id,
+          amount: Number(draft.amount),
+        })),
+        auction.cpoPercentage ?? auction.cpo_percentage,
+      )
+    : null;
+
+  if (paymentApproved && !cpo && hasEditableDrafts) {
+    participationStatus = 'registered';
+  } else if (cpoPending && (hasLockedDrafts || hasStoredJsonArray(cpo?.proposed_bids))) {
+    participationStatus = 'cpo_pending';
+  } else if (cpoRejected) {
+    participationStatus = 'cpo_rejected';
+  } else if (cpoApproved && hasBid) {
+    participationStatus = 'bid_submitted';
+  }
+
+  const serializedBidDrafts = bidDraftRecords.map((draft) => ({
+    id: draft.id,
+    auctionAssetId: draft.auction_asset_id ?? null,
+    amount: Number(draft.amount),
+    status: draft.status,
+    cpoId: draft.cpo_id ?? null,
+  }));
+
   const serializedBids = bids.map((bid) => ({
     id: bid.id,
     auctionAssetId: bid.auction_asset_id ?? null,
@@ -1002,6 +1086,8 @@ export async function getAuctionParticipation(auctionId, userId) {
         }
       : null,
     bids: serializedBids,
+    bidDrafts: serializedBidDrafts,
+    requiredCpoAmountPreview: draftCpoPreview,
     lotParticipation,
     bid: legacyBid
       ? {
@@ -1017,6 +1103,9 @@ export async function getAuctionParticipation(auctionId, userId) {
       canSubmitPayment:
         auctionOpen && !paymentApproved && !paymentPending && (!payment || paymentRejected),
       canSubmitCpo: auctionOpen && paymentApproved && !cpoApproved && !cpoPending,
+      canSubmitCpoWithBids,
+      canEditBidDrafts,
+      bidsLocked,
       canPlaceBid,
       inBiddingWindow: inWindow,
       biddingWindowStatus,
@@ -1355,6 +1444,67 @@ export async function deleteAuction(id, staffId) {
   return { deleted: true, id };
 }
 
+function guessMimeType(fileName) {
+  const extension = String(fileName || '').split('.').pop()?.toLowerCase();
+  switch (extension) {
+    case 'pdf':
+      return 'application/pdf';
+    case 'png':
+      return 'image/png';
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'webp':
+      return 'image/webp';
+    default:
+      return 'application/octet-stream';
+  }
+}
+
+function resolveUploadUrlToAbsolutePath(fileUrl) {
+  const url = String(fileUrl || '');
+  const uploadsMarker = '/uploads/';
+  const markerIndex = url.indexOf(uploadsMarker);
+  const relative = markerIndex >= 0
+    ? url.slice(markerIndex + uploadsMarker.length)
+    : url.replace(/^\/api\/uploads\//, '').replace(/^\//, '');
+  return path.resolve(process.cwd(), env.storage.uploadDir, relative);
+}
+
+/**
+ * Resolve an auction document for authenticated inline streaming.
+ * @param {string} auctionId
+ * @param {number} docIndex
+ * @param {string} userId
+ */
+export async function resolveAuctionDocumentForStream(auctionId, docIndex, userId) {
+  const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, auctionId);
+  if (!hasPayment) {
+    throw new AppError('Document access requires approved payment', 403, 'DOCUMENT_ACCESS_DENIED');
+  }
+
+  const auction = await findAuctionOrThrow(auctionId);
+  const docs = normalizeDocumentFiles(auction.document_files);
+  const index = Number(docIndex);
+
+  if (!Number.isInteger(index) || index < 0 || index >= docs.length) {
+    throw new AppError('Document not found', 404, 'DOCUMENT_NOT_FOUND');
+  }
+
+  const doc = docs[index];
+  const absolutePath = resolveUploadUrlToAbsolutePath(doc.url);
+
+  if (!fs.existsSync(absolutePath)) {
+    throw new AppError('Document file not found', 404, 'DOCUMENT_FILE_NOT_FOUND');
+  }
+
+  return {
+    absolutePath,
+    fileName: doc.name || `auction-document-${index + 1}`,
+    mimeType: guessMimeType(doc.name || absolutePath),
+  };
+}
+
 export const auctionService = Object.freeze({
   createAuction,
   listAuctions,
@@ -1362,6 +1512,7 @@ export const auctionService = Object.freeze({
   getAuctionById,
   getBrowseAuctionById,
   getAuctionParticipation,
+  resolveAuctionDocumentForStream,
   updateAuction,
   publishAuction,
   suspendAuction,

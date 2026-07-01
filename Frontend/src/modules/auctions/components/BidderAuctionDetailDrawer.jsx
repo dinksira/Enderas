@@ -12,6 +12,7 @@ import {
   normalizeAuctionStatus,
   statusPillClass,
 } from '../utils/auction-drawer-utils.js';
+import { resolveMediaUrl } from '../../../utils/media-url.js';
 import {
   getParticipationStatusVariant,
   resolveParticipationStatus,
@@ -263,16 +264,19 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
                   <section className="auction-drawer__section">
                     <h3>{t('bidder.browse.photos')}</h3>
                     <div className="auction-drawer__thumbnails">
-                      {images.map((imageUrl) => (
+                      {images.map((imageUrl) => {
+                        const resolvedImageUrl = resolveMediaUrl(imageUrl);
+                        return (
                         <button
                           key={imageUrl}
                           type="button"
                           className="auction-drawer__thumbnail"
-                          onClick={() => setViewerSrc(imageUrl)}
+                          onClick={() => setViewerSrc(resolvedImageUrl)}
                         >
-                          <img src={imageUrl} alt={auction.title} />
+                          <img src={resolvedImageUrl} alt={auction.title} />
                         </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   </section>
                 )}

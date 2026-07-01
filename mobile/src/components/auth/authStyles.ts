@@ -167,6 +167,8 @@ function createAuthStyles(colors: ThemeColors, isDark: boolean) {
       paddingHorizontal: 10,
       alignItems: 'center',
       justifyContent: 'center',
+      position: 'relative',
+      zIndex: 2,
     },
     submitButtonText: {
       fontSize: 13,

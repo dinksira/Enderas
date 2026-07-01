@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,16 +7,25 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GoldButton } from '@/components/auth';
 import { LocalReceiptUpload } from '@/components/auction/LocalReceiptUpload';
 import { ParticipationStatusBanner } from '@/components/auction/ParticipationStatusBanner';
+import { KycRequiredModal } from '@/components/kyc/KycRequiredModal';
 import { ScreenShell } from '@/components/shell/ScreenShell';
 import { GlassCard } from '@/components/shell/GlassCard';
-import { findMockAuctionById } from '@/data/mockAuctions';
+import { useAuctionActionGate } from '@/hooks/useAuctionActionGate';
 import { useAuctionParticipation } from '@/hooks/useAuctionParticipation';
+import { openAuctionDocumentInBrowser } from '@/lib/auctionDocumentUtils';
 import { formatEtbAmount } from '@/lib/auctionUtils';
 import { useTheme } from '@/lib/appStore';
+import { useAuthStore } from '@/lib/authStore';
+import { fileUploadApi } from '@/services/fileUploadApi';
+import { paymentApi } from '@/services/paymentApi';
 import { Typography, Spacing, Radii } from '@/theme';
 import type { PaymentMethod } from '@/types/auctionParticipation';
 
-const PAYMENT_METHODS: { id: PaymentMethod; labelKey: string; icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'] }[] = [
+const PAYMENT_METHODS: {
+  id: PaymentMethod;
+  labelKey: string;
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+}[] = [
   { id: 'manual', labelKey: 'auction.participation.manualTransfer', icon: 'bank-transfer' },
   { id: 'addis_pay', labelKey: 'auction.participation.addisPay', icon: 'cellphone' },
 ];
@@ -25,43 +34,101 @@ export default function BuyAuctionDocScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const auction = useMemo(() => (id ? findMockAuctionById(id) : undefined), [id]);
-  const { record, actions } = useAuctionParticipation(id ?? '');
+  const auctionId = id ?? '';
+  const { auction, participation, loading, error, refresh, kycVerified } = useAuctionParticipation(auctionId);
+  const { isAuthenticated } = useAuctionActionGate();
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const [kycModalVisible, setKycModalVisible] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('manual');
+  const [receipt, setReceipt] = useState<{ uri: string; name: string; mimeType?: string } | undefined>();
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
-    record.documentPayment.paymentMethod ?? 'manual',
-  );
-  const [receipt, setReceipt] = useState<{ uri: string; name: string } | undefined>(
-    record.documentPayment.receiptUri && record.documentPayment.receiptName
-      ? { uri: record.documentPayment.receiptUri, name: record.documentPayment.receiptName }
-      : undefined,
-  );
+  if (!isAuthenticated) {
+    return (
+      <ScreenShell title={t('auction.participation.buyDoc')} showBack onBack={() => router.back()} bottomPadding={40}>
+        <GlassCard padding={Spacing.lg}>
+          <Text style={[Typography.body, { color: colors.textSecondary }]}>
+            {t('auction.participation.loginRequired')}
+          </Text>
+          <GoldButton
+            label={t('authRequired.loginCta')}
+            onPress={() => router.push(`/(auth)/login?returnTo=${encodeURIComponent(`/auction/${auctionId}/buy-doc`)}` as any)}
+          />
+        </GlassCard>
+      </ScreenShell>
+    );
+  }
 
-  if (!auction || !id) {
+  if (!kycVerified) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.base }}>
+        <KycRequiredModal
+          visible
+          onClose={() => router.back()}
+          onVerify={() => router.push('/kyc' as any)}
+        />
+      </View>
+    );
+  }
+
+  if (loading && !auction) {
+    return (
+      <ScreenShell title={t('auction.participation.buyDoc')} showBack onBack={() => router.back()} bottomPadding={40}>
+        <ActivityIndicator color={colors.goldBright} />
+      </ScreenShell>
+    );
+  }
+
+  if (!auction || !id || error) {
     return (
       <ScreenShell title={t('auction.participation.buyDoc')} showBack onBack={() => router.back()} bottomPadding={40}>
         <GlassCard padding={Spacing.lg}>
           <Text style={[Typography.body, { color: colors.danger.fg }]}>
-            {t('dashboard.browse.detailError')}
+            {error ?? t('dashboard.browse.detailError')}
           </Text>
         </GlassCard>
       </ScreenShell>
     );
   }
 
-  const paymentStatus = record.documentPayment.status;
+  const paymentStatus = participation?.payment?.status ?? 'none';
   const isPending = paymentStatus === 'pending';
   const isApproved = paymentStatus === 'approved';
   const isRejected = paymentStatus === 'rejected';
-  const canSubmit = !isPending && !isApproved && receipt;
+  const canSubmit = !isPending && !isApproved && receipt && !submitting;
 
-  const handleSubmit = () => {
-    if (!receipt) return;
-    actions.submitDocumentPayment(id, {
-      paymentMethod,
-      receiptUri: receipt.uri,
-      receiptName: receipt.name,
-    });
+  const handleSubmit = async () => {
+    if (!receipt || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      let receiptUrl: string | undefined;
+      if (paymentMethod === 'manual') {
+        const uploaded = await fileUploadApi.uploadFile(
+          {
+            uri: receipt.uri,
+            name: receipt.name,
+            mimeType: receipt.mimeType ?? 'application/pdf',
+          },
+          'payments/receipts',
+        );
+        receiptUrl = uploaded.fileUrl;
+      }
+
+      await paymentApi.createPayment({
+        auctionId: id,
+        amount: auction.documentFee,
+        paymentMethod,
+        receiptUrl,
+      });
+      await refresh();
+      router.back();
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : t('auction.participation.submitPaymentFailed'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -86,7 +153,7 @@ export default function BuyAuctionDocScreen() {
           tone="lost"
           icon="close-circle-outline"
           title={t('auction.participation.docRejectedTitle')}
-          message={t('auction.participation.docRejectedBody')}
+          message={participation?.payment?.rejectionReason ?? t('auction.participation.docRejectedBody')}
         />
       ) : null}
 
@@ -104,7 +171,7 @@ export default function BuyAuctionDocScreen() {
           {t('auction.participation.documentFee')}
         </Text>
         <Text style={[Typography.h1, { color: colors.cream, fontSize: 28, marginTop: 4 }]}>
-          {formatEtbAmount(auction.documentPrice)}
+          {formatEtbAmount(auction.documentFee)}
         </Text>
         <Text style={[Typography.caption, { color: colors.textMuted, marginTop: 8 }]}>
           {t('auction.participation.buyDocHint')}
@@ -160,31 +227,48 @@ export default function BuyAuctionDocScreen() {
         />
       </GlassCard>
 
+      {submitError ? (
+        <Text style={[Typography.caption, { color: colors.danger.fg, marginBottom: 10 }]}>
+          {submitError}
+        </Text>
+      ) : null}
+
       {!isApproved ? (
         <GoldButton
-          label={isPending ? t('auction.participation.docUnderReview') : t('auction.participation.submitPayment')}
+          label={
+            submitting
+              ? t('common.submitting')
+              : isPending
+                ? t('auction.participation.docUnderReview')
+                : t('auction.participation.submitPayment')
+          }
           onPress={handleSubmit}
           disabled={!canSubmit || isPending}
         />
       ) : (
         <GoldButton
-          label={t('auction.participation.viewDoc')}
-          onPress={() => router.push(`/auction/${id}/document`)}
+          label={t('auction.participation.openExternal')}
+          onPress={() => {
+            void openAuctionDocumentInBrowser(id, auction.documents, 0, accessToken).then((opened) => {
+              if (!opened) {
+                Alert.alert(
+                  t('auction.participation.downloadErrorTitle'),
+                  t('auction.participation.downloadErrorBody'),
+                );
+              }
+            });
+          }}
         />
       )}
 
-      {isPending ? (
-        <View style={styles.simRow}>
-          <Text style={[Typography.caption, { color: colors.textMuted, flex: 1 }]}>
-            {t('auction.participation.simulateHint')}
-          </Text>
-          <Pressable onPress={() => actions.simulateApproveDocumentPayment(id)}>
-            <Text style={[Typography.caption, { color: colors.goldBright, fontWeight: '700' }]}>
-              {t('auction.participation.simulateApprove')}
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
+      <KycRequiredModal
+        visible={kycModalVisible}
+        onClose={() => setKycModalVisible(false)}
+        onVerify={() => {
+          setKycModalVisible(false);
+          router.push('/kyc' as any);
+        }}
+      />
     </ScreenShell>
   );
 }
@@ -210,12 +294,5 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: Radii.input,
     borderWidth: 1,
-  },
-  simRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 14,
-    paddingHorizontal: 4,
   },
 });

@@ -8,6 +8,7 @@ import { ROUTES } from '../../../config/routes.js';
 import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
 import { useAuthStore } from '../../../stores/auth-store.js';
 import { auctionService } from '../services/auction-service.js';
+import { resolveMediaUrl } from '../../../utils/media-url.js';
 import { winnerService } from '../../winners/services/winner-service.js';
 import {
   canViewBidAmounts,
@@ -596,7 +597,7 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
                             <p className="auction-drawer__document-size">{formatFileSize(doc.size)}</p>
                           </div>
                           <a
-                            href={doc.url}
+                            href={resolveMediaUrl(doc.url)}
                             className="auction-drawer__download-btn"
                             download={doc.name}
                             target="_blank"

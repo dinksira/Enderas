@@ -1,58 +1,150 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 
-import { getMockLotsForAuction } from '@/data/mockAuctionLots';
-import { resolveParticipationRecord } from '@/data/mockParticipationSeeds';
-import { useAuctionParticipationStore } from '@/lib/auctionParticipationStore';
-import {
-  canEnterBidFlow,
-  getParticipationSummary,
-  hasDocumentAccess,
-} from '@/lib/auctionParticipationUtils';
+import { auctionApi } from '@/services/auctionApi';
+import { bidDraftApi } from '@/services/bidDraftApi';
 import { isKycVerified } from '@/lib/auth-utils';
+import { normalizeBrowseAuctionApi } from '@/lib/normalizeBrowseAuction';
 import { useAuthStore } from '@/lib/authStore';
+import type { AuctionLotApi, AuctionParticipationApi, BrowseAuctionApi } from '@/types/auctionApi';
 
-export function useAuctionParticipation(auctionId: string) {
+interface UseAuctionParticipationResult {
+  auction: BrowseAuctionApi | null;
+  participation: AuctionParticipationApi | null;
+  lots: AuctionLotApi[];
+  loading: boolean;
+  refreshing: boolean;
+  error: string | null;
+  kycVerified: boolean;
+  documentApproved: boolean;
+  canBid: boolean;
+  refresh: () => Promise<void>;
+  upsertLotBid: (lotId: string, amount: number) => Promise<void>;
+  removeLotBid: (draftId: string) => Promise<void>;
+  clearLotSelection: (lotId: string, draftId?: string) => Promise<void>;
+}
+
+export function useAuctionParticipation(auctionId: string): UseAuctionParticipationResult {
   const user = useAuthStore((s) => s.user);
-  const storedRecord = useAuctionParticipationStore((s) => s.records[auctionId]);
-  const record = resolveParticipationRecord(auctionId, storedRecord);
-  const submitDocumentPayment = useAuctionParticipationStore((s) => s.submitDocumentPayment);
-  const simulateApproveDocumentPayment = useAuctionParticipationStore(
-    (s) => s.simulateApproveDocumentPayment,
-  );
-  const simulateRejectDocumentPayment = useAuctionParticipationStore(
-    (s) => s.simulateRejectDocumentPayment,
-  );
-  const toggleLotSelection = useAuctionParticipationStore((s) => s.toggleLotSelection);
-  const updateLotBid = useAuctionParticipationStore((s) => s.updateLotBid);
-  const submitCpoReceipt = useAuctionParticipationStore((s) => s.submitCpoReceipt);
-  const simulateApproveCpo = useAuctionParticipationStore((s) => s.simulateApproveCpo);
-  const simulateRejectCpo = useAuctionParticipationStore((s) => s.simulateRejectCpo);
-  const resetParticipation = useAuctionParticipationStore((s) => s.resetParticipation);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const [auction, setAuction] = useState<BrowseAuctionApi | null>(null);
+  const [participation, setParticipation] = useState<AuctionParticipationApi | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const lots = useMemo(() => getMockLotsForAuction(auctionId), [auctionId]);
   const kycVerified = isKycVerified(user);
-  const documentApproved = hasDocumentAccess(record.documentPayment);
-  const canBid = canEnterBidFlow(record.documentPayment, kycVerified);
-  const summary = getParticipationSummary(record, lots);
+  const documentApproved = Boolean(participation?.gates.documentAccess);
+  const canBid = Boolean(documentApproved && kycVerified && participation?.gates.canEditBidDrafts);
+
+  const lots = useMemo(() => auction?.lots ?? [], [auction?.lots]);
+
+  const load = useCallback(async () => {
+    if (!auctionId) return;
+
+    setError(null);
+    try {
+      const auctionData = normalizeBrowseAuctionApi(await auctionApi.browseAuctionById(auctionId));
+      setAuction(auctionData);
+
+      if (accessToken) {
+        const participationData = await auctionApi.getParticipation(auctionId);
+        setParticipation(participationData);
+      } else {
+        setParticipation(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load auction');
+    }
+  }, [auctionId, accessToken]);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await load();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      setLoading(true);
+      try {
+        await load();
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [load]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!loading) {
+        void load();
+      }
+    }, [load, loading]),
+  );
+
+  const upsertLotBid = useCallback(
+    async (lotId: string, amount: number) => {
+      await bidDraftApi.upsertBidDraft({
+        auctionId,
+        auctionAssetId: lotId,
+        amount,
+      });
+      await load();
+    },
+    [auctionId, load],
+  );
+
+  const removeLotBid = useCallback(
+    async (draftId: string) => {
+      await bidDraftApi.deleteBidDraft(draftId);
+      await load();
+    },
+    [load],
+  );
+
+  const clearLotSelection = useCallback(
+    async (lotId: string, draftId?: string) => {
+      if (draftId) {
+        await bidDraftApi.deleteBidDraft(draftId);
+      } else {
+        const existing = participation?.bidDrafts.find(
+          (draft) => draft.auctionAssetId === lotId && draft.status === 'draft',
+        );
+        if (existing?.id) {
+          await bidDraftApi.deleteBidDraft(existing.id);
+        }
+      }
+      await load();
+    },
+    [load, participation?.bidDrafts],
+  );
 
   return {
-    record,
+    auction,
+    participation,
     lots,
+    loading,
+    refreshing,
+    error,
     kycVerified,
     documentApproved,
     canBid,
-    summary,
-    actions: {
-      submitDocumentPayment,
-      simulateApproveDocumentPayment,
-      simulateRejectDocumentPayment,
-      toggleLotSelection,
-      updateLotBid,
-      submitCpoReceipt,
-      simulateApproveCpo,
-      simulateRejectCpo,
-      resetParticipation,
-    },
+    refresh,
+    upsertLotBid,
+    removeLotBid,
+    clearLotSelection,
   };
 }
 
