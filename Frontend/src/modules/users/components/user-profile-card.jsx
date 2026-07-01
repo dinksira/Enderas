@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
 import { useUserProfile } from '../hooks/use-user-profile.js';
-import { formatDate, getUserStatusVariant } from '../utils/user-management-utils.js';
+import { formatDate } from '@enderass/shared/utils';
+import { getUserStatusVariant } from '../utils/user-management-utils.js';
 
 export function UserProfileCard() {
   const { t, i18n } = useTranslation();

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { PlaceBidForm } from './PlaceBidForm.jsx';
-import { formatEtbAmount } from '../utils/auction-drawer-utils.js';
+import { formatEtbAmount } from '@enderass/shared/utils';
 
 function resolveWindowStatus(participation, auction) {
   const fromApi = participation?.gates?.biddingWindowStatus;

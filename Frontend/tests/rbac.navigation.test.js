@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveNavigation } from '../src/config/navigation.config.js';
+import { resolveNavigation } from '@enderass/shared/config';
 
 test('bidder navigation excludes staff and roles', () => {
   const permissions = {

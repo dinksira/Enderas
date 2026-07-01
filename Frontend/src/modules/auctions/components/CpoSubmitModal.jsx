@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/Button.jsx';
 import { FileUpload } from '../../../components/FileUpload.jsx';
 import { cpoService } from '../../cpo-management/services/cpo-service.js';
-import { formatEtbAmount } from '../utils/auction-drawer-utils.js';
+import { formatEtbAmount } from '@enderass/shared/utils';
 import { computeRequiredCpoAmount, isMultiLotAuction } from '../utils/auction-lot-utils.js';
 
 /**

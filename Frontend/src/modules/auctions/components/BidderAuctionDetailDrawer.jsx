@@ -11,7 +11,7 @@ import {
   formatEtbAmount,
   normalizeAuctionStatus,
   statusPillClass,
-} from '../utils/auction-drawer-utils.js';
+} from '@enderass/shared/utils';
 import {
   getParticipationStatusVariant,
   resolveParticipationStatus,

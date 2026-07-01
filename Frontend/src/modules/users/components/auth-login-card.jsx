@@ -61,11 +61,17 @@ export function AuthStepTitle({ title }) {
  * @param {boolean} props.loading
  * @param {string} props.label
  * @param {string} [props.loadingLabel]
+ * @param {boolean} [props.disabled]
  */
-export function AuthSubmitButton({ loading, label, loadingLabel = 'Please Wait...' }) {
+export function AuthSubmitButton({ loading, label, loadingLabel = 'Please Wait...', disabled = false }) {
   return (
     <div className="auth-login-card__submit">
-      <Button type="submit" variant="primary" className="auth-login-card__button" disabled={loading}>
+      <Button
+        type="submit"
+        variant="primary"
+        className="auth-login-card__button"
+        disabled={loading || disabled}
+      >
         {loading ? loadingLabel : label}
       </Button>
     </div>

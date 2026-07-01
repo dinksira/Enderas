@@ -1,5 +1,14 @@
 {
+  "name": "enderass-auction-system",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "frontend",
+    "admin",
+    "backend"
+  ],
   "devDependencies": {
+    "playwright": "^1.61.1",
     "vitest": "^4.0.18"
   }
 }

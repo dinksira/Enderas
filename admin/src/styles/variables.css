@@ -1,0 +1,316 @@
+:root {
+  /* ─── CORE / PRIMITIVE ─────────────────────────────────────────────────── */
+
+  /* Brand palette */
+  --core-color-navy-500: #06436a;
+  --core-color-navy-700: #04304c;
+  --core-color-navy-900: #081026;
+  --core-color-blue-hover: #76a6c5;
+  --core-color-overlay-blue: #1b447d;
+
+  /* Neutral palette */
+  --core-color-neutral-900: #1c1c1c;
+  --core-color-neutral-600: #666666;
+  --core-color-neutral-400: #999999;
+  --core-color-neutral-200: #e0e0e0;
+  --core-color-neutral-100: #f5f5f5;
+  --core-color-neutral-0: #ffffff;
+
+  /* Semantic status palette */
+  --core-color-success-500: #28a745;
+  --core-color-warning-500: #ffc107;
+  --core-color-danger-500: #dc3545;
+  --core-color-info-500: #17a2b8;
+
+  /* Radius */
+  --core-radius-sharp: 0px;
+  --core-radius-progress: 2px;
+  --core-radius-circle: 50%;
+
+  /* Typography families */
+  --core-font-family-display: 'Vidaloka', Georgia, serif;
+  --core-font-family-ui: 'Montserrat', Arial, sans-serif;
+  --core-font-family-body: 'Roboto', Arial, sans-serif;
+  --core-font-family-amharic: 'Noto Sans Ethiopic', Arial, sans-serif;
+
+  /* Typography scale */
+  --core-font-size-caption: 13px;
+  --core-font-size-body: 15px;
+  --core-font-size-body-sm: 14px;
+  --core-font-size-ui: 14px;
+  --core-font-size-subheading: 18px;
+  --core-font-size-card-title: 22px;
+  --core-font-size-section: 32px;
+  --core-font-size-page-title: 42px;
+  --core-font-size-hero: 56px;
+
+  --core-font-weight-regular: 400;
+  --core-font-weight-medium: 500;
+  --core-font-weight-semibold: 600;
+  --core-font-weight-bold: 700;
+
+  --core-line-height-tight: 1;
+  --core-line-height-snug: 1.3;
+  --core-line-height-normal: 1.4;
+  --core-line-height-relaxed: 1.7;
+
+  --core-letter-spacing-button: 1.5px;
+  --core-letter-spacing-nav: 0.5px;
+  --core-letter-spacing-label: 0.5px;
+  --core-letter-spacing-caption: 0.3px;
+
+  /* Spacing (8px base grid) */
+  --core-space-1: 4px;
+  --core-space-2: 8px;
+  --core-space-3: 12px;
+  --core-space-4: 16px;
+  --core-space-5: 24px;
+  --core-space-6: 32px;
+  --core-space-7: 48px;
+  --core-space-8: 64px;
+  --core-space-9: 96px;
+  --core-space-10: 128px;
+
+  /* Elevation */
+  --core-shadow-none: none;
+  --core-shadow-low: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --core-shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --core-shadow-high: 0 8px 30px rgba(6, 67, 106, 0.12);
+  --core-shadow-overlay: 0 16px 48px rgba(0, 0, 0, 0.2);
+  --core-shadow-navbar: 0 2px 10px rgba(0, 0, 0, 0.08);
+
+  /* Focus & interaction */
+  --core-focus-ring: 0 0 0 3px rgba(6, 67, 106, 0.4);
+  --core-focus-ring-error: 0 0 0 3px rgba(220, 53, 69, 0.25);
+  --core-opacity-disabled: 0.5;
+  --core-transition-default: all 0.3s ease;
+  --core-transition-bg: background-color 0.3s ease;
+  --core-transition-shadow: box-shadow 0.3s ease;
+  --core-transition-border: border-color 0.3s ease;
+
+  /* Layout */
+  --core-layout-max-width: 1200px;
+  --core-layout-gutter: 15px;
+  --core-layout-navbar-height: 80px;
+  --core-layout-grid-min: 280px;
+
+  /* ─── SEMANTIC ─────────────────────────────────────────────────────────── */
+
+  --semantic-color-brand-primary: var(--core-color-navy-500);
+  --semantic-color-brand-primary-hover: var(--core-color-navy-700);
+  --semantic-color-brand-deep: var(--core-color-navy-900);
+  --semantic-color-brand-accent: var(--core-color-blue-hover);
+  --semantic-color-brand-overlay: var(--core-color-overlay-blue);
+
+  --semantic-color-text-primary: var(--core-color-neutral-900);
+  --semantic-color-text-secondary: var(--core-color-neutral-600);
+  --semantic-color-text-muted: var(--core-color-neutral-400);
+  --semantic-color-text-inverse: var(--core-color-neutral-0);
+  --semantic-color-text-on-warning: var(--core-color-neutral-900);
+
+  --semantic-color-background-primary: var(--core-color-neutral-0);
+  --semantic-color-background-secondary: var(--core-color-neutral-100);
+  --semantic-color-background-inverse: var(--core-color-navy-900);
+
+  --semantic-color-border-default: var(--core-color-neutral-200);
+  --semantic-color-border-focus: var(--core-color-navy-500);
+  --semantic-color-border-hover: var(--core-color-navy-500);
+
+  --semantic-color-status-success: var(--core-color-success-500);
+  --semantic-color-status-warning: var(--core-color-warning-500);
+  --semantic-color-status-danger: var(--core-color-danger-500);
+  --semantic-color-status-info: var(--core-color-info-500);
+
+  --semantic-color-warning: var(--semantic-color-status-warning);
+  --semantic-color-error: var(--semantic-color-status-danger);
+
+  --semantic-color-surface-hover: rgba(6, 67, 106, 0.05);
+  --semantic-color-surface-disabled: rgba(0, 0, 0, 0.5);
+
+  --semantic-radius-default: var(--core-radius-sharp);
+  --semantic-radius-indicator: var(--core-radius-circle);
+  --semantic-radius-progress: var(--core-radius-progress);
+
+  --semantic-font-display: var(--core-font-family-display);
+  --semantic-font-ui: var(--core-font-family-ui);
+  --semantic-font-body: var(--core-font-family-body);
+  --semantic-font-amharic: var(--core-font-family-amharic);
+
+  --semantic-shadow-surface: var(--core-shadow-low);
+  --semantic-shadow-elevated: var(--core-shadow-high);
+  --semantic-shadow-navigation: var(--core-shadow-navbar);
+
+  --semantic-focus-ring: var(--core-focus-ring);
+
+  /* ─── COMPONENT ────────────────────────────────────────────────────────── */
+
+  /* Button */
+  --component-button-font-family: var(--semantic-font-ui);
+  --component-button-font-size: var(--core-font-size-ui);
+  --component-button-font-weight: var(--core-font-weight-bold);
+  --component-button-letter-spacing: var(--core-letter-spacing-button);
+  --component-button-radius: var(--semantic-radius-default);
+  --component-button-padding-y: 14px;
+  --component-button-padding-x: 32px;
+  --component-button-padding-y-secondary: 13px;
+  --component-button-padding-x-secondary: 31px;
+  --component-button-min-height: 44px;
+  --component-button-transition: var(--core-transition-default);
+
+  --component-button-primary-bg: var(--semantic-color-brand-primary);
+  --component-button-primary-bg-hover: var(--semantic-color-brand-primary-hover);
+  --component-button-primary-text: var(--semantic-color-text-inverse);
+  --component-button-primary-border: transparent;
+
+  --component-button-secondary-bg: transparent;
+  --component-button-secondary-bg-hover: var(--semantic-color-brand-primary);
+  --component-button-secondary-text: var(--semantic-color-brand-primary);
+  --component-button-secondary-text-hover: var(--semantic-color-text-inverse);
+  --component-button-secondary-border: var(--semantic-color-brand-primary);
+
+  /* Input */
+  --component-input-height: var(--core-space-7);
+  --component-input-padding-x: var(--core-space-4);
+  --component-input-font-family: var(--semantic-font-ui);
+  --component-input-font-size: var(--core-font-size-ui);
+  --component-input-font-weight: var(--core-font-weight-regular);
+  --component-input-radius: var(--semantic-radius-default);
+  --component-input-bg: var(--semantic-color-background-primary);
+  --component-input-border: var(--semantic-color-border-default);
+  --component-input-border-focus: var(--semantic-color-border-focus);
+  --component-input-border-error: var(--semantic-color-status-danger);
+  --component-input-text: var(--semantic-color-text-primary);
+  --component-input-placeholder: var(--semantic-color-text-muted);
+  --component-input-focus-ring: var(--semantic-focus-ring);
+  --component-input-error-focus-ring: var(--core-focus-ring-error);
+  --component-input-label-font-family: var(--semantic-font-ui);
+  --component-input-label-font-size: var(--core-font-size-caption);
+  --component-input-label-font-weight: var(--core-font-weight-semibold);
+  --component-input-label-letter-spacing: var(--core-letter-spacing-label);
+  --component-input-label-color: var(--semantic-color-text-primary);
+  --component-input-label-gap: var(--core-space-2);
+  --component-input-error-font-family: var(--semantic-font-body);
+  --component-input-error-font-size: 12px;
+  --component-input-error-color: var(--semantic-color-status-danger);
+
+  /* Card */
+  --component-card-bg: var(--semantic-color-background-primary);
+  --component-card-border: var(--semantic-color-border-default);
+  --component-card-border-hover: var(--semantic-color-border-hover);
+  --component-card-radius: var(--semantic-radius-default);
+  --component-card-padding: var(--core-space-5);
+  --component-card-shadow: var(--core-shadow-low);
+  --component-card-shadow-hover: var(--core-shadow-high);
+  --component-card-transition: var(--core-transition-default);
+  --component-card-title-font-family: var(--semantic-font-ui);
+  --component-card-title-font-size: var(--core-font-size-subheading);
+  --component-card-title-font-weight: var(--core-font-weight-semibold);
+  --component-card-title-color: var(--semantic-color-text-primary);
+  --component-card-body-font-family: var(--semantic-font-body);
+  --component-card-body-font-size: var(--core-font-size-body);
+  --component-card-body-color: var(--semantic-color-text-secondary);
+
+  /* Table */
+  --component-table-header-bg: var(--semantic-color-brand-primary);
+  --component-table-header-text: var(--semantic-color-text-inverse);
+  --component-table-header-font-family: var(--semantic-font-ui);
+  --component-table-header-font-size: var(--core-font-size-caption);
+  --component-table-header-font-weight: var(--core-font-weight-bold);
+  --component-table-header-letter-spacing: var(--core-letter-spacing-label);
+  --component-table-row-bg-odd: var(--semantic-color-background-primary);
+  --component-table-row-bg-even: var(--semantic-color-background-secondary);
+  --component-table-row-bg-hover: var(--semantic-color-surface-hover);
+  --component-table-row-text: var(--semantic-color-text-primary);
+  --component-table-row-font-family: var(--semantic-font-body);
+  --component-table-row-font-size: var(--core-font-size-body-sm);
+  --component-table-cell-padding-y: var(--core-space-3);
+  --component-table-cell-padding-x: var(--core-space-4);
+  --component-table-border: var(--semantic-color-border-default);
+
+  /* Navigation */
+  --component-navbar-height: var(--core-layout-navbar-height);
+  --component-navbar-bg: var(--semantic-color-background-primary);
+  --component-navbar-text: var(--semantic-color-text-primary);
+  --component-navbar-text-hover: var(--semantic-color-brand-accent);
+  --component-navbar-text-active: var(--semantic-color-brand-primary);
+  --component-navbar-font-family: var(--semantic-font-ui);
+  --component-navbar-font-size: var(--core-font-size-ui);
+  --component-navbar-font-weight: var(--core-font-weight-medium);
+  --component-navbar-letter-spacing: var(--core-letter-spacing-nav);
+  --component-navbar-shadow: var(--semantic-shadow-navigation);
+  --component-navbar-z-index: 100;
+
+  /* Footer */
+  --component-footer-bg: var(--semantic-color-brand-deep);
+  --component-footer-text: var(--semantic-color-text-inverse);
+  --component-footer-padding-y: var(--core-space-6);
+  --component-footer-font-family: var(--semantic-font-body);
+  --component-footer-font-size: var(--core-font-size-body-sm);
+
+  /* Login */
+  --component-login-shell-bg: var(--semantic-color-background-secondary);
+  --component-login-card-max-width: 480px;
+  --component-login-display-color: var(--semantic-color-text-primary);
+  --component-login-helper-color: var(--semantic-color-text-secondary);
+  --component-login-alert-bg: rgba(220, 53, 69, 0.08);
+  --component-login-alert-border: var(--semantic-color-status-danger);
+  --component-login-alert-text: var(--semantic-color-status-danger);
+
+  /* Auth flow — documented rounded-geometry exception (login & OTP screens) */
+  --component-auth-card-radius: 16px;
+  --component-auth-input-radius: 8px;
+  --component-auth-button-radius: 8px;
+  --component-auth-card-border-width: 2px;
+  --component-auth-card-border-color: var(--semantic-color-brand-primary);
+  --component-auth-card-bg: var(--semantic-color-background-primary);
+  --component-auth-card-shadow: var(--core-shadow-medium);
+  --component-auth-card-padding: var(--core-space-6);
+  --component-auth-card-min-height: 520px;
+  --component-auth-otp-size: var(--core-space-7);
+  --component-auth-otp-radius: var(--core-radius-circle);
+  --component-auth-otp-gap: var(--core-space-3);
+  --component-auth-otp-border: var(--semantic-color-border-default);
+  --component-auth-otp-border-focus: var(--semantic-color-border-focus);
+  --component-auth-otp-font-size: var(--core-font-size-subheading);
+  --component-auth-title-font-family: var(--semantic-font-ui);
+  --component-auth-title-font-size: var(--core-font-size-subheading);
+  --component-auth-title-font-weight: var(--core-font-weight-bold);
+  --component-auth-title-letter-spacing: var(--core-letter-spacing-label);
+  --component-auth-instruction-font-family: var(--semantic-font-body);
+  --component-auth-instruction-font-size: var(--core-font-size-body-sm);
+  --component-auth-instruction-color: var(--semantic-color-text-secondary);
+  --component-auth-brand-font-family: var(--semantic-font-display);
+  --component-auth-brand-font-size: var(--core-font-size-card-title);
+  --component-auth-brand-color: var(--semantic-color-brand-primary);
+  --component-auth-resend-color: var(--semantic-color-brand-primary);
+  --component-auth-resend-hover: var(--semantic-color-brand-primary-hover);
+  --component-auth-timer-color: var(--semantic-color-text-secondary);
+  --component-auth-locale-color: var(--semantic-color-text-primary);
+  --component-auth-locale-active: var(--semantic-color-brand-primary);
+  --component-auth-locale-font-size: var(--core-font-size-ui);
+  --component-auth-locale-font-size-am: calc(var(--core-font-size-ui) + 1px);
+  --component-auth-locale-divider: var(--semantic-color-border-default);
+
+  /* Dashboard shell */
+  --dashboard-sidebar-bg: #0a0f1e;
+  --dashboard-sidebar-width: 260px;
+  --dashboard-header-height: 72px;
+  --dashboard-canvas-bg: #fbfbfb;
+  --dashboard-surface-bg: #ffffff;
+  --dashboard-accent: #0a0f1e;
+  --dashboard-accent-hover: #060a14;
+  --dashboard-text-primary: var(--core-color-neutral-900);
+  --dashboard-text-muted: #8b9cb3;
+  --dashboard-text-subtle: #6c757d;
+  --dashboard-text-inverse: #ffffff;
+  --dashboard-border: var(--core-color-neutral-200);
+  --dashboard-gold: #d4a843;
+  --dashboard-search-bg: rgba(0, 0, 0, 0.05);
+  --dashboard-search-radius: 999px;
+  --dashboard-status-active-bg: #28a745;
+  --dashboard-status-pending-bg: #fd7e14;
+  --dashboard-status-suspended-bg: #dc3545;
+  --dashboard-status-closed-bg: #e9ecef;
+  --dashboard-status-closed-text: #1c1c1c;
+  --dashboard-sidebar-divider: rgba(255, 255, 255, 0.08);
+}

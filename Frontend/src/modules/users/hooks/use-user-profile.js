@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getMyKYC } from '../../kyc/services/kyc.service.js';
 import { userService } from '../services/user-service.js';
-import { formatDate } from '../utils/user-management-utils.js';
+import { formatDate } from '@enderass/shared/utils';
 
 export function useUserProfile() {
   const { t } = useTranslation();

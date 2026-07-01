@@ -1,18 +1,18 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useRegisterPageSearch } from '../../../contexts/PageSearchContext.jsx';
+import { useRegisterPageSearch } from '@enderass/shared/contexts';
 import { useBrowseAuctions } from '../hooks/use-browse-auctions.js';
 import { BidderAuctionDetailDrawer } from '../components/BidderAuctionDetailDrawer.jsx';
 import {
   formatEtbAmount,
   normalizeAuctionStatus,
   statusPillClass,
-} from '../utils/auction-drawer-utils.js';
+} from '@enderass/shared/utils';
 import {
   getParticipationStatusVariant,
   resolveParticipationStatus,
 } from '../utils/participation-utils.js';
-import { StatusPill } from '../../../components/admin/StatusPill.jsx';
+import { StatusPill } from '@enderass/shared/ui-admin';
 
 const STATUS_FILTERS = ['', 'ACTIVE', 'CLOSED', 'SUSPENDED'];
 

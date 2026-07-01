@@ -10,7 +10,7 @@ import {
   normalizeAssetDetail,
   normalizeAssetStatus,
 } from '../utils/asset-form-utils.js';
-import { formatDate } from '../../users/utils/user-management-utils.js';
+import { formatDate } from '@enderass/shared/utils';
 
 function MetaField({ label, value, children }) {
   return (

@@ -4,8 +4,8 @@ import { Button } from '../../../components/Button.jsx';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
 import { DashboardToast } from '../../../components/DashboardToast.jsx';
 import { usePaginatedResource } from '../../../hooks/use-paginated-resource.js';
-import { formatDate } from '../../users/utils/user-management-utils.js';
-import { notificationService } from '../services/notification-service.js';
+import { formatDate } from '@enderass/shared/utils';
+import { notificationService } from '@enderass/shared/services';
 
 const PAGE_SIZE = 20;
 

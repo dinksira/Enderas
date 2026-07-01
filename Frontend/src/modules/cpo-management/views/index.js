@@ -1,1 +1,1 @@
-export { CpoManagementView } from './CpoManagementView.jsx';
+export { MyCpoView } from './MyCpoView.jsx';

@@ -1,10 +1,9 @@
-import { BidManagementView } from '../../bid-management/views/BidManagementView.jsx';
 import { Navigate } from 'react-router-dom';
 import { ROUTES } from '../../../config/routes.js';
-import { usePermission } from '../../../core/auth/usePermission.js';
+import { usePermission } from '@enderass/shared/auth';
 
 /**
- * Staff bid management vs bidder redirect.
+ * Bidder browse redirect; staff bid management lives in the admin app.
  */
 export function BidsRouteEntry() {
   const { roleCode } = usePermission();
@@ -13,7 +12,7 @@ export function BidsRouteEntry() {
     return <Navigate to={ROUTES.APP_BROWSE_AUCTIONS} replace />;
   }
 
-  return <BidManagementView />;
+  return <Navigate to="/app/access-denied" replace />;
 }
 
 export default BidsRouteEntry;

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../../config/routes.js';
 import { AdminDataTable } from '../../../components/admin/AdminDataTable.jsx';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
-import { formatEtbAmount } from '../../auctions/utils/auction-drawer-utils.js';
+import { formatEtbAmount } from '@enderass/shared/utils';
 import { PaymentDetailDrawer } from '../components/PaymentDetailDrawer.jsx';
 import { usePayments } from '../hooks/use-payments.js';
 import {
