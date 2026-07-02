@@ -1074,6 +1074,8 @@ export async function getAuctionParticipation(auctionId, userId) {
           amount: Number(draft.amount),
         })),
         auction.cpoPercentage ?? auction.cpo_percentage,
+        lots,
+        auction.reservePrice ?? auction.reserve_price,
       )
     : null;
 

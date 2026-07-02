@@ -4,7 +4,7 @@ import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { FileUpload } from '../../../components/FileUpload.jsx';
 import { cpoService } from '../../cpo-management/services/cpo-service.js';
 import { formatEtbAmount } from '@enderass/shared/utils';
-import { computeRequiredCpoFromBidAmounts } from '../utils/auction-lot-utils.js';
+import { computeBidCoveragePercent, computeRequiredCpoFromBidAmounts } from '../utils/auction-lot-utils.js';
 
 /**
  * @param {{
@@ -30,12 +30,14 @@ export function CpoSubmitModal({ open, loading = false, auction, participation, 
     [draftBids],
   );
 
+  const auctionReserve = Number(auction?.reservePrice ?? auction?.reserve_price ?? 0) || null;
+
   const requiredCpoAmount = useMemo(() => {
     if (participation?.requiredCpoAmountPreview) {
       return Number(participation.requiredCpoAmountPreview) || 0;
     }
-    return computeRequiredCpoFromBidAmounts(draftBids, cpoPercentage);
-  }, [cpoPercentage, draftBids, participation?.requiredCpoAmountPreview]);
+    return computeRequiredCpoFromBidAmounts(draftBids, cpoPercentage, lots, auctionReserve);
+  }, [auctionReserve, cpoPercentage, draftBids, lots, participation?.requiredCpoAmountPreview]);
 
   if (!open) return null;
 
@@ -98,7 +100,7 @@ export function CpoSubmitModal({ open, loading = false, auction, participation, 
           {cpoPercentage > 0 && (
             <>
               <dt>{t('bidder.participation.cpoModal.cpoPercentage')}</dt>
-              <dd>{cpoPercentage}%</dd>
+              <dd>{t('bidder.participation.cpoModal.cpoRateAtFullReserve', { percentage: cpoPercentage })}</dd>
             </>
           )}
           {requiredCpoAmount > 0 && (
@@ -121,12 +123,21 @@ export function CpoSubmitModal({ open, loading = false, auction, participation, 
               {draftBids.map((draft, index) => {
                 const lot = lots.find((entry) => entry.id === draft.auctionAssetId);
                 const label = lot?.lotLabel || lot?.assetTitle || t('bidder.participation.cpoModal.lotFallback', { index: index + 1 });
+                const lotReserve = Number(lot?.reservePrice ?? lot?.reserve_price ?? auctionReserve ?? 0);
+                const coverage = lotReserve > 0
+                  ? computeBidCoveragePercent(draft.amount, lotReserve)
+                  : 0;
                 return (
                   <li key={draft.id || draft.auctionAssetId || index} className="auction-lot-picker__item">
                     <div className="auction-lot-picker__label">
                       <span className="auction-lot-picker__copy">
                         <strong>{label}</strong>
-                        <span>{formatEtbAmount(draft.amount)}</span>
+                        <span>
+                          {formatEtbAmount(draft.amount)}
+                          {coverage > 0 && (
+                            <> · {t('bidder.participation.cpoModal.bidCoverage', { percentage: coverage })}</>
+                          )}
+                        </span>
                       </span>
                     </div>
                   </li>

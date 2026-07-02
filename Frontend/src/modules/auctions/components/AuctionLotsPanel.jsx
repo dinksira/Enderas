@@ -2,9 +2,9 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatEtbAmount } from '@enderass/shared/utils';
 import {
-  computeMinimumBidTotalForLots,
-  computeRequiredCpoAmount,
+  computeAggregateBidCoveragePercent,
   computeRequiredCpoFromBidAmounts,
+  computeTotalBidAmountFromDrafts,
   computeTotalReserveForLots,
   isMultiLotAuction,
 } from '../utils/auction-lot-utils.js';
@@ -34,6 +34,7 @@ export function AuctionLotsPanel({
   const { t } = useTranslation();
   const lots = lotsProp ?? auction?.lots ?? [];
   const cpoPercentage = Number(auction?.cpoPercentage ?? auction?.cpo_percentage ?? 0);
+  const auctionReserve = Number(auction?.reservePrice ?? auction?.reserve_price ?? 0) || null;
 
   const draftByLotId = useMemo(
     () => new Map(
@@ -56,16 +57,22 @@ export function AuctionLotsPanel({
     : computeTotalReserveForLots(lots, lots.map((lot) => lot.id));
 
   const selectedReserveTotal = computeTotalReserveForLots(lots, selectedLotIds);
-  const selectedMinimumBidTotal = computeMinimumBidTotalForLots(lots, selectedLotIds, cpoPercentage);
+  const selectedBidTotal = computeTotalBidAmountFromDrafts(bidDrafts, selectedLotIds);
 
   const selectedDraftBids = (bidDrafts || []).filter(
     (draft) => draft.auctionAssetId && selectedSet.has(draft.auctionAssetId),
   );
-  const cpoFromDrafts = computeRequiredCpoFromBidAmounts(selectedDraftBids, cpoPercentage);
-  const cpoAtReserve = selectedLotIds.length > 0
-    ? computeRequiredCpoAmount(lots, selectedLotIds, cpoPercentage)
-    : 0;
-  const cpoPreview = cpoFromDrafts > 0 ? cpoFromDrafts : cpoAtReserve;
+  const cpoFromDrafts = computeRequiredCpoFromBidAmounts(
+    selectedDraftBids,
+    cpoPercentage,
+    lots,
+    auctionReserve,
+  );
+  const coverageFromDrafts = computeAggregateBidCoveragePercent(
+    selectedDraftBids,
+    lots,
+    auctionReserve,
+  );
 
   return (
     <section
@@ -91,7 +98,7 @@ export function AuctionLotsPanel({
         )}
         {showSelectHint && isMulti && selectable && (
           <p className="bidder-detail__lots-hint">
-            {t('bidder.browse.lots.selectHintCheckable')}
+            {t('bidder.browse.lots.selectHintCheckable', { percentage: cpoPercentage })}
           </p>
         )}
         {showSelectHint && isMulti && !selectable && (
@@ -192,26 +199,24 @@ export function AuctionLotsPanel({
               amount: formatEtbAmount(selectedReserveTotal),
             })}
           </p>
+          {selectedBidTotal > 0 && (
+            <p className="bidder-detail__lots-totals-line">
+              {t('bidder.browse.lots.selectedTotalBids', {
+                amount: formatEtbAmount(selectedBidTotal),
+              })}
+            </p>
+          )}
           {cpoPercentage > 0 && (
-            <>
-              <p className="bidder-detail__lots-totals-line">
-                {t('bidder.browse.lots.selectedMinimumBid', {
-                  amount: formatEtbAmount(selectedMinimumBidTotal),
-                  percentage: cpoPercentage,
-                })}
-              </p>
-              <p className="bidder-detail__lots-totals-line bidder-detail__lots-totals-line--highlight">
-                {cpoFromDrafts > 0
-                  ? t('bidder.browse.lots.selectedCpoFromBids', {
-                      amount: formatEtbAmount(cpoPreview),
-                      percentage: cpoPercentage,
-                    })
-                  : t('bidder.browse.lots.selectedCpoAtReserve', {
-                      amount: formatEtbAmount(cpoPreview),
-                      percentage: cpoPercentage,
-                    })}
-              </p>
-            </>
+            <p className="bidder-detail__lots-totals-line bidder-detail__lots-totals-line--highlight">
+              {cpoFromDrafts > 0
+                ? t('bidder.browse.lots.selectedCpoFromBids', {
+                    amount: formatEtbAmount(cpoFromDrafts),
+                    coverage: coverageFromDrafts,
+                  })
+                : t('bidder.browse.lots.cpoFromBidsPending', {
+                    percentage: cpoPercentage,
+                  })}
+            </p>
           )}
         </footer>
       )}
