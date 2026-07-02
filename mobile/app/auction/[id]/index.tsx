@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Image } from 'expo-image';
@@ -15,14 +15,13 @@ import { GlassCard } from '@/components/shell/GlassCard';
 import { useAuctionActionGate } from '@/hooks/useAuctionActionGate';
 import { useAuctionParticipation } from '@/hooks/useAuctionParticipation';
 import { canShowBuyDocButton } from '@/lib/auctionParticipationUtils';
-import { openAuctionDocumentInBrowser } from '@/lib/auctionDocumentUtils';
+import { useAuctionCountdown } from '@/lib/auctionCountdown';
 import { formatEtbAmount, getCategoryTheme, statusTone } from '@/lib/auctionUtils';
 import {
   buildLotParticipationRows,
   shouldShowLotParticipationOverview,
 } from '@/lib/lotParticipationUtils';
 import { useTheme } from '@/lib/appStore';
-import { useAuthStore } from '@/lib/authStore';
 import { resolveMediaUrl } from '@/lib/media-utils';
 import { Typography, Spacing } from '@/theme';
 import { toneToStatus, type UiTone } from '@/theme/statusTones';
@@ -36,8 +35,11 @@ export default function AuctionDetailScreen() {
   const { auction, participation, lots, loading, error, documentApproved, kycVerified } =
     useAuctionParticipation(auctionId);
   const { isAuthenticated, gateReason } = useAuctionActionGate();
-  const accessToken = useAuthStore((s) => s.accessToken);
   const [kycModalVisible, setKycModalVisible] = useState(false);
+  const { label: countdownLabel, accentLabel, urgency, expired } = useAuctionCountdown(
+    auction?.endDate,
+    t('bids.ended'),
+  );
 
   const paymentStatus = participation?.payment?.status ?? 'none';
   const showBuyDoc = canShowBuyDocButton(participation);
@@ -78,7 +80,7 @@ export default function AuctionDetailScreen() {
     router.push(path as any);
   };
 
-  const handleViewDocument = async () => {
+  const handleViewDocument = () => {
     if (!isAuthenticated) {
       router.push(`/(auth)/login?returnTo=${encodeURIComponent(`/auction/${id}/document`)}` as any);
       return;
@@ -87,15 +89,7 @@ export default function AuctionDetailScreen() {
       setKycModalVisible(true);
       return;
     }
-    if (!documentApproved) {
-      router.push(`/auction/${id}/document` as any);
-      return;
-    }
-
-    const opened = await openAuctionDocumentInBrowser(id, auction?.documents, 0, accessToken);
-    if (!opened) {
-      Alert.alert(t('auction.participation.downloadErrorTitle'), t('auction.participation.downloadErrorBody'));
-    }
+    router.push(`/auction/${id}/document` as any);
   };
 
   const renderParticipationBanner = () => {
@@ -164,19 +158,38 @@ export default function AuctionDetailScreen() {
     );
   }
 
+  const auctionStatus =
+    typeof auction.status === 'string' && auction.status.length > 0 ? auction.status : 'PENDING';
+  const auctionTitle = typeof auction.title === 'string' && auction.title.length > 0 ? auction.title : 'Auction';
+  const auctionDescription =
+    typeof auction.description === 'string' && auction.description.length > 0
+      ? auction.description
+      : '—';
+  const auctionImageUrls = Array.isArray(auction.imageUrls) ? auction.imageUrls : [];
+
   const theme = getCategoryTheme(auction.category);
-  const tone: UiTone = statusTone(auction.status as BrowseAuction['status']);
+  const tone: UiTone = statusTone(auctionStatus as BrowseAuction['status']);
   const statusColors = toneToStatus(tone, colors);
-  const thumbnailUri = resolveMediaUrl(auction.imageUrls?.[0]);
+  const countdownTone =
+    urgency === 'critical'
+      ? colors.danger
+      : urgency === 'soon'
+        ? colors.warning
+        : urgency === 'warm'
+          ? { fg: colors.goldBright, soft: colors.glassFillActive, border: colors.goldBorderActive }
+          : urgency === 'expired'
+            ? null
+            : { fg: colors.goldChampagne, soft: colors.glassFillActive, border: colors.goldBorder };
+  const thumbnailUri = resolveMediaUrl(auctionImageUrls[0]);
   const categoryLabel = t(`dashboard.categories.${auction.category}`, {
     defaultValue: auction.category,
   });
-  const statusLabel = t(`dashboard.filters.${auction.status.toLowerCase()}`);
+  const statusLabel = t(`dashboard.filters.${auctionStatus.toLowerCase()}`);
 
   return (
     <ScreenShell
       title={t('dashboard.browse.detailEyebrow')}
-      pageTitle={auction.title}
+      pageTitle={auctionTitle}
       showBack
       onBack={() => router.back()}
       bottomPadding={40}
@@ -220,19 +233,46 @@ export default function AuctionDetailScreen() {
       </View>
 
       <GlassCard padding={16} style={styles.infoCard}>
-        <View style={styles.infoRow}>
+        <View style={styles.infoGrid}>
           <InfoCell label={t('dashboard.browse.category')} value={categoryLabel} colors={colors} />
-          <InfoCell
-            label={t('dashboard.browse.ends')}
-            value={auction.endingDate ?? auction.endDate ?? '—'}
-            colors={colors}
-            align="right"
-          />
-        </View>
-        <View style={[styles.infoRow, { marginTop: 12 }]}>
+          <View
+            style={[
+              styles.infoCell,
+              styles.infoTile,
+              styles.countdownCell,
+              {
+                backgroundColor: colors.glassFill,
+                borderColor: countdownTone?.border ?? colors.goldBorder,
+              },
+            ]}
+          >
+            <Text style={[styles.infoLabel, { color: colors.textMuted }]}>
+              {expired ? t('dashboard.browse.ends') : 'Ends in'}
+            </Text>
+            <Text
+              style={[
+                styles.infoValue,
+                styles.countdownValue,
+                {
+                  color: expired ? colors.textMuted : urgency === 'critical' ? colors.danger.fg : colors.cream,
+                },
+              ]}
+            >
+              {countdownLabel}
+            </Text>
+            <Text
+              style={[
+                Typography.caption,
+                styles.countdownSupport,
+                { color: expired ? colors.textMuted : urgency === 'critical' ? colors.danger.fg : colors.textSecondary },
+              ]}
+            >
+              {accentLabel}
+            </Text>
+          </View>
           <InfoCell
             label={t('auction.participation.documentFee')}
-            value={formatEtbAmount(auction.documentFee)}
+            value={formatEtbAmount(Number(auction.documentFee ?? 0))}
             colors={colors}
           />
           <InfoCell
@@ -249,7 +289,7 @@ export default function AuctionDetailScreen() {
           {t('dashboard.browse.description')}
         </Text>
         <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
-          {auction.description}
+          {auctionDescription}
         </Text>
       </GlassCard>
 
@@ -261,31 +301,46 @@ export default function AuctionDetailScreen() {
         <Text style={[styles.sectionTitle, { color: colors.goldChampagne, marginBottom: 12 }]}>
           {t('auction.participation.actions')}
         </Text>
+        <Text style={[styles.actionsIntro, { color: colors.textSecondary }]}>
+          {showParticipationOverview
+            ? 'Review your participation or jump back into bidding.'
+            : 'Unlock documents, inspect the lot pack, and place your bids when you are ready.'}
+        </Text>
         <View style={styles.actions}>
           {showBuyDoc ? (
             <LockedActionButton
               label={t('auction.participation.buyDoc')}
               locked={false}
+              disabled={false}
               onPress={() => handleParticipationAction(`/auction/${id}/buy-doc`)}
+              variant="primary"
+              icon="file-document-plus-outline"
+              helperText="Unlock auction docs"
             />
           ) : paymentStatus === 'pending' ? (
             <LockedActionButton
               label={t('auction.participation.docUnderReview')}
               locked
+              disabled
               lockedHint={t('auction.participation.docPendingBody')}
               onPress={() => router.push(`/auction/${id}/buy-doc`)}
-              variant="outline"
+              variant="primary"
+              icon="clock-outline"
+              helperText="Payment review"
             />
           ) : null}
 
           <LockedActionButton
             label={t('auction.participation.viewDoc')}
             locked={viewDocLocked}
+            disabled={viewDocLocked}
             lockedHint={viewDocHint}
             onPress={() => {
               void handleViewDocument();
             }}
-            variant="outline"
+            variant="primary"
+            icon="eye-outline"
+            helperText="Preview documents"
           />
 
           <LockedActionButton
@@ -295,9 +350,12 @@ export default function AuctionDetailScreen() {
                 : t('auction.participation.placeBids')
             }
             locked={bidLocked}
+            disabled={bidLocked}
             lockedHint={bidHint}
             onPress={() => handleParticipationAction(`/auction/${id}/bid`)}
-            variant="outline"
+            variant="primary"
+            icon="gavel"
+            helperText="Join the auction"
           />
         </View>
       </GlassCard>
@@ -328,9 +386,21 @@ function InfoCell({
   valueColor?: string;
 }) {
   return (
-    <View style={[styles.infoCell, align === 'right' && { alignItems: 'flex-end' }]}>
+    <View
+      style={[
+        styles.infoCell,
+        styles.infoTile,
+        {
+          alignItems: align === 'right' ? 'flex-end' : 'flex-start',
+          backgroundColor: colors.glassFill,
+          borderColor: colors.goldBorder,
+        },
+      ]}
+    >
       <Text style={[styles.infoLabel, { color: colors.textMuted }]}>{label}</Text>
-      <Text style={[styles.infoValue, { color: valueColor ?? colors.cream }]}>{value}</Text>
+      <Text style={[styles.infoValue, styles.countdownValue, { color: valueColor ?? colors.cream }]}>
+        {value}
+      </Text>
     </View>
   );
 }
@@ -377,14 +447,25 @@ const styles = StyleSheet.create({
   infoCard: {
     marginBottom: 14,
   },
-  infoRow: {
+  infoGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
     gap: 12,
   },
   infoCell: {
-    flex: 1,
+    width: '47%',
     gap: 4,
+  },
+  infoTile: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 12,
+    minHeight: 82,
+    justifyContent: 'center',
+  },
+  countdownCell: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   infoLabel: {
     fontSize: 10,
@@ -396,6 +477,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.2,
+  },
+  countdownValue: {
+    fontVariant: ['tabular-nums'],
+    textAlign: 'right',
+  },
+  countdownSupport: {
+    marginTop: 2,
+    textAlign: 'right',
   },
   sectionTitle: {
     fontSize: 11,
@@ -411,6 +500,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   actions: {
-    gap: 12,
+    gap: 14,
+  },
+  actionsIntro: {
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 14,
   },
 });

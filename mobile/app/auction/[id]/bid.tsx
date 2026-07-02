@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -71,9 +71,9 @@ export default function AuctionBidScreen() {
   const [cpoModalVisible, setCpoModalVisible] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const [submittingCpo, setSubmittingCpo] = useState(false);
-  const [kycModalVisible, setKycModalVisible] = useState(false);
   const [lotBids, setLotBids] = useState<Record<string, string>>({});
   const [focusLotId, setFocusLotId] = useState<string | null>(null);
+  const hydratedDraftIdsRef = useRef<Set<string>>(new Set());
 
   const bidDrafts = participation?.bidDrafts ?? [];
   const selectedDrafts = bidDrafts.filter((draft) => draft.status === 'draft' || draft.status === 'locked');
@@ -95,15 +95,22 @@ export default function AuctionBidScreen() {
 
   useEffect(() => {
     if (!participation?.bidDrafts) return;
-    setLotBids((prev) => {
-      const next = { ...prev };
-      for (const draft of participation.bidDrafts) {
-        if (draft.status !== 'draft' && draft.status !== 'locked') continue;
-        if (!draft.auctionAssetId || draft.auctionAssetId in next) continue;
-        next[draft.auctionAssetId] = String(draft.amount);
-      }
-      return next;
-    });
+    const syncDrafts = () => {
+      setLotBids((prev) => {
+        const next = { ...prev };
+        for (const draft of participation.bidDrafts) {
+          if (draft.status !== 'draft' && draft.status !== 'locked') continue;
+          if (!draft.auctionAssetId) continue;
+          if (hydratedDraftIdsRef.current.has(draft.id) || draft.auctionAssetId in next) continue;
+          next[draft.auctionAssetId] = String(draft.amount);
+          hydratedDraftIdsRef.current.add(draft.id);
+        }
+        return next;
+      });
+    };
+
+    const timer = setTimeout(syncDrafts, 0);
+    return () => clearTimeout(timer);
   }, [participation?.bidDrafts]);
 
   const parseBidAmount = (text: string): number => {

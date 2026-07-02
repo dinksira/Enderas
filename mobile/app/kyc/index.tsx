@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
-import { AuthRequired } from '@/components/auth';
-import { FormField, GoldButton } from '@/components/auth';
+import { AuthRequired, FormField, GoldButton } from '@/components/auth';
 import {
   KycDocumentTypeSelector,
   type IndividualDocumentType,

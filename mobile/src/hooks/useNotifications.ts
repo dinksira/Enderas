@@ -29,8 +29,8 @@ function formatRelativeTimestamp(iso?: string | null): string {
   return date.toLocaleDateString();
 }
 
-function mapNotificationKind(type: string): NotificationKind {
-  const normalized = type.toLowerCase();
+function mapNotificationKind(type?: string | null): NotificationKind {
+  const normalized = typeof type === 'string' ? type.toLowerCase() : '';
   if (normalized.includes('bid') || normalized.includes('winner') || normalized.includes('outbid')) {
     return 'bid';
   }
@@ -48,8 +48,8 @@ function mapNotification(notification: BackendNotification): AppNotification {
 
   return {
     id: notification.id,
-    title: notification.title,
-    body: notification.message,
+    title: typeof notification.title === 'string' ? notification.title : 'Notification',
+    body: typeof notification.message === 'string' ? notification.message : '',
     timestamp: formatRelativeTimestamp(notification.sentAt || notification.createdAt),
     read: isRead,
     kind: mapNotificationKind(notification.type),
@@ -103,7 +103,11 @@ export function useNotifications(): UseNotificationsResult {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    refresh();
+    const timer = setTimeout(() => {
+      void refresh();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [refresh]);
 
   const markNotificationRead = useCallback(

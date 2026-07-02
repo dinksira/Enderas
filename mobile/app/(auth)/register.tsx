@@ -124,6 +124,8 @@ export default function RegisterScreen() {
         firstName: userType === 'individual' ? nameParts.firstName : undefined,
         lastName: userType === 'individual' ? nameParts.lastName : undefined,
         organizationName: userType === 'organization' ? organizationName.trim() : undefined,
+        nationalIdNumber: userType === 'individual' ? nationalIdNumber.trim() : undefined,
+        tinNumber: userType === 'organization' ? tinNumber.trim() : undefined,
       });
 
       setPendingOtpVerification(trimmedMobile, {

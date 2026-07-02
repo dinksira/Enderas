@@ -366,6 +366,8 @@ const SplashScreen = ({ onChoreographyComplete, dismiss = false, onFinish }: Spl
     return () => {
       timeouts.forEach(clearTimeout);
     };
+  // Shared values and refs used here are stable for the lifetime of the component.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Exit fade — only after the parent confirms routes are ready (`dismiss`).

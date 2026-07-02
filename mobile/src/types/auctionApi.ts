@@ -105,13 +105,11 @@ export interface AuctionParticipationApi {
   } | null;
   bids: ParticipationBidApi[];
   bidDrafts: BidDraftApi[];
-  lotParticipation?: Array<
-    AuctionLotApi & {
-      selected?: boolean;
-      bid?: ParticipationBidApi | null;
-      canPlaceBid?: boolean;
-    }
-  >;
+  lotParticipation?: (AuctionLotApi & {
+    selected?: boolean;
+    bid?: ParticipationBidApi | null;
+    canPlaceBid?: boolean;
+  })[];
   gates: {
     documentAccess: boolean;
     cpoApproved: boolean;

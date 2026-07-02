@@ -7,7 +7,7 @@ import { AuthShell, GoldButton, OtpInput } from '@/components/auth';
 import { verifyOtp, resendOtp } from '@/services/authApi';
 import { ApiError } from '@/services/api';
 import { isMobileAllowedUser } from '@/lib/auth-utils';
-import { useAuthStore, type AuthUser } from '@/lib/authStore';
+import { useAuthStore, useIsAuthenticated, type AuthUser } from '@/lib/authStore';
 import { useOtpTimer } from '@/hooks/useOtpTimer';
 import { maskMobileNumber } from '@/utils/mobile-utils';
 
@@ -29,6 +29,7 @@ export default function VerifyOtpScreen() {
   const authStyles = useAuthStyles();
   const { t } = useTranslation();
   const pendingOtpMobile = useAuthStore((s) => s.pendingOtpMobile);
+  const isAuthenticated = useIsAuthenticated();
   const setSession = useAuthStore((s) => s.setSession);
   const clearSession = useAuthStore((s) => s.clearSession);
   const clearPendingOtpVerification = useAuthStore((s) => s.clearPendingOtpVerification);
@@ -41,10 +42,10 @@ export default function VerifyOtpScreen() {
   const verifyingRef = useRef(false);
 
   useEffect(() => {
-    if (!pendingOtpMobile) {
+    if (!pendingOtpMobile && !isAuthenticated) {
       router.replace('/(auth)/register');
     }
-  }, [pendingOtpMobile]);
+  }, [isAuthenticated, pendingOtpMobile]);
 
   const handleOtpChange = useCallback((next: string) => {
     setOtp(next);
