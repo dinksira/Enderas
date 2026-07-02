@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Dimensions,
-  Linking,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
@@ -108,9 +107,11 @@ export default function AssetDetailScreen() {
     ? t(`assets.ownershipDocs.${ownershipDocKey}`)
     : asset.ownershipDocumentType;
 
-  const openDocument = (url: string) => {
+  const openDocument = (url: string, name?: string) => {
     const resolved = resolveMediaUrl(url);
-    if (resolved) Linking.openURL(resolved).catch(() => {});
+    if (resolved) {
+      router.push(`/document-viewer?url=${encodeURIComponent(resolved)}&title=${encodeURIComponent(name ?? 'Document')}`);
+    }
   };
 
   return (
@@ -344,8 +345,7 @@ export default function AssetDetailScreen() {
         {asset.ownershipDocumentUrl ? (
           <DocumentRow
             name={ownershipDocLabel}
-            url={asset.ownershipDocumentUrl}
-            onPress={openDocument}
+            onPress={() => openDocument(asset.ownershipDocumentUrl!, ownershipDocLabel)}
             colors={colors}
           />
         ) : null}
@@ -354,9 +354,7 @@ export default function AssetDetailScreen() {
           <DocumentRow
             key={`${doc.url}-${index}`}
             name={doc.name}
-            url={doc.url}
-            size={doc.size}
-            onPress={openDocument}
+            onPress={() => openDocument(doc.url, doc.name)}
             colors={colors}
           />
         ))}
@@ -423,15 +421,14 @@ function InfoRow({
 
 function DocumentRow({
   name,
-  url,
   size,
   onPress,
   colors,
 }: {
   name: string;
-  url: string;
+  url?: string;
   size?: number;
-  onPress: (url: string) => void;
+  onPress: () => void;
   colors: ReturnType<typeof useTheme>['colors'];
 }) {
   const { t } = useTranslation();
@@ -439,7 +436,7 @@ function DocumentRow({
 
   return (
     <Pressable
-      onPress={() => onPress(url)}
+      onPress={onPress}
       style={({ pressed }) => [
         styles.docRow,
         {
