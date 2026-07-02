@@ -118,9 +118,27 @@ export async function rejectAsset(req, res, next) {
   }
 }
 
+export async function staffCreateAsset(req, res, next) {
+  try {
+    const { userId, ...assetPayload } = req.body;
+    if (!userId) {
+      throw new Error('Asset owner user ID is required');
+    }
+    const asset = await assetService.staffCreateAsset(
+      resolveStaffId(req),
+      userId,
+      assetPayload
+    );
+    return sendSuccess(res, { asset }, 201);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const assetController = Object.freeze({
   createAsset,
   createAssetsBatch,
+  staffCreateAsset,
   listAssets,
   listMyAssets,
   getAssetById,

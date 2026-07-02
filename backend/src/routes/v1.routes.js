@@ -246,6 +246,14 @@ v1Router.post(
   authorize({ module: MODULES.ASSETS, action: ACTIONS.REJECT }),
   assetController.rejectAsset,
 );
+v1Router.post(
+  '/assets/staff-create',
+  authenticate,
+  attachDataScope(MODULES.ASSETS),
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.CREATE }),
+  requireStaff,
+  assetController.staffCreateAsset,
+);
 
 // Evaluations
 v1Router.get(

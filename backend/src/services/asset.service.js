@@ -759,10 +759,91 @@ export async function rejectAsset(id, staffId, rejectionReason) {
   return getAssetById(id, { isStaff: true }, null);
 }
 
+/**
+ * Create an asset directly as staff (skips review/evaluation, marks as evaluated immediately)
+ * @param {string} staffId
+ * @param {string} userId (asset owner user ID)
+ * @param {object} payload
+ */
+export async function staffCreateAsset(staffId, userId, payload) {
+  if (!staffId) {
+    throw new AppError('Staff profile required', 403, 'STAFF_REQUIRED');
+  }
+
+  const {
+    title,
+    assetType,
+    description,
+    conditionNotes,
+    location,
+    address,
+    imageUrls,
+    desiredReservePrice,
+    auctionConditions,
+    ownershipDocumentType,
+    ownershipDocumentUrl,
+    additionalDocuments,
+  } = payload;
+
+  validateCreateAssetPayload({
+    title,
+    assetType,
+    description,
+    conditionNotes,
+    location,
+    ownershipDocumentType,
+    ownershipDocumentUrl,
+    imageUrls,
+    desiredReservePrice,
+    auctionConditions,
+    additionalDocuments,
+  });
+
+  const owner = await findOrCreateAssetOwner(userId);
+  const resolvedDocType = ownershipDocumentType || ASSET_TYPE_OWNERSHIP_DOC[assetType];
+  assertOwnershipDocMatchesType(assetType, resolvedDocType);
+
+  const asset = await Asset.create({
+    id: generateUuid(),
+    asset_owner_id: owner.id,
+    submission_batch_id: null,
+    asset_type: assetType,
+    title: title.trim(),
+    description: description.trim(),
+    condition_notes: conditionNotes.trim(),
+    location: location.trim(),
+    address: address?.trim() || null,
+    image_urls: normalizeImageUrls(imageUrls),
+    desired_reserve_price: Number(desiredReservePrice),
+    auction_conditions: auctionConditions.trim(),
+    ownership_document_type: resolvedDocType,
+    ownership_document_url: ownershipDocumentUrl.trim(),
+    additional_document_urls: normalizeAdditionalDocuments(additionalDocuments),
+    status: 'evaluated',
+    reviewed_by_staff_id: staffId,
+    reviewed_at: new Date(),
+  });
+
+  await auditService.writeAuditLog({
+    staffId,
+    action: AUDIT_ACTIONS.CREATE,
+    entityType: 'Asset',
+    entityId: asset.id,
+    metadata: {
+      title: asset.title,
+      assetType: asset.asset_type,
+      createdByStaff: true,
+    },
+  });
+
+  return serializeAsset(await findAssetOrThrow(asset.id));
+}
+
 export const assetService = Object.freeze({
   findOrCreateAssetOwner,
   createAsset,
   createAssetsBatch,
+  staffCreateAsset,
   listAssets,
   getAssetById,
   updateAsset,

@@ -11,6 +11,7 @@ export { auctionService } from './auction-service.js';
 export { paymentService } from './payment-service.js';
 export { cpoService } from './cpo-service.js';
 export { bidService } from './bid-service.js';
+export { bidDraftService } from './bid-draft-service.js';
 export {
   kycService,
   submitKYC,

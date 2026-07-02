@@ -28,19 +28,6 @@ const ICON_MAP = {
       <path d="M8 12l3 3 5-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
-  'my-payments': (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="6" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M7 15h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  ),
-  'my-cpo': (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M8 4h8l2 4v12H6V8l2-4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
   'my-assets': (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M4 20V9l8-5 8 5v11" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
@@ -353,7 +340,9 @@ export function DashboardShell() {
     >
       <nav className="dashboard-shell__float-dock" aria-label={t('dashboard.a11y.main_navigation')}>
         <div className="dashboard-shell__float-nav-list">
-          {navigation.map((item) => {
+          {navigation
+            .filter((item) => item.id !== 'my-payments' && item.id !== 'my-cpo')
+            .map((item) => {
             const navLabel = t(getNavLabelKey(item), item.label);
             return (
               <NavLink
@@ -368,7 +357,7 @@ export function DashboardShell() {
                 <SidebarTooltip label={navLabel} />
               </NavLink>
             );
-          })}
+            })}
         </div>
 
         <div className="dashboard-shell__float-dock-bottom">

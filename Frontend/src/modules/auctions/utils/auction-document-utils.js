@@ -1,6 +1,6 @@
-import { ENV } from '../../../config/env.js';
-import { useAuthStore } from '../../../stores/auth-store.js';
-import { resolveMediaUrl } from '../../../utils/media-url.js';
+import { ENV } from '@enderass/shared/api';
+import { useAuthStore } from '@enderass/shared/auth';
+import { toLoadableMediaUrl } from '../../public/utils/landing-utils.js';
 
 export function getAuctionDocumentStreamUrl(auctionId, docIndex = 0) {
   return `${ENV.apiBaseUrl}${ENV.apiV1Prefix}/auctions/browse/${auctionId}/documents/${docIndex}/stream`;
@@ -37,5 +37,5 @@ export function resolveAuctionDocumentHref({
     ? doc
     : (doc?.url || doc?.fileUrl || '');
 
-  return resolveMediaUrl(rawUrl);
+  return toLoadableMediaUrl(rawUrl) || rawUrl;
 }

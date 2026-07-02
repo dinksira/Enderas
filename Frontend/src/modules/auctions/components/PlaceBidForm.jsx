@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/Button.jsx';
-import { bidService } from '../../bid-management/services/bid-service.js';
+import { bidDraftService } from '../services/bid-draft-service.js';
 
 /**
  * @param {{
@@ -42,7 +42,7 @@ export function PlaceBidForm({
     setSuccess('');
 
     try {
-      await bidService.placeBid({
+      await bidDraftService.saveDraft({
         auctionId,
         amount: bidAmount,
         auctionAssetId: auctionAssetId || undefined,

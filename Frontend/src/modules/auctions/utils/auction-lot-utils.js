@@ -6,6 +6,27 @@ export function roundMoney(amount) {
   return Math.round(value * 100) / 100;
 }
 
+export function computeRequiredCpoFromBidAmounts(proposedBids, cpoPercentage) {
+  const percentage = Number(cpoPercentage);
+  if (!Array.isArray(proposedBids) || !proposedBids.length) {
+    return 0;
+  }
+  if (!Number.isFinite(percentage) || percentage <= 0) {
+    return 0;
+  }
+
+  const totalBidAmount = proposedBids.reduce((sum, entry) => {
+    const amount = Number(entry?.amount);
+    return Number.isFinite(amount) && amount > 0 ? sum + amount : sum;
+  }, 0);
+
+  if (totalBidAmount <= 0) {
+    return 0;
+  }
+
+  return roundMoney((totalBidAmount * percentage) / 100);
+}
+
 export function computeRequiredCpoAmount(lots, selectedLotIds, cpoPercentage) {
   const selected = new Set(selectedLotIds);
   const totalReserve = (lots || [])

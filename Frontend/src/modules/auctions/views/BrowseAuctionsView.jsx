@@ -2,14 +2,17 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useRegisterPageSearch } from '@enderass/shared/contexts';
+import { useAuthStore } from '@enderass/shared/auth';
 import { useBrowseAuctions } from '../hooks/use-browse-auctions.js';
 import { BidderAuctionDetailDrawer } from '../components/BidderAuctionDetailDrawer.jsx';
 import { BrowseAuctionCard, BrowseAuctionCardSkeleton } from '../components/BrowseAuctionCard.jsx';
+import { KYCStatusBanner } from '../../../components/KYCStatusBanner.jsx';
 
 export function BrowseAuctionsView() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const categoryFilter = searchParams.get('category') || '';
+  const canParticipate = useAuthStore((state) => state.canParticipateInAuctions());
 
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState(null);
@@ -45,6 +48,7 @@ export function BrowseAuctionsView() {
 
   return (
     <section className="asset-page browse-auctions-page">
+      <KYCStatusBanner />
       <section className="browse-auctions__grid-panel" aria-live="polite">
         {loading && (
           <div className="browse-auctions__grid" aria-busy="true">
@@ -73,18 +77,21 @@ export function BrowseAuctionsView() {
               <BrowseAuctionCard
                 key={record.id}
                 auction={record}
-                onOpen={setSelectedId}
+                onOpen={canParticipate ? setSelectedId : undefined}
+                disabled={!canParticipate}
               />
             ))}
           </div>
         )}
       </section>
 
-      <BidderAuctionDetailDrawer
-        auctionId={selectedId}
-        open={Boolean(selectedId)}
-        onClose={() => setSelectedId(null)}
-      />
+      {canParticipate && (
+        <BidderAuctionDetailDrawer
+          auctionId={selectedId}
+          open={Boolean(selectedId)}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
     </section>
   );
 }

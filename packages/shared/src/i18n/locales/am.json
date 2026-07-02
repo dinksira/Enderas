@@ -818,6 +818,7 @@
     "pendingBanner": "ሁሉንም የጨረታ ባህሪዎች ለመጠቀም KYC ማረጋገጫዎን ያጠናቅቁ።",
     "underReviewBanner": "KYC ሰነዶችዎ በማረጋገጥ ላይ ናቸው። በተረጋገጠበት ወቅት ማሳወቂያ ይደርስዎታል።",
     "rejectedBanner": "KYCዎ ተተርፏል። ግምገማውን ይመልከቱ እና ሰነዶችዎን እንደገና ይስቀሉ።",
+    "completeKycToViewDetails": "KYCን አጠናቀው ዝርዝሮችን ይመልከቱ",
     "completeProfile": "መገለጫ ያጠናቅቁ",
     "resubmit": "ሰነዶችን እንደገና ይስቀሉ",
     "verificationTitle": "መገለጫዎን ያጠናቅቁ",

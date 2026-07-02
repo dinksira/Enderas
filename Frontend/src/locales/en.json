@@ -903,20 +903,20 @@
       "placeBid": {
         "title": "Place Your Bid",
         "titleForLot": "Bid on {{lot}}",
-        "hint": "One bid per lot. Amount must meet or exceed the lot reserve price.",
+        "hint": "Select a lot if needed, then enter one bid amount per lot. Your CPO requirement will be calculated from these bid amounts.",
         "amountLabel": "Bid Amount (ETB)",
         "amountRequired": "Enter a valid bid amount.",
         "belowReserve": "Bid must be at least {{amount}}.",
         "minAmount": "Min {{amount}}",
-        "submit": "Submit Bid",
-        "submitting": "Submitting...",
-        "success": "Your bid was submitted successfully.",
-        "failed": "Failed to submit bid. Please try again."
+        "submit": "Save Bid",
+        "submitting": "Saving...",
+        "success": "Your bid amount was saved. You can now continue to CPO submission.",
+        "failed": "Failed to save bid amount. Please try again."
       }
     },
     "participation": {
       "panelTitle": "Participation Steps",
-      "panelSubtitle": "Complete each step to access auction documents and place your sealed bid.",
+      "panelSubtitle": "Complete document payment, place your bid, then upload CPO to finish auction participation.",
       "loading": "Loading your participation status...",
       "loadFailed": "Could not load participation status.",
       "retry": "Retry",
@@ -931,32 +931,32 @@
       "documentsUnlockedCopy": "You are registered for this auction. Review and download the documents below.",
       "documentsEmpty": "No documents are attached to this auction yet.",
       "paymentCopy": "Pay the document fee of {{amount}} and upload your payment receipt.",
-      "cpoCopy": "Upload your Certified Payment Order (CPO) after document payment is approved.",
-      "cpoNextAction": "This is your current step. Submit your CPO to move toward bidding.",
-      "bidCopy": "Submit one sealed bid per selected lot at or above each lot reserve once your CPO is approved.",
+      "cpoCopy": "Upload your Certified Payment Order (CPO) after saving your bid amounts. The system calculates the required CPO from your total bids.",
+      "cpoNextAction": "This is your current step. Upload the CPO document that covers your saved bid amounts.",
+      "bidCopy": "Place your bid first. For multi-lot auctions, choose the lots you want and enter an amount at or above each lot reserve.",
       "bidLocked": {
         "notRegistered": "Complete document payment and get it approved first.",
-        "submitCpo": "You are registered, but bidding stays locked until you submit and get CPO approved.",
-        "cpoPending": "Your CPO is under review. Bidding unlocks after staff approval.",
-        "cpoRejected": "Your CPO was rejected. Resubmit CPO to unlock bidding.",
-        "outsideWindow": "CPO is approved. Bidding opens during the auction active window shown above.",
-        "windowEnded": "CPO is approved, but the bidding window for this auction has ended.",
+        "submitCpo": "Save your bid amount first, then upload the CPO document.",
+        "cpoPending": "Your CPO is under review. Your saved bids will be finalized after staff approval.",
+        "cpoRejected": "Your CPO was rejected. Review the reason and upload a new CPO for your saved bids.",
+        "outsideWindow": "Bid entry is available only during the auction active window shown above.",
+        "windowEnded": "The bidding window for this auction has ended.",
         "auctionClosed": "This auction is no longer open for bidding."
       },
       "bidCard": {
-        "eyebrow": "Step 3 — Place bid",
-        "titleOpen": "Submit your sealed bid",
-        "titleOpenMulti": "Submit bids for your selected lots",
+        "eyebrow": "Step 2 — Place bid",
+        "titleDraft": "Place your bid",
+        "titleDraftMulti": "Place bids for your selected lots",
         "titleWaiting": "Bidding opens soon",
         "titleClosed": "Bidding window closed",
-        "leadOpen": "Enter an amount at or above the reserve price of {{amount}}.",
-        "leadOpenMulti": "{{count}} lot(s) still need a bid. Enter an amount at or above each lot reserve.",
+        "leadDraft": "Enter a bid amount at or above the reserve price, then continue to CPO upload.",
+        "leadDraftMulti": "{{count}} lot(s) still need a bid. Enter an amount at or above each lot reserve, then continue to CPO upload.",
         "leadWaiting": "Bidding opens at {{start}} and closes at {{end}} (East Africa Time).",
         "leadClosed": "The bidding window was {{start}} to {{end}} (East Africa Time).",
-        "waitingHint": "Your CPO is approved. Come back between {{start}} and {{end}} to place your bid here.",
-        "closedHint": "Your CPO is approved, but this auction's bidding window has ended. You can no longer place a bid for this auction.",
+        "waitingHint": "Come back between {{start}} and {{end}} to place your bid here.",
+        "closedHint": "This auction's bidding window has ended. You can no longer place a bid for this auction.",
         "lotBidSubmitted": "{{lot}}: bid of {{amount}} submitted.",
-        "scrollHint": "Use the bid form at the top of this panel."
+        "scrollHint": "Save your bid amounts in the form below before uploading CPO."
       },
       "paymentRejected": "Your payment was rejected. Review the reason and submit again.",
       "cpoRejected": "Your CPO was rejected. Review the reason and submit again.",
@@ -967,8 +967,8 @@
       "partialBidsSubmitted": "You submitted {{submitted}} of {{total}} lot bid(s). Complete the remaining lots before the bidding window closes.",
       "steps": {
         "payment": "Document Payment",
-        "cpo": "CPO Submission",
-        "bid": "Place Bid"
+        "bid": "Place Bid",
+        "cpo": "CPO Submission"
       },
       "stepStatus": {
         "complete": "Complete",
@@ -1007,12 +1007,12 @@
         "registered": {
           "label": "Registered bidder",
           "title": "You are registered for this auction",
-          "body": "Payment approved. You now have document access. Submit your CPO below — bidding unlocks after CPO approval."
+          "body": "Payment approved. You now have document access. Place your bid amounts before uploading CPO."
         },
         "cpo_pending": {
           "label": "CPO pending",
           "title": "CPO under review",
-          "body": "Your CPO was submitted. Bidding opens after staff approval."
+          "body": "Your CPO was submitted. Your saved bids will be finalized after staff approval."
         },
         "cpo_rejected": {
           "label": "CPO rejected",
@@ -1020,14 +1020,14 @@
           "body": "Review the rejection reason and upload a new CPO document."
         },
         "ready_to_bid": {
-          "label": "Ready to bid",
-          "title": "Place your sealed bid now",
-          "body": "Your CPO is approved. Use the bid form below to submit one bid at or above the reserve price."
+          "label": "Ready for CPO",
+          "title": "Upload CPO to finalize participation",
+          "body": "Your bid amounts are saved. Upload a CPO document that covers the system-calculated percentage of your total bids."
         },
         "bidding_waiting": {
           "label": "CPO approved",
           "title": "Bidding opens soon",
-          "body": "Your CPO is approved. The bid form appears when the auction enters its active bidding window."
+          "body": "The auction is not yet in its active bidding window."
         },
         "bidding_closed": {
           "label": "Bidding closed",
@@ -1037,7 +1037,7 @@
         "bid_submitted": {
           "label": "Bid submitted",
           "title": "Your bid is in",
-          "body": "You have already submitted your sealed bid for this auction."
+          "body": "Your bid has been finalized for this auction."
         }
       },
       "paymentModal": {
@@ -1056,19 +1056,20 @@
         "failed": "Failed to submit payment. Please try again."
       },
       "cpoModal": {
-        "title": "Submit CPO",
-        "subtitle": "Select the lots you want to bid on, then upload your Certified Payment Order document.",
+        "title": "Upload CPO",
+        "subtitle": "Review your saved bid amounts, then upload the Certified Payment Order document for the required total.",
         "auction": "Auction",
         "cpoPercentage": "CPO percentage",
         "requiredAmount": "Required CPO amount",
-        "selectLots": "Lots to bid on",
-        "selectLotsHint": "Required CPO = total reserve of selected lots × {{percentage}}%.",
+        "selectedBids": "Saved bids",
+        "selectedBidsHint": "Required CPO = total saved bid amount x {{percentage}}%.",
         "lotFallback": "Lot",
         "lotsRequired": "Select at least one lot to bid on.",
+        "bidRequired": "Save at least one bid amount before uploading CPO.",
         "document": "CPO Document",
         "documentRequired": "Upload your CPO document.",
         "documentUploaded": "Document uploaded.",
-        "submit": "Submit CPO",
+        "submit": "Upload CPO",
         "submitting": "Submitting...",
         "success": "CPO submitted for review.",
         "failed": "Failed to submit CPO. Please try again."
