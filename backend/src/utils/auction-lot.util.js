@@ -33,31 +33,43 @@ export function roundMoney(amount) {
 }
 
 /**
- * @param {Array<{ auctionAssetId?: string, amount: number }>} proposedBids
- * @param {number} cpoPercentage
+ * Bid coverage vs reserve: 100% when bid equals reserve.
+ * @param {number} bidAmount
+ * @param {number} reservePrice
  */
-export function computeRequiredCpoFromBidAmounts(proposedBids, cpoPercentage) {
-  const percentage = Number(cpoPercentage);
-  if (!Array.isArray(proposedBids) || !proposedBids.length) {
+export function computeBidCoveragePercent(bidAmount, reservePrice) {
+  const bid = Number(bidAmount);
+  const reserve = Number(reservePrice);
+  if (!Number.isFinite(bid) || bid <= 0 || !Number.isFinite(reserve) || reserve <= 0) {
     return 0;
   }
-  if (!Number.isFinite(percentage) || percentage <= 0) {
-    return 0;
-  }
-
-  const totalBidAmount = proposedBids.reduce((sum, entry) => {
-    const amount = Number(entry?.amount);
-    return Number.isFinite(amount) && amount > 0 ? sum + amount : sum;
-  }, 0);
-
-  if (totalBidAmount <= 0) {
-    return 0;
-  }
-
-  return roundMoney((totalBidAmount * percentage) / 100);
+  return roundMoney((bid / reserve) * 100);
 }
 
-/** Minimum bid = reserve × (CPO% / 100). Falls back to reserve when CPO% is missing. */
+/**
+ * CPO amount scales with bid coverage: full reserve = 100% coverage.
+ * Formula: reserve × (auction CPO rate / 100) × (bid / reserve)
+ * @param {number} bidAmount
+ * @param {number} reservePrice
+ * @param {number} cpoPercentage Auction CPO rate at 100% reserve coverage
+ */
+export function computeCpoFromBidAndReserve(bidAmount, reservePrice, cpoPercentage) {
+  const bid = Number(bidAmount);
+  const reserve = Number(reservePrice);
+  const rate = Number(cpoPercentage);
+  if (!Number.isFinite(bid) || bid <= 0) {
+    return 0;
+  }
+  if (!Number.isFinite(reserve) || reserve <= 0) {
+    return 0;
+  }
+  if (!Number.isFinite(rate) || rate <= 0) {
+    return 0;
+  }
+  return roundMoney(reserve * (rate / 100) * (bid / reserve));
+}
+
+/** Minimum bid = reserve × (auction CPO rate / 100) — floor matches minimum coverage. */
 export function computeMinimumBidFromReserve(reservePrice, cpoPercentage) {
   const reserve = Number(reservePrice);
   if (!Number.isFinite(reserve) || reserve <= 0) {
@@ -68,6 +80,84 @@ export function computeMinimumBidFromReserve(reservePrice, cpoPercentage) {
     return reserve;
   }
   return roundMoney((reserve * percentage) / 100);
+}
+
+function resolveReserveForBid(entry, lots, auctionReservePrice) {
+  const lotId = entry?.auctionAssetId ?? entry?.auction_asset_id ?? null;
+  if (lotId && Array.isArray(lots) && lots.length > 0) {
+    const lot = lots.find((item) => item.id === lotId);
+    const lotReserve = Number(lot?.reserve_price ?? lot?.reservePrice);
+    if (Number.isFinite(lotReserve) && lotReserve > 0) {
+      return lotReserve;
+    }
+  }
+
+  const fallback = Number(auctionReservePrice);
+  return Number.isFinite(fallback) && fallback > 0 ? fallback : 0;
+}
+
+/**
+ * @param {Array<{ auctionAssetId?: string, amount: number }>} proposedBids
+ * @param {number} cpoPercentage
+ * @param {Array<{ id: string, reserve_price?: number, reservePrice?: number }>} [lots]
+ * @param {number|null} [auctionReservePrice]
+ */
+export function computeRequiredCpoFromBidAmounts(
+  proposedBids,
+  cpoPercentage,
+  lots = [],
+  auctionReservePrice = null,
+) {
+  const percentage = Number(cpoPercentage);
+  if (!Array.isArray(proposedBids) || !proposedBids.length) {
+    return 0;
+  }
+  if (!Number.isFinite(percentage) || percentage <= 0) {
+    return 0;
+  }
+
+  const total = proposedBids.reduce((sum, entry) => {
+    const amount = Number(entry?.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return sum;
+    }
+    const reserve = resolveReserveForBid(entry, lots, auctionReservePrice);
+    if (reserve <= 0) {
+      return sum;
+    }
+    return sum + computeCpoFromBidAndReserve(amount, reserve, percentage);
+  }, 0);
+
+  return roundMoney(total);
+}
+
+/**
+ * @param {Array<{ auctionAssetId?: string, amount: number }>} proposedBids
+ * @param {Array<{ id: string, reserve_price?: number, reservePrice?: number }>} [lots]
+ * @param {number|null} [auctionReservePrice]
+ */
+export function computeAggregateBidCoveragePercent(proposedBids, lots = [], auctionReservePrice = null) {
+  if (!Array.isArray(proposedBids) || !proposedBids.length) {
+    return 0;
+  }
+
+  let totalBid = 0;
+  let totalReserve = 0;
+
+  for (const entry of proposedBids) {
+    const amount = Number(entry?.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      continue;
+    }
+    const reserve = resolveReserveForBid(entry, lots, auctionReservePrice);
+    if (reserve <= 0) {
+      continue;
+    }
+    totalBid += amount;
+    totalReserve += reserve;
+  }
+
+  return computeBidCoveragePercent(totalBid, totalReserve);
 }
 
 export function computeRequiredCpoAmount(lots, selectedLotIds, cpoPercentage) {
@@ -90,7 +180,10 @@ export function computeRequiredCpoAmount(lots, selectedLotIds, cpoPercentage) {
 export default {
   normalizeLotIdList,
   roundMoney,
+  computeBidCoveragePercent,
+  computeCpoFromBidAndReserve,
   computeRequiredCpoAmount,
   computeRequiredCpoFromBidAmounts,
+  computeAggregateBidCoveragePercent,
   computeMinimumBidFromReserve,
 };

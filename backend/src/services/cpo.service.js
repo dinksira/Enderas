@@ -5,9 +5,7 @@ import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import {
   normalizeLotIdList,
-  computeRequiredCpoAmount,
   computeRequiredCpoFromBidAmounts,
-  roundMoney,
 } from '../utils/auction-lot.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
@@ -233,8 +231,24 @@ export async function createCpo(
     order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
   });
 
-  const normalizedProposedBids = bidDraftService.normalizeProposedBids(proposedBids);
+  let normalizedProposedBids = bidDraftService.normalizeProposedBids(proposedBids);
+
+  if (!normalizedProposedBids.length) {
+    const drafts = await bidDraftService.listBidDraftsForAuction(resolvedAuctionId, userId);
+    normalizedProposedBids = drafts
+      .filter((draft) => draft.status === 'draft')
+      .map((draft) => ({
+        auctionAssetId: draft.auction_asset_id ?? undefined,
+        amount: Number(draft.amount),
+      }))
+      .filter((entry) => Number.isFinite(entry.amount) && entry.amount > 0);
+  }
+
   const usesBidPackageFlow = normalizedProposedBids.length > 0;
+
+  if (!usesBidPackageFlow) {
+    throw new AppError('Save bid amounts before submitting CPO', 400, 'BID_DRAFTS_REQUIRED');
+  }
 
   let selectedIds = normalizeLotIdList(selectedAuctionAssetIds);
   const isMultiLot = auction.auction_mode === 'multi' || lots.length > 1;
@@ -272,21 +286,12 @@ export async function createCpo(
     throw new AppError('One or more selected lots are invalid', 400, 'INVALID_LOTS');
   }
 
-  let requiredCpoAmount = 0;
-  if (usesBidPackageFlow) {
-    requiredCpoAmount = computeRequiredCpoFromBidAmounts(
-      normalizedProposedBids,
-      auction.cpo_percentage,
-    );
-  } else if (lots.length > 0) {
-    requiredCpoAmount = computeRequiredCpoAmount(lots, selectedIds, auction.cpo_percentage);
-  } else {
-    const reserve = Number(auction.reserve_price);
-    const percentage = Number(auction.cpo_percentage);
-    if (Number.isFinite(reserve) && reserve > 0 && Number.isFinite(percentage) && percentage > 0) {
-      requiredCpoAmount = roundMoney((reserve * percentage) / 100);
-    }
-  }
+  const requiredCpoAmount = computeRequiredCpoFromBidAmounts(
+    normalizedProposedBids,
+    auction.cpo_percentage,
+    lots,
+    auction.reserve_price,
+  );
 
   const declaredAmount = declaredCpoAmount != null && declaredCpoAmount !== ''
     ? Number(declaredCpoAmount)

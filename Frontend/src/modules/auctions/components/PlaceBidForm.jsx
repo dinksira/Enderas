@@ -4,7 +4,8 @@ import { Button } from '../../../components/Button.jsx';
 import { bidDraftService } from '../services/bid-draft-service.js';
 import { formatEtbAmount } from '@enderass/shared/utils';
 import {
-  computeCpoFromBidAmount,
+  computeBidCoveragePercent,
+  computeCpoFromBidAndReserve,
   computeMinimumBidFromReserve,
 } from '../utils/auction-lot-utils.js';
 
@@ -39,12 +40,19 @@ export function PlaceBidForm({
   const minimumBid = hasReserve ? computeMinimumBidFromReserve(reserve, cpoRate) : 0;
 
   const enteredAmount = Number(amount);
-  const cpoForEntered = useMemo(() => {
-    if (!Number.isFinite(enteredAmount) || enteredAmount <= 0 || !hasCpoRate) {
+  const coveragePercent = useMemo(() => {
+    if (!hasReserve || !Number.isFinite(enteredAmount) || enteredAmount <= 0) {
       return 0;
     }
-    return computeCpoFromBidAmount(enteredAmount, cpoRate);
-  }, [enteredAmount, cpoRate, hasCpoRate]);
+    return computeBidCoveragePercent(enteredAmount, reserve);
+  }, [enteredAmount, hasReserve, reserve]);
+
+  const cpoForEntered = useMemo(() => {
+    if (!hasReserve || !Number.isFinite(enteredAmount) || enteredAmount <= 0 || !hasCpoRate) {
+      return 0;
+    }
+    return computeCpoFromBidAndReserve(enteredAmount, reserve, cpoRate);
+  }, [enteredAmount, cpoRate, hasCpoRate, hasReserve, reserve]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -100,13 +108,13 @@ export function PlaceBidForm({
           )}
           {hasCpoRate && (
             <>
-              <dt>{t('bidder.browse.placeBid.cpoPercentage')}</dt>
+              <dt>{t('bidder.browse.placeBid.auctionCpoRate')}</dt>
               <dd>{cpoRate}%</dd>
             </>
           )}
           {minimumBid > 0 && (
             <>
-              <dt>{t('bidder.browse.placeBid.minimumBid')}</dt>
+              <dt>{t('bidder.browse.placeBid.minimumBid', { percentage: hasCpoRate ? cpoRate : 0 })}</dt>
               <dd className="place-bid-pricing__highlight">{formatEtbAmount(minimumBid)}</dd>
             </>
           )}
@@ -114,10 +122,10 @@ export function PlaceBidForm({
       )}
 
       <p className="auction-drawer__hint">
-        {minimumBid > 0
+        {hasReserve && hasCpoRate
           ? t('bidder.browse.placeBid.hintWithCpo', {
-              reserve: hasReserve ? formatEtbAmount(reserve) : '—',
-              percentage: hasCpoRate ? cpoRate : 0,
+              reserve: formatEtbAmount(reserve),
+              percentage: cpoRate,
               minimumBid: formatEtbAmount(minimumBid),
             })
           : t('bidder.browse.placeBid.hint')}
@@ -138,11 +146,19 @@ export function PlaceBidForm({
         placeholder={minimumBid > 0 ? String(minimumBid) : undefined}
       />
 
-      {hasCpoRate && Number.isFinite(enteredAmount) && enteredAmount > 0 && (
+      {hasReserve && Number.isFinite(enteredAmount) && enteredAmount > 0 && (
+        <p className="place-bid-pricing__live" role="status">
+          {t('bidder.browse.placeBid.cpoCoveragePercent', {
+            percentage: coveragePercent,
+          })}
+        </p>
+      )}
+
+      {hasCpoRate && Number.isFinite(enteredAmount) && enteredAmount > 0 && cpoForEntered > 0 && (
         <p className="place-bid-pricing__live" role="status">
           {t('bidder.browse.placeBid.cpoForYourBid', {
             amount: formatEtbAmount(cpoForEntered),
-            percentage: cpoRate,
+            coverage: coveragePercent,
           })}
         </p>
       )}

@@ -332,13 +332,18 @@ export async function promoteBidDraftsOnCpoApproval(cpo) {
   return createdBids;
 }
 
-export function computeDraftCpoPreview(drafts, cpoPercentage) {
+export function computeDraftCpoPreview(drafts, cpoPercentage, lots = [], auctionReservePrice = null) {
   const proposedBids = drafts.map((draft) => ({
     auctionAssetId: draft.auction_asset_id ?? draft.auctionAssetId ?? null,
     amount: Number(draft.amount),
   }));
 
-  return computeRequiredCpoFromBidAmounts(proposedBids, cpoPercentage);
+  return computeRequiredCpoFromBidAmounts(
+    proposedBids,
+    cpoPercentage,
+    lots,
+    auctionReservePrice,
+  );
 }
 
 export const bidDraftService = Object.freeze({
