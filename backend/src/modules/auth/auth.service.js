@@ -13,6 +13,7 @@ import { withRedis } from '../../utils/redis-safe.util.js';
 import { UnauthorizedError, AppError, InvalidCredentialsError } from '../../utils/error.util.js';
 import { env } from '../../config/env.config.js';
 import { auditService, AUDIT_ACTIONS } from '../../services/audit.service.js';
+import { settingsService } from '../../services/settings.service.js';
 import {
   USER_STATUSES,
   LOGIN_ALLOWED_STATUSES,
@@ -243,8 +244,9 @@ export async function loginWithCredentials(mobileNumber, plainTextPassword) {
   const user = await User.unscoped().findOne({
     where: {
       mobile_number: { [Op.in]: lookupCandidates },
-      status: { [Op.in]: LOGIN_ALLOWED_STATUSES },
       deleted_at: null,
+      is_mobile_verified: true,
+      status: { [Op.notIn]: [USER_STATUSES.SUSPENDED, USER_STATUSES.DEACTIVATED] },
     },
     attributes: [
       'id',
@@ -351,61 +353,216 @@ export async function completeLogin(userId, sessionContext = {}) {
   };
 }
 
-const OTP_TTL_SECONDS = 300;
+const DEFAULT_OTP_TTL_SECONDS = 300;
 const otpMemoryFallback = new Map();
+
+function normalizeOtpTtlSeconds(value) {
+  const ttl = Number(value);
+  if (!Number.isFinite(ttl) || ttl < 60 || ttl > 3600) {
+    return DEFAULT_OTP_TTL_SECONDS;
+  }
+  return Math.floor(ttl);
+}
+
+async function resolveOtpTtlSeconds() {
+  try {
+    const configured = await settingsService.getSetting('otp.ttl_seconds');
+    return normalizeOtpTtlSeconds(configured);
+  } catch {
+    return DEFAULT_OTP_TTL_SECONDS;
+  }
+}
+
+function buildOtpExpiry(issuedAt, ttlSeconds) {
+  return new Date(issuedAt.getTime() + ttlSeconds * 1000).toISOString();
+}
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 function buildOtpKey(mobileNumber) {
-  const candidates = getMobileLookupCandidates(mobileNumber);
-  return `otp:${candidates[0] || mobileNumber}`;
+  const normalized = normalizeMobileNumber(mobileNumber);
+  return `otp:${normalized}`;
 }
 
-async function storeOTP(mobileNumber, otp, expiresIn = OTP_TTL_SECONDS) {
-  const key = buildOtpKey(mobileNumber);
+function buildPasswordResetOtpKey(mobileNumber) {
+  const normalized = normalizeMobileNumber(mobileNumber);
+  return `password-reset:otp:${normalized}`;
+}
+
+async function storeOtpForKey(key, otp, expiresIn = DEFAULT_OTP_TTL_SECONDS) {
+  const ttlSeconds = normalizeOtpTtlSeconds(expiresIn);
+  const issuedAt = new Date();
 
   const stored = await withRedis(async (client) => {
-    await client.setex(key, expiresIn, otp);
+    await client.setex(key, ttlSeconds, otp);
     return true;
   }, false);
 
   if (!stored) {
     otpMemoryFallback.set(key, {
       otp,
-      expiresAt: Date.now() + expiresIn * 1000,
+      expiresAt: issuedAt.getTime() + ttlSeconds * 1000,
     });
   }
+
+  return {
+    otpExpiresIn: ttlSeconds,
+    otpExpiresAt: buildOtpExpiry(issuedAt, ttlSeconds),
+  };
 }
 
-async function verifyStoredOTP(mobileNumber, otp) {
-  const key = buildOtpKey(mobileNumber);
+async function storeOTP(mobileNumber, otp, expiresIn = DEFAULT_OTP_TTL_SECONDS) {
+  return storeOtpForKey(buildOtpKey(mobileNumber), otp, expiresIn);
+}
 
-  const redisValid = await withRedis(async (client) => {
+async function storePasswordResetOTP(mobileNumber, otp, expiresIn = DEFAULT_OTP_TTL_SECONDS) {
+  return storeOtpForKey(buildPasswordResetOtpKey(mobileNumber), otp, expiresIn);
+}
+
+/**
+ * @returns {Promise<'valid' | 'expired' | 'invalid'>}
+ */
+async function checkOtpForKey(key, otp) {
+  const redisResult = await withRedis(async (client) => {
     const storedOTP = await client.get(key);
-    if (!storedOTP || storedOTP !== otp) {
-      return false;
+    if (!storedOTP) {
+      return 'expired';
     }
-    await client.del(key);
-    return true;
+    if (storedOTP !== otp) {
+      return 'invalid';
+    }
+    return 'valid';
   }, null);
 
-  if (redisValid === true) {
-    return true;
-  }
-
-  if (redisValid === false) {
-    return false;
+  if (redisResult === 'valid' || redisResult === 'invalid' || redisResult === 'expired') {
+    return redisResult;
   }
 
   const memoryEntry = otpMemoryFallback.get(key);
-  if (!memoryEntry || memoryEntry.expiresAt < Date.now() || memoryEntry.otp !== otp) {
-    return false;
+  if (!memoryEntry) {
+    return 'expired';
+  }
+
+  if (memoryEntry.expiresAt < Date.now()) {
+    return 'expired';
+  }
+
+  if (memoryEntry.otp !== otp) {
+    return 'invalid';
+  }
+
+  return 'valid';
+}
+
+/**
+ * @returns {Promise<'valid' | 'expired' | 'invalid'>}
+ */
+async function verifyOtpForKey(key, otp) {
+
+  const redisResult = await withRedis(async (client) => {
+    const storedOTP = await client.get(key);
+    if (!storedOTP) {
+      return 'expired';
+    }
+    if (storedOTP !== otp) {
+      return 'invalid';
+    }
+    await client.del(key);
+    return 'valid';
+  }, null);
+
+  if (redisResult === 'valid' || redisResult === 'invalid' || redisResult === 'expired') {
+    return redisResult;
+  }
+
+  const memoryEntry = otpMemoryFallback.get(key);
+  if (!memoryEntry) {
+    return 'expired';
+  }
+
+  if (memoryEntry.expiresAt < Date.now()) {
+    otpMemoryFallback.delete(key);
+    return 'expired';
+  }
+
+  if (memoryEntry.otp !== otp) {
+    return 'invalid';
   }
 
   otpMemoryFallback.delete(key);
-  return true;
+  return 'valid';
+}
+
+async function verifyStoredOTP(mobileNumber, otp) {
+  return verifyOtpForKey(buildOtpKey(mobileNumber), otp);
+}
+
+async function verifyPasswordResetOTP(mobileNumber, otp) {
+  return verifyOtpForKey(buildPasswordResetOtpKey(mobileNumber), otp);
+}
+
+async function checkPasswordResetOTP(mobileNumber, otp) {
+  return checkOtpForKey(buildPasswordResetOtpKey(mobileNumber), otp);
+}
+
+async function findPasswordResetEligibleUser(mobileNumber) {
+  const normalizedMobile = normalizeMobileNumber(mobileNumber);
+  const lookupCandidates = getMobileLookupCandidates(normalizedMobile);
+
+  return User.unscoped().findOne({
+    where: {
+      mobile_number: { [Op.in]: lookupCandidates },
+      is_mobile_verified: true,
+      deleted_at: null,
+      status: { [Op.notIn]: [USER_STATUSES.SUSPENDED, USER_STATUSES.DEACTIVATED] },
+    },
+    attributes: ['id', 'mobile_number', 'status'],
+  });
+}
+
+async function revokeUserRefreshTokens(userId) {
+  await RefreshToken.update(
+    { revoked_at: new Date() },
+    { where: { user_id: userId, revoked_at: null } },
+  );
+}
+
+async function checkDuplicateRegistrationIdentifiers({ nationalIdNumber, tinNumber }) {
+  const orConditions = [];
+
+  if (nationalIdNumber) {
+    orConditions.push({ national_id_number: nationalIdNumber });
+  }
+
+  if (tinNumber) {
+    orConditions.push({ tin_number: tinNumber });
+  }
+
+  if (orConditions.length === 0) {
+    return;
+  }
+
+  const duplicateUser = await User.unscoped().findOne({
+    where: {
+      [Op.or]: orConditions,
+      deleted_at: null,
+    },
+    attributes: ['id', 'national_id_number', 'tin_number'],
+  });
+
+  if (!duplicateUser) {
+    return;
+  }
+
+  if (nationalIdNumber && duplicateUser.national_id_number === nationalIdNumber) {
+    throw new AppError('National ID number already registered', 400, 'DUPLICATE_NATIONAL_ID');
+  }
+
+  if (tinNumber && duplicateUser.tin_number === tinNumber) {
+    throw new AppError('TIN number already registered', 400, 'DUPLICATE_TIN');
+  }
 }
 
 /**
@@ -420,7 +577,21 @@ export async function register(userData) {
     password,
     userType = 'individual',
     organizationName,
+    nationalIdNumber: rawNationalIdNumber,
+    nationalId: rawNationalId,
+    tinNumber: rawTinNumber,
   } = userData;
+
+  const nationalIdNumber = (rawNationalIdNumber ?? rawNationalId ?? '').trim() || null;
+  const tinNumber = (rawTinNumber ?? '').trim() || null;
+
+  if (userType === 'individual' && !nationalIdNumber) {
+    throw new AppError('National ID number is required', 400, 'VALIDATION_ERROR');
+  }
+
+  if (userType === 'organization' && !tinNumber) {
+    throw new AppError('TIN number is required', 400, 'VALIDATION_ERROR');
+  }
 
   const normalizedMobile = resolveMobileForStorage(mobileNumber);
 
@@ -435,6 +606,8 @@ export async function register(userData) {
   if (existingUser) {
     throw new AppError('Mobile number already registered', 400, 'DUPLICATE_MOBILE');
   }
+
+  await checkDuplicateRegistrationIdentifiers({ nationalIdNumber, tinNumber });
 
   const bidderRole = await Role.findOne({
     where: { code: 'bidder', is_active: true },
@@ -455,6 +628,8 @@ export async function register(userData) {
     first_name: firstName || null,
     last_name: lastName || null,
     organization_name: organizationName || null,
+    national_id_number: userType === 'individual' ? nationalIdNumber : null,
+    tin_number: userType === 'organization' ? tinNumber : null,
     preferred_language: 'en',
     is_mobile_verified: false,
     is_email_verified: false,
@@ -463,12 +638,18 @@ export async function register(userData) {
   });
 
   const otp = generateOTP();
-  await storeOTP(normalizedMobile, otp);
+  const otpTtlSeconds = await resolveOtpTtlSeconds();
+  const otpExpiry = await storeOTP(normalizedMobile, otp, otpTtlSeconds);
 
   if (env.isProduction) {
     console.info('[auth.service] OTP sent to registered mobile (production)');
   } else {
-    console.info('[auth.service] Registration OTP for', normalizedMobile, ':', otp);
+    console.log('');
+    console.log('==================================================');
+    console.log(`[DEV] Registration OTP: ${otp}`);
+    console.log(`[DEV] Mobile: ${normalizedMobile}`);
+    console.log('==================================================');
+    console.log('');
   }
 
   await auditService.writeAuditLog({
@@ -476,13 +657,16 @@ export async function register(userData) {
     action: AUDIT_ACTIONS.CREATE,
     entityType: 'User',
     entityId: user.id,
-    metadata: { userType, action: 'register' },
+    metadata: { userType, action: 'register', otpExpiresIn: otpExpiry.otpExpiresIn },
   });
 
   return {
     userId: user.id,
     mobileNumber: user.mobile_number,
     requiresOTPVerification: true,
+    otpExpiresIn: otpExpiry.otpExpiresIn,
+    otpExpiresAt: otpExpiry.otpExpiresAt,
+    ...(!env.isProduction ? { devOtp: otp } : {}),
   };
 }
 
@@ -492,10 +676,14 @@ export async function register(userData) {
  */
 export async function verifyOTP(mobileNumber, otp) {
   const normalizedMobile = normalizeMobileNumber(mobileNumber);
-  const isValid = await verifyStoredOTP(normalizedMobile, otp);
+  const otpStatus = await verifyStoredOTP(normalizedMobile, otp);
 
-  if (!isValid) {
-    throw new AppError('Invalid or expired OTP', 400, 'INVALID_OTP');
+  if (otpStatus === 'expired') {
+    throw new AppError('OTP has expired. Request a new code.', 400, 'OTP_EXPIRED');
+  }
+
+  if (otpStatus === 'invalid') {
+    throw new AppError('Invalid OTP', 400, 'INVALID_OTP');
   }
 
   const lookupCandidates = getMobileLookupCandidates(normalizedMobile);
@@ -508,6 +696,10 @@ export async function verifyOTP(mobileNumber, otp) {
 
   if (!user) {
     throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+  }
+
+  if (user.is_mobile_verified) {
+    throw new AppError('Mobile number already verified', 400, 'ALREADY_VERIFIED');
   }
 
   const oldStatus = user.status;
@@ -546,16 +738,170 @@ export async function resendOTP(mobileNumber) {
     throw new AppError('User not found', 404, 'USER_NOT_FOUND');
   }
 
+  if (user.is_mobile_verified) {
+    throw new AppError('Mobile number already verified', 400, 'ALREADY_VERIFIED');
+  }
+
   const otp = generateOTP();
-  await storeOTP(normalizedMobile, otp);
+  const otpTtlSeconds = await resolveOtpTtlSeconds();
+  const otpExpiry = await storeOTP(normalizedMobile, otp, otpTtlSeconds);
 
   if (env.isProduction) {
     console.info('[auth.service] OTP resent (production)');
   } else {
-    console.info('[auth.service] Resent OTP for', normalizedMobile, ':', otp);
+    console.log('');
+    console.log('==================================================');
+    console.log(`[DEV] Registration OTP (resend): ${otp}`);
+    console.log(`[DEV] Mobile: ${normalizedMobile}`);
+    console.log('==================================================');
+    console.log('');
   }
 
+  return {
+    success: true,
+    otpExpiresIn: otpExpiry.otpExpiresIn,
+    otpExpiresAt: otpExpiry.otpExpiresAt,
+    ...(!env.isProduction ? { devOtp: otp } : {}),
+  };
+}
+
+/**
+ * Send a password-reset OTP to a verified mobile number.
+ * Always returns a generic success payload to avoid account enumeration.
+ * @param {string} mobileNumber
+ */
+export async function requestPasswordReset(mobileNumber) {
+  const normalizedMobile = normalizeMobileNumber(mobileNumber);
+  const user = await findPasswordResetEligibleUser(normalizedMobile);
+  const otpTtlSeconds = await resolveOtpTtlSeconds();
+
+  if (user) {
+    const otp = generateOTP();
+    const otpExpiry = await storePasswordResetOTP(normalizedMobile, otp, otpTtlSeconds);
+
+    if (env.isProduction) {
+      console.info('[auth.service] Password reset OTP sent (production)');
+    } else {
+      console.log('');
+      console.log('==================================================');
+      console.log(`[DEV] Password reset code: ${otp}`);
+      console.log(`[DEV] Mobile: ${normalizedMobile}`);
+      console.log('==================================================');
+      console.log('');
+    }
+
+    await auditService.writeAuditLog({
+      userId: user.id,
+      action: AUDIT_ACTIONS.UPDATE,
+      entityType: 'User',
+      entityId: user.id,
+      metadata: { action: 'password_reset_requested', otpExpiresIn: otpExpiry.otpExpiresIn },
+    });
+
+    return {
+      success: true,
+      otpExpiresIn: otpExpiry.otpExpiresIn,
+      otpExpiresAt: otpExpiry.otpExpiresAt,
+      ...(!env.isProduction ? { devOtp: otp } : {}),
+    };
+  }
+
+  if (!env.isProduction) {
+    console.warn(
+      `[auth.service] Password reset: no eligible account for ${normalizedMobile}. ` +
+      'Account must exist, be mobile-verified, and have status active/kyc_pending/kyc_under_review/kyc_rejected.',
+    );
+  }
+
+  return {
+    success: true,
+    otpExpiresIn: otpTtlSeconds,
+    otpExpiresAt: buildOtpExpiry(new Date(), otpTtlSeconds),
+  };
+}
+
+/**
+ * @param {string} mobileNumber
+ * @param {string} otp
+ * @param {string} newPassword
+ */
+export async function resetPasswordWithOtp(mobileNumber, otp, newPassword) {
+  const normalizedMobile = normalizeMobileNumber(mobileNumber);
+  const otpStatus = await verifyPasswordResetOTP(normalizedMobile, otp);
+
+  if (otpStatus === 'expired') {
+    throw new AppError('OTP has expired. Request a new code.', 400, 'OTP_EXPIRED');
+  }
+
+  if (otpStatus === 'invalid') {
+    throw new AppError('Invalid OTP', 400, 'INVALID_OTP');
+  }
+
+  const user = await findPasswordResetEligibleUser(normalizedMobile);
+  if (!user) {
+    throw new AppError('Unable to reset password for this account', 400, 'PASSWORD_RESET_NOT_ALLOWED');
+  }
+
+  const hashedPassword = await hashPassword(newPassword);
+  const passwordUpdates = {
+    password: hashedPassword,
+    failed_login_attempts: 0,
+  };
+
+  if (!user.status || user.status === USER_STATUSES.PENDING) {
+    passwordUpdates.status = USER_STATUSES.KYC_PENDING;
+  }
+
+  await User.unscoped().update(
+    passwordUpdates,
+    { where: { id: user.id } },
+  );
+
+  const updatedUser = await User.unscoped().findByPk(user.id, {
+    attributes: ['id', 'password', 'status'],
+  });
+
+  const passwordSaved = await verifyPassword(newPassword, updatedUser?.password);
+  if (!passwordSaved) {
+    throw new AppError('Password could not be saved. Please try again.', 500, 'PASSWORD_UPDATE_FAILED');
+  }
+
+  await revokeUserRefreshTokens(user.id);
+
+  await auditService.writeAuditLog({
+    userId: user.id,
+    action: AUDIT_ACTIONS.UPDATE,
+    entityType: 'User',
+    entityId: user.id,
+    metadata: { action: 'password_reset_completed' },
+  });
+
   return { success: true };
+}
+
+/**
+ * Check a password-reset OTP without consuming it (for inline UI validation).
+ * @param {string} mobileNumber
+ * @param {string} otp
+ */
+export async function verifyPasswordResetOtpCode(mobileNumber, otp) {
+  const normalizedMobile = normalizeMobileNumber(mobileNumber);
+  const otpStatus = await checkPasswordResetOTP(normalizedMobile, otp);
+
+  if (otpStatus === 'expired') {
+    throw new AppError('OTP has expired. Request a new code.', 400, 'OTP_EXPIRED');
+  }
+
+  if (otpStatus === 'invalid') {
+    throw new AppError('Invalid OTP', 400, 'INVALID_OTP');
+  }
+
+  const user = await findPasswordResetEligibleUser(normalizedMobile);
+  if (!user) {
+    throw new AppError('Unable to reset password for this account', 400, 'PASSWORD_RESET_NOT_ALLOWED');
+  }
+
+  return { valid: true };
 }
 
 export const authService = Object.freeze({
@@ -565,6 +911,9 @@ export const authService = Object.freeze({
   register,
   verifyOTP,
   resendOTP,
+  requestPasswordReset,
+  verifyPasswordResetOtpCode,
+  resetPasswordWithOtp,
 });
 
 export default authService;

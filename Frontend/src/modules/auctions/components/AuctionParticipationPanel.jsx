@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/Button.jsx';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
 import { ROUTES } from '../../../config/routes.js';
-import { useAuthStore } from '../../../stores/auth-store.js';
+import { useAuthStore } from '@enderass/shared/auth';
 import { AuctionDocumentsBlock } from './AuctionDocumentsBlock.jsx';
 import { AuctionBidSection } from './AuctionBidSection.jsx';
-import { formatEtbAmount } from '../utils/auction-drawer-utils.js';
+import { formatEtbAmount } from '@enderass/shared/utils';
 import {
   canShowCpoButton,
   canShowPaymentButton,
@@ -18,12 +18,8 @@ import {
   shouldShowBidSection,
 } from '../utils/participation-utils.js';
 
-function stepClass(state) {
-  return `auction-participation__step auction-participation__step--${state}`;
-}
-
-function trackerStepClass(state) {
-  return `auction-participation__tracker-step auction-participation__tracker-step--${state}`;
+function journeyStepClass(state) {
+  return `bidder-journey__step bidder-journey__step--${state}`;
 }
 
 function StepStatusPill({ statusKey, t }) {
@@ -39,6 +35,24 @@ function StepStatusPill({ statusKey, t }) {
       label={t(`bidder.participation.stepStatus.${statusKey}`)}
       variant={variantMap[statusKey] || 'default'}
     />
+  );
+}
+
+function StepNode({ index, state }) {
+  if (state === 'complete') {
+    return (
+      <span className="bidder-journey__node bidder-journey__node--complete" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </span>
+    );
+  }
+
+  return (
+    <span className={`bidder-journey__node bidder-journey__node--${state}`} aria-hidden="true">
+      {index + 1}
+    </span>
   );
 }
 
@@ -77,14 +91,14 @@ export function AuctionParticipationPanel({
 
   if (!canParticipate) {
     return (
-      <section className="auction-participation" aria-label={t('bidder.participation.panelTitle')}>
-        <div className="auction-participation__kyc-gate">
-          <h3 className="auction-participation__title">
+      <section className="bidder-journey" aria-label={t('bidder.participation.panelTitle')}>
+        <div className="bidder-journey__kyc-gate">
+          <h3 className="bidder-journey__title">
             {kycUnderReview
               ? t('bidder.participation.kycGate.underReviewTitle')
               : t('bidder.participation.kycGate.title')}
           </h3>
-          <p className="auction-participation__lead">
+          <p className="bidder-journey__lead">
             {kycUnderReview
               ? t('bidder.participation.kycGate.underReviewBody')
               : t('bidder.participation.kycGate.body')}
@@ -112,16 +126,16 @@ export function AuctionParticipationPanel({
   const showBidSection = shouldShowBidSection(participation, auction?.status);
 
   return (
-    <section className="auction-participation" aria-label={t('bidder.participation.panelTitle')}>
-      <header className={`auction-participation__banner auction-participation__banner--${statusVariant}`}>
-        <div className="auction-participation__banner-copy">
-          <p className="auction-participation__eyebrow">{t('bidder.participation.journeyEyebrow')}</p>
-          <h3 className="auction-participation__title">
+    <section className="bidder-journey" aria-label={t('bidder.participation.panelTitle')}>
+      <header className={`bidder-journey__banner bidder-journey__banner--${statusVariant}`}>
+        <div className="bidder-journey__banner-copy">
+          <p className="bidder-journey__eyebrow">{t('bidder.participation.journeyEyebrow')}</p>
+          <h3 className="bidder-journey__title">
             {t(`bidder.participation.status.${participationStatus}.title`, {
               defaultValue: t('bidder.participation.panelTitle'),
             })}
           </h3>
-          <p className="auction-participation__lead">
+          <p className="bidder-journey__lead">
             {t(`bidder.participation.status.${participationStatus}.body`, {
               defaultValue: t('bidder.participation.panelSubtitle'),
             })}
@@ -135,99 +149,10 @@ export function AuctionParticipationPanel({
         />
       </header>
 
-      {!loading && showBidSection && (
-        <AuctionBidSection
-          auction={auction}
-          auctionId={auction?.id}
-          participation={participation}
-          canPlaceBid={canPlaceBid}
-          onSuccess={onBidSuccess}
-        />
-      )}
-
-      <ol className="auction-participation__tracker" aria-label={t('bidder.participation.panelTitle')}>
-        {PARTICIPATION_STEPS.map((stepKey, index) => (
-          <li key={stepKey} className={trackerStepClass(stepState[stepKey])}>
-            <span className="auction-participation__tracker-index">{index + 1}</span>
-            <span className="auction-participation__tracker-label">
-              {t(`bidder.participation.steps.${stepKey}`)}
-            </span>
-          </li>
-        ))}
-      </ol>
-
-      <ol className="auction-participation__steps">
-        {PARTICIPATION_STEPS.map((stepKey) => (
-          <li key={stepKey} className={stepClass(stepState[stepKey])}>
-            <div className="auction-participation__step-header">
-              <strong>{t(`bidder.participation.steps.${stepKey}`)}</strong>
-              <StepStatusPill statusKey={stepState[stepKey]} t={t} />
-            </div>
-
-            {stepKey === 'payment' && (
-              <p className="auction-participation__step-copy">
-                {t('bidder.participation.paymentCopy', { amount: formatEtbAmount(documentFee) })}
-              </p>
-            )}
-            {stepKey === 'cpo' && (
-              <p className="auction-participation__step-copy">{t('bidder.participation.cpoCopy')}</p>
-            )}
-            {stepKey === 'bid' && (
-              <p className="auction-participation__step-copy">{t('bidder.participation.bidCopy')}</p>
-            )}
-
-            {stepKey === 'bid' && bidLockedHintKey && !showBidSection && (
-              <p className="auction-participation__hint auction-participation__hint--inline" role="status">
-                {t(bidLockedHintKey)}
-              </p>
-            )}
-
-            {stepKey === 'bid' && showBidSection && canPlaceBid && (
-              <p className="auction-participation__hint auction-participation__hint--inline auction-participation__hint--next" role="status">
-                {t('bidder.participation.bidCard.scrollHint')}
-              </p>
-            )}
-
-            {stepKey === 'cpo' && isRegistered && stepState.cpo === 'active' && (
-              <p className="auction-participation__hint auction-participation__hint--inline auction-participation__hint--next" role="status">
-                {t('bidder.participation.cpoNextAction')}
-              </p>
-            )}
-
-            {stepKey === 'payment' && participation?.payment?.status === 'rejected' && (
-              <p className="auction-participation__rejection" role="alert">
-                {participation.payment.rejectionReason || t('bidder.participation.paymentRejected')}
-              </p>
-            )}
-            {stepKey === 'cpo' && participation?.cpo?.status === 'rejected' && (
-              <p className="auction-participation__rejection" role="alert">
-                {participation.cpo.rejectionReason || t('bidder.participation.cpoRejected')}
-              </p>
-            )}
-
-            {stepKey === 'payment' && showPayButton && (
-              <div className="auction-participation__step-action">
-                <Button variant="primary" onClick={onPayDocumentFee}>
-                  {t('bidder.participation.actions.payDocumentFee')}
-                </Button>
-              </div>
-            )}
-
-            {stepKey === 'cpo' && showCpoButton && (
-              <div className="auction-participation__step-action">
-                <Button variant="primary" onClick={onSubmitCpo}>
-                  {t('bidder.participation.actions.submitCpo')}
-                </Button>
-              </div>
-            )}
-          </li>
-        ))}
-      </ol>
-
-      {loading && <p className="auction-participation__hint">{t('bidder.participation.loading')}</p>}
+      {loading && <p className="bidder-journey__hint">{t('bidder.participation.loading')}</p>}
 
       {!loading && participationError && (
-        <div className="auction-participation__error" role="alert">
+        <div className="bidder-journey__error" role="alert">
           <p>{participationError}</p>
           {onRetryParticipation && (
             <button type="button" className="asset-page__refresh" onClick={onRetryParticipation}>
@@ -237,14 +162,109 @@ export function AuctionParticipationPanel({
         </div>
       )}
 
+      <ol className="bidder-journey__steps">
+        {PARTICIPATION_STEPS.map((stepKey, index) => (
+          <li key={stepKey} className={journeyStepClass(stepState[stepKey])}>
+            <div className="bidder-journey__rail" aria-hidden="true">
+              <StepNode index={index} state={stepState[stepKey]} />
+              {index < PARTICIPATION_STEPS.length - 1 && (
+                <span className={`bidder-journey__line bidder-journey__line--${stepState[stepKey]}`} />
+              )}
+            </div>
+
+            <div className="bidder-journey__card">
+              <div className="bidder-journey__card-header">
+                <div>
+                  <p className="bidder-journey__step-eyebrow">
+                    {t('bidder.participation.stepLabel', { step: index + 1, total: PARTICIPATION_STEPS.length })}
+                  </p>
+                  <strong className="bidder-journey__step-title">
+                    {t(`bidder.participation.steps.${stepKey}`)}
+                  </strong>
+                </div>
+                <StepStatusPill statusKey={stepState[stepKey]} t={t} />
+              </div>
+
+              {stepKey === 'payment' && (
+                <p className="bidder-journey__step-copy">
+                  {t('bidder.participation.paymentCopy', { amount: formatEtbAmount(documentFee) })}
+                </p>
+              )}
+              {stepKey === 'cpo' && (
+                <p className="bidder-journey__step-copy">{t('bidder.participation.cpoCopy')}</p>
+              )}
+              {stepKey === 'bid' && (
+                <p className="bidder-journey__step-copy">{t('bidder.participation.bidCopy')}</p>
+              )}
+
+              {stepKey === 'bid' && bidLockedHintKey && !showBidSection && (
+                <p className="bidder-journey__hint bidder-journey__hint--inline" role="status">
+                  {t(bidLockedHintKey)}
+                </p>
+              )}
+
+              {stepKey === 'cpo' && isRegistered && stepState.cpo === 'active' && (
+                <p className="bidder-journey__hint bidder-journey__hint--next" role="status">
+                  {t('bidder.participation.cpoNextAction')}
+                </p>
+              )}
+
+              {stepKey === 'payment' && participation?.payment?.status === 'rejected' && (
+                <p className="bidder-journey__rejection" role="alert">
+                  {participation.payment.rejectionReason || t('bidder.participation.paymentRejected')}
+                </p>
+              )}
+              {stepKey === 'cpo' && participation?.cpo?.status === 'rejected' && (
+                <p className="bidder-journey__rejection" role="alert">
+                  {participation.cpo.rejectionReason || t('bidder.participation.cpoRejected')}
+                </p>
+              )}
+
+              {stepKey === 'payment' && showPayButton && (
+                <div className="bidder-journey__action">
+                  <Button variant="primary" onClick={onPayDocumentFee}>
+                    {t('bidder.participation.actions.payDocumentFee')}
+                  </Button>
+                </div>
+              )}
+
+              {stepKey === 'cpo' && showCpoButton && (
+                <div className="bidder-journey__action">
+                  <Button variant="primary" onClick={onSubmitCpo}>
+                    {t('bidder.participation.actions.submitCpo')}
+                  </Button>
+                </div>
+              )}
+
+              {stepKey === 'bid' && showBidSection && (
+                <div className="bidder-journey__bid">
+                  {canPlaceBid && (
+                    <p className="bidder-journey__hint bidder-journey__hint--next" role="status">
+                      {t('bidder.participation.bidCard.scrollHint')}
+                    </p>
+                  )}
+                  <AuctionBidSection
+                    auction={auction}
+                    auctionId={auction?.id}
+                    participation={participation}
+                    canPlaceBid={canPlaceBid}
+                    onSuccess={onBidSuccess}
+                  />
+                </div>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+
       {!loading && participation?.payment?.status === 'pending' && (
-        <p className="auction-participation__hint">{t('bidder.participation.paymentPending')}</p>
+        <p className="bidder-journey__hint">{t('bidder.participation.paymentPending')}</p>
       )}
       {!loading && participation?.cpo?.status === 'pending' && (
-        <p className="auction-participation__hint">{t('bidder.participation.cpoPending')}</p>
+        <p className="bidder-journey__hint">{t('bidder.participation.cpoPending')}</p>
       )}
       {!loading && participation?.flags?.allBidsSubmitted && (
-        <p className="auction-participation__hint">
+        <p className="bidder-journey__hint bidder-journey__hint--success">
           {participation.isMultiLot
             ? t('bidder.participation.allBidsSubmitted')
             : t('bidder.participation.bidSubmitted', {
@@ -253,7 +273,7 @@ export function AuctionParticipationPanel({
         </p>
       )}
       {!loading && participation?.flags?.hasBid && !participation?.flags?.allBidsSubmitted && participation?.isMultiLot && (
-        <p className="auction-participation__hint">
+        <p className="bidder-journey__hint">
           {t('bidder.participation.partialBidsSubmitted', {
             submitted: (participation.bids || []).length,
             total: (participation.cpo?.selectedAuctionAssetIds || []).length,
@@ -261,7 +281,7 @@ export function AuctionParticipationPanel({
         </p>
       )}
       {!loading && participation?.bid && !participation?.isMultiLot && (
-        <p className="auction-participation__hint">
+        <p className="bidder-journey__hint bidder-journey__hint--success">
           {t('bidder.participation.bidSubmitted', {
             amount: formatEtbAmount(participation.bid.amount),
           })}

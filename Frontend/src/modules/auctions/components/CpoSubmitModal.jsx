@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../../components/Button.jsx';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { FileUpload } from '../../../components/FileUpload.jsx';
 import { cpoService } from '../../cpo-management/services/cpo-service.js';
-import { formatEtbAmount } from '../utils/auction-drawer-utils.js';
+import { formatEtbAmount } from '@enderass/shared/utils';
 import { computeRequiredCpoAmount, isMultiLotAuction } from '../utils/auction-lot-utils.js';
 
 /**
@@ -100,6 +100,7 @@ export function CpoSubmitModal({ open, loading = false, auction, onClose, onSubm
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
+        <ModalCloseButton onClick={onClose} disabled={busy} />
         <h2 id="cpo-submit-title" className="kyc-modal__title">
           {t('bidder.participation.cpoModal.title')}
         </h2>
@@ -145,7 +146,6 @@ export function CpoSubmitModal({ open, loading = false, auction, onClose, onSubm
                       />
                       <span className="auction-lot-picker__copy">
                         <strong>{label}</strong>
-                        <span>{formatEtbAmount(lot.reservePrice)}</span>
                       </span>
                     </label>
                   </li>

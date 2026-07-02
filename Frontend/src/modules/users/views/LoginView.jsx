@@ -7,8 +7,8 @@ import { CredentialsStep } from '../components/credentials-step.jsx';
 import { OtpVerificationStep } from '../components/otp-verification-step.jsx';
 import { useOtpTimer } from '../hooks/use-otp-timer.js';
 import { authApi } from '../services/authApi.js';
-import { useAuthStore } from '../../../stores/auth-store.js';
-import { isValidEthiopianMobile } from '../../../utils/mobile-utils.js';
+import { useAuthStore } from '@enderass/shared/auth';
+import { isValidEthiopianMobile } from '@enderass/shared/utils';
 
 const AUTH_STEPS = Object.freeze({
   CREDENTIALS: 'CREDENTIALS',

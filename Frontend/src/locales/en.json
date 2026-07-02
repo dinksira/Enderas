@@ -447,7 +447,7 @@
     },
     "requestWizard": {
       "title": "Asset Request",
-      "subtitle": "Submit one or more assets in guided steps. Our team will review each request before it enters the auction pipeline.",
+      "subtitle": "Fill in all sections below, add assets to your list, then submit when ready. Our team will review each request before it enters the auction pipeline.",
       "stepProgress": "Asset request progress",
       "locationHint": "Location details help evaluators verify your asset. You can skip fields you prefer not to share yet.",
       "reviewIntro": "Confirm your details before sending the request to the admin team.",
@@ -460,6 +460,12 @@
         "reservePrice": "e.g. 2500000",
         "auctionConditions": "Any terms, viewing rules, payment expectations, or special notes..."
       },
+      "sectionHints": {
+        "details": "Tell us about the asset you want to auction.",
+        "location": "Where is the asset and what are your auction terms?",
+        "documents": "Upload ownership proof and supporting documents.",
+        "review": "Complete the form above, then click Add to List. Submit when your queue is ready."
+      },
       "steps": {
         "details": "Asset Details",
         "location": "Location & Terms",
@@ -469,7 +475,7 @@
       },
       "batchReview": {
         "intro": "Review every asset below. Add more assets or submit them together when you are ready.",
-        "empty": "No assets in your list yet. Go back and complete the form to add one.",
+        "empty": "No assets in your list yet. Complete the form above and click Add to List.",
         "assetLabel": "Asset {{index}}",
         "queuedCount": "{{count}} asset(s) already queued. You can add more after this one.",
         "editing": "You are editing a queued asset.",
@@ -479,6 +485,7 @@
         "back": "Back",
         "next": "Continue",
         "addToQueue": "Add to List",
+        "updateQueue": "Update in List",
         "cancel": "Cancel",
         "submit": "Submit Request",
         "submitAll": "Submit {{count}} Requests",
@@ -582,6 +589,109 @@
       "amharic": "Amharic"
     }
   },
+  "public": {
+    "nav": {
+      "label": "Main navigation",
+      "auctions": "Auctions",
+      "howItWorks": "How It Works",
+      "about": "About",
+      "contact": "Contact"
+    },
+    "header": {
+      "login": "Login",
+      "register": "Register"
+    },
+    "hero": {
+      "eyebrow": "National Digital Auction Infrastructure",
+      "title": "Institutional auctions. Verified bidders. Transparent outcomes.",
+      "lead": "Enderas connects banks, government agencies, NGOs, and private institutions with qualified bidders across Ethiopia — with sealed bids, audited workflows, and settlement-grade security.",
+      "ctaPrimary": "Browse Auctions",
+      "ctaSecondary": "Register to Bid",
+      "liveLabel": "Live lot"
+    },
+    "stats": {
+      "label": "Platform statistics",
+      "activeAuctions": "Active Auctions",
+      "registeredBidders": "Registered Bidders",
+      "totalValue": "Total Value Transacted",
+      "institutions": "Institutions Onboarded"
+    },
+    "flow": {
+      "title": "How It Works",
+      "subtitle": "A five-stage participation pipeline designed for regulatory compliance and bidder accountability.",
+      "steps": {
+        "register": { "title": "Register", "desc": "Create an individual or organization account with verified mobile number." },
+        "kyc": { "title": "Verify KYC", "desc": "Submit identity documents for staff review before bidding access." },
+        "browse": { "title": "Browse Auctions", "desc": "Review published lots, reserves, and institutional sale conditions." },
+        "cpo": { "title": "Documents & CPO", "desc": "Pay document fees and submit Certified Payment Order for selected lots." },
+        "bid": { "title": "Submit Bid", "desc": "Place sealed bids at or above reserve during the active bidding window." }
+      }
+    },
+    "auctions": {
+      "title": "Featured Live Auctions",
+      "subtitle": "High-value assets currently open for qualified bidder participation.",
+      "viewAll": "View all auctions →",
+      "reserve": "Reserve"
+    },
+    "categories": {
+      "title": "Browse by Asset Class",
+      "subtitle": "Vehicles, land, buildings, and machinery from verified institutional sellers.",
+      "vehicle": "Vehicle",
+      "vehicles": "Vehicles",
+      "land": "Land",
+      "building": "Building",
+      "buildings": "Buildings",
+      "machinery": "Machinery"
+    },
+    "trust": {
+      "title": "Built for Trust",
+      "subtitle": "Enterprise-grade controls for national-scale asset disposition.",
+      "items": {
+        "https": { "code": "TLS 1.3", "title": "Encrypted Transit", "desc": "All sessions and API traffic protected in transit." },
+        "audit": { "code": "AUDIT", "title": "Audit Logging", "desc": "Immutable activity trail for staff and bidder actions." },
+        "rbac": { "code": "RBAC", "title": "Role-Based Access", "desc": "Granular permissions across institutional workflows." },
+        "payments": { "code": "PAY", "title": "Verified Payments", "desc": "Document fees and CPO reviewed before bidding unlocks." }
+      }
+    },
+    "footer": {
+      "about": "Ethiopia's national digital auction management platform for institutional asset disposition and verified bidder participation.",
+      "partners": "Institutional partners",
+      "contact": "Contact",
+      "legal": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "audit": "Audit & Compliance"
+    },
+    "auth": {
+      "brandTitle": "Secure access for verified participants",
+      "brandSub": "National auction infrastructure with KYC-gated bidding, document verification, and sealed bid submission.",
+      "brandFoot": "Enderas National PLC · Addis Ababa",
+      "loginTab": "Login",
+      "registerTab": "Register",
+      "loginTitle": "Sign in",
+      "loginLead": "Enter your registered mobile number and password.",
+      "registerTitle": "Create account",
+      "registerLead": "Register as an individual bidder or institutional organization.",
+      "loginCta": "Sign In",
+      "loggingIn": "Signing in…",
+      "forgotPassword": "Forgot password? (OTP reset)",
+      "nationalId": "National ID Number",
+      "nationalIdRequired": "National ID number is required",
+      "tradeLicense": "Trade License",
+      "tinCertificate": "TIN Certificate",
+      "businessRegistration": "Business Registration Certificate",
+      "kycNotice": "Your account will be reviewed after document upload. KYC approval is required before you can participate in auctions.",
+      "otpTitle": "Verify mobile number",
+      "otpLead": "Enter the 6-digit code sent to",
+      "otpTimer": "Code expires in {{time}}",
+      "otpExpired": "Code expired",
+      "resend": "Resend code",
+      "resending": "Sending…",
+      "verify": "Verify & Continue",
+      "verifying": "Verifying…",
+      "back": "Back"
+    }
+  },
   "auth": {
     "registerTitle": "Create Account",
     "registerSubtitle": "Register to participate in Enderas auctions",
@@ -606,7 +716,9 @@
     "haveAccount": "Already have an account?",
     "signIn": "Sign in",
     "enterValidOtp": "Enter the complete 6-digit verification code",
-    "invalidOtp": "Invalid or expired verification code",
+    "invalidOtp": "Invalid verification code",
+    "otpExpired": "This verification code has expired. Resend a new code to continue.",
+    "otpExpiredShort": "Verification code expired. Resend a new code to continue.",
     "resendOtpFailed": "Unable to resend verification code",
     "otpPageSubtitle": "AUCTION MANAGEMENT SYSTEM",
     "fullName": "Full Name",

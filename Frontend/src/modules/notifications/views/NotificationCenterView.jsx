@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useRegisterPageSearch } from '@enderass/shared/contexts';
 import { Button } from '../../../components/Button.jsx';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
 import { DashboardToast } from '../../../components/DashboardToast.jsx';
 import { usePaginatedResource } from '../../../hooks/use-paginated-resource.js';
-import { formatDate } from '../../users/utils/user-management-utils.js';
-import { notificationService } from '../services/notification-service.js';
+import { formatDate } from '@enderass/shared/utils';
+import { notificationService } from '@enderass/shared/services';
 
 const PAGE_SIZE = 20;
 
@@ -43,6 +44,8 @@ export function NotificationCenterView() {
   const {
     page,
     setPage,
+    search,
+    setSearch,
     items: notifications,
     pagination,
     loading,
@@ -55,6 +58,12 @@ export function NotificationCenterView() {
     pageSize: PAGE_SIZE,
     itemsKey: 'items',
     initialTab: 'all',
+  });
+
+  useRegisterPageSearch({
+    value: search,
+    onChange: setSearch,
+    placeholder: t('notifications.center.searchPlaceholder'),
   });
 
   useEffect(() => {

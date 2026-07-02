@@ -1,6 +1,7 @@
 @import './variables.css';
 @import './dashboard.css';
 @import './admin.css';
+@import './public-site.css';
 
 /* ─── RESET & BASE ─────────────────────────────────────────────────────────── */
 
@@ -945,6 +946,18 @@ select {
   font-family: var(--semantic-font-body);
   font-size: var(--core-font-size-body-sm);
   color: var(--component-auth-timer-color);
+}
+
+.auth-login-card__hint {
+  margin: 0;
+  font-family: var(--semantic-font-body);
+  font-size: var(--core-font-size-body-sm);
+  color: var(--component-auth-timer-color);
+  text-align: center;
+}
+
+.auth-login-card__hint--warning {
+  color: var(--semantic-color-danger, #b42318);
 }
 
 .auth-login-card__resend-button {
@@ -2135,26 +2148,99 @@ select {
 }
 
 .image-viewer-header {
-  display: flex;
-  justify-content: flex-end;
+  display: none;
 }
 
-.image-viewer-close-btn {
-  background: none;
+.image-viewer-counter {
+  position: absolute;
+  top: var(--core-space-3);
+  left: var(--core-space-3);
+  z-index: 3;
+  font-family: var(--semantic-font-ui);
+  font-size: 13px;
+  color: var(--semantic-color-text-secondary);
+}
+
+.image-viewer-container--gallery {
+  position: relative;
+  padding: var(--core-space-4) var(--core-space-5);
+}
+
+.image-viewer-container--gallery > .modal-close-btn {
+  position: absolute;
+  top: var(--core-space-3);
+  right: var(--core-space-3);
+  z-index: 3;
+}
+
+.modal-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: none;
-  padding: var(--core-space-2);
+  background: transparent;
+  color: var(--semantic-color-text-secondary);
   cursor: pointer;
+  border-radius: var(--semantic-radius-sm);
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.modal-close-btn:hover {
   color: var(--semantic-color-text-primary);
+  background-color: var(--semantic-color-surface-hover);
+}
+
+.modal-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.image-viewer-stage {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease, background-color 0.2s ease;
-  border-radius: var(--semantic-radius-sm);
+  gap: var(--core-space-4);
+  min-width: min(80vw, 960px);
 }
 
-.image-viewer-close-btn:hover {
-  color: var(--semantic-color-brand-primary);
-  background-color: var(--semantic-color-surface-hover);
+.image-viewer-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--semantic-color-border-default) 70%, white);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--semantic-color-background-primary) 90%, transparent);
+  color: var(--semantic-color-text-primary);
+  cursor: pointer;
+  box-shadow: var(--semantic-shadow-md);
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  z-index: 2;
+}
+
+.image-viewer-nav:hover {
+  background: var(--semantic-color-surface-hover);
+  border-color: var(--semantic-color-brand-primary);
+}
+
+.image-viewer-nav--prev {
+  left: var(--core-space-3);
+}
+
+.image-viewer-nav--next {
+  right: var(--core-space-3);
+}
+
+.image-viewer-container--gallery .image-viewer-image {
+  max-width: min(78vw, 920px);
 }
 
 .image-viewer-image {

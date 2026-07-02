@@ -4,7 +4,7 @@ import { Button } from '../../../components/Button.jsx';
 import { AdminDetailDrawer } from '../../../components/admin/AdminDetailDrawer.jsx';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
 import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
-import { useAuthStore } from '../../../stores/auth-store.js';
+import { useAuthStore } from '@enderass/shared/auth';
 import { cpoService } from '../services/cpo-service.js';
 import { formatDate, getCpoStatusVariant } from '../utils/cpo-management-utils.js';
 

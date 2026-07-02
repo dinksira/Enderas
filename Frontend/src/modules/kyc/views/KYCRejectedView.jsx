@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '../../../stores/auth-store.js';
+import { useAuthStore } from '@enderass/shared/auth';
 import { ROUTES } from '../../../config/routes.js';
 import { Button } from '../../../components/Button.jsx';
 import { kycService } from '../services/kyc.service.js';

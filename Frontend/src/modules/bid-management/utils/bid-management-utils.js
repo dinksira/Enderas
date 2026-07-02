@@ -1,4 +1,4 @@
-import { formatDate } from '../../users/utils/user-management-utils.js';
+import { formatDate } from '@enderass/shared/utils';
 
 export const BID_PAGE_SIZE = 20;
 

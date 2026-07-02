@@ -150,14 +150,12 @@ export async function listCpos(options = {}, scope = {}) {
 
   if (search?.trim()) {
     const term = `%${search.trim()}%`;
-    userInclude.where = {
-      [Op.or]: [
-        { first_name: { [Op.like]: term } },
-        { last_name: { [Op.like]: term } },
-        { mobile_number: { [Op.like]: term } },
-      ],
-    };
-    userInclude.required = true;
+    where[Op.or] = [
+      { '$auction.title$': { [Op.like]: term } },
+      { '$user.first_name$': { [Op.like]: term } },
+      { '$user.last_name$': { [Op.like]: term } },
+      { '$user.mobile_number$': { [Op.like]: term } },
+    ];
   }
 
   const { count, rows } = await Cpo.findAndCountAll({
@@ -170,6 +168,7 @@ export async function listCpos(options = {}, scope = {}) {
     limit,
     offset: (page - 1) * limit,
     distinct: true,
+    subQuery: false,
   });
 
   const result = {

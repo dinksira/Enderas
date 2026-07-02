@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/Button.jsx';
 import { bidService } from '../../bid-management/services/bid-service.js';
-import { formatEtbAmount } from '../utils/auction-drawer-utils.js';
 
 /**
  * @param {{
@@ -34,7 +33,7 @@ export function PlaceBidForm({
       return;
     }
     if (reservePrice != null && bidAmount < reservePrice) {
-      setError(t('bidder.browse.placeBid.belowReserve', { amount: formatEtbAmount(reservePrice) }));
+      setError(t('bidder.browse.placeBid.belowMinimum'));
       return;
     }
 
@@ -78,11 +77,6 @@ export function PlaceBidForm({
         value={amount}
         onChange={(event) => setAmount(event.target.value)}
         disabled={loading}
-        placeholder={
-          reservePrice != null
-            ? t('bidder.browse.placeBid.minAmount', { amount: formatEtbAmount(reservePrice) })
-            : undefined
-        }
       />
 
       {error && (

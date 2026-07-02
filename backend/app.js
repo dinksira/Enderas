@@ -14,10 +14,9 @@ const app = express();
 
 app.disable('x-powered-by');
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-];
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : ['http://localhost:5173', 'http://localhost:5174'];
 
 app.use(cors({
   origin(origin, callback) {
@@ -36,6 +35,15 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(i18nMiddleware);
+
+if (!env.isProduction) {
+  app.use('/api', (req, res, next) => {
+    if (req.method !== 'GET' || req.path.startsWith('/auth/')) {
+      process.stdout.write(`[http] ${req.method} ${req.originalUrl}\n`);
+    }
+    next();
+  });
+}
 
 // Serve static files from uploads directory
 const uploadsDir = path.resolve(process.cwd(), env.storage.uploadDir);
