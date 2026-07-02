@@ -84,6 +84,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
   const [uploadingAdditional, setUploadingAdditional] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [submittedCount, setSubmittedCount] = useState(0);
+  const [ownershipUploadKey, setOwnershipUploadKey] = useState(0);
 
   const ownershipDocType = form.assetType ? getOwnershipDocType(form.assetType) : '';
   const ownershipDocLabelKey = ownershipDocType
@@ -98,6 +99,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
       return [];
     });
     setEditingClientId(null);
+    setOwnershipUploadKey((current) => current + 1);
   };
 
   useEffect(() => {
@@ -115,6 +117,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
       setUploadingAdditional(false);
       setCompleted(false);
       setSubmittedCount(0);
+      setOwnershipUploadKey((current) => current + 1);
     }
   }, [open]);
 
@@ -214,10 +217,10 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
     try {
       const uploaded = await assetService.uploadFiles(selected, 'assets/documents');
       const docs = uploaded.map((entry, index) => ({
-        name: selected[index]?.name || entry.fileName || 'document',
-        url: entry.fileUrl,
-        size: selected[index]?.size || 0,
-      }));
+        name: selected[index]?.name || entry.fileName || entry.originalName || 'document',
+        url: entry.fileUrl || entry.url || '',
+        size: selected[index]?.size || entry.fileSize || 0,
+      })).filter((doc) => doc.url);
       setForm((current) => ({
         ...current,
         additionalDocuments: [...current.additionalDocuments, ...docs],
@@ -308,6 +311,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
       return buildPhotoPreviewsFromFiles(item.form.photoFiles);
     });
     setEditingClientId(clientId);
+    setOwnershipUploadKey((current) => current + 1);
     scrollToSection(ASSET_REQUEST_STEPS.DETAILS);
   };
 
@@ -550,7 +554,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
                         .filter(Boolean)
                         .join(' ')}
                       rows={4}
-                      value={form.description}
+                      value={form.description ?? ''}
                       onChange={(event) => updateField('description', event.target.value)}
                       disabled={submitting}
                       placeholder={t('assets.requestWizard.placeholders.description')}
@@ -576,7 +580,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
                         .filter(Boolean)
                         .join(' ')}
                       rows={3}
-                      value={form.conditionNotes}
+                      value={form.conditionNotes ?? ''}
                       onChange={(event) => updateField('conditionNotes', event.target.value)}
                       disabled={submitting}
                       placeholder={t('assets.requestWizard.placeholders.conditionNotes')}
@@ -622,7 +626,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
                     type="number"
                     min="1"
                     step="0.01"
-                    value={form.desiredReservePrice}
+                    value={form.desiredReservePrice ?? ''}
                     onChange={(event) => updateField('desiredReservePrice', event.target.value)}
                     error={errors.desiredReservePrice}
                     disabled={submitting}
@@ -643,7 +647,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
                         .filter(Boolean)
                         .join(' ')}
                       rows={4}
-                      value={form.auctionConditions}
+                      value={form.auctionConditions ?? ''}
                       onChange={(event) => updateField('auctionConditions', event.target.value)}
                       disabled={submitting}
                       placeholder={t('assets.requestWizard.placeholders.auctionConditions')}
@@ -747,7 +751,11 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
                     folder="assets/ownership"
                     accept={OWNERSHIP_ACCEPT}
                     disabled={submitting || !form.assetType}
-                    onUpload={(result) => updateField('ownershipDocumentUrl', result.fileUrl)}
+                    resetKey={ownershipUploadKey}
+                    onUpload={(result) => updateField(
+                      'ownershipDocumentUrl',
+                      result?.fileUrl || result?.url || '',
+                    )}
                   />
                   {errors.ownershipDocumentUrl && (
                     <span className="input-field__error" role="alert">
@@ -760,7 +768,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
                       {t('assets.form.fields.additionalDocuments')}
                     </h4>
                     <p className="auction-create-modal__section-hint">
-                      {t('assets.form.hints.additionalDocumentsPdf')}
+                      {t('assets.form.hints.additionalDocuments')}
                     </p>
                     <button
                       type="button"

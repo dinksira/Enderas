@@ -62,6 +62,13 @@ export function getOwnershipDocType(assetType) {
   return ASSET_TYPE_OWNERSHIP_DOC[assetType] || 'other';
 }
 
+export function hasOwnershipDocument(form) {
+  return Boolean(
+    String(form?.ownershipDocumentUrl || '').trim()
+    || form?.ownershipDocumentFile,
+  );
+}
+
 /** Parse API JSON array fields that may arrive as strings from MySQL. */
 export function toArray(val) {
   if (Array.isArray(val)) {
@@ -106,10 +113,12 @@ const EMPTY_FORM = Object.freeze({
   description: '',
   conditionNotes: '',
   location: '',
+  address: '',
   desiredReservePrice: '',
   auctionConditions: '',
   photoFiles: [],
   ownershipDocumentUrl: '',
+  ownershipDocumentFile: null,
   additionalDocuments: [],
 });
 
@@ -117,6 +126,7 @@ export function buildEmptyAssetForm() {
   return {
     ...EMPTY_FORM,
     photoFiles: [],
+    ownershipDocumentFile: null,
     additionalDocuments: [],
   };
 }
@@ -158,7 +168,7 @@ export function summarizeAssetDraft(form, t) {
     location: form.location?.trim() || '—',
     reserve: formatReserveAmount(form.desiredReservePrice),
     photoCount: form.photoFiles?.length ?? 0,
-    documentCount: (form.additionalDocuments?.length ?? 0) + (form.ownershipDocumentUrl ? 1 : 0),
+    documentCount: (form.additionalDocuments?.length ?? 0) + (hasOwnershipDocument(form) ? 1 : 0),
   };
 }
 
@@ -205,11 +215,8 @@ export function validateAssetStep(step, form, t) {
   }
 
   if (step === ASSET_REQUEST_STEPS.DOCUMENTS) {
-    if (!form.ownershipDocumentUrl?.trim()) {
+    if (!hasOwnershipDocument(form)) {
       errors.ownershipDocumentUrl = t('assets.form.errors.ownershipDocRequired');
-    }
-    if (!form.additionalDocuments?.length) {
-      errors.additionalDocuments = t('assets.form.errors.supportingDocsRequired');
     }
   }
 
@@ -268,4 +275,5 @@ export default {
   toArray,
   validateAssetForm,
   validateAssetStep,
+  hasOwnershipDocument,
 };

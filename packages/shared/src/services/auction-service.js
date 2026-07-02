@@ -21,7 +21,7 @@ export const auctionService = Object.freeze({
   },
 
   browseById: async (id) => {
-    const response = await publicApi.get(`${AUCTIONS_BASE}/browse/${id}`);
+    const response = await api.get(`${AUCTIONS_BASE}/browse/${id}`);
     return response;
   },
 

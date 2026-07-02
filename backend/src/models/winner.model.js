@@ -27,6 +27,10 @@ export const Winner = sequelize.define(
       allowNull: false,
       unique: true,
     },
+    auction_asset_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: true,
+    },
     user_id: {
       type: DataTypes.CHAR(36),
       allowNull: false,

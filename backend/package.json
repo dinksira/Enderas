@@ -8,6 +8,7 @@
     "dev": "node --watch --env-file=.env server.js",
     "db": "node --env-file=.env scripts/db/cli.mjs",
     "db:migrate": "node --env-file=.env scripts/db/cli.mjs migrate",
+    "db:patch-bid-drafts": "node --env-file=.env scripts/apply-bid-drafts-schema.mjs",
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
     "db:setup": "node --env-file=.env scripts/db/cli.mjs setup test",
     "db:setup:normal": "node --env-file=.env scripts/db/cli.mjs setup normal",

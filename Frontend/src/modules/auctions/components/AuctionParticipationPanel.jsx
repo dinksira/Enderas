@@ -119,8 +119,13 @@ export function AuctionParticipationPanel({
   const documentFee = auction?.documentFee ?? 0;
   const showPayButton = canShowPaymentButton(participation, auction, { loading });
   const showCpoButton = canShowCpoButton(participation, auction, { loading });
-  const isRegistered = Boolean(participation?.isRegisteredBidder || participation?.flags?.paymentApproved);
-  const showDocuments = isRegistered || documentAccess;
+  const paymentApproved = Boolean(
+    participation?.flags?.paymentApproved
+    || participation?.gates?.documentAccess
+    || documentAccess,
+  );
+  const isRegistered = Boolean(participation?.isRegisteredBidder || paymentApproved);
+  const showDocuments = paymentApproved;
   const bidLockedHintKey = stepState.bid === 'locked' ? getBidStepHintKey(participation, auction) : null;
   const showBidSection = shouldShowBidSection(participation, auction?.status);
 
@@ -225,6 +230,22 @@ export function AuctionParticipationPanel({
                     {t('bidder.participation.actions.payDocumentFee')}
                   </Button>
                 </div>
+              )}
+
+              {stepKey === 'payment' && paymentApproved && (
+                <>
+                  <p className="bidder-journey__hint bidder-journey__hint--success" role="status">
+                    {t('bidder.participation.documentsUnlockedInStep')}
+                  </p>
+                  <div className="bidder-journey__documents">
+                    <AuctionDocumentsBlock
+                      auctionId={auction?.id}
+                      documents={documents}
+                      unlocked
+                      compact
+                    />
+                  </div>
+                </>
               )}
 
               {stepKey === 'cpo' && showCpoButton && (

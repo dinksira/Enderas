@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { LiveCountdown } from '@enderass/shared/ui';
-import { normalizeAuctionStatus } from '@enderass/shared/utils';
+import { normalizeAuctionStatus, formatEtbAmount } from '@enderass/shared/utils';
+import { isMultiLotAuction } from '../utils/auction-lot-utils.js';
 import { StatusPill } from '@enderass/shared/ui-admin';
 import { AuctionCardMedia } from '../../public/components/AuctionCardMedia.jsx';
 import {
@@ -33,6 +34,9 @@ export function BrowseAuctionCard({ auction, onOpen, disabled = false }) {
   const categoryKey = auction.categoryKey || auction.category || 'other_assets';
   const endingLabel = auction.endingDate || auction.endDateFormatted || '—';
   const isActive = displayStatus === 'ACTIVE';
+  const isMultiLot = isMultiLotAuction(auction);
+  const lotCount = Number(auction.lotCount) || (auction.lots?.length ?? 0);
+  const totalReserve = auction.totalReservePrice ?? auction.reservePrice;
 
   function handleOpen() {
     if (!disabled && onOpen) {
@@ -78,6 +82,18 @@ export function BrowseAuctionCard({ auction, onOpen, disabled = false }) {
         </div>
 
         <h3 className="browse-auction-card__title">{auction.title}</h3>
+
+        {(isMultiLot || lotCount > 1) && (
+          <p className="browse-auction-card__lots-meta">
+            {t('bidder.browse.lots.lotCountValue', { count: lotCount || auction.lots?.length || 2 })}
+            {totalReserve > 0 && (
+              <>
+                {' · '}
+                {t('bidder.browse.lots.totalReserve')}: {formatEtbAmount(totalReserve)}
+              </>
+            )}
+          </p>
+        )}
 
         <div className="browse-auction-card__metrics browse-auction-card__metrics--single">
           <div className="browse-auction-card__metric">

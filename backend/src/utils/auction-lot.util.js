@@ -33,11 +33,6 @@ export function roundMoney(amount) {
 }
 
 /**
- * @param {Array<{ id: string, reserve_price?: number, reservePrice?: number }>} lots
- * @param {string[]} selectedLotIds
- * @param {number} cpoPercentage
- */
-/**
  * @param {Array<{ auctionAssetId?: string, amount: number }>} proposedBids
  * @param {number} cpoPercentage
  */
@@ -62,6 +57,19 @@ export function computeRequiredCpoFromBidAmounts(proposedBids, cpoPercentage) {
   return roundMoney((totalBidAmount * percentage) / 100);
 }
 
+/** Minimum bid = reserve × (CPO% / 100). Falls back to reserve when CPO% is missing. */
+export function computeMinimumBidFromReserve(reservePrice, cpoPercentage) {
+  const reserve = Number(reservePrice);
+  if (!Number.isFinite(reserve) || reserve <= 0) {
+    return 0;
+  }
+  const percentage = Number(cpoPercentage);
+  if (!Number.isFinite(percentage) || percentage <= 0) {
+    return reserve;
+  }
+  return roundMoney((reserve * percentage) / 100);
+}
+
 export function computeRequiredCpoAmount(lots, selectedLotIds, cpoPercentage) {
   const selected = new Set(selectedLotIds);
   const totalReserve = lots
@@ -84,4 +92,5 @@ export default {
   roundMoney,
   computeRequiredCpoAmount,
   computeRequiredCpoFromBidAmounts,
+  computeMinimumBidFromReserve,
 };

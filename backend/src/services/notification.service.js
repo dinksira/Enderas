@@ -355,14 +355,24 @@ export async function sendCpoRejected(userId, rejectionReason) {
   });
 }
 
-export async function sendWinnerAnnouncement(userId, auctionId, auctionTitle = null) {
+export async function sendWinnerAnnouncement(
+  userId,
+  auctionId,
+  auctionTitle = null,
+  { lotLabel = null, bidAmount = null } = {},
+) {
   const title = auctionTitle?.trim() || 'an auction';
+  const lotCopy = lotLabel ? ` for ${lotLabel}` : '';
+  const amountCopy = bidAmount != null
+    ? ` with a winning bid of ${new Intl.NumberFormat('en-ET').format(Number(bidAmount))} ETB`
+    : '';
+
   return createInAppNotification({
     userId,
     type: 'winner_announcement',
-    title: 'Auction Winner',
-    message: `Congratulations! You have been selected as the winning bidder for ${title}.`,
-    metadata: { auctionId, auctionTitle },
+    title: 'You won the auction',
+    message: `Congratulations! You are the highest bidder${lotCopy} on "${title}"${amountCopy}.`,
+    metadata: { auctionId, auctionTitle, lotLabel, bidAmount },
   });
 }
 

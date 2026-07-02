@@ -1,14 +1,31 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from './Button.jsx';
 import { fileUploadService } from '../services/file-upload.service.js';
 
-export function FileUpload({ onUpload, folder = 'default', accept = 'image/*', label, disabled = false }) {
+function resolveUploadFileUrl(result) {
+  return String(result?.fileUrl || result?.url || '').trim();
+}
+
+export function FileUpload({
+  onUpload,
+  folder = 'default',
+  accept = 'image/*',
+  label,
+  disabled = false,
+  resetKey,
+}) {
   const { t } = useTranslation();
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [uploadedUrl, setUploadedUrl] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  useEffect(() => {
+    setUploadedUrl(null);
+    setError(null);
+    setIsUploading(false);
+  }, [resetKey]);
 
   const handleFile = useCallback(async (file) => {
     if (!file) return;
@@ -16,8 +33,9 @@ export function FileUpload({ onUpload, folder = 'default', accept = 'image/*', l
     setError(null);
     try {
       const result = await fileUploadService.uploadFile(file, folder);
-      setUploadedUrl(result.fileUrl);
-      onUpload?.(result);
+      const fileUrl = resolveUploadFileUrl(result);
+      setUploadedUrl(fileUrl || null);
+      onUpload?.({ ...result, fileUrl });
     } catch (err) {
       setError(err.message || t('common.uploadFailed'));
     } finally {

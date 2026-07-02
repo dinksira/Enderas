@@ -1,4 +1,4 @@
-import { ENV } from '../config/env.js';
+import { ENV } from '../api/env.js';
 
 /**
  * Normalize upload URLs returned by the API to match the static mount at /api/uploads.

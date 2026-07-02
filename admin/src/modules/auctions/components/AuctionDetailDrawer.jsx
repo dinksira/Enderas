@@ -13,7 +13,7 @@ import {
   getWinnerStatusVariant,
 } from '@enderass/shared/utils';
 import { validateAuctionStep, AUCTION_STEPS } from '../utils/auction-form-utils.js';
-import { formatEtbAmount, normalizeAuctionStatus, statusPillClass } from '@enderass/shared/utils';
+import { formatEtbAmount, normalizeAuctionStatus, resolveMediaUrl, statusPillClass } from '@enderass/shared/utils';
 import { AUCTION_CATEGORY_KEYS, buildEditFormFromAuction, buildImagesOnlyUpdatePayload, buildUpdatePayload, canEditAuction, formatFileSize, isImagesOnlyAuctionEdit } from '../utils/auction-drawer-utils.js';
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp';
 const PDF_ACCEPT = 'application/pdf';
