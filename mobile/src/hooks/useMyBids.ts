@@ -40,7 +40,11 @@ export function useMyBids(): UseMyBidsResult {
   }, []);
 
   useEffect(() => {
-    refresh();
+    const timer = setTimeout(() => {
+      void refresh();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [refresh]);
 
   const pullRefresh = useCallback(() => refresh(true), [refresh]);

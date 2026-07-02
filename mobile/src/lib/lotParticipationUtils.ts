@@ -54,7 +54,9 @@ export function buildLotParticipationRows(
 
   const selectedLotIds = new Set<string>([
     ...(participation.cpo?.selectedAuctionAssetIds ?? []),
-    ...(participation.lotParticipation?.filter((lot) => lot.selected).map((lot) => lot.id) ?? []),
+    ...((participation.lotParticipation ?? [])
+      .filter((lot) => lot.selected)
+      .map((lot) => lot.id) ?? []),
     ...bidByLotId.keys(),
     ...lockedDraftByLotId.keys(),
   ]);

@@ -42,26 +42,28 @@ export function CpoUploadModal({ visible, cpoAmount, submitting = false, onClose
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start();
-    } else {
-      setReceipt(undefined);
     }
   }, [visible, anim]);
 
   const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] });
+  const handleClose = () => {
+    setReceipt(undefined);
+    onClose();
+  };
 
   const handleSubmit = async () => {
     if (!receipt || submitting) return;
     try {
       await onSubmit({ receiptUri: receipt.uri, receiptName: receipt.name });
-      onClose();
+      handleClose();
     } catch {
       // Parent surfaces errors; keep modal open for retry.
     }
   };
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <View style={[styles.overlay, { backgroundColor: colors.scrim }]}>
           <TouchableWithoutFeedback>
             <Animated.View
@@ -97,7 +99,7 @@ export function CpoUploadModal({ visible, cpoAmount, submitting = false, onClose
 
               <View style={styles.actions}>
                 <View style={styles.actionButton}>
-                  <GoldButton label={t('common.cancel')} variant="outline" onPress={onClose} compact />
+                  <GoldButton label={t('common.cancel')} variant="outline" onPress={handleClose} compact />
                 </View>
                 <View style={styles.actionButton}>
                   <GoldButton
@@ -110,7 +112,7 @@ export function CpoUploadModal({ visible, cpoAmount, submitting = false, onClose
               </View>
 
               <Pressable
-                onPress={onClose}
+                onPress={handleClose}
                 hitSlop={12}
                 style={({ pressed }) => [styles.closeButton, { opacity: pressed ? 0.7 : 1 }]}
               >

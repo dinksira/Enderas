@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '@/lib/appStore';
+import { useAuctionCountdown } from '@/lib/auctionCountdown';
 import { resolveMediaUrl } from '@/lib/media-utils';
 import { getCategoryTheme } from '@/theme/categoryColors';
 import { toneToStatus, type UiTone } from '@/theme/statusTones';
@@ -49,12 +50,15 @@ function BrowseAuctionCardImpl({ auction, onPress, compact }: BrowseAuctionCardP
   const categoryLabel = t(`dashboard.categories.${auction.category}`, {
     defaultValue: auction.category,
   });
+  const { shortLabel, accentLabel, urgency, expired } = useAuctionCountdown(
+    auction.endDate,
+    t('bids.ended'),
+  );
 
   const thumbHeight = compact ? 96 : 140;
   const bodyPadding = compact ? Spacing.sm : Spacing.sm2;
   const titleLines = compact ? 1 : 2;
   const descLines = compact ? 1 : 2;
-
   return (
     <PressableScale
       onPress={onPress}
@@ -134,10 +138,30 @@ function BrowseAuctionCardImpl({ auction, onPress, compact }: BrowseAuctionCardP
 
           <View style={[styles.dateRow, { borderTopColor: colors.divider }]}>
             <Text style={[Typography.microCaps, { color: colors.textMuted }]}>
-              {t('dashboard.browse.ends')}
+              {expired ? t('dashboard.browse.ends') : 'Ends in'}
             </Text>
-            <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '800' }]}>
-              {auction.endingDate}
+            <Text
+              style={[
+                compact ? Typography.bodyMedium : Typography.cardTitle,
+                styles.countdownValue,
+                {
+                  color: expired ? colors.textMuted : urgency === 'critical' ? colors.danger.fg : colors.cream,
+                  fontWeight: '800',
+                },
+              ]}
+            >
+              {shortLabel}
+            </Text>
+            <Text
+              style={[
+                Typography.caption,
+                styles.countdownSupport,
+                {
+                  color: expired ? colors.textMuted : urgency === 'critical' ? colors.danger.fg : colors.textSecondary,
+                },
+              ]}
+            >
+              {accentLabel}
             </Text>
           </View>
         </View>
@@ -210,6 +234,13 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xs2,
     marginTop: Spacing.xxs,
     gap: Spacing.xxs,
+  },
+  countdownValue: {
+    fontVariant: ['tabular-nums'],
+    letterSpacing: 0.3,
+  },
+  countdownSupport: {
+    marginTop: -2,
   },
 });
 

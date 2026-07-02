@@ -24,6 +24,51 @@ interface UseAuctionParticipationResult {
   clearLotSelection: (lotId: string, draftId?: string) => Promise<void>;
 }
 
+function normalizeParticipationApi(
+  participation: AuctionParticipationApi,
+): AuctionParticipationApi {
+  return {
+    ...participation,
+    bids: Array.isArray(participation.bids) ? participation.bids : [],
+    bidDrafts: Array.isArray(participation.bidDrafts) ? participation.bidDrafts : [],
+    lotParticipation: Array.isArray(participation.lotParticipation)
+      ? participation.lotParticipation
+      : [],
+    payment: participation.payment ?? null,
+    cpo: participation.cpo
+      ? {
+          ...participation.cpo,
+          selectedAuctionAssetIds: Array.isArray(participation.cpo.selectedAuctionAssetIds)
+            ? participation.cpo.selectedAuctionAssetIds
+            : [],
+        }
+      : null,
+    gates: {
+      documentAccess: Boolean(participation.gates?.documentAccess),
+      cpoApproved: Boolean(participation.gates?.cpoApproved),
+      canSubmitPayment: Boolean(participation.gates?.canSubmitPayment),
+      canSubmitCpo: Boolean(participation.gates?.canSubmitCpo),
+      canSubmitCpoWithBids: Boolean(participation.gates?.canSubmitCpoWithBids),
+      canEditBidDrafts: Boolean(participation.gates?.canEditBidDrafts),
+      bidsLocked: Boolean(participation.gates?.bidsLocked),
+      canPlaceBid: Boolean(participation.gates?.canPlaceBid),
+      inBiddingWindow: Boolean(participation.gates?.inBiddingWindow),
+      biddingWindowStatus: participation.gates?.biddingWindowStatus,
+      paymentPending: Boolean(participation.gates?.paymentPending),
+      cpoPending: Boolean(participation.gates?.cpoPending),
+    },
+    flags: {
+      paymentApproved: Boolean(participation.flags?.paymentApproved),
+      paymentRejected: Boolean(participation.flags?.paymentRejected),
+      cpoApproved: Boolean(participation.flags?.cpoApproved),
+      cpoRejected: Boolean(participation.flags?.cpoRejected),
+      hasBid: Boolean(participation.flags?.hasBid),
+      allBidsSubmitted: Boolean(participation.flags?.allBidsSubmitted),
+      pendingLotCount: Number(participation.flags?.pendingLotCount ?? 0),
+    },
+  };
+}
+
 export function useAuctionParticipation(auctionId: string): UseAuctionParticipationResult {
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -34,8 +79,8 @@ export function useAuctionParticipation(auctionId: string): UseAuctionParticipat
   const [error, setError] = useState<string | null>(null);
 
   const kycVerified = isKycVerified(user);
-  const documentApproved = Boolean(participation?.gates.documentAccess);
-  const canBid = Boolean(documentApproved && kycVerified && participation?.gates.canEditBidDrafts);
+  const documentApproved = Boolean(participation?.gates?.documentAccess);
+  const canBid = Boolean(documentApproved && kycVerified && participation?.gates?.canEditBidDrafts);
 
   const lots = useMemo(() => auction?.lots ?? [], [auction?.lots]);
 
@@ -48,7 +93,8 @@ export function useAuctionParticipation(auctionId: string): UseAuctionParticipat
       setAuction(auctionData);
 
       if (accessToken) {
-        const participationData = await auctionApi.getParticipation(auctionId);
+        const rawParticipation = await auctionApi.getParticipation(auctionId);
+        const participationData = normalizeParticipationApi(rawParticipation);
         setParticipation(participationData);
       } else {
         setParticipation(null);
@@ -119,7 +165,7 @@ export function useAuctionParticipation(auctionId: string): UseAuctionParticipat
       if (draftId) {
         await bidDraftApi.deleteBidDraft(draftId);
       } else {
-        const existing = participation?.bidDrafts.find(
+        const existing = participation?.bidDrafts?.find(
           (draft) => draft.auctionAssetId === lotId && draft.status === 'draft',
         );
         if (existing?.id) {

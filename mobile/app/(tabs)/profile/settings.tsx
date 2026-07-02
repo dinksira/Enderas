@@ -12,7 +12,7 @@ import { glassElevation } from '@/lib/glassStyles';
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from '@/lib/i18n';
 import { ScreenShell } from '@/components/shell/ScreenShell';
 import { GlassCard } from '@/components/shell/GlassCard';
-import { Typography, Spacing, Radii } from '@/theme';
+import { Typography, Spacing } from '@/theme';
 
 function Row({
   icon,

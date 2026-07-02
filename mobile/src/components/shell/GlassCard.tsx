@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useRef } from 'react';
-import { Animated, Easing, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Easing } from 'react-native';
 
 import { GlassSurface, type GlassSurfaceProps } from './GlassSurface';
 

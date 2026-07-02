@@ -41,7 +41,11 @@ export function useAssetDetail(id: string | undefined): UseAssetDetailResult {
   }, [id]);
 
   useEffect(() => {
-    refresh();
+    const timer = setTimeout(() => {
+      void refresh();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [refresh]);
 
   return { asset, loading, error, refresh };

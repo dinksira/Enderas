@@ -25,13 +25,28 @@ export function resolveAuctionCategoryFilter(assetTypeOrCategory: string): strin
   return ASSET_TYPE_TO_AUCTION_CATEGORY[assetTypeOrCategory] ?? assetTypeOrCategory;
 }
 
+function addThousandsSeparators(value: number): string {
+  const [whole, fraction] = String(value).split('.');
+  const groupedWhole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return fraction ? `${groupedWhole}.${fraction}` : groupedWhole;
+}
+
 /**
  * Format an ETB amount with the en-ET locale grouping. Returns an em
  * dash for non-finite values so the layout doesn't shift to "NaN ETB".
  */
 export function formatEtbAmount(value: number): string {
-  if (!Number.isFinite(value)) return '—';
-  return `${new Intl.NumberFormat('en-ET').format(value)} ETB`;
+  if (typeof value !== 'number' || isNaN(value)) return '—';
+
+  try {
+    if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function') {
+      return `${new Intl.NumberFormat('en-ET').format(value)} ETB`;
+    }
+  } catch {
+    // Fall back to manual grouping below.
+  }
+
+  return `${addThousandsSeparators(value)} ETB`;
 }
 
 /**

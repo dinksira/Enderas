@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -77,13 +77,6 @@ export function KycFileUpload({
   const [error, setError] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
   const [localPreviewUri, setLocalPreviewUri] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!value) {
-      setMimeType(null);
-      setLocalPreviewUri(null);
-    }
-  }, [value]);
 
   const handlePick = async () => {
     if (disabled || uploading) return;

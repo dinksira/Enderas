@@ -68,7 +68,11 @@ const DEFAULT_THEME: CategoryTheme = {
  * then matched against the keys. If no exact match, we check whether the
  * input *contains* any known key (handles values like "Vehicle Auction").
  */
-export function getCategoryTheme(category: string): CategoryTheme {
+export function getCategoryTheme(category: string | null | undefined): CategoryTheme {
+  if (!category) {
+    return DEFAULT_THEME;
+  }
+
   const key = category.replace(/\s+/g, '').toLowerCase();
   const normalized = Object.keys(CATEGORY_THEMES).find(
     (k) => k.toLowerCase() === key || category.toLowerCase().includes(k.toLowerCase()),
