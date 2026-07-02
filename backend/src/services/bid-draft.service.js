@@ -6,7 +6,7 @@ import { Auction } from '../models/auction.model.js';
 import { AuctionAsset } from '../models/auctionAsset.model.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
-import { computeRequiredCpoFromBidAmounts } from '../utils/auction-lot.util.js';
+import { computeRequiredCpoFromBidAmounts, computeMinimumBidFromReserve } from '../utils/auction-lot.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { paymentService } from './payment.service.js';
 import { Cpo } from '../models/cpo.model.js';
@@ -106,16 +106,32 @@ async function assertCanEditBidDrafts(userId, auctionId) {
 }
 
 async function validateBidAmountForLot(auctionId, auctionAssetId, amount) {
+  const auction = await Auction.findOne({ where: { id: auctionId, deleted_at: null } });
+  if (!auction) {
+    throw new AppError('Auction not found', 404, 'AUCTION_NOT_FOUND');
+  }
+
+  const cpoPercentage = Number(auction.cpo_percentage);
   const lots = await AuctionAsset.findAll({
     where: { auction_id: auctionId },
     order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
   });
 
+  const assertMinimumBid = (reservePrice) => {
+    const minimumBid = computeMinimumBidFromReserve(reservePrice, cpoPercentage);
+    if (minimumBid > 0 && amount < minimumBid) {
+      throw new AppError(
+        `Bid must be at least ${minimumBid} (${cpoPercentage || 0}% of reserve ${reservePrice})`,
+        400,
+        'BID_BELOW_MINIMUM',
+      );
+    }
+  };
+
   if (lots.length === 0) {
-    const auction = await Auction.findByPk(auctionId);
     const reserve = Number(auction?.reserve_price);
-    if (Number.isFinite(reserve) && reserve > 0 && amount < reserve) {
-      throw new AppError(`Bid must be at least the reserve price (${reserve})`, 400, 'BID_BELOW_RESERVE');
+    if (Number.isFinite(reserve) && reserve > 0) {
+      assertMinimumBid(reserve);
     }
     return { lots, resolvedLotId: null };
   }
@@ -135,9 +151,7 @@ async function validateBidAmountForLot(auctionId, auctionAssetId, amount) {
   }
 
   const reservePrice = Number(lot.reserve_price);
-  if (amount < reservePrice) {
-    throw new AppError(`Bid must be at least the reserve price (${reservePrice})`, 400, 'BID_BELOW_RESERVE');
-  }
+  assertMinimumBid(reservePrice);
 
   return { lots, resolvedLotId };
 }

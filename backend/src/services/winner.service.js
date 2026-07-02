@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import { Winner, WINNER_STATUSES } from '../models/winner.model.js';
-import { Auction, Bid, User, Staff } from '../models/index.js';
+import { Auction, AuctionAsset, Bid, User, Staff } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
@@ -192,14 +192,62 @@ async function findWinnerOrThrow(id) {
   return winner;
 }
 
+async function findActiveWinnerForLot(auctionId, auctionAssetId = null) {
+  const where = {
+    auction_id: auctionId,
+    deleted_at: null,
+    status: { [Op.in]: ['pending_confirmation', 'confirmed'] },
+  };
+
+  if (auctionAssetId) {
+    where.auction_asset_id = auctionAssetId;
+  } else {
+    where.auction_asset_id = { [Op.is]: null };
+  }
+
+  return Winner.findOne({ where });
+}
+
 async function findActiveWinnerForAuction(auctionId) {
-  return Winner.findOne({
-    where: {
-      auction_id: auctionId,
-      deleted_at: null,
-      status: { [Op.in]: ['pending_confirmation', 'confirmed'] },
-    },
+  return findActiveWinnerForLot(auctionId, null);
+}
+
+async function resolveStaffIdForAutoSelection(auction, staffId) {
+  if (staffId) {
+    return staffId;
+  }
+
+  if (auction?.created_by_staff_id) {
+    return auction.created_by_staff_id;
+  }
+
+  const fallbackStaff = await Staff.findOne({
+    where: { is_active: true },
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id'],
+        where: { status: 'active', deleted_at: null },
+        required: true,
+      },
+    ],
+    order: [['created_at', 'ASC']],
+    attributes: ['id'],
   });
+
+  return fallbackStaff?.id ?? null;
+}
+
+async function markLotOutcome(auctionAssetId, outcomeStatus) {
+  if (!auctionAssetId) {
+    return;
+  }
+
+  await AuctionAsset.update(
+    { outcome_status: outcomeStatus },
+    { where: { id: auctionAssetId } },
+  );
 }
 
 async function createWinnerRecord({
@@ -207,12 +255,15 @@ async function createWinnerRecord({
   bidId,
   userId,
   staffId,
+  auctionAssetId = null,
   selectionMethod = 'manual',
   auctionTitle = null,
+  lotLabel = null,
+  bidAmount = null,
 }) {
-  const active = await findActiveWinnerForAuction(auctionId);
+  const active = await findActiveWinnerForLot(auctionId, auctionAssetId);
   if (active) {
-    throw new AppError('Winner already selected for this auction', 409, 'WINNER_EXISTS');
+    throw new AppError('Winner already selected for this auction lot', 409, 'WINNER_EXISTS');
   }
 
   const now = new Date();
@@ -220,6 +271,7 @@ async function createWinnerRecord({
     id: generateUuid(),
     auction_id: auctionId,
     bid_id: bidId,
+    auction_asset_id: auctionAssetId,
     user_id: userId,
     selected_by_staff_id: staffId,
     selected_at: now,
@@ -228,7 +280,10 @@ async function createWinnerRecord({
     notification_sent_at: now,
   });
 
-  await notificationService.sendWinnerAnnouncement(userId, auctionId, auctionTitle);
+  await notificationService.sendWinnerAnnouncement(userId, auctionId, auctionTitle, {
+    lotLabel,
+    bidAmount,
+  });
 
   return winner;
 }
@@ -358,8 +413,11 @@ export async function selectWinner({ auctionId, bidId }, staffId) {
     bidId,
     userId: bid.userId,
     staffId,
+    auctionAssetId: bid.auctionAssetId ?? null,
     selectionMethod: 'manual',
     auctionTitle: auction.title,
+    lotLabel: bid.auctionAsset?.lotLabel ?? bid.auctionAsset?.lot_label ?? null,
+    bidAmount: bid.amount,
   });
 
   await auditService.writeAuditLog({
@@ -377,68 +435,111 @@ export async function selectWinner({ auctionId, bidId }, staffId) {
 export async function autoSelectWinner(auctionId, staffId) {
   const auction = await Auction.findOne({ where: { id: auctionId, deleted_at: null } });
   if (!auction) {
-    return { winner: null, noReserveMet: false, noBids: true };
+    return { winner: null, winners: [], noReserveMet: false, noBids: true };
   }
 
-  const existing = await findActiveWinnerForAuction(auctionId);
-  if (existing) {
-    const detail = await getWinnerById(existing.id, 'super_admin');
-    return { winner: detail, noReserveMet: false, noBids: false, alreadySelected: true };
+  const resolvedStaffId = await resolveStaffIdForAutoSelection(auction, staffId);
+  if (!resolvedStaffId) {
+    return {
+      winner: null,
+      winners: [],
+      noReserveMet: false,
+      noBids: false,
+      staffRequired: true,
+    };
   }
 
-  const highestBid = await bidService.getHighestValidBid(auctionId);
-  if (!highestBid) {
+  const lots = await AuctionAsset.findAll({
+    where: { auction_id: auctionId },
+    order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
+  });
+
+  const targets = lots.length > 0
+    ? lots.map((lot) => ({
+        lotId: lot.id,
+        reserve: Number(lot.reserve_price),
+        lotLabel: lot.lot_label || null,
+      }))
+    : [{
+        lotId: null,
+        reserve: Number(auction.reserve_price),
+        lotLabel: null,
+      }];
+
+  const winners = [];
+  let sawBid = false;
+
+  for (const target of targets) {
+    const existing = await findActiveWinnerForLot(auctionId, target.lotId);
+    if (existing) {
+      winners.push(await getWinnerById(existing.id, 'super_admin'));
+      sawBid = true;
+      continue;
+    }
+
+    const highestBid = target.lotId
+      ? await bidService.getHighestValidBidForLot(auctionId, target.lotId)
+      : await bidService.getHighestValidBid(auctionId);
+
+    if (!highestBid) {
+      await markLotOutcome(target.lotId, 'unsold');
+      continue;
+    }
+
+    sawBid = true;
+    const amount = Number(highestBid.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      await markLotOutcome(target.lotId, 'unsold');
+      continue;
+    }
+
+    const winner = await createWinnerRecord({
+      auctionId,
+      bidId: highestBid.id,
+      userId: highestBid.user_id,
+      staffId: resolvedStaffId,
+      auctionAssetId: target.lotId,
+      selectionMethod: 'auto',
+      auctionTitle: auction.title,
+      lotLabel: target.lotLabel,
+      bidAmount: amount,
+    });
+
+    await markLotOutcome(target.lotId, 'sold');
+
     await auditService.writeAuditLog({
-      staffId: staffId ?? null,
+      staffId: resolvedStaffId,
+      userId: highestBid.user_id,
+      action: AUDIT_ACTIONS.CREATE,
+      entityType: 'Winner',
+      entityId: winner.id,
+      metadata: {
+        auctionId,
+        bidId: highestBid.id,
+        auctionAssetId: target.lotId,
+        auto: true,
+      },
+    });
+
+    winners.push(await getWinnerById(winner.id, 'super_admin'));
+  }
+
+  if (!sawBid) {
+    await auditService.writeAuditLog({
+      staffId: resolvedStaffId ?? null,
       action: AUDIT_ACTIONS.UPDATE,
       entityType: 'Auction',
       entityId: auctionId,
       metadata: { action: 'auto_select_winner', outcome: 'no_bids' },
     });
-    return { winner: null, noReserveMet: false, noBids: true };
   }
 
-  const reserve = Number(auction.reserve_price);
-  const amount = Number(highestBid.amount);
-  if (!Number.isFinite(amount) || amount < reserve) {
-    await auditService.writeAuditLog({
-      staffId: staffId ?? null,
-      action: AUDIT_ACTIONS.UPDATE,
-      entityType: 'Auction',
-      entityId: auctionId,
-      metadata: { action: 'auto_select_winner', outcome: 'no_reserve_met', reserve, highestBid: amount },
-    });
-    return { winner: null, noReserveMet: true, noBids: false };
-  }
-
-  let resolvedStaffId = staffId;
-  if (!resolvedStaffId) {
-    resolvedStaffId = auction.created_by_staff_id ?? null;
-  }
-  if (!resolvedStaffId) {
-    return { winner: null, noReserveMet: false, noBids: false, staffRequired: true };
-  }
-
-  const winner = await createWinnerRecord({
-    auctionId,
-    bidId: highestBid.id,
-    userId: highestBid.user_id,
-    staffId: resolvedStaffId,
-    selectionMethod: 'auto',
-    auctionTitle: auction.title,
-  });
-
-  await auditService.writeAuditLog({
-    staffId: resolvedStaffId,
-    userId: highestBid.user_id,
-    action: AUDIT_ACTIONS.CREATE,
-    entityType: 'Winner',
-    entityId: winner.id,
-    metadata: { auctionId, bidId: highestBid.id, auto: true },
-  });
-
-  const detail = await getWinnerById(winner.id, 'super_admin');
-  return { winner: detail, noReserveMet: false, noBids: false };
+  return {
+    winners,
+    winner: winners[0] ?? null,
+    noReserveMet: false,
+    noBids: !sawBid && winners.length === 0,
+  };
 }
 
 export async function confirmWinner(id, staffId) {
@@ -512,9 +613,10 @@ export async function replaceWinner(id, bidId, staffId) {
   }
 
   const auctionId = declinedWinner.auction_id;
-  const active = await findActiveWinnerForAuction(auctionId);
+  const auctionAssetId = declinedWinner.auction_asset_id ?? null;
+  const active = await findActiveWinnerForLot(auctionId, auctionAssetId);
   if (active) {
-    throw new AppError('An active winner already exists for this auction', 409, 'WINNER_EXISTS');
+    throw new AppError('An active winner already exists for this auction lot', 409, 'WINNER_EXISTS');
   }
 
   const bid = await bidService.getBidById(bidId, { isStaff: true });
@@ -534,8 +636,11 @@ export async function replaceWinner(id, bidId, staffId) {
     bidId,
     userId: bid.userId,
     staffId,
+    auctionAssetId: bid.auctionAssetId ?? auctionAssetId,
     selectionMethod: 'manual',
     auctionTitle: auction?.title,
+    lotLabel: bid.auctionAsset?.lotLabel ?? bid.auctionAsset?.lot_label ?? null,
+    bidAmount: bid.amount,
   });
 
   await auditService.writeAuditLog({

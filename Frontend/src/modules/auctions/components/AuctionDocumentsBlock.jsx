@@ -1,20 +1,28 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DocumentViewer } from '@enderass/shared/ui';
+import { getDocumentKind } from '@enderass/shared/utils';
 import { toLoadableMediaUrl } from '../../public/utils/landing-utils.js';
-
 import { resolveAuctionDocumentHref } from '../utils/auction-document-utils.js';
 
-function resolveDocument(doc, t) {
+function resolveDocumentEntry(doc, docIndex, auctionId, unlocked, t) {
   const rawUrl = typeof doc === 'string' ? doc : doc?.url || doc?.fileUrl || '';
-  const url = toLoadableMediaUrl(rawUrl) || rawUrl;
-  if (typeof doc === 'string') {
-    return { url, name: t('bidder.participation.document') };
-  }
-  return {
-    url,
-    name: doc?.name || doc?.fileName || t('bidder.participation.document'),
-  };
+  const name = typeof doc === 'string'
+    ? t('bidder.participation.document')
+    : (doc?.name || doc?.fileName || t('bidder.participation.document'));
+
+  const url = unlocked && auctionId
+    ? resolveAuctionDocumentHref({
+        auctionId,
+        doc,
+        docIndex,
+        unlocked: true,
+      })
+    : (toLoadableMediaUrl(rawUrl) || rawUrl);
+
+  const kind = getDocumentKind(name) || getDocumentKind(rawUrl) || (unlocked && auctionId ? 'pdf' : 'file');
+
+  return { url, name, docIndex, kind };
 }
 
 /**
@@ -34,9 +42,12 @@ export function AuctionDocumentsBlock({
   const { t } = useTranslation();
   const [viewerDoc, setViewerDoc] = useState(null);
 
-  const items = documents
-    .map((doc) => resolveDocument(doc, t))
-    .filter((doc) => Boolean(doc.url));
+  const items = useMemo(
+    () => documents
+      .map((doc, index) => resolveDocumentEntry(doc, index, auctionId, unlocked, t))
+      .filter((doc) => Boolean(doc.url)),
+    [auctionId, documents, unlocked, t],
+  );
 
   if (!unlocked) {
     return (
@@ -82,7 +93,7 @@ export function AuctionDocumentsBlock({
         ) : (
           <ul className="auction-documents__list">
             {items.map((doc) => (
-              <li key={doc.url} className="auction-documents__item">
+              <li key={`${doc.url}-${doc.docIndex}`} className="auction-documents__item">
                 <button
                   type="button"
                   className="auction-documents__link"
@@ -107,6 +118,7 @@ export function AuctionDocumentsBlock({
         <DocumentViewer
           url={viewerDoc.url}
           title={viewerDoc.name}
+          kind={viewerDoc.kind}
           onClose={() => setViewerDoc(null)}
         />
       )}

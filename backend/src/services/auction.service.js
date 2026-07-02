@@ -725,6 +725,49 @@ async function attachBidCounts(auctions) {
   return auctions.map((auction) => serializeAuction(auction, countMap.get(auction.id) || 0));
 }
 
+async function attachBrowseLotSummaries(items) {
+  if (!items.length) {
+    return items;
+  }
+
+  const auctionIds = items.map((item) => item.id);
+  const rows = await sequelize.query(
+    `
+    SELECT auction_id, COUNT(*) AS lot_count, COALESCE(SUM(reserve_price), 0) AS total_reserve
+    FROM auction_assets
+    WHERE auction_id IN (:auctionIds)
+    GROUP BY auction_id
+    `,
+    {
+      replacements: { auctionIds },
+      type: QueryTypes.SELECT,
+    },
+  );
+
+  const summaryMap = new Map(
+    rows.map((row) => [
+      row.auction_id,
+      {
+        lotCount: Number(row.lot_count) || 0,
+        totalReserve: Number(row.total_reserve) || 0,
+      },
+    ]),
+  );
+
+  return items.map((item) => {
+    const summary = summaryMap.get(item.id);
+    if (!summary) {
+      return item;
+    }
+
+    return {
+      ...item,
+      lotCount: summary.lotCount,
+      totalReservePrice: item.totalReservePrice ?? (summary.lotCount > 1 ? summary.totalReserve : item.totalReservePrice),
+    };
+  });
+}
+
 /**
  * @param {{ status?: string, search?: string }} [options]
  */
@@ -806,6 +849,7 @@ export async function listBrowseAuctions(options = {}, userId = null) {
   });
 
   let items = (await attachBidCounts(auctions)).map((row) => sanitizeBrowseAuction(row));
+  items = await attachBrowseLotSummaries(items);
   items = await attachUserParticipationSummaries(items, userId);
 
   return {

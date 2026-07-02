@@ -73,10 +73,10 @@ export function SubmitAssetForm({ onSuccess }) {
     try {
       const uploaded = await assetService.uploadFiles(selected, 'assets/documents');
       const docs = uploaded.map((entry, index) => ({
-        name: selected[index]?.name || entry.fileName || 'document',
-        url: entry.fileUrl,
-        size: selected[index]?.size || 0,
-      }));
+        name: selected[index]?.name || entry.fileName || entry.originalName || 'document',
+        url: entry.fileUrl || entry.url || '',
+        size: selected[index]?.size || entry.fileSize || 0,
+      })).filter((doc) => doc.url);
       setForm((current) => ({
         ...current,
         additionalDocuments: [...current.additionalDocuments, ...docs],
@@ -187,14 +187,14 @@ export function SubmitAssetForm({ onSuccess }) {
 
       <Input
         label={t('assets.form.fields.location')}
-        value={form.location}
+        value={form.location ?? ''}
         onChange={(event) => updateField('location', event.target.value)}
         disabled={loading}
       />
 
       <Input
         label={t('assets.form.fields.address')}
-        value={form.address}
+        value={form.address ?? ''}
         onChange={(event) => updateField('address', event.target.value)}
         disabled={loading}
       />
@@ -204,7 +204,10 @@ export function SubmitAssetForm({ onSuccess }) {
         folder="assets/ownership"
         accept={PDF_ACCEPT}
         disabled={loading || !form.assetType}
-        onUpload={(result) => updateField('ownershipDocumentUrl', result.fileUrl)}
+        onUpload={(result) => updateField(
+          'ownershipDocumentUrl',
+          result?.fileUrl || result?.url || '',
+        )}
       />
       {errors.ownershipDocumentUrl && (
         <span className="input-field__error" role="alert">

@@ -27,6 +27,11 @@ import {
 
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp';
 const PDF_ACCEPT = 'application/pdf';
+const OWNERSHIP_ACCEPT = 'application/pdf,image/jpeg,image/png,image/webp';
+
+function isOwnershipDocFile(file) {
+  return file?.type === 'application/pdf' || file?.type?.startsWith('image/');
+}
 
 function cloneInitialForm() {
   return {
@@ -437,7 +442,7 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
 
   const handleNewAssetDocumentSelect = (event, isOwnership) => {
     const selected = Array.from(event.target.files || []).filter(
-      (file) => file.type === 'application/pdf',
+      (file) => (isOwnership ? isOwnershipDocFile(file) : file.type === 'application/pdf'),
     );
     if (!selected.length) return;
 
@@ -488,7 +493,7 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
       const [uploadedPhotos, uploadedOwnershipDoc, uploadedAdditionalDocs] = await Promise.all([
         assetService.uploadFiles(newAssetForm.photoFiles, 'assets/photos'),
         newAssetForm.ownershipDocumentFile
-          ? assetService.uploadFiles([newAssetForm.ownershipDocumentFile], 'assets/documents')
+          ? assetService.uploadFiles([newAssetForm.ownershipDocumentFile], 'assets/ownership')
           : [],
         assetService.uploadFiles(
           newAssetForm.additionalDocuments.map(d => d.file),
@@ -499,12 +504,14 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
       // 2. Build asset payload
       const assetPayload = buildAssetPayload(newAssetForm);
       assetPayload.imageUrls = uploadedPhotos.map(file => file.fileUrl);
-      assetPayload.ownershipDocumentUrl = uploadedOwnershipDoc[0]?.fileUrl || '';
+      assetPayload.ownershipDocumentUrl = uploadedOwnershipDoc[0]?.fileUrl
+        || uploadedOwnershipDoc[0]?.url
+        || '';
       assetPayload.additionalDocuments = uploadedAdditionalDocs.map((file, index) => ({
         name: newAssetForm.additionalDocuments[index]?.name || file.originalName,
-        url: file.fileUrl,
+        url: file.fileUrl || file.url,
         size: file.fileSize || newAssetForm.additionalDocuments[index]?.size,
-      }));
+      })).filter((doc) => doc.url);
 
       // 3. Call staff create asset endpoint
       const response = await assetService.staffCreate({
@@ -1086,15 +1093,13 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
                       onDragOver={(event) => event.preventDefault()}
                       onDrop={(event) => {
                         event.preventDefault();
-                        const files = Array.from(event.dataTransfer.files || []).filter(
-                          (file) => file.type === 'application/pdf',
-                        );
+                        const files = Array.from(event.dataTransfer.files || []).filter(isOwnershipDocFile);
                         if (!files.length) return;
                         const syntheticEvent = { target: { files, value: '' } };
                         handleNewAssetDocumentSelect(syntheticEvent, true);
                       }}
                     >
-                      <p>Drag & drop PDF here or click to browse</p>
+                      <p>Drag & drop PDF or image here or click to browse</p>
                       <button
                         type="button"
                         className="auction-create-modal__browse-btn"
@@ -1106,7 +1111,7 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
                       <input
                         ref={newAssetOwnershipDocInputRef}
                         type="file"
-                        accept={PDF_ACCEPT}
+                        accept={OWNERSHIP_ACCEPT}
                         hidden
                         onChange={(e) => handleNewAssetDocumentSelect(e, true)}
                       />

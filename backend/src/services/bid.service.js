@@ -3,7 +3,7 @@ import { Bid } from '../models/bid.model.js';
 import { Auction, AuctionAsset, User } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
-import { normalizeLotIdList } from '../utils/auction-lot.util.js';
+import { normalizeLotIdList, computeMinimumBidFromReserve } from '../utils/auction-lot.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { cpoService } from './cpo.service.js';
 import { paymentService } from './payment.service.js';
@@ -206,8 +206,9 @@ export async function placeBid({ auctionId, auctionAssetId, amount }, userId) {
     }
 
     const reservePrice = Number(lot.reserve_price);
-    if (bidAmount < reservePrice) {
-      throw new AppError(`Bid must be at least the reserve price (${reservePrice})`, 400, 'BID_BELOW_RESERVE');
+    const minimumBid = computeMinimumBidFromReserve(reservePrice, auction.cpo_percentage);
+    if (minimumBid > 0 && bidAmount < minimumBid) {
+      throw new AppError(`Bid must be at least ${minimumBid}`, 400, 'BID_BELOW_MINIMUM');
     }
 
     const existing = await Bid.findOne({
@@ -241,8 +242,9 @@ export async function placeBid({ auctionId, auctionAssetId, amount }, userId) {
   }
 
   const reservePrice = Number(auction.reserve_price);
-  if (bidAmount < reservePrice) {
-    throw new AppError(`Bid must be at least the reserve price (${reservePrice})`, 400, 'BID_BELOW_RESERVE');
+  const minimumBid = computeMinimumBidFromReserve(reservePrice, auction.cpo_percentage);
+  if (minimumBid > 0 && bidAmount < minimumBid) {
+    throw new AppError(`Bid must be at least ${minimumBid}`, 400, 'BID_BELOW_MINIMUM');
   }
 
   const existing = await Bid.findOne({ where: { auction_id: auctionId, user_id: userId } });
@@ -307,7 +309,20 @@ export async function invalidateBid(id, reason, staffId) {
 
 export async function getHighestValidBid(auctionId) {
   return Bid.findOne({
-    where: { auction_id: auctionId, is_valid: true, status: 'submitted' },
+    where: { auction_id: auctionId, is_valid: true, status: 'submitted', auction_asset_id: null },
+    order: [['amount', 'DESC'], ['submitted_at', 'ASC']],
+    include: bidInclude,
+  });
+}
+
+export async function getHighestValidBidForLot(auctionId, auctionAssetId) {
+  return Bid.findOne({
+    where: {
+      auction_id: auctionId,
+      auction_asset_id: auctionAssetId,
+      is_valid: true,
+      status: 'submitted',
+    },
     order: [['amount', 'DESC'], ['submitted_at', 'ASC']],
     include: bidInclude,
   });
@@ -321,6 +336,7 @@ export const bidService = Object.freeze({
   placeBid,
   invalidateBid,
   getHighestValidBid,
+  getHighestValidBidForLot,
 });
 
 export default bidService;

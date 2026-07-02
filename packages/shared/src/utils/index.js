@@ -19,3 +19,4 @@ export {
 } from './auction-utils.js';
 export { getCountdownParts, formatCountdown } from './countdown-utils.js';
 export { isPdfUrl, isImageUrl, getDocumentKind } from './document-utils.js';
+export { resolveMediaUrl } from './media-url.js';

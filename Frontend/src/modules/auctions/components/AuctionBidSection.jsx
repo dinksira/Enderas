@@ -1,6 +1,9 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlaceBidForm } from './PlaceBidForm.jsx';
+import { AuctionLotsPanel } from './AuctionLotsPanel.jsx';
 import { formatEtbAmount } from '@enderass/shared/utils';
+import { isMultiLotAuction } from '../utils/auction-lot-utils.js';
 
 function resolveWindowStatus(participation, auction) {
   const fromApi = participation?.gates?.biddingWindowStatus;
@@ -18,21 +21,40 @@ function resolveWindowStatus(participation, auction) {
   return 'open';
 }
 
+function getCpoPercentage(auction) {
+  return Number(auction?.cpoPercentage ?? auction?.cpo_percentage ?? 0) || null;
+}
+
 function getBidLots(participation, auction) {
+  const lots = auction?.lots || [];
+  const canEditBidDrafts = Boolean(participation?.gates?.canEditBidDrafts);
+
+  if (canEditBidDrafts && lots.length > 0) {
+    const draftByLotId = new Map(
+      (participation?.bidDrafts || [])
+        .filter((draft) => draft.auctionAssetId)
+        .map((draft) => [draft.auctionAssetId, draft]),
+    );
+
+    return lots.map((lot) => ({
+      ...lot,
+      draft: draftByLotId.get(lot.id) || null,
+    }));
+  }
+
   const lotParticipation = participation?.lotParticipation;
   if (Array.isArray(lotParticipation) && lotParticipation.length > 0) {
     return lotParticipation.filter((lot) => lot.selected);
   }
 
-  if (auction?.lots?.length === 1) {
-    return auction.lots;
+  if (lots.length === 1) {
+    return lots;
   }
 
   return [];
 }
 
 /**
- * Prominent bid entry — shown after payment approval so bidders can save bid amounts before CPO upload.
  * @param {{
  *   auction?: object|null,
  *   auctionId?: string|null,
@@ -47,21 +69,56 @@ export function AuctionBidSection({
   onSuccess,
 }) {
   const { t } = useTranslation();
+  const [selectedLotIds, setSelectedLotIds] = useState([]);
 
   const allBidsSubmitted = Boolean(participation?.flags?.allBidsSubmitted);
   const canEditBidDrafts = Boolean(participation?.gates?.canEditBidDrafts);
   const hasBidDrafts = Array.isArray(participation?.bidDrafts) && participation.bidDrafts.length > 0;
+
+  const draftLotIds = useMemo(
+    () => (participation?.bidDrafts || [])
+      .map((draft) => draft.auctionAssetId)
+      .filter(Boolean),
+    [participation?.bidDrafts],
+  );
+
+  useEffect(() => {
+    if (!draftLotIds.length) {
+      return;
+    }
+    setSelectedLotIds((current) => [...new Set([...current, ...draftLotIds])]);
+  }, [draftLotIds]);
+
+  const handleToggleLot = useCallback((lotId) => {
+    if (draftLotIds.includes(lotId)) {
+      return;
+    }
+    setSelectedLotIds((current) => (
+      current.includes(lotId)
+        ? current.filter((id) => id !== lotId)
+        : [...current, lotId]
+    ));
+  }, [draftLotIds]);
+
   if (!auctionId || (!canEditBidDrafts && !hasBidDrafts) || allBidsSubmitted) {
     return null;
   }
 
+  const cpoPercentage = getCpoPercentage(auction);
   const startLabel = auction?.startDateFormatted || auction?.startingDate || '—';
   const endLabel = auction?.endDateFormatted || auction?.endingDate || '—';
   const windowStatus = resolveWindowStatus(participation, auction);
   const bidLots = getBidLots(participation, auction);
-  const isMultiLot = bidLots.length > 1;
-  const pendingLots = bidLots.filter((lot) => !lot.bid && lot.canPlaceBid);
-  const submittedLots = bidLots.filter((lot) => lot.bid);
+  const isMultiLot = isMultiLotAuction({ ...auction, lots: bidLots });
+  const catalogLots = auction?.lots?.length ? auction.lots : bidLots;
+  const selectedSet = new Set(selectedLotIds);
+
+  const submittedLots = bidLots.filter((lot) => lot.draft || lot.bid);
+  const pendingLots = isMultiLot
+    ? bidLots.filter(
+        (lot) => selectedSet.has(lot.id) && !lot.draft && !lot.bid,
+      )
+    : bidLots.filter((lot) => !lot.draft && !lot.bid);
 
   const titleKey =
     windowStatus === 'open'
@@ -98,13 +155,26 @@ export function AuctionBidSection({
         </p>
       </header>
 
+      {isMultiLot && catalogLots.length > 1 && (
+        <AuctionLotsPanel
+          auction={auction}
+          lots={catalogLots}
+          bidDrafts={participation?.bidDrafts}
+          compact
+          showSelectHint
+          selectable
+          selectedLotIds={selectedLotIds}
+          onToggleLot={handleToggleLot}
+        />
+      )}
+
       {submittedLots.length > 0 && (
         <ul className="auction-bid-card__submitted" role="status">
           {submittedLots.map((lot) => (
             <li key={lot.id}>
               {t('bidder.participation.bidCard.lotBidSubmitted', {
                 lot: lot.lotLabel || lot.assetTitle,
-                amount: formatEtbAmount(lot.bid.amount),
+                amount: formatEtbAmount(lot.bid?.amount ?? lot.draft?.amount),
               })}
             </li>
           ))}
@@ -119,15 +189,21 @@ export function AuctionBidSection({
               auctionId={auctionId}
               auctionAssetId={lot.id}
               lotLabel={lot.lotLabel || lot.assetTitle}
-              reservePrice={lot.reservePrice}
+              reservePrice={lot.reservePrice ?? lot.reserve_price}
+              cpoPercentage={cpoPercentage}
               onSuccess={onSuccess}
             />
           ))}
         </div>
+      ) : canEditBidDrafts && isMultiLot && selectedLotIds.length === 0 ? (
+        <p className="auction-bid-card__waiting" role="status">
+          {t('bidder.browse.lots.selectToBid')}
+        </p>
       ) : canEditBidDrafts && !isMultiLot ? (
         <PlaceBidForm
           auctionId={auctionId}
           reservePrice={auction?.reservePrice ?? auction?.reserve}
+          cpoPercentage={cpoPercentage}
           onSuccess={onSuccess}
         />
       ) : (

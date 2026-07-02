@@ -177,11 +177,6 @@ function validateCreateAssetPayload(payload) {
   if (!String(payload.auctionConditions || '').trim()) {
     throw new AppError('Auction conditions are required', 400, 'AUCTION_CONDITIONS_REQUIRED');
   }
-
-  const additionalDocuments = normalizeAdditionalDocuments(payload.additionalDocuments);
-  if (!additionalDocuments.length) {
-    throw new AppError('At least one supporting PDF is required', 400, 'SUPPORTING_DOCS_REQUIRED');
-  }
 }
 
 function validateAssetPayload(payload, { requireOwnershipUrl = false } = {}) {

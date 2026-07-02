@@ -7,6 +7,7 @@ import { ModalCloseButton } from './ModalCloseButton.jsx';
  * @param {{
  *   url: string,
  *   title?: string,
+ *   kind?: 'image' | 'pdf' | 'file',
  *   onClose: () => void,
  *   openInNewTabLabel?: string,
  *   previewUnavailableLabel?: string,
@@ -15,12 +16,14 @@ import { ModalCloseButton } from './ModalCloseButton.jsx';
 export function DocumentViewer({
   url,
   title = 'Document',
+  kind: kindOverride,
   onClose,
   openInNewTabLabel,
   previewUnavailableLabel,
 }) {
   const { t } = useTranslation();
-  const kind = getDocumentKind(url);
+  const resolvedKind = kindOverride || getDocumentKind(url) || getDocumentKind(title);
+  const kind = resolvedKind || (url.includes('/documents/') && url.includes('/stream') ? 'pdf' : 'file');
 
   if (kind === 'image') {
     return <ImageViewer src={url} alt={title} onClose={onClose} />;
@@ -28,7 +31,7 @@ export function DocumentViewer({
 
   if (kind === 'pdf') {
     return (
-      <div className="kyc-modal-overlay" role="presentation" onClick={onClose}>
+      <div className="kyc-modal-overlay kyc-modal-overlay--document-viewer" role="presentation" onClick={onClose}>
         <div className="kyc-pdf-viewer" onClick={(event) => event.stopPropagation()}>
           <header className="kyc-pdf-viewer__header">
             <p className="document-viewer__title">{title}</p>

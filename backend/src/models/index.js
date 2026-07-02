@@ -110,6 +110,8 @@ Winner.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(Winner, { foreignKey: 'user_id', as: 'wins' });
 Winner.belongsTo(Staff, { foreignKey: 'selected_by_staff_id', as: 'selectedByStaff' });
 Staff.hasMany(Winner, { foreignKey: 'selected_by_staff_id', as: 'selectedWinners' });
+Winner.belongsTo(AuctionAsset, { foreignKey: 'auction_asset_id', as: 'auctionAsset' });
+AuctionAsset.hasMany(Winner, { foreignKey: 'auction_asset_id', as: 'winners' });
 
 export {
   User,

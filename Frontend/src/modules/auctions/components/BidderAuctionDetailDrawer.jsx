@@ -5,6 +5,7 @@ import { DashboardToast } from '../../../components/DashboardToast.jsx';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
 import { AuctionImageGallery } from './AuctionImageGallery.jsx';
 import { AuctionParticipationPanel } from './AuctionParticipationPanel.jsx';
+import { AuctionLotsPanel } from './AuctionLotsPanel.jsx';
 import { toLoadableMediaUrl } from '../../public/utils/landing-utils.js';
 import { DocumentPaymentModal } from './DocumentPaymentModal.jsx';
 import { CpoSubmitModal } from './CpoSubmitModal.jsx';
@@ -14,6 +15,7 @@ import {
   normalizeAuctionStatus,
   statusPillClass,
 } from '@enderass/shared/utils';
+import { isMultiLotAuction } from '../utils/auction-lot-utils.js';
 import {
   getParticipationStatusVariant,
   resolveParticipationStatus,
@@ -41,6 +43,7 @@ function normalizeAuctionDetail(auctionData) {
     images: toArray(auctionData.images ?? auctionData.imageUrls ?? auctionData.image_urls),
     imageUrls: toArray(auctionData.images ?? auctionData.imageUrls ?? auctionData.image_urls),
     documents: toArray(auctionData.documents ?? auctionData.document_files ?? auctionData.documentFiles),
+    lots: toArray(auctionData.lots),
   };
 }
 
@@ -208,6 +211,9 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
 
   const displayStatus = normalizeAuctionStatus(auction?.status);
   const documents = auction?.documents ?? [];
+  const lots = auction?.lots ?? [];
+  const isMultiLot = isMultiLotAuction(auction);
+  const totalReserve = auction?.totalReservePrice ?? auction?.reservePrice;
   const documentAccess = Boolean(
     auction?.documentAccess || participation?.gates?.documentAccess || participation?.isRegisteredBidder,
   );
@@ -331,7 +337,53 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
                       label={t('bidder.participation.documentFee')}
                       value={formatEtbAmount(auction.documentFee)}
                     />
+                    {isMultiLot && lots.length > 1 && (
+                      <StatCard
+                        icon={(
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                          </svg>
+                        )}
+                        label={t('bidder.browse.lots.lotCount')}
+                        value={t('bidder.browse.lots.lotCountValue', { count: lots.length })}
+                      />
+                    )}
+                    {totalReserve > 0 && (
+                      <StatCard
+                        icon={(
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="1" x2="12" y2="23" />
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                          </svg>
+                        )}
+                        label={isMultiLot ? t('bidder.browse.lots.totalReserve') : t('bidder.browse.placeBid.reservePrice')}
+                        value={formatEtbAmount(totalReserve)}
+                      />
+                    )}
+                    {auction.cpoPercentage > 0 && (
+                      <StatCard
+                        icon={(
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 6v6l4 2" />
+                          </svg>
+                        )}
+                        label={t('bidder.browse.placeBid.cpoPercentage')}
+                        value={`${auction.cpoPercentage}%`}
+                      />
+                    )}
                   </section>
+
+                  {lots.length > 0 && (
+                    <AuctionLotsPanel
+                      auction={auction}
+                      lots={lots}
+                      bidDrafts={participation?.bidDrafts}
+                    />
+                  )}
 
                   <section className="bidder-detail__journey">
                     <AuctionParticipationPanel
