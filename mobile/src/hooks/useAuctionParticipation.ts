@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
+import { ApiError } from '@/services/api';
 import { auctionApi } from '@/services/auctionApi';
 import { bidDraftApi } from '@/services/bidDraftApi';
 import { isKycVerified } from '@/lib/auth-utils';
@@ -154,7 +155,11 @@ export function useAuctionParticipation(auctionId: string): UseAuctionParticipat
 
   const removeLotBid = useCallback(
     async (draftId: string) => {
-      await bidDraftApi.deleteBidDraft(draftId);
+      try {
+        await bidDraftApi.deleteBidDraft(draftId);
+      } catch (err) {
+        if (!(err instanceof ApiError && err.code === 'BID_DRAFT_NOT_FOUND')) throw err;
+      }
       await load();
     },
     [load],
@@ -162,14 +167,14 @@ export function useAuctionParticipation(auctionId: string): UseAuctionParticipat
 
   const clearLotSelection = useCallback(
     async (lotId: string, draftId?: string) => {
-      if (draftId) {
-        await bidDraftApi.deleteBidDraft(draftId);
-      } else {
-        const existing = participation?.bidDrafts?.find(
-          (draft) => draft.auctionAssetId === lotId && draft.status === 'draft',
-        );
-        if (existing?.id) {
-          await bidDraftApi.deleteBidDraft(existing.id);
+      const id = draftId ?? participation?.bidDrafts?.find(
+        (draft) => draft.auctionAssetId === lotId && draft.status === 'draft',
+      )?.id;
+      if (id) {
+        try {
+          await bidDraftApi.deleteBidDraft(id);
+        } catch (err) {
+          if (!(err instanceof ApiError && err.code === 'BID_DRAFT_NOT_FOUND')) throw err;
         }
       }
       await load();
