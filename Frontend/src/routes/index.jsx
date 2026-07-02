@@ -16,8 +16,6 @@ import { AccessDeniedView } from '../views/AccessDeniedView.jsx';
 import { MyAssetsView } from '../modules/assets/views/MyAssetsView.jsx';
 import { BrowseAuctionsView } from '../modules/auctions/views/BrowseAuctionsView.jsx';
 import { BidsRouteEntry } from '../modules/auctions/views/BidsRouteEntry.jsx';
-import { MyPaymentsView } from '../modules/payments/views/MyPaymentsView.jsx';
-import { MyCpoView } from '../modules/cpo-management/views/MyCpoView.jsx';
 import { MyBidsView } from '../modules/bid-management/views/MyBidsView.jsx';
 import { NotificationCenterView } from '../modules/notifications/views/NotificationCenterView.jsx';
 function guard(module, action = ACTIONS.READ, element) {
@@ -103,9 +101,9 @@ export function AppRoutes() {
         <Route path="my-bids" element={guard(MODULES.BIDS, ACTIONS.READ, <MyBidsView />)} />
         <Route path="winners" element={<Navigate to="/app/access-denied" replace />} />
         <Route path="payments" element={<Navigate to="/app/access-denied" replace />} />
-        <Route path="my-payments" element={guard(MODULES.PAYMENTS, ACTIONS.READ, <MyPaymentsView />)} />
+        <Route path="my-payments" element={<Navigate to={ROUTES.APP_NOTIFICATIONS} replace />} />
         <Route path="cpo" element={<Navigate to="/app/access-denied" replace />} />
-        <Route path="my-cpo" element={guard(MODULES.CPO, ACTIONS.READ, <MyCpoView />)} />
+        <Route path="my-cpo" element={<Navigate to={ROUTES.APP_NOTIFICATIONS} replace />} />
         <Route path="reports" element={<Navigate to="/app/access-denied" replace />} />
         <Route path="notifications" element={guard(MODULES.NOTIFICATIONS, ACTIONS.READ, <NotificationCenterView />)} />
         <Route path="profile" element={guard(MODULES.USERS, ACTIONS.READ, <UserProfileView />)} />

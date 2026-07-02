@@ -818,6 +818,7 @@
     "pendingBanner": "Complete your KYC verification to access all auction features.",
     "underReviewBanner": "Your KYC documents are under review. You will be notified once approved.",
     "rejectedBanner": "Your KYC was rejected. Please review the feedback and resubmit your documents.",
+    "completeKycToViewDetails": "Complete KYC to view details",
     "completeProfile": "COMPLETE PROFILE",
     "resubmit": "RESUBMIT DOCUMENTS",
     "verificationTitle": "Complete Your Profile",

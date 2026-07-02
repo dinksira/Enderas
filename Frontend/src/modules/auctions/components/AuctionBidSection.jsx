@@ -32,12 +32,11 @@ function getBidLots(participation, auction) {
 }
 
 /**
- * Prominent bid entry — shown when CPO is approved so bidders can find it easily.
+ * Prominent bid entry — shown after payment approval so bidders can save bid amounts before CPO upload.
  * @param {{
  *   auction?: object|null,
  *   auctionId?: string|null,
  *   participation?: object|null,
- *   canPlaceBid?: boolean,
  *   onSuccess?: () => void,
  * }} props
  */
@@ -45,13 +44,14 @@ export function AuctionBidSection({
   auction,
   auctionId,
   participation,
-  canPlaceBid = false,
   onSuccess,
 }) {
   const { t } = useTranslation();
 
   const allBidsSubmitted = Boolean(participation?.flags?.allBidsSubmitted);
-  if (!auctionId || !participation?.flags?.cpoApproved || allBidsSubmitted) {
+  const canEditBidDrafts = Boolean(participation?.gates?.canEditBidDrafts);
+  const hasBidDrafts = Array.isArray(participation?.bidDrafts) && participation.bidDrafts.length > 0;
+  if (!auctionId || (!canEditBidDrafts && !hasBidDrafts) || allBidsSubmitted) {
     return null;
   }
 
@@ -65,14 +65,14 @@ export function AuctionBidSection({
 
   const titleKey =
     windowStatus === 'open'
-      ? (isMultiLot ? 'bidder.participation.bidCard.titleOpenMulti' : 'bidder.participation.bidCard.titleOpen')
+      ? (isMultiLot ? 'bidder.participation.bidCard.titleDraftMulti' : 'bidder.participation.bidCard.titleDraft')
       : windowStatus === 'after'
         ? 'bidder.participation.bidCard.titleClosed'
         : 'bidder.participation.bidCard.titleWaiting';
 
   const leadKey =
     windowStatus === 'open'
-      ? (isMultiLot ? 'bidder.participation.bidCard.leadOpenMulti' : 'bidder.participation.bidCard.leadOpen')
+      ? (isMultiLot ? 'bidder.participation.bidCard.leadDraftMulti' : 'bidder.participation.bidCard.leadDraft')
       : windowStatus === 'after'
         ? 'bidder.participation.bidCard.leadClosed'
         : 'bidder.participation.bidCard.leadWaiting';
@@ -111,7 +111,7 @@ export function AuctionBidSection({
         </ul>
       )}
 
-      {canPlaceBid && pendingLots.length > 0 ? (
+      {canEditBidDrafts && pendingLots.length > 0 ? (
         <div className="auction-bid-card__forms">
           {pendingLots.map((lot) => (
             <PlaceBidForm
@@ -124,7 +124,7 @@ export function AuctionBidSection({
             />
           ))}
         </div>
-      ) : canPlaceBid && !isMultiLot ? (
+      ) : canEditBidDrafts && !isMultiLot ? (
         <PlaceBidForm
           auctionId={auctionId}
           reservePrice={auction?.reservePrice ?? auction?.reserve}

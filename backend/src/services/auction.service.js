@@ -670,7 +670,6 @@ function serializeAuction(auction, bidCount = 0, extras = {}) {
     auctionConditions: plain.auction_conditions,
     imageUrls: normalizeAssetImageUrls(plain.image_urls),
     documents: normalizeDocumentFiles(plain.document_files),
-    documents: plain.document_files || [],
     status: mapDisplayStatus(plain.status),
     dbStatus: plain.status,
     startDate: plain.start_date,
@@ -1035,7 +1034,7 @@ export async function getAuctionParticipation(auctionId, userId) {
     : null;
 
   if (paymentApproved && !cpo && hasEditableDrafts) {
-    participationStatus = 'registered';
+    participationStatus = 'ready_to_bid';
   } else if (cpoPending && (hasLockedDrafts || hasStoredJsonArray(cpo?.proposed_bids))) {
     participationStatus = 'cpo_pending';
   } else if (cpoRejected) {

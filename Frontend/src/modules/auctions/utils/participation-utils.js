@@ -1,4 +1,4 @@
-export const PARTICIPATION_STEPS = Object.freeze(['payment', 'cpo', 'bid']);
+export const PARTICIPATION_STEPS = Object.freeze(['payment', 'bid', 'cpo']);
 
 export const PARTICIPATION_STATUS_VARIANTS = Object.freeze({
   not_started: 'default',
@@ -31,19 +31,10 @@ export function resolveParticipationStatus(participation) {
   const { flags, bid, bids, payment, cpo } = participation;
   const hasAnyBid = Boolean(flags?.hasBid || bid || (Array.isArray(bids) && bids.length > 0));
 
-  if (flags?.allBidsSubmitted) return 'bid_submitted';
-  if (hasAnyBid && participation?.isMultiLot) {
-    if (participation?.gates?.canPlaceBid) return 'ready_to_bid';
-    return 'bid_submitted';
-  }
-  if (hasAnyBid) return 'bid_submitted';
-  if (flags?.cpoApproved || cpo?.status === 'approved') {
-    if (participation?.gates?.canPlaceBid) return 'ready_to_bid';
-    if (participation?.gates?.biddingWindowStatus === 'after') return 'bidding_closed';
-    return 'bidding_waiting';
-  }
+  if (flags?.allBidsSubmitted || hasAnyBid) return 'bid_submitted';
   if (cpo?.status === 'rejected' || flags?.cpoRejected) return 'cpo_rejected';
   if (cpo?.status === 'pending') return 'cpo_pending';
+  if (participation?.gates?.canSubmitCpoWithBids) return 'ready_to_bid';
   if (flags?.paymentApproved || participation?.isRegisteredBidder) return 'registered';
   if (payment?.status === 'rejected' || flags?.paymentRejected) return 'payment_rejected';
   if (payment?.status === 'pending') return 'payment_pending';
@@ -80,70 +71,67 @@ export function canShowCpoButton(participation, auction, { loading = false } = {
     return false;
   }
 
-  return Boolean(participation?.gates?.canSubmitCpo);
+  return Boolean(participation?.gates?.canSubmitCpoWithBids);
 }
 
 export function getParticipationStepState(participation) {
   if (!participation) {
-    return { currentStep: 'payment', payment: 'active', cpo: 'locked', bid: 'locked' };
+    return { currentStep: 'payment', payment: 'active', bid: 'locked', cpo: 'locked' };
   }
 
   const { flags, gates, bid, bids } = participation;
   const hasAnyBid = Boolean(flags?.hasBid || bid || (Array.isArray(bids) && bids.length > 0));
+  const hasBidDrafts = Array.isArray(participation?.bidDrafts) && participation.bidDrafts.length > 0;
   const allBidsSubmitted = Boolean(flags?.allBidsSubmitted);
 
   if (allBidsSubmitted || (hasAnyBid && !gates?.canPlaceBid && !participation?.isMultiLot)) {
-    return { currentStep: 'bid', payment: 'complete', cpo: 'complete', bid: 'complete' };
+    return { currentStep: 'cpo', payment: 'complete', bid: 'complete', cpo: 'complete' };
   }
 
   if (hasAnyBid && participation?.isMultiLot) {
     return {
-      currentStep: 'bid',
+      currentStep: 'cpo',
       payment: 'complete',
-      cpo: 'complete',
       bid: gates?.canPlaceBid ? 'active' : 'pending',
+      cpo: 'complete',
     };
   }
 
   if (hasAnyBid) {
-    return { currentStep: 'bid', payment: 'complete', cpo: 'complete', bid: 'complete' };
-  }
-
-  if (flags?.cpoApproved) {
-    return {
-      currentStep: 'bid',
-      payment: 'complete',
-      cpo: 'complete',
-      bid: gates?.canPlaceBid ? 'active' : 'pending',
-    };
+    return { currentStep: 'cpo', payment: 'complete', bid: 'complete', cpo: 'complete' };
   }
 
   if (participation.cpo?.status === 'pending') {
-    return { currentStep: 'cpo', payment: 'complete', cpo: 'pending', bid: 'locked' };
+    return {
+      currentStep: 'cpo',
+      payment: 'complete',
+      bid: 'complete',
+      cpo: 'pending',
+    };
   }
 
   if (flags?.paymentApproved || participation?.isRegisteredBidder) {
     return {
-      currentStep: 'cpo',
+      currentStep: hasBidDrafts ? 'cpo' : 'bid',
       payment: 'complete',
-      cpo: gates?.canSubmitCpo ? 'active' : 'pending',
-      bid: 'locked',
+      bid: gates?.canEditBidDrafts ? 'active' : (hasBidDrafts ? 'complete' : 'pending'),
+      cpo: gates?.canSubmitCpoWithBids ? 'active' : 'locked',
     };
   }
 
   if (participation.payment?.status === 'pending') {
-    return { currentStep: 'payment', payment: 'pending', cpo: 'locked', bid: 'locked' };
+    return { currentStep: 'payment', payment: 'pending', bid: 'locked', cpo: 'locked' };
   }
 
   if (participation.payment?.status === 'rejected' || flags?.paymentRejected) {
-    return { currentStep: 'payment', payment: 'rejected', cpo: 'locked', bid: 'locked' };
+    return { currentStep: 'payment', payment: 'rejected', bid: 'locked', cpo: 'locked' };
   }
 
   return {
     currentStep: 'payment',
     payment: gates?.canSubmitPayment ? 'active' : 'locked',
-    cpo: 'locked',
     bid: 'locked',
+    cpo: 'locked',
   };
 }
 
@@ -157,12 +145,8 @@ export function shouldShowBidSection(participation, displayStatus) {
   const status = String(displayStatus || '').toUpperCase();
   if (status !== 'ACTIVE') return false;
   if (participation?.flags?.allBidsSubmitted) return false;
-  if (!participation?.flags?.cpoApproved) return false;
-  if (participation?.isMultiLot) {
-    return Boolean(participation?.gates?.canPlaceBid || participation?.flags?.hasBid);
-  }
-  if (participation?.bid || participation?.flags?.hasBid) return false;
-  return true;
+  if (participation?.cpo?.status === 'pending' || participation?.flags?.cpoApproved) return false;
+  return Boolean(participation?.gates?.canEditBidDrafts || participation?.gates?.canSubmitCpoWithBids);
 }
 
 export function getBidStepHintKey(participation, auction) {
@@ -170,19 +154,12 @@ export function getBidStepHintKey(participation, auction) {
     return 'bidder.participation.bidLocked.notRegistered';
   }
 
-  if (participation.bid || participation.flags?.hasBid) {
-    if (participation.isMultiLot && participation.gates?.canPlaceBid) {
-      return null;
-    }
-    return null;
-  }
-
   if (!participation.flags?.paymentApproved && !participation.isRegisteredBidder) {
     return 'bidder.participation.bidLocked.notRegistered';
   }
 
-  if (!participation.cpo) {
-    return 'bidder.participation.bidLocked.submitCpo';
+  if (participation?.gates?.canEditBidDrafts || participation?.gates?.canSubmitCpoWithBids) {
+    return null;
   }
 
   if (participation.cpo?.status === 'pending') {
@@ -193,12 +170,9 @@ export function getBidStepHintKey(participation, auction) {
     return 'bidder.participation.bidLocked.cpoRejected';
   }
 
-  if (participation.flags?.cpoApproved && !participation.gates?.canPlaceBid) {
-    if (participation.gates?.biddingWindowStatus === 'after') {
-      return 'bidder.participation.bidLocked.windowEnded';
-    }
-    return 'bidder.participation.bidLocked.outsideWindow';
+  if (participation.flags?.cpoApproved) {
+    return null;
   }
 
-  return 'bidder.participation.bidLocked.submitCpo';
+  return 'bidder.participation.bidLocked.notRegistered';
 }

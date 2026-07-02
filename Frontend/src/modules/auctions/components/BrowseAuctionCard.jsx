@@ -22,9 +22,10 @@ function getCardParticipationLabel(status, t) {
  * @param {{
  *   auction: object,
  *   onOpen: (id: string) => void,
+ *   disabled?: boolean,
  * }} props
  */
-export function BrowseAuctionCard({ auction, onOpen }) {
+export function BrowseAuctionCard({ auction, onOpen, disabled = false }) {
   const { t } = useTranslation();
   const displayStatus = normalizeAuctionStatus(auction.status);
   const myStatus = resolveParticipationStatus(auction.myParticipation);
@@ -34,11 +35,13 @@ export function BrowseAuctionCard({ auction, onOpen }) {
   const isActive = displayStatus === 'ACTIVE';
 
   function handleOpen() {
-    onOpen(auction.id);
+    if (!disabled && onOpen) {
+      onOpen(auction.id);
+    }
   }
 
   function handleKeyDown(event) {
-    if (event.key === 'Enter' || event.key === ' ') {
+    if ((event.key === 'Enter' || event.key === ' ') && !disabled && onOpen) {
       event.preventDefault();
       handleOpen();
     }
@@ -46,12 +49,13 @@ export function BrowseAuctionCard({ auction, onOpen }) {
 
   return (
     <article
-      className="browse-auction-card"
+      className={`browse-auction-card${disabled ? ' browse-auction-card--disabled' : ''}`}
       onClick={handleOpen}
       onKeyDown={handleKeyDown}
-      tabIndex={0}
-      role="button"
-      aria-label={t('bidder.browse.openDetail', { title: auction.title })}
+      tabIndex={disabled ? -1 : 0}
+      role={disabled ? undefined : 'button'}
+      aria-disabled={disabled}
+      aria-label={disabled ? t('kyc.completeKycToViewDetails') : t('bidder.browse.openDetail', { title: auction.title })}
     >
       <AuctionCardMedia
         auction={auction}
@@ -104,10 +108,12 @@ export function BrowseAuctionCard({ auction, onOpen }) {
             />
           </div>
           <span className="browse-auction-card__cta">
-            {t('bidder.browse.view')}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            {disabled ? t('kyc.completeKycToViewDetails') : t('bidder.browse.view')}
+            {!disabled && (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
           </span>
         </div>
       </div>

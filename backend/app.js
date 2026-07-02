@@ -7,6 +7,8 @@ import apiRouter from './src/routes/index.js';
 import { errorMiddleware } from './src/middleware/error.middleware.js';
 import { env } from './src/config/env.config.js';
 
+console.log('=== APP.JS LOADED == env.isProduction', env.isProduction);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -32,18 +34,14 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
+app.use((req, res, next) => {
+  console.log(`[http] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(i18nMiddleware);
-
-if (!env.isProduction) {
-  app.use('/api', (req, res, next) => {
-    if (req.method !== 'GET' || req.path.startsWith('/auth/')) {
-      process.stdout.write(`[http] ${req.method} ${req.originalUrl}\n`);
-    }
-    next();
-  });
-}
 
 // Serve static files from uploads directory
 const uploadsDir = path.resolve(process.cwd(), env.storage.uploadDir);

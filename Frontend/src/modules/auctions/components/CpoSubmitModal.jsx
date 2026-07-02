@@ -4,59 +4,42 @@ import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { FileUpload } from '../../../components/FileUpload.jsx';
 import { cpoService } from '../../cpo-management/services/cpo-service.js';
 import { formatEtbAmount } from '@enderass/shared/utils';
-import { computeRequiredCpoAmount, isMultiLotAuction } from '../utils/auction-lot-utils.js';
+import { computeRequiredCpoFromBidAmounts } from '../utils/auction-lot-utils.js';
 
 /**
  * @param {{
  *   open: boolean,
  *   loading?: boolean,
  *   auction?: object|null,
+ *   participation?: object|null,
  *   onClose: () => void,
  *   onSubmit: () => Promise<void>,
  * }} props
  */
-export function CpoSubmitModal({ open, loading = false, auction, onClose, onSubmit }) {
+export function CpoSubmitModal({ open, loading = false, auction, participation, onClose, onSubmit }) {
   const { t } = useTranslation();
   const [documentUrl, setDocumentUrl] = useState('');
-  const [selectedLotIds, setSelectedLotIds] = useState([]);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const lots = useMemo(() => auction?.lots || [], [auction?.lots]);
-  const isMultiLot = isMultiLotAuction(auction);
   const cpoPercentage = Number(auction?.cpoPercentage ?? auction?.cpo_percentage ?? 0);
+  const draftBids = useMemo(() => participation?.bidDrafts || [], [participation?.bidDrafts]);
+  const selectedLotIds = useMemo(
+    () => draftBids.map((draft) => draft.auctionAssetId).filter(Boolean),
+    [draftBids],
+  );
 
   const requiredCpoAmount = useMemo(() => {
-    if (!lots.length) {
-      const reserve = Number(auction?.reservePrice ?? auction?.reserve_price ?? 0);
-      if (!Number.isFinite(reserve) || reserve <= 0 || !cpoPercentage) {
-        return 0;
-      }
-      return computeRequiredCpoAmount(
-        [{ id: 'legacy', reservePrice: reserve }],
-        ['legacy'],
-        cpoPercentage,
-      );
+    if (participation?.requiredCpoAmountPreview) {
+      return Number(participation.requiredCpoAmountPreview) || 0;
     }
-
-    const effectiveSelection = isMultiLot
-      ? selectedLotIds
-      : (selectedLotIds.length ? selectedLotIds : lots.length === 1 ? [lots[0].id] : []);
-
-    return computeRequiredCpoAmount(lots, effectiveSelection, cpoPercentage);
-  }, [auction, cpoPercentage, isMultiLot, lots, selectedLotIds]);
+    return computeRequiredCpoFromBidAmounts(draftBids, cpoPercentage);
+  }, [cpoPercentage, draftBids, participation?.requiredCpoAmountPreview]);
 
   if (!open) return null;
 
   const busy = loading || submitting;
-
-  const toggleLot = (lotId) => {
-    setSelectedLotIds((current) => (
-      current.includes(lotId)
-        ? current.filter((id) => id !== lotId)
-        : [...current, lotId]
-    ));
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -66,8 +49,8 @@ export function CpoSubmitModal({ open, loading = false, auction, onClose, onSubm
       return;
     }
 
-    if (isMultiLot && !selectedLotIds.length) {
-      setError(t('bidder.participation.cpoModal.lotsRequired'));
+    if (!draftBids.length) {
+      setError(t('bidder.participation.cpoModal.bidRequired'));
       return;
     }
 
@@ -77,11 +60,14 @@ export function CpoSubmitModal({ open, loading = false, auction, onClose, onSubm
       await cpoService.createCpo({
         auctionId: auction.id,
         documentUrl,
-        selectedAuctionAssetIds: isMultiLot ? selectedLotIds : undefined,
+        selectedAuctionAssetIds: selectedLotIds.length ? selectedLotIds : undefined,
+        proposedBids: draftBids.map((draft) => ({
+          auctionAssetId: draft.auctionAssetId || undefined,
+          amount: draft.amount,
+        })),
       });
       await onSubmit();
       setDocumentUrl('');
-      setSelectedLotIds([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('bidder.participation.cpoModal.failed'));
       throw err;
@@ -123,31 +109,26 @@ export function CpoSubmitModal({ open, loading = false, auction, onClose, onSubm
           )}
         </dl>
 
-        {isMultiLot && (
+        {draftBids.length > 0 && (
           <fieldset className="auction-lot-picker">
             <legend className="auction-lot-picker__legend">
-              {t('bidder.participation.cpoModal.selectLots')}
+              {t('bidder.participation.cpoModal.selectedBids')}
             </legend>
             <p className="auction-lot-picker__hint">
-              {t('bidder.participation.cpoModal.selectLotsHint', { percentage: cpoPercentage })}
+              {t('bidder.participation.cpoModal.selectedBidsHint', { percentage: cpoPercentage })}
             </p>
             <ul className="auction-lot-picker__list">
-              {lots.map((lot) => {
-                const checked = selectedLotIds.includes(lot.id);
-                const label = lot.lotLabel || lot.assetTitle || t('bidder.participation.cpoModal.lotFallback');
+              {draftBids.map((draft, index) => {
+                const lot = lots.find((entry) => entry.id === draft.auctionAssetId);
+                const label = lot?.lotLabel || lot?.assetTitle || t('bidder.participation.cpoModal.lotFallback', { index: index + 1 });
                 return (
-                  <li key={lot.id} className="auction-lot-picker__item">
-                    <label className="auction-lot-picker__label">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        disabled={busy}
-                        onChange={() => toggleLot(lot.id)}
-                      />
+                  <li key={draft.id || draft.auctionAssetId || index} className="auction-lot-picker__item">
+                    <div className="auction-lot-picker__label">
                       <span className="auction-lot-picker__copy">
                         <strong>{label}</strong>
+                        <span>{formatEtbAmount(draft.amount)}</span>
                       </span>
-                    </label>
+                    </div>
                   </li>
                 );
               })}

@@ -122,7 +122,6 @@ export function AuctionParticipationPanel({
   const isRegistered = Boolean(participation?.isRegisteredBidder || participation?.flags?.paymentApproved);
   const showDocuments = isRegistered || documentAccess;
   const bidLockedHintKey = stepState.bid === 'locked' ? getBidStepHintKey(participation, auction) : null;
-  const canPlaceBid = Boolean(participation?.gates?.canPlaceBid);
   const showBidSection = shouldShowBidSection(participation, auction?.status);
 
   return (
@@ -238,7 +237,7 @@ export function AuctionParticipationPanel({
 
               {stepKey === 'bid' && showBidSection && (
                 <div className="bidder-journey__bid">
-                  {canPlaceBid && (
+                  {participation?.gates?.canEditBidDrafts && (
                     <p className="bidder-journey__hint bidder-journey__hint--next" role="status">
                       {t('bidder.participation.bidCard.scrollHint')}
                     </p>
@@ -247,7 +246,6 @@ export function AuctionParticipationPanel({
                     auction={auction}
                     auctionId={auction?.id}
                     participation={participation}
-                    canPlaceBid={canPlaceBid}
                     onSuccess={onBidSuccess}
                   />
                 </div>

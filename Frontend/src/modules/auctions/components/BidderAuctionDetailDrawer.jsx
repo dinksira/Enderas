@@ -382,6 +382,7 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
       <CpoSubmitModal
         open={cpoModalOpen}
         auction={auction}
+        participation={participation}
         onClose={() => setCpoModalOpen(false)}
         onSubmit={handleCpoSuccess}
       />
