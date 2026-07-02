@@ -46,7 +46,11 @@ export function AuthShell({
         <BackgroundOrbs />
         <View style={authStyles.keyboardAvoid}>
           <KeyboardAwareScrollView
-            contentContainerStyle={authStyles.scrollContent}
+            contentContainerStyle={
+              keyboardAware
+                ? authStyles.scrollContent
+                : [authStyles.scrollContent, authStyles.scrollContentTop]
+            }
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
@@ -69,11 +73,13 @@ export function AuthShell({
               {children}
             </Animated.View>
           </KeyboardAwareScrollView>
-          <KeyboardToolbar theme={toolbarTheme}>
-            <KeyboardToolbar.Prev />
-            <KeyboardToolbar.Next />
-            <KeyboardToolbar.Done />
-          </KeyboardToolbar>
+          {keyboardAware ? (
+            <KeyboardToolbar theme={toolbarTheme}>
+              <KeyboardToolbar.Prev />
+              <KeyboardToolbar.Next />
+              <KeyboardToolbar.Done />
+            </KeyboardToolbar>
+          ) : null}
         </View>
       </SafeAreaView>
     </View>

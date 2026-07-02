@@ -15,6 +15,10 @@ const otpInputStyle = {
   bottom: 0,
   color: 'transparent',
   backgroundColor: 'transparent',
+  // opacity:0 reliably hides the underlying native text on every platform.
+  // `color: transparent` alone still renders the value (in the default tiny
+  // font) on top of the first box on some Android/iOS builds.
+  opacity: 0,
 };
 
 export function OtpInput({

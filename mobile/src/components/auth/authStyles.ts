@@ -30,6 +30,14 @@ function createAuthStyles(colors: ThemeColors, isDark: boolean) {
       paddingHorizontal: 28,
       paddingVertical: 24,
     },
+    scrollContentTop: {
+      flexGrow: 1,
+      justifyContent: 'flex-start',
+      alignItems: 'center',
+      paddingHorizontal: 28,
+      paddingTop: 24,
+      paddingBottom: 24,
+    },
     titleAccent: {
       flexDirection: 'row',
       alignItems: 'center',
