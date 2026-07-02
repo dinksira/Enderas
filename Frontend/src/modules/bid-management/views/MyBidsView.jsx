@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AdminDataTable } from '../../../components/admin/AdminDataTable.jsx';
+import { useRegisterPageSearch } from '@enderass/shared/contexts';
 import { StatusPill } from '../../../components/admin/StatusPill.jsx';
+import { BidderRecordCard, BidderRecordCardGrid } from '../../../components/bidder/BidderRecordCard.jsx';
 import { formatEtbAmount } from '@enderass/shared/utils';
 import { BidDetailDrawer } from '../components/BidDetailDrawer.jsx';
 import { useMyBids } from '../hooks/use-bids.js';
@@ -9,23 +10,7 @@ import {
   BID_PAGE_SIZE,
   formatDate,
   getBidStatusVariant,
-  MY_BID_TABLE_COLUMNS,
 } from '../utils/bid-management-utils.js';
-
-function ViewActionButton({ label, onClick }) {
-  return (
-    <button type="button" className="dashboard-actions__btn" aria-label={label} onClick={onClick}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path
-          d="M12 5c4.632 0 8 5.878 8 7s-3.368 7-8 7-8-5.878-8-7 3.368-7 8-7z"
-          stroke="currentColor"
-          strokeWidth="1.8"
-        />
-        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
-      </svg>
-    </button>
-  );
-}
 
 export function MyBidsView() {
   const { t, i18n } = useTranslation();
@@ -33,6 +18,8 @@ export function MyBidsView() {
   const isAmharic = locale === 'am';
 
   const {
+    search,
+    setSearch,
     page,
     items: bids,
     pagination,
@@ -42,6 +29,12 @@ export function MyBidsView() {
     goToPrevPage,
     goToNextPage,
   } = useMyBids();
+
+  useRegisterPageSearch({
+    value: search,
+    onChange: setSearch,
+    placeholder: t('bids.myBids.searchPlaceholder'),
+  });
 
   const [selectedId, setSelectedId] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -64,12 +57,10 @@ export function MyBidsView() {
 
   return (
     <div className={`kyc-management-page ${isAmharic ? 'kyc-management-page--am' : ''}`}>
-      <AdminDataTable
+      <BidderRecordCardGrid
         loading={loading}
         error={error}
         onRetry={refetch}
-        columns={MY_BID_TABLE_COLUMNS}
-        getColumnLabel={(key) => t(`bids.myBids.table.headers.${key}`)}
         emptyMessage={t('bids.myBids.empty')}
         footerSummary={footerSummary}
         page={page}
@@ -77,47 +68,35 @@ export function MyBidsView() {
         onPrevPage={goToPrevPage}
         onNextPage={goToNextPage}
         showPagination
+        loadingLabel={t('admin.loading')}
+        errorLabel={error ? t('dashboard.table.error', { message: error }) : undefined}
       >
         {bids.map((row) => (
-          <tr
+          <BidderRecordCard
             key={row.id}
-            className="dashboard-table__row kyc-management-page__row"
-            onClick={() => openDrawer(row.id)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                openDrawer(row.id);
-              }
-            }}
-            tabIndex={0}
-            role="button"
-            aria-label={t('bids.myBids.openDetail', { name: row.auctionTitle })}
-          >
-            <td className="dashboard-table__cell dashboard-table__cell--strong">{row.auctionTitle || '—'}</td>
-            <td className="dashboard-table__cell dashboard-table__cell--strong">
-              {formatEtbAmount(row.amount)}
-            </td>
-            <td className="dashboard-table__cell">
+            title={row.auctionTitle || '—'}
+            metrics={[
+              {
+                label: t('bids.myBids.table.headers.amount'),
+                value: formatEtbAmount(row.amount),
+              },
+              {
+                label: t('bids.myBids.table.headers.submitted_at'),
+                value: formatDate(row.submittedAt, locale),
+              },
+            ]}
+            status={(
               <StatusPill
                 label={t(`bids.management.status.${row.status}`, { defaultValue: row.status })}
                 variant={getBidStatusVariant(row.status)}
               />
-            </td>
-            <td className="dashboard-table__cell">{formatDate(row.submittedAt, locale)}</td>
-            <td className="dashboard-table__cell">
-              <div className="dashboard-actions">
-                <ViewActionButton
-                  label={t('bids.myBids.viewAction')}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    openDrawer(row.id);
-                  }}
-                />
-              </div>
-            </td>
-          </tr>
+            )}
+            ctaLabel={t('bids.myBids.viewAction')}
+            onOpen={() => openDrawer(row.id)}
+            ariaLabel={t('bids.myBids.openDetail', { name: row.auctionTitle })}
+          />
         ))}
-      </AdminDataTable>
+      </BidderRecordCardGrid>
 
       <BidDetailDrawer bidId={selectedId} open={drawerOpen} onClose={closeDrawer} />
     </div>

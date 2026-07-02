@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../../config/routes.js';
 import { PublicLanguageToggle } from './PublicLanguageToggle.jsx';
-import enderasLogo from '../../../assets/images/logo2.png';
+import whiteLogo from '../../../assets/white_logo.svg';
 
 const NAV_ITEMS = [
   { key: 'auctions', href: '#featured-auctions' },
@@ -52,8 +52,8 @@ export function PublicHeader() {
       <div className="pub-header__inner">
         <Link to={ROUTES.LANDING} className="pub-header__brand" onClick={closeMenu}>
           <img
-            src={enderasLogo}
-            alt="Enderas Asset Management"
+            src={whiteLogo}
+            alt="Enderas"
             className="pub-header__logo"
           />
         </Link>

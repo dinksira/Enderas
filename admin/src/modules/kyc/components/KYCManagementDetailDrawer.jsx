@@ -1,4 +1,4 @@
-import { Button, ImageViewer } from '@enderass/shared/ui';
+import { Button, ImageViewer, ModalCloseButton } from '@enderass/shared/ui';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
@@ -361,9 +361,7 @@ export function KYCManagementDetailDrawer({
         <div className="kyc-modal-overlay" role="presentation" onClick={() => setViewerSrc(null)}>
           <div className="kyc-pdf-viewer" onClick={(event) => event.stopPropagation()}>
             <header className="kyc-pdf-viewer__header">
-              <button type="button" className="kyc-drawer__close" onClick={() => setViewerSrc(null)}>
-                ×
-              </button>
+              <ModalCloseButton onClick={() => setViewerSrc(null)} />
             </header>
             <iframe title={t('kyc.management.documentPreview')} src={viewerSrc} className="kyc-pdf-viewer__frame" />
           </div>

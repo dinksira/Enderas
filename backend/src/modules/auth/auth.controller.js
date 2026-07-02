@@ -4,6 +4,9 @@ import {
   register as registerUser,
   verifyOTP as verifyUserOTP,
   resendOTP as resendUserOTP,
+  requestPasswordReset,
+  resetPasswordWithOtp,
+  verifyPasswordResetOtpCode,
 } from './auth.service.js';
 import { sendSuccess } from '../../utils/response.util.js';
 import { InvalidCredentialsError, AppError } from '../../utils/error.util.js';
@@ -68,6 +71,9 @@ export async function register(req, res, next) {
       password,
       userType = 'individual',
       organizationName,
+      nationalIdNumber,
+      nationalId,
+      tinNumber,
     } = req.body;
 
     const result = await registerUser({
@@ -78,6 +84,9 @@ export async function register(req, res, next) {
       password,
       userType,
       organizationName,
+      nationalIdNumber,
+      nationalId,
+      tinNumber,
     });
 
     return sendSuccess(res, {
@@ -120,11 +129,54 @@ export async function resendOTP(req, res, next) {
   }
 }
 
+export async function forgotPassword(req, res, next) {
+  try {
+    const mobileNumber = req.body.mobileNumber ?? req.body.mobile_number;
+    const result = await requestPasswordReset(mobileNumber);
+
+    return sendSuccess(res, {
+      ...result,
+      message: 'If an account exists for this number, a reset code has been sent.',
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function resetPassword(req, res, next) {
+  try {
+    const mobileNumber = req.body.mobileNumber ?? req.body.mobile_number;
+    const { otp, newPassword } = req.body;
+
+    await resetPasswordWithOtp(mobileNumber, otp, newPassword);
+
+    return sendSuccess(res, { message: 'Password reset successful. You can sign in with your new password.' });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function verifyResetOtp(req, res, next) {
+  try {
+    const mobileNumber = req.body.mobileNumber ?? req.body.mobile_number;
+    const { otp } = req.body;
+
+    await verifyPasswordResetOtpCode(mobileNumber, otp);
+
+    return sendSuccess(res, { valid: true });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const authController = Object.freeze({
   login,
   register,
   verifyOTP,
   resendOTP,
+  forgotPassword,
+  resetPassword,
+  verifyResetOtp,
 });
 
 export default authController;

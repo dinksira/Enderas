@@ -36,6 +36,15 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(i18nMiddleware);
 
+if (!env.isProduction) {
+  app.use('/api', (req, res, next) => {
+    if (req.method !== 'GET' || req.path.startsWith('/auth/')) {
+      process.stdout.write(`[http] ${req.method} ${req.originalUrl}\n`);
+    }
+    next();
+  });
+}
+
 // Serve static files from uploads directory
 const uploadsDir = path.resolve(process.cwd(), env.storage.uploadDir);
 app.use('/api/uploads', express.static(uploadsDir));

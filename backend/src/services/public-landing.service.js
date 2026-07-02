@@ -9,6 +9,27 @@ import { enrichAuctionsWithPrimaryImages } from '../utils/auction-image.util.js'
 
 const FEATURED_LIMIT = 8;
 
+/**
+ * Strip sensitive pricing from anonymous landing page payloads.
+ * @param {object} auction
+ */
+function sanitizePublicLandingAuction(auction) {
+  if (!auction || typeof auction !== 'object') {
+    return auction;
+  }
+
+  const {
+    reservePrice,
+    reserve,
+    totalReservePrice,
+    documentFee,
+    cpoPercentage,
+    ...publicFields
+  } = auction;
+
+  return publicFields;
+}
+
 async function countRegisteredBidders() {
   const bidderRole = await Role.findOne({
     where: { code: 'bidder', is_active: true },
@@ -108,7 +129,7 @@ export async function getPublicFeaturedAuctions(options = {}) {
   });
 
   return {
-    items: enriched.slice(0, limit),
+    items: enriched.slice(0, limit).map(sanitizePublicLandingAuction),
     total: items.length,
   };
 }
@@ -153,7 +174,7 @@ export async function getPublicLandingPage() {
     settingsService.getSetting('auction.default_currency'),
   ]);
 
-  const featuredAuctions = featured.items ?? [];
+  const featuredAuctions = (featured.items ?? []).map(sanitizePublicLandingAuction);
   const heroCandidates = featuredAuctions.filter((item) => item.imageUrl);
   const heroPool = heroCandidates.length > 0 ? heroCandidates : featuredAuctions;
   const heroLot = heroPool.length > 0

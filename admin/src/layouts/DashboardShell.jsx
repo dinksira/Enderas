@@ -9,9 +9,10 @@ import { PageSearchProvider, usePageSearch } from '../contexts/PageSearchContext
 import { notificationService } from '@enderass/shared/services';
 import iconSrc from '../assets/images/enderas_icon.svg';
 import { KYCStatusBanner } from '../components/KYCStatusBanner.jsx';
+import { AdminUnreadNotificationsBanner } from '../components/AdminUnreadNotificationsBanner.jsx';
 
 const PREFERRED_LANGUAGE_KEY = 'preferredLanguage';
-const NOTIFICATION_POLL_MS = 60_000;
+const NOTIFICATION_POLL_MS = 15_000;
 
 const ICON_MAP = {
   dashboard: (
@@ -308,6 +309,7 @@ function DashboardShellHeader({
 export function DashboardShell() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, clearSession } = useAuth();
   const { navigation, canRead, isAuthenticated } = usePermission();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -361,11 +363,26 @@ export function DashboardShell() {
     loadUnreadCount();
     const intervalId = window.setInterval(loadUnreadCount, NOTIFICATION_POLL_MS);
 
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        loadUnreadCount();
+      }
+    }
+
+    function handleWindowFocus() {
+      loadUnreadCount();
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
+
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
     };
-  }, [isAuthenticated, canRead]);
+  }, [isAuthenticated, canRead, location.pathname]);
 
   function handleLanguageChange(code) {
     i18n.changeLanguage(code);
@@ -462,6 +479,7 @@ export function DashboardShell() {
           />
 
           <div className="dashboard-shell__content">
+            <AdminUnreadNotificationsBanner unreadCount={unreadCount} />
             <KYCStatusBanner />
             <Outlet />
           </div>

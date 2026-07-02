@@ -1,4 +1,4 @@
-import { Button } from '@enderass/shared/ui';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 /**
@@ -42,6 +42,7 @@ export function CpoApproveModal({ open, loading = false, bidderName, onClose, on
         aria-labelledby="cpo-approve-title"
         onClick={(event) => event.stopPropagation()}
       >
+        <ModalCloseButton onClick={onClose} disabled={loading} />
         <h2 id="cpo-approve-title" className="kyc-modal__title">
           {t('cpo.management.approveModal.title')}
         </h2>

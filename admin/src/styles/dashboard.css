@@ -1207,6 +1207,7 @@
 .kyc-modal {
   width: min(480px, 100%);
   max-height: none;
+  position: relative;
   background: var(--dashboard-surface-bg);
   border: 1px solid var(--dashboard-border);
   border-radius: var(--semantic-radius-default);
@@ -1223,6 +1224,17 @@
   max-height: calc(100vh - (2 * var(--core-space-5)));
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.kyc-modal > .modal-close-btn {
+  position: absolute;
+  top: var(--core-space-3);
+  right: var(--core-space-3);
+  z-index: 1;
+}
+
+.kyc-modal:has(> .modal-close-btn) > .kyc-modal__title {
+  padding-right: 44px;
 }
 
 .kyc-modal__title {
@@ -1725,10 +1737,18 @@
 }
 
 .kyc-pdf-viewer__header {
+  position: relative;
   display: flex;
   justify-content: flex-end;
+  min-height: 44px;
   padding: var(--core-space-2) var(--core-space-3);
   border-bottom: 1px solid var(--dashboard-border);
+}
+
+.kyc-pdf-viewer__header .modal-close-btn {
+  position: absolute;
+  top: var(--core-space-2);
+  right: var(--core-space-3);
 }
 
 .kyc-pdf-viewer__frame {

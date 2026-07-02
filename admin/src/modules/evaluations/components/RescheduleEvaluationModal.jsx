@@ -1,4 +1,4 @@
-import { Button } from '@enderass/shared/ui';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 /**
@@ -88,6 +88,7 @@ export function RescheduleEvaluationModal({
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
+        <ModalCloseButton onClick={onClose} disabled={loading} />
         <h2 id="reschedule-evaluation-title" className="kyc-modal__title">
           {t(titleKey)}
         </h2>

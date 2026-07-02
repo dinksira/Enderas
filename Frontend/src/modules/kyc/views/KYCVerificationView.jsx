@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/Button.jsx';
 import { Input } from '../../../components/Input.jsx';
@@ -11,6 +11,7 @@ import { ROUTES } from '../../../config/routes.js';
 export function KYCVerificationView() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const setKYCStatus = useAuthStore((state) => state.setKYCStatus);
   const setSession = useAuthStore((state) => state.setSession);
@@ -35,6 +36,24 @@ export function KYCVerificationView() {
   useEffect(() => {
     checkKYCStatus();
   }, []);
+
+  useEffect(() => {
+    const prefill = location.state?.kycPrefill;
+    if (!prefill) return;
+
+    setFormData((current) => ({
+      ...current,
+      userType: prefill.userType || current.userType,
+      documentNumber: prefill.documentNumber || current.documentNumber,
+      tinNumber: prefill.tinNumber || current.tinNumber,
+    }));
+  }, [location.state]);
+
+  useEffect(() => {
+    if (user?.userType) {
+      setFormData((current) => ({ ...current, userType: user.userType }));
+    }
+  }, [user?.userType]);
 
   const checkKYCStatus = async () => {
     try {
@@ -62,9 +81,48 @@ export function KYCVerificationView() {
     event.preventDefault();
     setLoading(true);
     setErrors({});
+
+    const nextErrors = {};
+    if (formData.userType === 'individual') {
+      if (!formData.documentNumber.trim()) {
+        nextErrors.documentNumber = t('kyc.documentNumberRequired');
+      }
+      if (!formData.documentFrontUrl) {
+        nextErrors.documentFrontUrl = t('kyc.documentFrontRequired');
+      }
+    } else {
+      if (!formData.tinNumber.trim()) {
+        nextErrors.tinNumber = t('kyc.tinRequired');
+      }
+      if (!formData.tradeLicenseUrl) {
+        nextErrors.tradeLicenseUrl = t('kyc.tradeLicenseRequired');
+      }
+      if (!formData.tinCertificateUrl) {
+        nextErrors.tinCertificateUrl = t('kyc.tinCertificateRequired');
+      }
+      if (!formData.businessRegistrationUrl) {
+        nextErrors.businessRegistrationUrl = t('kyc.businessRegistrationRequired');
+      }
+    }
+
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
+      setLoading(false);
+      return;
+    }
+
     try {
       const submitFn = kycData?.status === 'rejected' ? kycService.resubmitKYC : kycService.submitKYC;
-      const result = await submitFn(formData);
+      const result = await submitFn({
+        userType: formData.userType,
+        documentNumber: formData.documentNumber,
+        documentFrontUrl: formData.documentFrontUrl,
+        documentBackUrl: formData.documentBackUrl,
+        tinNumber: formData.tinNumber,
+        tradeLicenseUrl: formData.tradeLicenseUrl,
+        tinCertificateUrl: formData.tinCertificateUrl,
+        businessRegistrationUrl: formData.businessRegistrationUrl,
+      });
       const kyc = result?.kyc || result;
       setKYCStatus(kyc?.status || 'pending', kyc);
       if (user) {

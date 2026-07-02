@@ -82,8 +82,6 @@ export function AuctionBidSection({
       ? 'bidder.participation.bidCard.closedHint'
       : 'bidder.participation.bidCard.waitingHint';
 
-  const singleReserve = auction?.reservePrice ?? auction?.reserve;
-
   return (
     <section className="auction-bid-card" aria-labelledby="auction-bid-card-title">
       <header className="auction-bid-card__header">
@@ -95,7 +93,7 @@ export function AuctionBidSection({
           {windowStatus === 'open'
             ? (isMultiLot
               ? t(leadKey, { count: pendingLots.length })
-              : t(leadKey, { amount: formatEtbAmount(singleReserve) }))
+              : t(leadKey))
             : t(leadKey, { start: startLabel, end: endLabel })}
         </p>
       </header>
@@ -129,7 +127,7 @@ export function AuctionBidSection({
       ) : canPlaceBid && !isMultiLot ? (
         <PlaceBidForm
           auctionId={auctionId}
-          reservePrice={singleReserve}
+          reservePrice={auction?.reservePrice ?? auction?.reserve}
           onSuccess={onSuccess}
         />
       ) : (

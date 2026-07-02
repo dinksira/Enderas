@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useRegisterPageSearch } from '@enderass/shared/contexts';
+import { BidderRecordCard, BidderRecordCardGrid } from '../../../components/bidder/BidderRecordCard.jsx';
 import { RequestAuctionWizardModal } from '../components/RequestAuctionWizardModal.jsx';
 import { AssetDetailDrawer } from '../components/AssetDetailDrawer.jsx';
 import { useMyAssets } from '../hooks/use-my-assets.js';
@@ -9,6 +11,7 @@ import { normalizeAssetStatus, statusPillClass } from '../utils/asset-form-utils
 export function MyAssetsView() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState('');
   const { records, loading, error, refetch } = useMyAssets();
   const [selectedId, setSelectedId] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -23,10 +26,38 @@ export function MyAssetsView() {
     }
   }, [searchParams, setSearchParams]);
 
+  useRegisterPageSearch({
+    value: search,
+    onChange: setSearch,
+    placeholder: t('assets.my.searchPlaceholder'),
+  });
+
   const sortedRecords = useMemo(
     () => [...records].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)),
     [records],
   );
+
+  const filteredRecords = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) {
+      return sortedRecords;
+    }
+
+    return sortedRecords.filter((record) => {
+      const haystack = [
+        record.title,
+        record.assetType,
+        record.category,
+        record.status,
+        record.location,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(term);
+    });
+  }, [search, sortedRecords]);
 
   const openDrawer = (id) => {
     setSelectedId(id);
@@ -54,99 +85,58 @@ export function MyAssetsView() {
         </button>
       </header>
 
-      <section className="dashboard-table-panel" aria-live="polite">
-        <div className="dashboard-table-scroll">
-          <table className="dashboard-table">
-            <thead>
-              <tr className="dashboard-table__head-row">
-                <th scope="col" className="dashboard-table__head-cell">
-                  {t('assets.table.headers.title')}
-                </th>
-                <th scope="col" className="dashboard-table__head-cell">
-                  {t('assets.table.headers.type')}
-                </th>
-                <th scope="col" className="dashboard-table__head-cell">
-                  {t('assets.table.headers.submitted')}
-                </th>
-                <th scope="col" className="dashboard-table__head-cell">
-                  {t('assets.table.headers.status')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={4} className="dashboard-table__empty">
-                    {t('dashboard.table.loading')}
-                  </td>
-                </tr>
-              )}
-
-              {!loading && error && (
-                <tr>
-                  <td colSpan={4} className="dashboard-table__empty" role="alert">
-                    {t('dashboard.table.error', { message: error })}
-                  </td>
-                </tr>
-              )}
-
-              {!loading && !error && sortedRecords.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="dashboard-table__empty">
-                    {t('assets.my.empty')}
-                  </td>
-                </tr>
-              )}
-
-              {!loading &&
-                !error &&
-                sortedRecords.map((record) => {
-                  const displayStatus = normalizeAssetStatus(record.status);
-                  return (
-                    <tr
-                      key={record.id}
-                      className="dashboard-table__row kyc-management-page__row"
-                      onClick={() => openDrawer(record.id)}
-                      tabIndex={0}
-                      role="button"
-                    >
-                      <td className="dashboard-table__cell dashboard-table__cell--strong">
-                        {record.title}
-                        {displayStatus === 'REJECTED' && record.rejectionReason && (
-                          <p className="asset-page__rejection-reason" role="note">
-                            {t('assets.my.rejectionReason', { reason: record.rejectionReason })}
-                          </p>
-                        )}
-                      </td>
-                      <td className="dashboard-table__cell dashboard-table__cell--muted">
-                        {t(`assets.types.${record.assetType}`, { defaultValue: record.assetType })}
-                      </td>
-                      <td className="dashboard-table__cell">
-                        {record.submittedAtFormatted || '—'}
-                      </td>
-                      <td className="dashboard-table__cell">
-                        <span className={`asset-status-pill ${statusPillClass(record.status)}`}>
-                          {t(`assets.status.${displayStatus.toLowerCase()}`, {
-                            defaultValue: displayStatus.replace(/_/g, ' '),
-                          })}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-        </div>
-
-        {!loading && !error && (
-          <div className="dashboard-table__footer">
-            {t('dashboard.table.footer_displayed', { count: sortedRecords.length })}
-            <button type="button" className="asset-page__refresh" onClick={refetch}>
-              {t('assets.my.refresh')}
-            </button>
-          </div>
+      <BidderRecordCardGrid
+        loading={loading}
+        error={error}
+        onRetry={refetch}
+        emptyMessage={t('assets.my.empty')}
+        footerSummary={t('dashboard.table.footer_displayed', { count: filteredRecords.length })}
+        footerActions={(
+          <button type="button" className="asset-page__refresh" onClick={refetch}>
+            {t('assets.my.refresh')}
+          </button>
         )}
-      </section>
+        loadingLabel={t('dashboard.table.loading')}
+        errorLabel={error ? t('dashboard.table.error', { message: error }) : undefined}
+      >
+        {filteredRecords.map((record) => {
+          const displayStatus = normalizeAssetStatus(record.status);
+          return (
+            <BidderRecordCard
+              key={record.id}
+              title={record.title}
+              eyebrow={t(`assets.types.${record.assetType}`, { defaultValue: record.assetType })}
+              metrics={[
+                {
+                  label: t('assets.table.headers.submitted'),
+                  value: record.submittedAtFormatted || '—',
+                },
+                {
+                  label: t('assets.table.headers.type'),
+                  value: t(`assets.types.${record.assetType}`, { defaultValue: record.assetType }),
+                },
+              ]}
+              status={(
+                <span className={`asset-status-pill ${statusPillClass(record.status)}`}>
+                  {t(`assets.status.${displayStatus.toLowerCase()}`, {
+                    defaultValue: displayStatus.replace(/_/g, ' '),
+                  })}
+                </span>
+              )}
+              footerExtra={
+                displayStatus === 'REJECTED' && record.rejectionReason ? (
+                  <p className="bidder-record-card__note" role="note">
+                    {t('assets.my.rejectionReason', { reason: record.rejectionReason })}
+                  </p>
+                ) : null
+              }
+              ctaLabel={t('bidder.browse.view')}
+              onOpen={() => openDrawer(record.id)}
+              ariaLabel={`${t('assets.my.drawer.title')}: ${record.title}`}
+            />
+          );
+        })}
+      </BidderRecordCardGrid>
 
       <AssetDetailDrawer
         assetId={selectedId}

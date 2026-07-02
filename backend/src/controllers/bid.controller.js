@@ -35,11 +35,12 @@ export async function listBids(req, res, next) {
 
 export async function listMyBids(req, res, next) {
   try {
-    const { page, limit, status } = req.query;
+    const { page, limit, status, search } = req.query;
     const result = await bidService.listMyBids(resolveUserId(req), {
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
       status: status || null,
+      search: search || null,
     });
     return sendSuccess(res, result);
   } catch (error) {

@@ -26,4 +26,9 @@ export function getPaymentStatusVariant(status) {
   }
 }
 
+export function isPdfUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  return url.startsWith('data:application/pdf') || /\.pdf($|\?)/i.test(url);
+}
+
 export { formatDate };

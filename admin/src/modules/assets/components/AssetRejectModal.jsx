@@ -1,4 +1,4 @@
-import { Button } from '@enderass/shared/ui';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 const MAX_REASON_LENGTH = 500;
@@ -53,6 +53,7 @@ export function AssetRejectModal({ open, loading = false, error = '', onConfirm,
         aria-labelledby="asset-reject-modal-title"
         onClick={(event) => event.stopPropagation()}
       >
+        <ModalCloseButton onClick={handleClose} disabled={loading} />
         <h2 id="asset-reject-modal-title" className="kyc-modal__title">
           {t('assets.review.rejectModalTitle')}
         </h2>

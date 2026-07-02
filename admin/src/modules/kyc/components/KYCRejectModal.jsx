@@ -1,4 +1,4 @@
-import { Button } from '@enderass/shared/ui';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 const REJECTION_REASON_KEYS = [
@@ -67,6 +67,7 @@ export function KYCRejectModal({ open, loading = false, onConfirm, onCancel }) {
         aria-labelledby="kyc-reject-modal-title"
         onClick={(event) => event.stopPropagation()}
       >
+        <ModalCloseButton onClick={handleClose} disabled={loading} />
         <h2 id="kyc-reject-modal-title" className="kyc-modal__title">
           {t('kyc.management.rejectModalTitle')}
         </h2>
