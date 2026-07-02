@@ -1,4 +1,4 @@
-import { Button, FileUpload } from '@enderass/shared/ui';
+import { Button, FileUpload, ModalCloseButton } from '@enderass/shared/ui';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fileUploadService } from '@enderass/shared/services';
@@ -134,6 +134,7 @@ export function EvaluationCompleteModal({
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
+        <ModalCloseButton onClick={onClose} disabled={busy} />
         <h2 id="complete-evaluation-title" className="kyc-modal__title">
           {t('evaluations.management.completeModal.title')}
         </h2>

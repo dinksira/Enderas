@@ -1,4 +1,4 @@
-import { Button } from '@enderass/shared/ui';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 /**
@@ -49,6 +49,7 @@ export function AuctionSuspendConfirmModal({
         aria-labelledby="auction-suspend-modal-title"
         onClick={(event) => event.stopPropagation()}
       >
+        <ModalCloseButton onClick={onCancel} disabled={loading} />
         <h2 id="auction-suspend-modal-title" className="kyc-modal__title">
           {t('auctions.confirmModals.suspend.title')}
         </h2>

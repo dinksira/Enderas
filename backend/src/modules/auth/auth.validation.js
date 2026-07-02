@@ -61,9 +61,14 @@ export function validateRegistrationBody(req, res, next) {
     password,
     userType = 'individual',
     organizationName,
+    nationalIdNumber,
+    nationalId,
+    tinNumber,
   } = req.body;
 
   const resolvedMobile = mobileNumber ?? phoneNumber;
+  const resolvedNationalId = (nationalIdNumber ?? nationalId ?? '').trim();
+  const resolvedTin = (tinNumber ?? '').trim();
   const errors = [];
 
   if (!resolvedMobile || typeof resolvedMobile !== 'string' || !resolvedMobile.trim()) {
@@ -78,8 +83,16 @@ export function validateRegistrationBody(req, res, next) {
     errors.push('firstName is required for individual accounts');
   }
 
+  if (userType === 'individual' && !resolvedNationalId) {
+    errors.push('nationalIdNumber is required for individual accounts');
+  }
+
   if (userType === 'organization' && !organizationName) {
     errors.push('organizationName is required for organization accounts');
+  }
+
+  if (userType === 'organization' && !resolvedTin) {
+    errors.push('tinNumber is required for organization accounts');
   }
 
   if (errors.length > 0) {
@@ -93,6 +106,8 @@ export function validateRegistrationBody(req, res, next) {
   }
 
   req.body.userType = userType;
+  req.body.nationalIdNumber = resolvedNationalId || null;
+  req.body.tinNumber = resolvedTin || null;
 
   return next();
 }
@@ -142,9 +157,55 @@ export function validateResendOTPBody(req, res, next) {
   return next();
 }
 
+export function validateForgotPasswordBody(req, res, next) {
+  return validateResendOTPBody(req, res, next);
+}
+
+export function validateVerifyResetOtpBody(req, res, next) {
+  return validateOTPBody(req, res, next);
+}
+
+export function validateResetPasswordBody(req, res, next) {
+  const mobileNumber = req.body?.mobileNumber ?? req.body?.mobile_number ?? req.body?.phoneNumber;
+  const { otp, newPassword, password } = req.body;
+  const resolvedPassword = newPassword ?? password;
+
+  const errors = [];
+
+  if (!mobileNumber || typeof mobileNumber !== 'string' || !mobileNumber.trim()) {
+    errors.push('mobileNumber is required');
+  }
+
+  if (!otp || typeof otp !== 'string' || otp.length !== 6) {
+    errors.push('valid 6-digit OTP is required');
+  }
+
+  if (!resolvedPassword || typeof resolvedPassword !== 'string' || resolvedPassword.length < 6) {
+    errors.push('password must be at least 6 characters');
+  }
+
+  if (errors.length > 0) {
+    return next(new AppError(errors.join('; '), 400, 'VALIDATION_ERROR'));
+  }
+
+  try {
+    assignNormalizedMobile(req, mobileNumber, ['mobileNumber', 'phoneNumber', 'mobile_number']);
+  } catch (error) {
+    return next(error);
+  }
+
+  req.body.otp = otp;
+  req.body.newPassword = resolvedPassword;
+
+  return next();
+}
+
 export default {
   validateLoginBody,
   validateRegistrationBody,
   validateOTPBody,
   validateResendOTPBody,
+  validateForgotPasswordBody,
+  validateVerifyResetOtpBody,
+  validateResetPasswordBody,
 };

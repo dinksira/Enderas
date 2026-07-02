@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../config/routes.js';
 import { resolvePageMeta } from '../config/navigation.config.js';
@@ -7,167 +7,65 @@ import { useAuth } from '../hooks/use-auth.js';
 import { usePermission } from '@enderass/shared/auth';
 import { PageSearchProvider, usePageSearch } from '../contexts/PageSearchContext.jsx';
 import { notificationService } from '@enderass/shared/services';
-import iconSrc from '../assets/images/enderas_icon.svg';
+import blueLogo from '../assets/blue_logo.svg';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { KYCStatusBanner } from '../components/KYCStatusBanner.jsx';
 
 const PREFERRED_LANGUAGE_KEY = 'preferredLanguage';
 const NOTIFICATION_POLL_MS = 60_000;
 
 const ICON_MAP = {
-  dashboard: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 7h16M6 7v12h12V7M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  auctions: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 7h16M6 7v12h12V7M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  'asset-request': (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19h14V9l-7-5-7 5v10z" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  assets: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19h14V9l-7-5-7 5v10z" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  'my-assets': (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19h14V9l-7-5-7 5v10z" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  'submit-asset': (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19h14V9l-7-5-7 5v10z" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  users: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M4 19c0-3 2.5-5 5-5s5 2 5 5" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="17" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M15 19c.3-2 1.8-3.5 4-3.5" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  staff: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 3l7 4v10l-7 4-7-4V7l7-4z" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  roles: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 3l7 4v10l-7 4-7-4V7l7-4z" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  payments: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="6" width="18" height="12" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  cpo: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  'bid-management': (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 18l8-8 4 4 4-6 4 4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  bids: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 18l8-8 4 4 4-6 4 4" stroke="currentColor" strokeWidth="1.8" />
+  'browse-auctions': (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M3 9.5L12 4l9 5.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 21V12h6v9" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M8 8.5h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   ),
   'my-bids': (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 18l8-8 4 4 4-6 4 4" stroke="currentColor" strokeWidth="1.8" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 18V8l4-2 4 2 4-2 4 2v10" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M8 12l3 3 5-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   'my-payments': (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="6" width="18" height="12" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.8" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="6" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M7 15h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   ),
   'my-cpo': (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M8 4h8l2 4v12H6V8l2-4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
-  'browse-auctions': (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 7h16M6 7v12h12V7M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  evaluations: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  documents: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  winners: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 18l8-8 4 4 4-6 4 4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  'analytics-report': (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19V9M12 19V5M19 19v-7" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  reports: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19V9M12 19V5M19 19v-7" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  kyc: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 1l9 5v12l-9 5-9-5V6l9-5z" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  ),
-  setting: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <path
-        d="M12 3v2M12 19v2M3 12h2M19 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-    </svg>
-  ),
-  settings: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <path
-        d="M12 3v2M12 19v2M3 12h2M19 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
+  'my-assets': (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 20V9l8-5 8 5v11" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 20v-6h6v6" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 9h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   ),
   notifications: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 4a5 5 0 00-5 5v3l-2 2h14l-2-2V9a5 5 0 00-5-5z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-      <path d="M10 20h4" stroke="currentColor" strokeWidth="1.8" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 4a4 4 0 00-4 4v2.5L6 14h12l-2-3.5V8a4 4 0 00-4-4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M10 17a2 2 0 004 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   ),
   profile: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.8" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  ),
+  dashboard: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="13" y="4" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="4" y="13" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="13" y="13" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
     </svg>
   ),
 };
@@ -197,9 +95,47 @@ function resolveInitialLanguage(user) {
 
 function NavIcon({ name }) {
   return (
-    <span className="dashboard-shell__nav-icon">
+    <span className="dashboard-shell__float-icon">
       {ICON_MAP[name] || ICON_MAP.dashboard}
     </span>
+  );
+}
+
+function SidebarTooltip({ label }) {
+  return <span className="dashboard-shell__tooltip">{label}</span>;
+}
+
+function LogoutConfirmModal({ open, onClose, onConfirm }) {
+  const { t } = useTranslation();
+
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <div className="kyc-modal-overlay" role="presentation" onClick={onClose}>
+      <div
+        className="kyc-modal dashboard-shell__logout-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="logout-confirm-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <ModalCloseButton onClick={onClose} />
+        <h2 id="logout-confirm-title" className="kyc-modal__title">
+          {t('dashboard.logoutModal.title')}
+        </h2>
+        <p className="kyc-modal__body">{t('dashboard.logoutModal.message')}</p>
+        <div className="kyc-modal__actions">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            {t('dashboard.logoutModal.cancel')}
+          </Button>
+          <Button type="button" variant="primary" onClick={onConfirm}>
+            {t('dashboard.logoutModal.confirm')}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -215,10 +151,6 @@ function DashboardShellHeader({
   const pageMeta = resolvePageMeta(location.pathname);
   const pageSearch = usePageSearch();
 
-  const showSearch = pageSearch.isRegistered
-    ? pageSearch.enabled
-    : pageMeta.searchEnabled;
-
   const searchPlaceholder = pageSearch.placeholder || t(pageMeta.searchPlaceholderKey);
   const searchValue = pageSearch.isRegistered ? pageSearch.value : '';
   const searchOnChange = pageSearch.onChange;
@@ -228,16 +160,26 @@ function DashboardShellHeader({
 
   return (
     <header className="dashboard-shell__header">
-      <div className="dashboard-shell__header-title-block">
-        <h1
-          className={`dashboard-shell__page-title${isAmharic ? ' dashboard-shell__page-title--am' : ''}`}
+      <div className="dashboard-shell__header-start">
+        <Link
+          to={ROUTES.LANDING}
+          className="dashboard-shell__header-brand"
+          aria-label={t('dashboard.brand.name')}
         >
-          {t(pageMeta.titleKey)}
-        </h1>
-        <p className="dashboard-shell__page-subtitle">{t(pageMeta.subtitleKey)}</p>
+          <img src={blueLogo} alt="" className="dashboard-shell__header-logo" />
+        </Link>
+
+        <div className="dashboard-shell__header-title-block">
+          <h1
+            className={`dashboard-shell__page-title${isAmharic ? ' dashboard-shell__page-title--am' : ''}`}
+          >
+            {t(pageMeta.titleKey)}
+          </h1>
+          <p className="dashboard-shell__page-subtitle">{t(pageMeta.subtitleKey)}</p>
+        </div>
       </div>
 
-      {showSearch && (
+      <div className="dashboard-shell__header-center">
         <div className="dashboard-shell__search-wrap">
           <input
             type="search"
@@ -254,9 +196,10 @@ function DashboardShellHeader({
             </svg>
           </span>
         </div>
-      )}
+      </div>
 
-      <div className="dashboard-shell__utilities">
+      <div className="dashboard-shell__header-end">
+        <div className="dashboard-shell__utilities">
         <div
           className="dashboard-shell__locale-toggle"
           role="group"
@@ -300,6 +243,7 @@ function DashboardShellHeader({
             </span>
           )}
         </button>
+        </div>
       </div>
     </header>
   );
@@ -310,8 +254,8 @@ export function DashboardShell() {
   const navigate = useNavigate();
   const { user, clearSession } = useAuth();
   const { navigation, canRead, isAuthenticated } = usePermission();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const activeLanguage = resolveLanguage(i18n.language);
   const isAmharic = activeLanguage === 'am';
@@ -377,7 +321,16 @@ export function DashboardShell() {
     }
   }
 
-  function handleLogout() {
+  function handleLogoutRequest() {
+    setLogoutModalOpen(true);
+  }
+
+  function handleLogoutCancel() {
+    setLogoutModalOpen(false);
+  }
+
+  function handleLogoutConfirm() {
+    setLogoutModalOpen(false);
     clearSession();
     navigate(ROUTES.HOME, { replace: true });
   }
@@ -391,67 +344,63 @@ export function DashboardShell() {
   }
 
   return (
-    <div className={`dashboard-shell${isAmharic ? ' dashboard-shell--am' : ''}${isSidebarCollapsed ? ' dashboard-shell--collapsed' : ''}`}>
-      <aside className="dashboard-shell__sidebar" aria-label={t('dashboard.a11y.admin_navigation')}>
-        <button
-          type="button"
-          className="dashboard-shell__toggle-btn"
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          aria-label={isSidebarCollapsed ? t('dashboard.a11y.expand_sidebar') : t('dashboard.a11y.collapse_sidebar')}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-
-        <div className="dashboard-shell__brand">
-          <img src={iconSrc} alt={t('dashboard.brand.name')} className="dashboard-shell__brand-icon" />
-          {!isSidebarCollapsed && (
-            <div className="dashboard-shell__brand-text">
-              <p className="dashboard-shell__brand-title">{t('dashboard.brand.name')}</p>
-              <p className="dashboard-shell__brand-subtitle">{t('dashboard.brand.systemSubtitle')}</p>
-            </div>
-          )}
+    <div
+      className={[
+        'dashboard-shell',
+        isAmharic ? 'dashboard-shell--am' : '',
+        'dashboard-shell--float-nav',
+      ].filter(Boolean).join(' ')}
+    >
+      <nav className="dashboard-shell__float-dock" aria-label={t('dashboard.a11y.main_navigation')}>
+        <div className="dashboard-shell__float-nav-list">
+          {navigation.map((item) => {
+            const navLabel = t(getNavLabelKey(item), item.label);
+            return (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                className={({ isActive }) =>
+                  `dashboard-shell__float-btn${isActive ? ' dashboard-shell__float-btn--active' : ''}`
+                }
+                aria-label={navLabel}
+              >
+                <NavIcon name={item.id} />
+                <SidebarTooltip label={navLabel} />
+              </NavLink>
+            );
+          })}
         </div>
 
-        <nav className="dashboard-shell__nav" aria-label={t('dashboard.a11y.main_navigation')}>
-          {navigation.map((item) => (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              className={({ isActive }) =>
-                `dashboard-shell__nav-link${isActive ? ' dashboard-shell__nav-link--active' : ''}`
-              }
-              title={t(getNavLabelKey(item), item.label)}
+        <div className="dashboard-shell__float-dock-bottom">
+          <div className="dashboard-shell__float-account">
+            <Link
+              to={ROUTES.APP_PROFILE}
+              className="dashboard-shell__float-btn dashboard-shell__float-btn--account"
+              aria-label={displayName}
             >
-              <NavIcon name={item.id} />
-              {!isSidebarCollapsed && <span>{t(getNavLabelKey(item), item.label)}</span>}
-            </NavLink>
-          ))}
-        </nav>
+              <span className="dashboard-shell__float-avatar" aria-hidden="true">{initials}</span>
+              <SidebarTooltip label={displayName} />
+            </Link>
 
-        <div className="dashboard-shell__footer">
-          {!isSidebarCollapsed && (
-            <div className="dashboard-shell__profile">
-              <div className="dashboard-shell__avatar" aria-hidden="true">
-                {initials}
-              </div>
-              <div>
-                <p className="dashboard-shell__profile-name">{displayName}</p>
-                <p className="dashboard-shell__profile-status">{t('dashboard.profile.full_access')}</p>
-              </div>
-            </div>
-          )}
-          <button type="button" className="dashboard-shell__logout" onClick={handleLogout}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M9 6l-6 6 6 6M3 12h14" stroke="currentColor" strokeWidth="1.8" />
-            </svg>
-            {!isSidebarCollapsed && <span>{t('dashboard.buttons.logout')}</span>}
-          </button>
+            <span className="dashboard-shell__float-account-divider" aria-hidden="true" />
+
+            <button
+              type="button"
+              className="dashboard-shell__float-btn dashboard-shell__float-btn--account dashboard-shell__float-btn--logout"
+              onClick={handleLogoutRequest}
+              aria-label={t('dashboard.buttons.logout')}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M10 7V6a2 2 0 012-2h6v16h-6a2 2 0 01-2-2v-1" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+                <path d="M14 12H4m0 0l3-3M4 12l3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <SidebarTooltip label={t('dashboard.buttons.logout')} />
+            </button>
+          </div>
         </div>
-      </aside>
+      </nav>
 
-      <div className="dashboard-shell__main">
+      <div className="dashboard-shell__main dashboard-shell__main--full">
         <PageSearchProvider>
           <DashboardShellHeader
             isAmharic={isAmharic}
@@ -467,6 +416,12 @@ export function DashboardShell() {
           </div>
         </PageSearchProvider>
       </div>
+
+      <LogoutConfirmModal
+        open={logoutModalOpen}
+        onClose={handleLogoutCancel}
+        onConfirm={handleLogoutConfirm}
+      />
     </div>
   );
 }

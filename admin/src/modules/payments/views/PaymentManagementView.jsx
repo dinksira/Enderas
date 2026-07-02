@@ -1,7 +1,8 @@
 import { AdminDataTable, StatusPill, ApproveConfirmModal } from '@enderass/shared/ui-admin';
 import { DashboardToast } from '@enderass/shared/ui';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { useRegisterPageSearch } from '../../../contexts/PageSearchContext.jsx';
 import { formatEtbAmount } from '@enderass/shared/utils';
 import { PaymentDetailDrawer } from '../components/PaymentDetailDrawer.jsx';
@@ -60,6 +61,7 @@ export function PaymentManagementView() {
 
   const [selectedId, setSelectedId] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [approveTarget, setApproveTarget] = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -80,6 +82,13 @@ export function PaymentManagementView() {
     setSelectedId(id);
     setDrawerOpen(true);
   };
+
+  useEffect(() => {
+    const paymentId = searchParams.get('paymentId');
+    if (!paymentId) return;
+    openDrawer(paymentId);
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const closeDrawer = () => {
     setDrawerOpen(false);

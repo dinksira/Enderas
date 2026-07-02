@@ -51,8 +51,8 @@ function revokePhotoPreviews(previews) {
 }
 
 /**
- * Multi-step auction request wizard for bidders and asset owners.
- * Supports queuing multiple assets before a single batch submission.
+ * Scrollable auction request wizard for bidders and asset owners.
+ * All form sections appear in one modal; supports queuing multiple assets before batch submission.
  * @param {{ open: boolean, onClose: () => void, onSuccess?: () => void }} props
  */
 export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
@@ -60,8 +60,20 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
   const navigate = useNavigate();
   const additionalInputRef = useRef(null);
   const photoInputRef = useRef(null);
+  const scrollBodyRef = useRef(null);
+  const detailsRef = useRef(null);
+  const locationRef = useRef(null);
+  const photosRef = useRef(null);
+  const documentsRef = useRef(null);
+  const reviewRef = useRef(null);
 
-  const [step, setStep] = useState(ASSET_REQUEST_STEPS.DETAILS);
+  const sectionRefs = useMemo(() => ({
+    [ASSET_REQUEST_STEPS.DETAILS]: detailsRef,
+    [ASSET_REQUEST_STEPS.LOCATION]: locationRef,
+    [ASSET_REQUEST_STEPS.PHOTOS]: photosRef,
+    [ASSET_REQUEST_STEPS.DOCUMENTS]: documentsRef,
+    [ASSET_REQUEST_STEPS.BATCH_REVIEW]: reviewRef,
+  }), []);
   const [form, setForm] = useState(cloneInitialForm);
   const [photoPreviews, setPhotoPreviews] = useState([]);
   const [assetQueue, setAssetQueue] = useState([]);
@@ -73,7 +85,6 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
   const [completed, setCompleted] = useState(false);
   const [submittedCount, setSubmittedCount] = useState(0);
 
-  const stepIndex = ASSET_REQUEST_STEP_ORDER.indexOf(step);
   const ownershipDocType = form.assetType ? getOwnershipDocType(form.assetType) : '';
   const ownershipDocLabelKey = ownershipDocType
     ? OWNERSHIP_DOC_LABEL_KEYS[ownershipDocType]
@@ -91,7 +102,6 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
 
   useEffect(() => {
     if (!open) {
-      setStep(ASSET_REQUEST_STEPS.DETAILS);
       setForm(cloneInitialForm());
       setPhotoPreviews((current) => {
         revokePhotoPreviews(current);
@@ -230,19 +240,17 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
     }));
   };
 
-  const goToStep = (targetStep) => {
-    setStep(targetStep);
-    setErrors({});
-    setSubmitError('');
+  const scrollToSection = (stepKey) => {
+    sectionRefs[stepKey]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const goToFirstErrorStep = (validationErrors) => {
+  const scrollToFirstErrorSection = (validationErrors) => {
     const firstErrorStep = ASSET_REQUEST_STEP_ORDER.find(
       (stepKey) => stepKey !== ASSET_REQUEST_STEPS.BATCH_REVIEW
         && Object.keys(validateAssetStep(stepKey, form, t)).some((key) => validationErrors[key]),
     );
     if (firstErrorStep) {
-      goToStep(firstErrorStep);
+      scrollToSection(firstErrorStep);
     }
   };
 
@@ -250,7 +258,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
     const validationErrors = validateAssetForm(form, t);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      goToFirstErrorStep(validationErrors);
+      scrollToFirstErrorSection(validationErrors);
       return false;
     }
 
@@ -300,7 +308,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
       return buildPhotoPreviewsFromFiles(item.form.photoFiles);
     });
     setEditingClientId(clientId);
-    goToStep(ASSET_REQUEST_STEPS.DETAILS);
+    scrollToSection(ASSET_REQUEST_STEPS.DETAILS);
   };
 
   const handleAddAnother = () => {
@@ -309,33 +317,12 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
       return;
     }
     resetCurrentForm();
-    goToStep(ASSET_REQUEST_STEPS.DETAILS);
+    scrollBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleNext = () => {
-    const stepErrors = validateAssetStep(step, form, t);
-    if (Object.keys(stepErrors).length > 0) {
-      setErrors(stepErrors);
-      return;
-    }
-
-    if (step === ASSET_REQUEST_STEPS.DOCUMENTS) {
-      if (commitCurrentToQueue()) {
-        goToStep(ASSET_REQUEST_STEPS.BATCH_REVIEW);
-      }
-      return;
-    }
-
-    const nextStep = ASSET_REQUEST_STEP_ORDER[stepIndex + 1];
-    if (nextStep) {
-      goToStep(nextStep);
-    }
-  };
-
-  const handleBack = () => {
-    const prevStep = ASSET_REQUEST_STEP_ORDER[stepIndex - 1];
-    if (prevStep) {
-      goToStep(prevStep);
+  const handleAddToQueue = () => {
+    if (commitCurrentToQueue()) {
+      scrollToSection(ASSET_REQUEST_STEPS.BATCH_REVIEW);
     }
   };
 
@@ -408,7 +395,7 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
   return (
     <div className="kyc-modal-overlay" role="presentation" onClick={submitting ? undefined : onClose}>
       <div
-        className="kyc-modal auction-create-modal request-auction-wizard"
+        className="kyc-modal auction-create-modal request-auction-wizard request-auction-wizard--single-scroll"
         role="dialog"
         aria-modal="true"
         aria-labelledby="request-auction-wizard-title"
@@ -437,35 +424,28 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
         </div>
 
         {!completed && (
-          <ol
-            className="auction-create-modal__steps"
+          <nav
+            className="request-auction-wizard__section-nav"
             aria-label={t('assets.requestWizard.stepProgress')}
           >
-            {ASSET_REQUEST_STEP_ORDER.map((stepKey, index) => {
-              const isActive = stepKey === step;
-              const isComplete = index < stepIndex;
-              return (
-                <li
-                  key={stepKey}
-                  className={[
-                    'auction-create-modal__step',
-                    isActive ? 'auction-create-modal__step--active' : '',
-                    isComplete ? 'auction-create-modal__step--complete' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                >
-                  <span className="auction-create-modal__step-index">{index + 1}</span>
-                  <span className="auction-create-modal__step-label">
-                    {t(`assets.requestWizard.steps.${stepKey}`)}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
+            {ASSET_REQUEST_STEP_ORDER.map((stepKey, index) => (
+              <button
+                key={stepKey}
+                type="button"
+                className="request-auction-wizard__section-nav-item"
+                onClick={() => scrollToSection(stepKey)}
+                disabled={submitting}
+              >
+                <span className="request-auction-wizard__section-nav-index">{index + 1}</span>
+                <span className="request-auction-wizard__section-nav-label">
+                  {t(`assets.requestWizard.steps.${stepKey}`)}
+                </span>
+              </button>
+            ))}
+          </nav>
         )}
 
-        <div className="auction-create-modal__body">
+        <div ref={scrollBodyRef} className="auction-create-modal__body request-auction-wizard__scroll">
           {completed && (
             <div className="request-auction-wizard__success">
               <div className="request-auction-wizard__success-icon" aria-hidden="true">
@@ -491,349 +471,422 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
             </div>
           )}
 
-          {!completed && step === ASSET_REQUEST_STEPS.DETAILS && (
-            <div className="auction-create-modal__grid">
-              {editingClientId && (
-                <p className="request-auction-wizard__editing-banner auction-create-modal__full">
-                  {t('assets.requestWizard.batchReview.editing')}
-                </p>
-              )}
-
-              <Input
-                label={t('assets.form.fields.title')}
-                value={form.title}
-                onChange={(event) => updateField('title', event.target.value)}
-                error={errors.title}
-                disabled={submitting}
-              />
-
-              <div className="input-field">
-                <label className="input-field__label" htmlFor="request-asset-type">
-                  {t('assets.form.fields.assetType')}
-                </label>
-                <select
-                  id="request-asset-type"
-                  className={[
-                    'input-field__control',
-                    'auction-create-modal__select',
-                    errors.assetType ? 'input-field__control--error' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  value={form.assetType}
-                  onChange={handleAssetTypeChange}
-                  disabled={submitting}
-                >
-                  <option value="">{t('assets.form.placeholders.selectAssetType')}</option>
-                  {ASSET_TYPE_KEYS.map((key) => (
-                    <option key={key} value={key}>
-                      {t(`assets.types.${key}`)}
-                    </option>
-                  ))}
-                </select>
-                {errors.assetType && (
-                  <span className="input-field__error" role="alert">
-                    {errors.assetType}
-                  </span>
-                )}
-              </div>
-
-              <div className="input-field auction-create-modal__full">
-                <label className="input-field__label" htmlFor="request-asset-description">
-                  {t('assets.form.fields.description')}
-                </label>
-                <textarea
-                  id="request-asset-description"
-                  className={[
-                    'kyc-modal__textarea',
-                    'auction-create-modal__textarea',
-                    errors.description ? 'auction-create-modal__textarea--error' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  rows={4}
-                  value={form.description}
-                  onChange={(event) => updateField('description', event.target.value)}
-                  disabled={submitting}
-                  placeholder={t('assets.requestWizard.placeholders.description')}
-                />
-                {errors.description && (
-                  <span className="input-field__error" role="alert">
-                    {errors.description}
-                  </span>
-                )}
-              </div>
-
-              <div className="input-field auction-create-modal__full">
-                <label className="input-field__label" htmlFor="request-asset-condition">
-                  {t('assets.form.fields.conditionNotes')}
-                </label>
-                <textarea
-                  id="request-asset-condition"
-                  className={[
-                    'kyc-modal__textarea',
-                    'auction-create-modal__textarea',
-                    errors.conditionNotes ? 'auction-create-modal__textarea--error' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  rows={3}
-                  value={form.conditionNotes}
-                  onChange={(event) => updateField('conditionNotes', event.target.value)}
-                  disabled={submitting}
-                  placeholder={t('assets.requestWizard.placeholders.conditionNotes')}
-                />
-                {errors.conditionNotes && (
-                  <span className="input-field__error" role="alert">
-                    {errors.conditionNotes}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {!completed && step === ASSET_REQUEST_STEPS.LOCATION && (
-            <div className="auction-create-modal__grid">
-              <Input
-                label={t('assets.form.fields.location')}
-                value={form.location}
-                onChange={(event) => updateField('location', event.target.value)}
-                error={errors.location}
-                disabled={submitting}
-                placeholder={t('assets.requestWizard.placeholders.location')}
-              />
-
-              <Input
-                label={t('assets.form.fields.desiredReservePrice')}
-                type="number"
-                min="1"
-                step="0.01"
-                value={form.desiredReservePrice}
-                onChange={(event) => updateField('desiredReservePrice', event.target.value)}
-                error={errors.desiredReservePrice}
-                disabled={submitting}
-                placeholder={t('assets.requestWizard.placeholders.reservePrice')}
-              />
-
-              <div className="input-field auction-create-modal__full">
-                <label className="input-field__label" htmlFor="request-auction-conditions">
-                  {t('assets.form.fields.auctionConditions')}
-                </label>
-                <textarea
-                  id="request-auction-conditions"
-                  className={[
-                    'kyc-modal__textarea',
-                    'auction-create-modal__textarea',
-                    errors.auctionConditions ? 'auction-create-modal__textarea--error' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  rows={4}
-                  value={form.auctionConditions}
-                  onChange={(event) => updateField('auctionConditions', event.target.value)}
-                  disabled={submitting}
-                  placeholder={t('assets.requestWizard.placeholders.auctionConditions')}
-                />
-                <p className="asset-submit-form__hint">
-                  {t('assets.requestWizard.reserveHint')}
-                </p>
-                {errors.auctionConditions && (
-                  <span className="input-field__error" role="alert">
-                    {errors.auctionConditions}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {!completed && step === ASSET_REQUEST_STEPS.PHOTOS && (
-            <div className="auction-create-modal__media">
-              <section className="auction-create-modal__upload-section">
-                <h3 className="auction-create-modal__section-title">
-                  {t('assets.form.fields.photos')}
-                </h3>
-                <p className="auction-create-modal__section-hint">
-                  {t('assets.form.hints.photos')}
-                </p>
-                <button
-                  type="button"
-                  className="auction-create-modal__browse-btn"
-                  onClick={() => photoInputRef.current?.click()}
-                  disabled={submitting}
-                >
-                  {t('assets.requestWizard.actions.addPhotos')}
-                </button>
-                <input
-                  ref={photoInputRef}
-                  type="file"
-                  accept={IMAGE_ACCEPT}
-                  multiple
-                  hidden
-                  onChange={handlePhotoSelect}
-                />
-                {photoPreviews.length > 0 && (
-                  <div className="auction-create-modal__image-grid">
-                    {photoPreviews.map((preview, index) => (
-                      <div key={preview.id} className="auction-create-modal__image-card">
-                        <img src={preview.url} alt={preview.name} />
-                        <button
-                          type="button"
-                          className="auction-create-modal__remove-btn"
-                          onClick={() => removePhoto(index)}
-                          disabled={submitting}
-                          aria-label={t('assets.requestWizard.removePhoto', { name: preview.name })}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
+          {!completed && (
+            <div className="request-auction-wizard__sections">
+              <section
+                ref={detailsRef}
+                id="wizard-section-details"
+                className="request-auction-wizard__section"
+                aria-labelledby="wizard-section-details-title"
+              >
+                <header className="request-auction-wizard__section-head">
+                  <span className="request-auction-wizard__section-num" aria-hidden="true">1</span>
+                  <div>
+                    <h3 id="wizard-section-details-title" className="request-auction-wizard__section-title">
+                      {t('assets.requestWizard.steps.details')}
+                    </h3>
+                    <p className="request-auction-wizard__section-desc">
+                      {t('assets.requestWizard.sectionHints.details')}
+                    </p>
                   </div>
-                )}
-                {errors.photos && (
-                  <span className="input-field__error" role="alert">
-                    {errors.photos}
-                  </span>
-                )}
+                </header>
+                <div className="auction-create-modal__grid">
+                  {editingClientId && (
+                    <p className="request-auction-wizard__editing-banner auction-create-modal__full">
+                      {t('assets.requestWizard.batchReview.editing')}
+                    </p>
+                  )}
+
+                  <Input
+                    label={t('assets.form.fields.title')}
+                    value={form.title}
+                    onChange={(event) => updateField('title', event.target.value)}
+                    error={errors.title}
+                    disabled={submitting}
+                  />
+
+                  <div className="input-field">
+                    <label className="input-field__label" htmlFor="request-asset-type">
+                      {t('assets.form.fields.assetType')}
+                    </label>
+                    <select
+                      id="request-asset-type"
+                      className={[
+                        'input-field__control',
+                        'auction-create-modal__select',
+                        errors.assetType ? 'input-field__control--error' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      value={form.assetType}
+                      onChange={handleAssetTypeChange}
+                      disabled={submitting}
+                    >
+                      <option value="">{t('assets.form.placeholders.selectAssetType')}</option>
+                      {ASSET_TYPE_KEYS.map((key) => (
+                        <option key={key} value={key}>
+                          {t(`assets.types.${key}`)}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.assetType && (
+                      <span className="input-field__error" role="alert">
+                        {errors.assetType}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="input-field auction-create-modal__full">
+                    <label className="input-field__label" htmlFor="request-asset-description">
+                      {t('assets.form.fields.description')}
+                    </label>
+                    <textarea
+                      id="request-asset-description"
+                      className={[
+                        'kyc-modal__textarea',
+                        'auction-create-modal__textarea',
+                        errors.description ? 'auction-create-modal__textarea--error' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      rows={4}
+                      value={form.description}
+                      onChange={(event) => updateField('description', event.target.value)}
+                      disabled={submitting}
+                      placeholder={t('assets.requestWizard.placeholders.description')}
+                    />
+                    {errors.description && (
+                      <span className="input-field__error" role="alert">
+                        {errors.description}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="input-field auction-create-modal__full">
+                    <label className="input-field__label" htmlFor="request-asset-condition">
+                      {t('assets.form.fields.conditionNotes')}
+                    </label>
+                    <textarea
+                      id="request-asset-condition"
+                      className={[
+                        'kyc-modal__textarea',
+                        'auction-create-modal__textarea',
+                        errors.conditionNotes ? 'auction-create-modal__textarea--error' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      rows={3}
+                      value={form.conditionNotes}
+                      onChange={(event) => updateField('conditionNotes', event.target.value)}
+                      disabled={submitting}
+                      placeholder={t('assets.requestWizard.placeholders.conditionNotes')}
+                    />
+                    {errors.conditionNotes && (
+                      <span className="input-field__error" role="alert">
+                        {errors.conditionNotes}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </section>
-            </div>
-          )}
 
-          {!completed && step === ASSET_REQUEST_STEPS.DOCUMENTS && (
-            <div className="auction-create-modal__media">
-              {ownershipDocLabelKey && (
-                <p className="auction-create-modal__section-hint">
-                  {t('assets.form.hints.ownershipDoc', {
-                    document: t(`assets.ownershipDocs.${ownershipDocLabelKey}`),
-                  })}
-                </p>
-              )}
+              <section
+                ref={locationRef}
+                id="wizard-section-location"
+                className="request-auction-wizard__section"
+                aria-labelledby="wizard-section-location-title"
+              >
+                <header className="request-auction-wizard__section-head">
+                  <span className="request-auction-wizard__section-num" aria-hidden="true">2</span>
+                  <div>
+                    <h3 id="wizard-section-location-title" className="request-auction-wizard__section-title">
+                      {t('assets.requestWizard.steps.location')}
+                    </h3>
+                    <p className="request-auction-wizard__section-desc">
+                      {t('assets.requestWizard.sectionHints.location')}
+                    </p>
+                  </div>
+                </header>
+                <div className="auction-create-modal__grid">
+                  <Input
+                    label={t('assets.form.fields.location')}
+                    value={form.location}
+                    onChange={(event) => updateField('location', event.target.value)}
+                    error={errors.location}
+                    disabled={submitting}
+                    placeholder={t('assets.requestWizard.placeholders.location')}
+                  />
 
-              <FileUpload
-                label={t('assets.form.fields.ownershipDocument')}
-                folder="assets/ownership"
-                accept={OWNERSHIP_ACCEPT}
-                disabled={submitting || !form.assetType}
-                onUpload={(result) => updateField('ownershipDocumentUrl', result.fileUrl)}
-              />
-              {errors.ownershipDocumentUrl && (
-                <span className="input-field__error" role="alert">
-                  {errors.ownershipDocumentUrl}
-                </span>
-              )}
+                  <Input
+                    label={t('assets.form.fields.desiredReservePrice')}
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    value={form.desiredReservePrice}
+                    onChange={(event) => updateField('desiredReservePrice', event.target.value)}
+                    error={errors.desiredReservePrice}
+                    disabled={submitting}
+                    placeholder={t('assets.requestWizard.placeholders.reservePrice')}
+                  />
 
-              <section className="auction-create-modal__upload-section">
-                <h3 className="auction-create-modal__section-title">
-                  {t('assets.form.fields.additionalDocuments')}
-                </h3>
-                <p className="auction-create-modal__section-hint">
-                  {t('assets.form.hints.additionalDocumentsPdf')}
-                </p>
-                <button
-                  type="button"
-                  className="auction-create-modal__browse-btn"
-                  onClick={() => additionalInputRef.current?.click()}
-                  disabled={submitting || uploadingAdditional}
-                >
-                  {uploadingAdditional ? t('common.uploading') : t('common.selectFile')}
-                </button>
-                <input
-                  ref={additionalInputRef}
-                  type="file"
-                  accept={PDF_ACCEPT}
-                  multiple
-                  hidden
-                  onChange={handleAdditionalFiles}
-                />
-                {form.additionalDocuments.length > 0 && (
-                  <ul className="auction-create-modal__doc-list">
-                    {form.additionalDocuments.map((doc, index) => (
-                      <li key={`${doc.url}-${index}`} className="auction-create-modal__doc-item">
-                        <div>
-                          <p className="auction-create-modal__doc-name">{doc.name}</p>
+                  <div className="input-field auction-create-modal__full">
+                    <label className="input-field__label" htmlFor="request-auction-conditions">
+                      {t('assets.form.fields.auctionConditions')}
+                    </label>
+                    <textarea
+                      id="request-auction-conditions"
+                      className={[
+                        'kyc-modal__textarea',
+                        'auction-create-modal__textarea',
+                        errors.auctionConditions ? 'auction-create-modal__textarea--error' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      rows={4}
+                      value={form.auctionConditions}
+                      onChange={(event) => updateField('auctionConditions', event.target.value)}
+                      disabled={submitting}
+                      placeholder={t('assets.requestWizard.placeholders.auctionConditions')}
+                    />
+                    <p className="asset-submit-form__hint">
+                      {t('assets.requestWizard.reserveHint')}
+                    </p>
+                    {errors.auctionConditions && (
+                      <span className="input-field__error" role="alert">
+                        {errors.auctionConditions}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              <section
+                ref={photosRef}
+                id="wizard-section-photos"
+                className="request-auction-wizard__section"
+                aria-labelledby="wizard-section-photos-title"
+              >
+                <header className="request-auction-wizard__section-head">
+                  <span className="request-auction-wizard__section-num" aria-hidden="true">3</span>
+                  <div>
+                    <h3 id="wizard-section-photos-title" className="request-auction-wizard__section-title">
+                      {t('assets.requestWizard.steps.photos')}
+                    </h3>
+                    <p className="request-auction-wizard__section-desc">
+                      {t('assets.form.hints.photos')}
+                    </p>
+                  </div>
+                </header>
+                <div className="auction-create-modal__media">
+                  <button
+                    type="button"
+                    className="auction-create-modal__browse-btn"
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={submitting}
+                  >
+                    {t('assets.requestWizard.actions.addPhotos')}
+                  </button>
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept={IMAGE_ACCEPT}
+                    multiple
+                    hidden
+                    onChange={handlePhotoSelect}
+                  />
+                  {photoPreviews.length > 0 && (
+                    <div className="auction-create-modal__image-grid">
+                      {photoPreviews.map((preview, index) => (
+                        <div key={preview.id} className="auction-create-modal__image-card">
+                          <img src={preview.url} alt={preview.name} />
+                          <button
+                            type="button"
+                            className="auction-create-modal__remove-btn"
+                            onClick={() => removePhoto(index)}
+                            disabled={submitting}
+                            aria-label={t('assets.requestWizard.removePhoto', { name: preview.name })}
+                          >
+                            ×
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          className="auction-create-modal__remove-btn"
-                          onClick={() => removeAdditionalDocument(index)}
-                          disabled={submitting}
-                          aria-label={t('assets.requestWizard.removeDocument', { name: doc.name })}
-                        >
-                          ×
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {errors.additionalDocuments && (
-                  <span className="input-field__error" role="alert">
-                    {errors.additionalDocuments}
-                  </span>
-                )}
+                      ))}
+                    </div>
+                  )}
+                  {errors.photos && (
+                    <span className="input-field__error" role="alert">
+                      {errors.photos}
+                    </span>
+                  )}
+                </div>
               </section>
 
-              {assetQueue.length > 0 && (
-                <p className="request-auction-wizard__queue-hint">
-                  {t('assets.requestWizard.batchReview.queuedCount', { count: assetQueue.length })}
-                </p>
-              )}
-            </div>
-          )}
+              <section
+                ref={documentsRef}
+                id="wizard-section-documents"
+                className="request-auction-wizard__section"
+                aria-labelledby="wizard-section-documents-title"
+              >
+                <header className="request-auction-wizard__section-head">
+                  <span className="request-auction-wizard__section-num" aria-hidden="true">4</span>
+                  <div>
+                    <h3 id="wizard-section-documents-title" className="request-auction-wizard__section-title">
+                      {t('assets.requestWizard.steps.documents')}
+                    </h3>
+                    <p className="request-auction-wizard__section-desc">
+                      {ownershipDocLabelKey
+                        ? t('assets.form.hints.ownershipDoc', {
+                            document: t(`assets.ownershipDocs.${ownershipDocLabelKey}`),
+                          })
+                        : t('assets.requestWizard.sectionHints.documents')}
+                    </p>
+                  </div>
+                </header>
+                <div className="auction-create-modal__media">
+                  <FileUpload
+                    label={t('assets.form.fields.ownershipDocument')}
+                    folder="assets/ownership"
+                    accept={OWNERSHIP_ACCEPT}
+                    disabled={submitting || !form.assetType}
+                    onUpload={(result) => updateField('ownershipDocumentUrl', result.fileUrl)}
+                  />
+                  {errors.ownershipDocumentUrl && (
+                    <span className="input-field__error" role="alert">
+                      {errors.ownershipDocumentUrl}
+                    </span>
+                  )}
 
-          {!completed && step === ASSET_REQUEST_STEPS.BATCH_REVIEW && (
-            <div className="request-auction-wizard__batch-review">
-              <p className="request-auction-wizard__review-intro">
-                {t('assets.requestWizard.batchReview.intro')}
-              </p>
+                  <section className="auction-create-modal__upload-section">
+                    <h4 className="auction-create-modal__section-title">
+                      {t('assets.form.fields.additionalDocuments')}
+                    </h4>
+                    <p className="auction-create-modal__section-hint">
+                      {t('assets.form.hints.additionalDocumentsPdf')}
+                    </p>
+                    <button
+                      type="button"
+                      className="auction-create-modal__browse-btn"
+                      onClick={() => additionalInputRef.current?.click()}
+                      disabled={submitting || uploadingAdditional}
+                    >
+                      {uploadingAdditional ? t('common.uploading') : t('common.selectFile')}
+                    </button>
+                    <input
+                      ref={additionalInputRef}
+                      type="file"
+                      accept={PDF_ACCEPT}
+                      multiple
+                      hidden
+                      onChange={handleAdditionalFiles}
+                    />
+                    {form.additionalDocuments.length > 0 && (
+                      <ul className="auction-create-modal__doc-list">
+                        {form.additionalDocuments.map((doc, index) => (
+                          <li key={`${doc.url}-${index}`} className="auction-create-modal__doc-item">
+                            <div>
+                              <p className="auction-create-modal__doc-name">{doc.name}</p>
+                            </div>
+                            <button
+                              type="button"
+                              className="auction-create-modal__remove-btn"
+                              onClick={() => removeAdditionalDocument(index)}
+                              disabled={submitting}
+                              aria-label={t('assets.requestWizard.removeDocument', { name: doc.name })}
+                            >
+                              ×
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {errors.additionalDocuments && (
+                      <span className="input-field__error" role="alert">
+                        {errors.additionalDocuments}
+                      </span>
+                    )}
+                  </section>
 
-              {queueSummaries.length === 0 ? (
-                <p className="request-auction-wizard__batch-empty" role="status">
-                  {t('assets.requestWizard.batchReview.empty')}
-                </p>
-              ) : (
-                <ul className="request-auction-wizard__batch-list">
-                  {queueSummaries.map((item) => (
-                    <li key={item.clientId} className="request-auction-wizard__batch-item">
-                      <div className="request-auction-wizard__batch-item-main">
-                        <p className="request-auction-wizard__batch-item-title">
-                          {t('assets.requestWizard.batchReview.assetLabel', { index: item.index })}
-                          {' — '}
-                          {item.title}
-                        </p>
-                        <p className="request-auction-wizard__batch-item-meta">
-                          {item.assetTypeLabel}
-                          {' · '}
-                          {item.location}
-                          {' · '}
-                          {item.reserve}
-                        </p>
-                        <p className="request-auction-wizard__batch-item-meta">
-                          {t('assets.requestWizard.review.photoCount', { count: item.photoCount })}
-                          {' · '}
-                          {t('assets.requestWizard.review.documentCount', { count: item.documentCount })}
-                        </p>
-                      </div>
-                      <div className="request-auction-wizard__batch-item-actions">
-                        <button
-                          type="button"
-                          className="auction-create-modal__edit-link"
-                          onClick={() => editQueueItem(item.clientId)}
-                          disabled={submitting}
-                        >
-                          {t('assets.requestWizard.actions.edit')}
-                        </button>
-                        <button
-                          type="button"
-                          className="auction-create-modal__edit-link request-auction-wizard__remove-link"
-                          onClick={() => removeFromQueue(item.clientId)}
-                          disabled={submitting}
-                        >
-                          {t('assets.requestWizard.actions.removeFromQueue')}
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                  {assetQueue.length > 0 && (
+                    <p className="request-auction-wizard__queue-hint">
+                      {t('assets.requestWizard.batchReview.queuedCount', { count: assetQueue.length })}
+                    </p>
+                  )}
+                </div>
+              </section>
+
+              <section
+                ref={reviewRef}
+                id="wizard-section-review"
+                className="request-auction-wizard__section request-auction-wizard__section--review"
+                aria-labelledby="wizard-section-review-title"
+              >
+                <header className="request-auction-wizard__section-head">
+                  <span className="request-auction-wizard__section-num" aria-hidden="true">5</span>
+                  <div>
+                    <h3 id="wizard-section-review-title" className="request-auction-wizard__section-title">
+                      {t('assets.requestWizard.steps.batchReview')}
+                    </h3>
+                    <p className="request-auction-wizard__section-desc">
+                      {t('assets.requestWizard.batchReview.intro')}
+                    </p>
+                  </div>
+                </header>
+                <div className="request-auction-wizard__batch-review">
+                  {queueSummaries.length === 0 ? (
+                    <div className="request-auction-wizard__batch-empty-card" role="status">
+                      <p className="request-auction-wizard__batch-empty">
+                        {t('assets.requestWizard.batchReview.empty')}
+                      </p>
+                      <p className="request-auction-wizard__batch-empty-hint">
+                        {t('assets.requestWizard.sectionHints.review')}
+                      </p>
+                    </div>
+                  ) : (
+                    <ul className="request-auction-wizard__batch-list">
+                      {queueSummaries.map((item) => (
+                        <li key={item.clientId} className="request-auction-wizard__batch-item">
+                          <div className="request-auction-wizard__batch-item-main">
+                            <p className="request-auction-wizard__batch-item-title">
+                              {t('assets.requestWizard.batchReview.assetLabel', { index: item.index })}
+                              {' — '}
+                              {item.title}
+                            </p>
+                            <p className="request-auction-wizard__batch-item-meta">
+                              {item.assetTypeLabel}
+                              {' · '}
+                              {item.location}
+                              {' · '}
+                              {item.reserve}
+                            </p>
+                            <p className="request-auction-wizard__batch-item-meta">
+                              {t('assets.requestWizard.review.photoCount', { count: item.photoCount })}
+                              {' · '}
+                              {t('assets.requestWizard.review.documentCount', { count: item.documentCount })}
+                            </p>
+                          </div>
+                          <div className="request-auction-wizard__batch-item-actions">
+                            <button
+                              type="button"
+                              className="auction-create-modal__edit-link"
+                              onClick={() => editQueueItem(item.clientId)}
+                              disabled={submitting}
+                            >
+                              {t('assets.requestWizard.actions.edit')}
+                            </button>
+                            <button
+                              type="button"
+                              className="auction-create-modal__edit-link request-auction-wizard__remove-link"
+                              onClick={() => removeFromQueue(item.clientId)}
+                              disabled={submitting}
+                            >
+                              {t('assets.requestWizard.actions.removeFromQueue')}
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </section>
             </div>
           )}
 
@@ -862,42 +915,34 @@ export function RequestAuctionWizardModal({ open, onClose, onSuccess }) {
             </div>
           ) : (
             <>
-              {stepIndex > 0 && step !== ASSET_REQUEST_STEPS.BATCH_REVIEW && (
-                <Button variant="secondary" onClick={handleBack} disabled={submitting}>
-                  {t('assets.requestWizard.actions.back')}
-                </Button>
-              )}
-
               <div className="auction-create-modal__actions-right">
                 <Button variant="secondary" onClick={onClose} disabled={submitting}>
                   {t('assets.requestWizard.actions.cancel')}
                 </Button>
 
-                {step === ASSET_REQUEST_STEPS.BATCH_REVIEW && canAddAnother && (
+                {canAddAnother && assetQueue.length > 0 && (
                   <Button variant="secondary" onClick={handleAddAnother} disabled={submitting}>
                     {t('assets.requestWizard.actions.addAnother')}
                   </Button>
                 )}
 
-                {step !== ASSET_REQUEST_STEPS.BATCH_REVIEW ? (
-                  <Button
-                    variant="primary"
-                    onClick={handleNext}
-                    disabled={submitting || uploadingAdditional}
-                  >
-                    {step === ASSET_REQUEST_STEPS.DOCUMENTS
-                      ? t('assets.requestWizard.actions.addToQueue')
-                      : t('assets.requestWizard.actions.next')}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="primary"
-                    onClick={handleSubmit}
-                    disabled={submitting || assetQueue.length === 0}
-                  >
-                    {submitting ? t('assets.requestWizard.actions.submitting') : submitLabel}
-                  </Button>
-                )}
+                <Button
+                  variant="secondary"
+                  onClick={handleAddToQueue}
+                  disabled={submitting || uploadingAdditional}
+                >
+                  {editingClientId
+                    ? t('assets.requestWizard.actions.updateQueue')
+                    : t('assets.requestWizard.actions.addToQueue')}
+                </Button>
+
+                <Button
+                  variant="primary"
+                  onClick={handleSubmit}
+                  disabled={submitting || assetQueue.length === 0}
+                >
+                  {submitting ? t('assets.requestWizard.actions.submitting') : submitLabel}
+                </Button>
               </div>
             </>
           )}

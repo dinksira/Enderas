@@ -1,7 +1,9 @@
 import { StatusPill } from '@enderass/shared/ui-admin';
 import { Button, DashboardToast } from '@enderass/shared/ui';
+import { ROUTES } from '@enderass/shared/config';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { usePaginatedResource } from '@enderass/shared/hooks';
 import { formatDate } from '@enderass/shared/utils';
 import { notificationService } from '@enderass/shared/services';
@@ -15,6 +17,7 @@ const FILTER_TABS = Object.freeze([
 
 export function NotificationCenterView() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const locale = i18n.language === 'am' ? 'am' : 'en';
   const isAmharic = locale === 'am';
 
@@ -88,6 +91,20 @@ export function NotificationCenterView() {
     }
   };
 
+  const resolvePaymentId = (metadata) => {
+    if (!metadata) return null;
+    try {
+      const data = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+      return data?.paymentId ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleReviewPayment = (paymentId) => {
+    navigate(`${ROUTES.APP_PAYMENTS}?paymentId=${encodeURIComponent(paymentId)}`);
+  };
+
   const footerSummary = t('notifications.center.table.footer', {
     from: notifications.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1,
     to: (page - 1) * PAGE_SIZE + notifications.length,
@@ -145,6 +162,7 @@ export function NotificationCenterView() {
           <ul className="notification-center-list">
             {notifications.map((notification) => {
               const isUnread = !notification.readAt && notification.status !== 'read';
+              const paymentId = resolvePaymentId(notification.metadata);
               return (
                 <li
                   key={notification.id}
@@ -170,6 +188,15 @@ export function NotificationCenterView() {
                       onClick={() => handleMarkRead(notification.id)}
                     >
                       {t('notifications.center.markRead')}
+                    </Button>
+                  )}
+                  {paymentId && (
+                    <Button
+                      variant="primary"
+                      disabled={actionLoading}
+                      onClick={() => handleReviewPayment(paymentId)}
+                    >
+                      {t('notifications.center.reviewPayment')}
                     </Button>
                   )}
                 </li>

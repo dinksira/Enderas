@@ -1,4 +1,4 @@
-import { Button } from '@enderass/shared/ui';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { staffService } from '@enderass/shared/services';
@@ -152,6 +152,7 @@ export function ScheduleEvaluationModal({
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
+        <ModalCloseButton onClick={onClose} disabled={loading} />
         <h2 id="schedule-evaluation-title" className="kyc-modal__title">
           {t('evaluations.management.scheduleModal.title')}
         </h2>

@@ -15,13 +15,14 @@ function resolveUserId(req) {
 
 export async function listNotifications(req, res, next) {
   try {
-    const { page, limit, status, type } = req.query;
+    const { page, limit, status, type, search } = req.query;
     const result = await notificationService.listNotifications(
       {
         page: page ? parseInt(page, 10) : 1,
         limit: limit ? parseInt(limit, 10) : 20,
         status: status || null,
         type: type || null,
+        search: search || null,
       },
       resolveScope(req),
     );

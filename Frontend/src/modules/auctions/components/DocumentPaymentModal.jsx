@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../../components/Button.jsx';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { FileUpload } from '../../../components/FileUpload.jsx';
 import { formatEtbAmount } from '@enderass/shared/utils';
 import { paymentService } from '../../payments/services/payment-service.js';
@@ -65,6 +65,7 @@ export function DocumentPaymentModal({ open, loading = false, auction, onClose, 
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
+        <ModalCloseButton onClick={onClose} disabled={busy} />
         <h2 id="document-payment-title" className="kyc-modal__title">
           {t('bidder.participation.paymentModal.title')}
         </h2>

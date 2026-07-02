@@ -1,4 +1,4 @@
-import { Button } from '@enderass/shared/ui';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@enderass/shared/auth';
@@ -85,6 +85,7 @@ export function SelectWinnerModal({ open, loading = false, onClose, onSubmit }) 
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
+        <ModalCloseButton onClick={onClose} disabled={loading} />
         <h2 id="select-winner-title" className="kyc-modal__title">
           {t('winners.management.selectModal.title')}
         </h2>

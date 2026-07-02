@@ -128,15 +128,13 @@ export async function listPayments(options = {}, scope = {}) {
 
   if (search?.trim()) {
     const term = `%${search.trim()}%`;
-    userInclude.where = {
-      [Op.or]: [
-        { first_name: { [Op.like]: term } },
-        { last_name: { [Op.like]: term } },
-        { mobile_number: { [Op.like]: term } },
-        { email: { [Op.like]: term } },
-      ],
-    };
-    userInclude.required = true;
+    where[Op.or] = [
+      { '$auction.title$': { [Op.like]: term } },
+      { '$user.first_name$': { [Op.like]: term } },
+      { '$user.last_name$': { [Op.like]: term } },
+      { '$user.mobile_number$': { [Op.like]: term } },
+      { '$user.email$': { [Op.like]: term } },
+    ];
   }
 
   const { count, rows } = await Payment.findAndCountAll({
@@ -149,6 +147,7 @@ export async function listPayments(options = {}, scope = {}) {
     limit,
     offset: (page - 1) * limit,
     distinct: true,
+    subQuery: false,
   });
 
   const result = {
@@ -233,6 +232,19 @@ export async function createPayment(payload, userId) {
     entityId: payment.id,
     metadata: { auctionId, amount, paymentMethod },
   });
+
+  try {
+    const payer = await User.findByPk(userId, {
+      attributes: ['id', 'first_name', 'last_name', 'organization_name', 'mobile_number'],
+    });
+    await notificationService.notifyFinanceOfficersPaymentPending({
+      payment: { id: payment.id, auction_id: auctionId, amount },
+      auction,
+      payerName: buildUserDisplayName(payer),
+    });
+  } catch (notifyError) {
+    console.error('[payment.service] failed to notify finance officers:', notifyError);
+  }
 
   return getPaymentById(payment.id, { userId, isStaff: false });
 }

@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../../../config/routes.js';
 import { LotSeal } from '../LotSeal.jsx';
 import { LiveCountdown } from '@enderass/shared/ui';
-import { formatEtbAmount } from '@enderass/shared/utils';
 import { AuctionCardMedia } from '../AuctionCardMedia.jsx';
 
 /**
@@ -55,11 +54,6 @@ export function LandingHero({ heroLot = null, status }) {
                 />
                 <span className="pub-hero__visual-label">{t('public.hero.liveLabel')}</span>
                 <p className="pub-hero__lot-title">{heroLot.title}</p>
-                <p className="pub-hero__visual-value">
-                  {formatEtbAmount(
-                    heroLot.totalReservePrice ?? heroLot.reservePrice ?? heroLot.reserve,
-                  )}
-                </p>
                 <LiveCountdown
                   endDate={heroLot.endDate}
                   className="pub-hero__countdown"

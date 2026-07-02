@@ -26,6 +26,12 @@
       "logout": "Logout",
       "profile": "Profile"
     },
+    "logoutModal": {
+      "title": "Sign out?",
+      "message": "Are you sure you want to sign out of your account?",
+      "confirm": "Sign out",
+      "cancel": "Cancel"
+    },
     "table": {
       "headers": {
         "id": "ID",
@@ -391,6 +397,7 @@
     "my": {
       "title": "My Asset Requests",
       "subtitle": "Submit and track asset requests. Once approved, your asset enters the evaluation and auction pipeline.",
+      "searchPlaceholder": "Search asset requests by title or type",
       "submitNew": "+ Asset Request",
       "empty": "You have not submitted any asset requests yet.",
       "rejectionReason": "Reason: {{reason}}",
@@ -626,16 +633,15 @@
       "steps": {
         "register": { "title": "Register", "desc": "Create an individual or organization account with verified mobile number." },
         "kyc": { "title": "Verify KYC", "desc": "Submit identity documents for staff review before bidding access." },
-        "browse": { "title": "Browse Auctions", "desc": "Review published lots, reserves, and institutional sale conditions." },
+        "browse": { "title": "Browse Auctions", "desc": "Review published lots and institutional sale conditions after sign-in." },
         "cpo": { "title": "Documents & CPO", "desc": "Pay document fees and submit Certified Payment Order for selected lots." },
-        "bid": { "title": "Submit Bid", "desc": "Place sealed bids at or above reserve during the active bidding window." }
+        "bid": { "title": "Submit Bid", "desc": "Place sealed bids during the active bidding window once verified." }
       }
     },
     "auctions": {
       "title": "Live Auction Listings",
-      "subtitle": "Published lots open to qualified bidders — reserve prices and bidding windows shown for each listing.",
+      "subtitle": "Published lots open to qualified bidders — sign in to view full details and bidding windows.",
       "viewAll": "View all auctions →",
-      "reserve": "Reserve",
       "empty": "No active auctions right now. Check back soon or register to be notified when new lots publish.",
       "loading": "Loading live auctions…",
       "ended": "Closed",
@@ -714,13 +720,38 @@
       "registerLead": "Register as an individual bidder or institutional organization.",
       "loginCta": "Sign In",
       "loggingIn": "Signing in…",
-      "forgotPassword": "Forgot password? (OTP reset)",
+      "forgotPassword": "Forgot password?",
+      "forgotTitle": "Reset your password",
+      "forgotLead": "Enter the mobile number on your account. We will send a 6-digit code by SMS.",
+      "forgotCta": "Send reset code",
+      "forgotSending": "Sending code…",
+      "forgotSent": "If an account exists for this number, a reset code has been sent.",
+      "resetTitle": "Choose a new password",
+      "resetLead": "Enter the code sent to",
+      "newPassword": "New password",
+      "confirmNewPassword": "Confirm new password",
+      "resetCta": "Update password",
+      "resetting": "Updating…",
+      "resetResend": "Resend reset code",
+      "resetSuccessTitle": "Password updated",
+      "resetSuccessLead": "Your password has been changed. Sign in with your new password.",
+      "backToLogin": "Back to sign in",
+      "otpChecking": "Checking code…",
+      "otpVerified": "Code verified",
+      "otpInvalid": "Incorrect code. Check the SMS and try again.",
+      "devResetOtp": "Development only — your reset code is {{code}}",
+      "devResetOtpLabel": "Local development — SMS not sent",
+      "devResetOtpHint": "Code is auto-filled below. In production this arrives by SMS only.",
+      "devResetOtpMissing": "No code was generated for this number. The account may be missing, not mobile-verified, or suspended. Try 0987654321 (test bidder) after running npm run db:seed:test in backend/.",
       "nationalId": "National ID Number",
       "nationalIdRequired": "National ID number is required",
       "tradeLicense": "Trade License",
       "tinCertificate": "TIN Certificate",
       "businessRegistration": "Business Registration Certificate",
-      "kycNotice": "Your account will be reviewed after document upload. KYC approval is required before you can participate in auctions.",
+      "devRegisterOtpLabel": "Local development — SMS not sent",
+      "devRegisterOtpHint": "Code is auto-filled below. In production this arrives by SMS only.",
+      "orgDocumentsAfterVerify": "Trade license, TIN certificate, and business registration are uploaded on the next step after your phone number is verified.",
+      "kycNotice": "After you verify your phone number, you will upload identification documents for KYC review before participating in auctions.",
       "otpTitle": "Verify mobile number",
       "otpLead": "Enter the 6-digit code sent to",
       "otpTimer": "Code expires in {{time}}",
@@ -747,8 +778,10 @@
     "emailOptional": "Email (optional)",
     "password": "Password",
     "confirmPassword": "Confirm Password",
+    "confirmPasswordRequired": "Please confirm your password",
     "passwordMismatch": "Passwords do not match",
     "passwordMinLength": "Password must be at least 6 characters",
+    "passwordResetNotAllowed": "Password reset is not available for this account.",
     "firstNameRequired": "First name is required",
     "organizationNameRequired": "Organization name is required",
     "invalidPhone": "Enter a valid phone number (e.g. 0912345678)",
@@ -769,6 +802,8 @@
     "companyNameRequired": "Company name is required",
     "tinRequired": "TIN number is required",
     "duplicatePhone": "This phone number is already registered",
+    "duplicateNationalId": "This National ID number is already registered",
+    "duplicateTin": "This TIN number is already registered",
     "noAccount": "Don't have an account?",
     "createAccount": "Create one",
     "genericError": "Something went wrong. Please try again.",
@@ -807,6 +842,12 @@
     "businessRegistration": "Business Registration",
     "submitting": "Submitting...",
     "submissionFailed": "KYC submission failed. Please try again.",
+    "documentNumberRequired": "National ID number is required",
+    "documentFrontRequired": "National ID front image is required",
+    "tinRequired": "TIN number is required",
+    "tradeLicenseRequired": "Trade license document is required",
+    "tinCertificateRequired": "TIN certificate is required",
+    "businessRegistrationRequired": "Business registration certificate is required",
     "managementSubtitle": "Review and verify user KYC documents",
     "statusFilters": "Status Filters",
     "selectSubmission": "Select a Submission",
@@ -932,7 +973,18 @@
       "view": "View",
       "openDetail": "Open auction {{title}}",
       "myStatus": "Your Status",
+      "participation": {
+        "not_registered": "Not registered"
+      },
       "photos": "Photos",
+      "gallery": {
+        "previous": "Previous image",
+        "next": "Next image",
+        "openImage": "Open image {{index}} of {{total}}",
+        "selectImage": "Select image {{index}} of {{total}}",
+        "imageCounter": "{{current}} of {{total}}",
+        "expand": "View full size"
+      },
       "auctionInfo": "Auction Information",
       "detailEyebrow": "Auction details",
       "detailTitle": "Auction",
@@ -943,11 +995,10 @@
       "placeBid": {
         "title": "Place Your Bid",
         "titleForLot": "Bid on {{lot}}",
-        "hint": "One bid per lot. Amount must meet or exceed the lot reserve price.",
+        "hint": "One bid per lot. Enter a valid sealed bid amount.",
         "amountLabel": "Bid Amount (ETB)",
         "amountRequired": "Enter a valid bid amount.",
-        "belowReserve": "Bid must be at least {{amount}}.",
-        "minAmount": "Min {{amount}}",
+        "belowMinimum": "Your bid amount is below the minimum required for this lot.",
         "submit": "Submit Bid",
         "submitting": "Submitting...",
         "success": "Your bid was submitted successfully.",
@@ -962,18 +1013,23 @@
       "retry": "Retry",
       "documentFee": "Document Fee",
       "journeyEyebrow": "Bidder journey",
+      "stepLabel": "Step {{step}} of {{total}}",
       "documents": "Auction Documents",
       "document": "Document",
       "downloadDocument": "Download",
+      "viewDocument": "View",
+      "viewDocumentNamed": "View {{name}}",
+      "openDocument": "Open document",
+      "documentPreviewUnavailable": "This file type cannot be previewed in the browser. Open it in a new tab instead.",
       "documentsLockedTitle": "Documents locked",
       "documentsLocked": "Pay the document fee and wait for approval to unlock auction documents.",
       "documentsUnlockedTitle": "Documents unlocked",
-      "documentsUnlockedCopy": "You are registered for this auction. Review and download the documents below.",
+      "documentsUnlockedCopy": "You are registered for this auction. Review the documents below.",
       "documentsEmpty": "No documents are attached to this auction yet.",
       "paymentCopy": "Pay the document fee of {{amount}} and upload your payment receipt.",
       "cpoCopy": "Upload your Certified Payment Order (CPO) after document payment is approved.",
       "cpoNextAction": "This is your current step. Submit your CPO to move toward bidding.",
-      "bidCopy": "Submit one sealed bid per selected lot at or above each lot reserve once your CPO is approved.",
+      "bidCopy": "Submit one sealed bid per selected lot once your CPO is approved.",
       "bidLocked": {
         "notRegistered": "Complete document payment and get it approved first.",
         "submitCpo": "You are registered, but bidding stays locked until you submit and get CPO approved.",
@@ -989,8 +1045,8 @@
         "titleOpenMulti": "Submit bids for your selected lots",
         "titleWaiting": "Bidding opens soon",
         "titleClosed": "Bidding window closed",
-        "leadOpen": "Enter an amount at or above the reserve price of {{amount}}.",
-        "leadOpenMulti": "{{count}} lot(s) still need a bid. Enter an amount at or above each lot reserve.",
+        "leadOpen": "Enter your sealed bid amount below.",
+        "leadOpenMulti": "{{count}} lot(s) still need a bid. Enter an amount for each lot below.",
         "leadWaiting": "Bidding opens at {{start}} and closes at {{end}} (East Africa Time).",
         "leadClosed": "The bidding window was {{start}} to {{end}} (East Africa Time).",
         "waitingHint": "Your CPO is approved. Come back between {{start}} and {{end}} to place your bid here.",
@@ -1062,7 +1118,7 @@
         "ready_to_bid": {
           "label": "Ready to bid",
           "title": "Place your sealed bid now",
-          "body": "Your CPO is approved. Use the bid form below to submit one bid at or above the reserve price."
+          "body": "Your CPO is approved. Use the bid form below to submit your sealed bid."
         },
         "bidding_waiting": {
           "label": "CPO approved",
@@ -1102,7 +1158,7 @@
         "cpoPercentage": "CPO percentage",
         "requiredAmount": "Required CPO amount",
         "selectLots": "Lots to bid on",
-        "selectLotsHint": "Required CPO = total reserve of selected lots × {{percentage}}%.",
+        "selectLotsHint": "Required CPO is calculated from your selected lots × {{percentage}}%.",
         "lotFallback": "Lot",
         "lotsRequired": "Select at least one lot to bid on.",
         "document": "CPO Document",
@@ -1330,6 +1386,8 @@
         "verifiedAt": "Verified At",
         "rejectionReason": "Rejection Reason",
         "receipt": "Receipt",
+        "viewReceipt": "View receipt",
+        "receiptPreview": "Payment receipt preview",
         "approve": "Approve",
         "reject": "Reject",
         "refresh": "Refresh"
@@ -1356,6 +1414,7 @@
     "my": {
       "pageTitle": "My Payments",
       "subtitle": "Track document fee payments you submitted for auctions.",
+      "searchPlaceholder": "Search payments by auction title",
       "payHintTitle": "How to pay the document fee",
       "payHintBody": "Open an active auction from Browse Auctions, then use Pay Document Fee in the participation steps.",
       "browseCta": "Browse Auctions",
@@ -1443,6 +1502,7 @@
     "my": {
       "pageTitle": "My CPO",
       "subtitle": "Track your Certified Payment Order submissions.",
+      "searchPlaceholder": "Search CPO records by auction title",
       "empty": "You have not submitted any CPO records yet.",
       "viewAction": "View CPO details",
       "table": {
@@ -1500,6 +1560,7 @@
     "myBids": {
       "pageTitle": "My Bids",
       "subtitle": "Your submitted bids across auctions.",
+      "searchPlaceholder": "Search bids by auction title",
       "empty": "You have not placed any bids yet.",
       "openDetail": "Open bid for {{name}}",
       "viewAction": "View details",
@@ -1655,12 +1716,14 @@
     "center": {
       "pageTitle": "Notifications",
       "subtitle": "Your in-app notifications and alerts.",
+      "searchPlaceholder": "Search notifications by title or message",
       "filters": "Notification filters",
       "markAllRead": "Mark All Read",
       "markRead": "Mark Read",
       "markAllSuccess": "All notifications marked as read.",
       "markAllFailed": "Failed to mark all as read.",
       "markReadFailed": "Failed to mark notification as read.",
+      "reviewPayment": "Review payment",
       "empty": "No notifications found.",
       "tabs": {
         "all": "ALL",
@@ -1674,6 +1737,11 @@
       "table": {
         "footer": "Showing {{from}}–{{to}} of {{total}} notifications"
       }
+    },
+    "banner": {
+      "unreadOne": "You have 1 unread notification.",
+      "unreadMany": "You have {{count}} unread notifications.",
+      "viewAll": "View notifications"
     }
   },
   "reports": {
@@ -1896,6 +1964,8 @@
     "profile": {
       "pageTitle": "My Profile",
       "subtitle": "Your account identity and verification status.",
+      "searchPlaceholder": "Search profile fields",
+      "searchEmpty": "No profile fields match your search.",
       "title": "Profile",
       "loading": "Loading profile...",
       "loadFailed": "Failed to load profile.",

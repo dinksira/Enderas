@@ -29,15 +29,23 @@ export async function createInAppNotification(payload) {
  * @param {{ userId?: string, isStaff?: boolean, isWildcard?: boolean }} scope
  */
 export async function listNotifications(options = {}, scope = {}) {
-  const { page = 1, limit = 20, status = null, type = null } = options;
+  const { page = 1, limit = 20, status = null, type = null, search = null } = options;
   const where = {};
 
-  if (!scope.isStaff && !scope.isWildcard) {
+  if (!scope.isWildcard && scope.userId) {
     where.user_id = scope.userId;
   }
 
   if (status) where.status = status;
   if (type) where.type = type;
+
+  if (search?.trim()) {
+    const term = `%${search.trim()}%`;
+    where[Op.or] = [
+      { title: { [Op.like]: term } },
+      { message: { [Op.like]: term } },
+    ];
+  }
 
   const { rows, count } = await Notification.findAndCountAll({
     where,
@@ -69,7 +77,7 @@ export async function listNotificationsForUser(userId, options = {}) {
  */
 export async function getNotificationById(id, scope = {}) {
   const where = { id };
-  if (!scope.isStaff && !scope.isWildcard) {
+  if (!scope.isWildcard && scope.userId) {
     where.user_id = scope.userId;
   }
 
@@ -276,6 +284,39 @@ export async function notifySuperAdminsEvaluationPending(evaluation) {
   });
 }
 
+/**
+ * Notify finance staff that a bidder submitted a document fee payment for review.
+ * @param {{
+ *   payment: { id: string, auction_id: string, amount: number|string },
+ *   auction?: { id?: string, title?: string|null },
+ *   payerName?: string|null,
+ * }} payload
+ */
+export async function notifyFinanceOfficersPaymentPending({ payment, auction, payerName }) {
+  const auctionTitle = auction?.title?.trim() || 'Auction';
+  const payer = payerName?.trim() || 'A bidder';
+  const amount = Number(payment.amount);
+  const amountLabel = Number.isFinite(amount) ? `${amount} ETB` : 'ETB';
+
+  const notificationPayload = {
+    type: 'general',
+    title: 'Document Payment Submitted',
+    message: `${payer} submitted a document fee payment of ${amountLabel} for "${auctionTitle}". Review and verify the receipt.`,
+    metadata: {
+      paymentId: payment.id,
+      auctionId: payment.auction_id ?? auction?.id ?? null,
+      auctionTitle,
+      payerName: payer,
+      amount: Number.isFinite(amount) ? amount : null,
+    },
+  };
+
+  await Promise.all([
+    notifyActiveStaffByRole('finance_officer', notificationPayload),
+    notifyActiveStaffByRole('super_admin', notificationPayload),
+  ]);
+}
+
 export async function sendPaymentApproved(userId) {
   return createInAppNotification({
     userId,
@@ -353,6 +394,7 @@ export const notificationService = Object.freeze({
   sendAssetRejected,
   notifyEvaluationOfficersAssetReady,
   notifySuperAdminsEvaluationPending,
+  notifyFinanceOfficersPaymentPending,
   sendPaymentApproved,
   sendPaymentRejected,
   sendCpoApproved,

@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../../../config/routes.js';
 import { LiveCountdown } from '@enderass/shared/ui';
-import { formatEtbAmount } from '@enderass/shared/utils';
 import { AuctionCardMedia } from '../AuctionCardMedia.jsx';
 
 /**
@@ -53,7 +52,6 @@ export function LandingFeaturedAuctions({ auctions, status }) {
           <div className="pub-auctions">
             {auctions.map((auction) => {
               const categoryKey = auction.categoryKey || auction.category;
-              const reserveAmount = auction.totalReservePrice ?? auction.reservePrice ?? auction.reserve;
 
               return (
                 <Link
@@ -76,12 +74,6 @@ export function LandingFeaturedAuctions({ auctions, status }) {
                       <p className="pub-auction-card__date">{auction.endingDate}</p>
                     )}
                     <div className="pub-auction-card__meta">
-                      <div>
-                        <p className="pub-auction-card__reserve-label">{t('public.auctions.reserve')}</p>
-                        <p className="pub-auction-card__reserve">
-                          {formatEtbAmount(reserveAmount)}
-                        </p>
-                      </div>
                       <LiveCountdown endDate={auction.endDate} />
                     </div>
                     {typeof auction.bidCount === 'number' && (

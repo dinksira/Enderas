@@ -26,6 +26,12 @@
       "logout": "ውጣ",
       "profile": "መገለጫ"
     },
+    "logoutModal": {
+      "title": "መውጣት ይፈልጋሉ?",
+      "message": "ከመለያዎ ለመውጣት እርግጠኛ ነዎት?",
+      "confirm": "ውጣ",
+      "cancel": "ሰርዝ"
+    },
     "table": {
       "headers": {
         "id": "መለያ",
@@ -391,6 +397,7 @@
     "my": {
       "title": "የእኔ የንብረት ጥያቄዎች",
       "subtitle": "የንብረት ጥያቄዎችን ያስገቡ እና ይከታተሉ። ከጸደቀ በኋላ ንብረትዎ ወደ ግምገማ እና ጨረታ ሂደት ይገባል።",
+      "searchPlaceholder": "በርዕስ ወይም በአይነት የንብረት ጥያቄዎችን ይፈልጉ",
       "submitNew": "+ የንብረት ጥያቄ",
       "empty": "እስካሁን ምንም የንብረት ጥያቄ አላስገቡም።",
       "rejectionReason": "ምክንያት፡ {{reason}}",
@@ -626,16 +633,15 @@
       "steps": {
         "register": { "title": "ተመዝገብ", "desc": "በተረጋገጠ የሞባይል ቁጥር እንደ ግለሰብ ወይም ድርጅት መለያ ይፍጠሩ።" },
         "kyc": { "title": "KYC አረጋግጥ", "desc": "ለመጫረት ከመክፈትዎ በፊት ማንነት ሰነዶችን ለሰራተኞች ግምገማ ያስረክቡ።" },
-        "browse": { "title": "ጨረታ ይመልከቱ", "desc": "የታተሙ ሎቶች፣ መጠበቂያ ዋጋዎች እና የሽያጭ ሁኔታዎችን ይገምግሙ።" },
+        "browse": { "title": "ጨረታ ይመልከቱ", "desc": "ከመግባት በኋላ የታተሙ ሎቶችን እና የሽያጭ ሁኔታዎችን ይገምግሙ።" },
         "cpo": { "title": "ሰነድ እና CPO", "desc": "የሰነድ ክፍያ ይክፈሉ እና ለተመረጡ ሎቶች የተረጋገጠ የክፍያ ትዕዛዝ ያስረክቡ።" },
-        "bid": { "title": "ጨረታ አስገባ", "desc": "በንቁ ጊዜ ውስጥ ከመጠበቂያ ዋጋ በላይ የታሸገ ጨረታ ያስገቡ።" }
+        "bid": { "title": "ጨረታ አስገባ", "desc": "ከማረጋገጫ በኋላ በንቁ የጨረታ ጊዜ ውስጥ ታሸገ ጨረታ ያስገቡ።" }
       }
     },
     "auctions": {
       "title": "የቀጥታ ጨረታ ዝርዝሮች",
-      "subtitle": "ለብቁ ተሳታፊዎች ክፍት የታተሙ ሎቶች — መጠበቂያ ዋጋ እና የጨረታ ጊዜ ለእያንዳንዱ ይታያል።",
+      "subtitle": "ለብቁ ተሳታፊዎች ክፍት የታተሙ ሎቶች — ሙሉ ዝርዝር ለመመልከት ይግቡ።",
       "viewAll": "ሁሉንም ጨረታዎች ይመልከቱ →",
-      "reserve": "መጠበቂያ",
       "empty": "አሁን ንቁ ጨረታ የለም። ቆይተው ይመለሱ ወይም አዲስ ሎቶች ሲታተሙ ለማሳወቅ ይመዝገቡ።",
       "loading": "ጨረታዎች በመጫን ላይ…",
       "ended": "ተዘጋ",
@@ -714,13 +720,38 @@
       "registerLead": "እንደ ግለሰብ ተሳታፊ ወይም ተቋማዊ ድርጅት ይመዝገቡ።",
       "loginCta": "ግባ",
       "loggingIn": "በመግባት ላይ…",
-      "forgotPassword": "የይለፍ ቃል ረሱ? (OTP ዳግም ማስጀመር)",
+      "forgotPassword": "የይለፍ ቃል ረሱ?",
+      "forgotTitle": "የይለፍ ቃልዎን ዳግም ያስጀምሩ",
+      "forgotLead": "በመለያዎ ላይ ያለውን የሞባይል ቁጥር ያስገቡ። 6-አሃዝ ኮድ በSMS እንልካለን።",
+      "forgotCta": "የዳግም ማስጀመሪያ ኮድ ላክ",
+      "forgotSending": "ኮድ በመላክ ላይ…",
+      "forgotSent": "ለዚህ ቁጥር መለያ ካለ ኮድ ተልኳል።",
+      "resetTitle": "አዲስ የይለፍ ቃል ይምረጡ",
+      "resetLead": "ወደ የተላከው ኮድ ያስገቡ",
+      "newPassword": "አዲስ የይለፍ ቃል",
+      "confirmNewPassword": "አዲስ የይለፍ ቃል አረጋግጥ",
+      "resetCta": "የይለፍ ቃል አዘምን",
+      "resetting": "በማዘመን ላይ…",
+      "resetResend": "የዳግም ማስጀመሪያ ኮድ እንደገና ላክ",
+      "resetSuccessTitle": "የይለፍ ቃል ተዘምኗል",
+      "resetSuccessLead": "የይለፍ ቃልዎ ተቀይሯል። በአዲሱ የይለፍ ቃል ይግቡ።",
+      "backToLogin": "ወደ መግቢያ ተመለስ",
+      "otpChecking": "ኮድ በማረጋገጥ ላይ…",
+      "otpVerified": "ኮዱ ተረጋግጧል",
+      "otpInvalid": "ልክ ያልሆነ ኮድ። SMS ይመልከቱ እና እንደገና ይሞክሩ።",
+      "devResetOtp": "ለማሳደጊያ ብቻ — የዳግም ማስጀመሪያ ኮድዎ {{code}} ነው",
+      "devResetOtpLabel": "በአካባቢ ማሳደጊያ — SMS አልተላከም",
+      "devResetOtpHint": "ኮዱ ከታች በራሱ ተሞልቷል። በመጠቀሚያ ላይ በSMS ብቻ ይደርሳል።",
+      "devResetOtpMissing": "ለዚህ ቁጥር ኮድ አልተፈጠረም። መለያው ላይቆም፣ ሞባይል አልተረጋገጠም ወይም ታግዷል። backend/ ውስጥ npm run db:seed:test ከሰሩ በኋላ 0987654321 (የሙከራ ተጫዋች) ይሞክሩ።",
       "nationalId": "የብሔራዊ መታወቂያ ቁጥር",
       "nationalIdRequired": "የብሔራዊ መታወቂያ ቁጥር ያስፈልጋል",
       "tradeLicense": "የንግድ ፈቃድ",
       "tinCertificate": "TIN ሰርተፊኬት",
       "businessRegistration": "የንግድ ምዝገባ ሰርተፊኬት",
-      "kycNotice": "ሰነድ ከተሰቀለ በኋላ መለያዎ ይገመገማል። በጨረታ ለመሳተፍ KYC ማጽደቅ ያስፈልጋል።",
+      "devRegisterOtpLabel": "በአካባቢ ማሳደጊያ — SMS አልተላከም",
+      "devRegisterOtpHint": "ኮዱ ከታች በራሱ ተሞልቷል። በመጠቀሚያ ላይ በSMS ብቻ ይደርሳል።",
+      "orgDocumentsAfterVerify": "የንግድ ፈቃድ፣ TIN ሰርተፊኬት እና የንግድ ምዝገባ ሰነዶች ስልክዎ ከተረጋገጠ በኋላ በሚቀጥለው ደረጃ ይሰቀላሉ።",
+      "kycNotice": "ስልክ ቁጥርዎን ከረጋገጡ በኋላ ለKYC ግምገማ የማንነት ሰነዶችን ታስቀማላችሁ። ከጨረታ ለመሳተፍ KYC ማጽደቅ ያስፈልጋል።",
       "otpTitle": "የሞባይል ቁጥር አረጋግጥ",
       "otpLead": "ወደ የተላከው 6-አሃዝ ኮድ ያስገቡ",
       "otpTimer": "ኮዱ ያበቃል በ {{time}}",
@@ -747,8 +778,10 @@
     "emailOptional": "ኢሜይል (አማራጭ)",
     "password": "የይለፍ ቃል",
     "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+    "confirmPasswordRequired": "እባክዎ የይለፍ ቃልዎን ያረጋግጡ",
     "passwordMismatch": "የይለፍ ቃሎች አይዛመዱም",
     "passwordMinLength": "የይለፍ ቃል ቢያንስ 6 ቁምፊ መሆን አለበት",
+    "passwordResetNotAllowed": "ለዚህ መለያ የይለፍ ቃል ዳግም ማስጀመር አይቻልም።",
     "firstNameRequired": "ስም ያስፈልጋል",
     "organizationNameRequired": "የድርጅት ስም ያስፈልጋል",
     "invalidPhone": "ትክክለኛ የሞባይል ቁጥር ያስገቡ (ለምሳሌ 0912345678)",
@@ -769,6 +802,8 @@
     "companyNameRequired": "የኩባንያ ስም ያስፈልጋል",
     "tinRequired": "TIN ቁጥር ያስፈልጋል",
     "duplicatePhone": "ይህ ስልክ ቁጥር ቀድሞውኑ ተመዝግቧል",
+    "duplicateNationalId": "ይህ የብሔራዊ መታወቂያ ቁጥር ቀድሞውኑ ተመዝግቧል",
+    "duplicateTin": "ይህ TIN ቁጥር ቀድሞውኑ ተመዝግቧል",
     "noAccount": "መለያ የለዎት?",
     "createAccount": "መለያ ፍጠር",
     "genericError": "አንድ ስህተት ተከስቷል። እንደገና ይሞክሩ።",
@@ -807,6 +842,12 @@
     "businessRegistration": "የንግድ ምዝገባ",
     "submitting": "በመስቀል ላይ...",
     "submissionFailed": "KYC ስርጭት አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+    "documentNumberRequired": "የብሔራዊ መታወቂያ ቁጥር ያስፈልጋል",
+    "documentFrontRequired": "የብሔራዊ መታወቂያ የፊት ገጽ ፎቶ ያስፈልጋል",
+    "tinRequired": "TIN ቁጥር ያስፈልጋል",
+    "tradeLicenseRequired": "የንግድ ፈቃድ ሰነድ ያስፈልጋል",
+    "tinCertificateRequired": "TIN ሰርተፊኬት ያስፈልጋል",
+    "businessRegistrationRequired": "የንግድ ምዝገባ ሰርተፊኬት ያስፈልጋል",
     "managementSubtitle": "የተጠቃሚ KYC ሰነዶችን ይመልከቱ እና ያረጋግጡ",
     "statusFilters": "የሁኔታ ማጣሪያዎች",
     "selectSubmission": "ስርጭት ይምረጡ",
@@ -933,7 +974,18 @@
       "participate": "ተሳተፍ",
       "openDetail": "ጨረታ {{title}} ክፈት",
       "myStatus": "የእርስዎ ሁኔታ",
+      "participation": {
+        "not_registered": "አልተመዘገቡም"
+      },
       "photos": "ፎቶዎች",
+      "gallery": {
+        "previous": "ቀዳሚ ፎቶ",
+        "next": "ቀጣይ ፎቶ",
+        "openImage": "ፎቶ {{index}} ከ {{total}} ክፈት",
+        "selectImage": "ፎቶ {{index}} ከ {{total}} ይምረጡ",
+        "imageCounter": "{{current}} ከ {{total}}",
+        "expand": "ሙሉ መጠን ይመልከቱ"
+      },
       "auctionInfo": "የጨረታ መረጃ",
       "detailEyebrow": "የጨረታ ዝርዝር",
       "detailTitle": "ጨረታ",
@@ -944,11 +996,10 @@
       "placeBid": {
         "title": "ጨረታ ያስገቡ",
         "titleForLot": "በ {{lot}} ላይ ጨረታ ያስገቡ",
-        "hint": "በእያንዳንዱ ሎት አንድ ጨረታ። መጠኑ ከሎት መጠበቂያ ዋጋ በላይ መሆን አለበት።",
+        "hint": "በእያንዳንዱ ሎት አንድ ጨረታ። ትክክለኛ የታሸገ ጨረታ መጠን ያስገቡ።",
         "amountLabel": "የጨረታ መጠን (ETB)",
         "amountRequired": "ትክክለኛ የጨረታ መጠን ያስገቡ።",
-        "belowReserve": "ጨረታው ቢያንስ {{amount}} መሆን አለበት።",
-        "minAmount": "ዝቅተኛ {{amount}}",
+        "belowMinimum": "የጨረታ መጠንዎ ለዚህ ሎት የሚፈለገውን ዝቅተኛ መጠን አልሟላም።",
         "submit": "ጨረታ አስገባ",
         "submitting": "በመላክ ላይ...",
         "success": "ጨረታዎ በተሳካ ሁኔታ ተልኳል።",
@@ -963,18 +1014,23 @@
       "retry": "እንደገና ይሞክሩ",
       "documentFee": "የሰነድ ክፍያ",
       "journeyEyebrow": "የጨረታ ተሳታፊ ጉዞ",
+      "stepLabel": "ደረጃ {{step}} ከ {{total}}",
       "documents": "የጨረታ ሰነዶች",
       "document": "ሰነድ",
       "downloadDocument": "አውርድ",
+      "viewDocument": "ይመልከቱ",
+      "viewDocumentNamed": "{{name}} ይመልከቱ",
+      "openDocument": "ሰነድ ይክፈሉ",
+      "documentPreviewUnavailable": "ይህ የፋይል አይነት በአሳሽ ውስጥ ሊታይ አይችልም። በአዲስ ትር ይክፈቱት።",
       "documentsLockedTitle": "ሰነዶች ተቆልፈዋል",
       "documentsLocked": "የጨረታ ሰነዶችን ለመክፈት የሰነድ ክፍያ ይክፈሉ እና ማጽደቅ ይጠብቁ።",
       "documentsUnlockedTitle": "ሰነዶች ተከፍተዋል",
-      "documentsUnlockedCopy": "ለዚህ ጨረታ ተመዝግበዋል። ከታች ያሉትን ሰነዶች ይመልከቱ እና ያውርዱ።",
+      "documentsUnlockedCopy": "ለዚህ ጨረታ ተመዝግበዋል። ከታች ያሉትን ሰነዶች ይመልከቱ።",
       "documentsEmpty": "ለዚህ ጨረታ እስካሁን ምንም ሰነድ አልተያዘም።",
       "paymentCopy": "የሰነድ ክፍያ {{amount}} ይክፈሉ እና የክፍያ ደረሰኝ ይስቀሉ።",
       "cpoCopy": "የሰነድ ክፍያ ከጸደቀ በኋላ የተረጋገጠ የክፍያ ትዕዛዝ (CPO) ይስቀሉ።",
       "cpoNextAction": "ይህ የአሁኑ ደረጃዎ ነው። ወደ ጨረታ ለመቀጠል CPO ያስገቡ።",
-      "bidCopy": "CPO ከጸደቀ በኋላ በእያንዳንዱ የተመረጠ ሎት ከመጠበቂያ ዋጋ በላይ አንድ የታሸገ ጨረታ ያስገቡ።",
+      "bidCopy": "CPO ከጸደቀ በኋላ በእያንዳንዱ የተመረጠ ሎት አንድ የታሸገ ጨረታ ያስገቡ።",
       "bidLocked": {
         "notRegistered": "መጀመሪያ የሰነድ ክፍያ ያጠናቅቁ እና ማጽደቅ ይጠብቁ።",
         "submitCpo": "ተመዝግበዋል፣ ነገር ግን CPO እንዲጸድቅ ድረስ ጨረታ ተቆልፏል።",
@@ -990,8 +1046,8 @@
         "titleOpenMulti": "ለተመረጡት ሎቶች ጨረታ ያስገቡ",
         "titleWaiting": "ጨረታ በቅርቡ ይከፈታል",
         "titleClosed": "የጨረታ ጊዜ አልቋል",
-        "leadOpen": "ከመጠበቂያ ዋጋ {{amount}} በላይ መጠን ያስገቡ።",
-        "leadOpenMulti": "{{count}} ሎት(ዎች) ጨረታ ይፈልጋሉ። በእያንዳንዱ ሎት መጠበቂያ ዋጋ በላይ መጠን ያስገቡ።",
+        "leadOpen": "የታሸገ ጨረታ መጠንዎን ከታች ያስገቡ።",
+        "leadOpenMulti": "{{count}} ሎት(ዎች) ጨረታ ይፈልጋሉ። ለእያንዳንዱ ሎት ከታች መጠን ያስገቡ።",
         "leadWaiting": "ጨረታ በ {{start}} ይከፈታል እና በ {{end}} ይዘጋል (የምሥራቅ አፍሪካ ሰዓት)።",
         "leadClosed": "የጨረታ ጊዜው {{start}} እስከ {{end}} ነበር (የምሥራቅ አፍሪካ ሰዓት)።",
         "waitingHint": "CPO ጸድቋል። በ {{start}} እና {{end}} መካከል ተመልሰው ጨረታዎን እዚህ ያስገቡ።",
@@ -1063,7 +1119,7 @@
         "ready_to_bid": {
           "label": "ጨረታ ለማስገባት ዝግጁ",
           "title": "የታሸገ ጨረታዎን አሁን ያስገቡ",
-          "body": "CPO ጸድቋል። ከታች ያለውን የጨረታ ቅጽ በመጠቀም ከመጠበቂያ ዋጋ በላይ አንድ ጨረታ ያስገቡ።"
+          "body": "CPO ጸድቋል። ከታች ያለውን የጨረታ ቅጽ በመጠቀም የታሸገ ጨረታዎን ያስገቡ።"
         },
         "bidding_waiting": {
           "label": "CPO ጸድቋል",
@@ -1103,7 +1159,7 @@
         "cpoPercentage": "የ CPO መቶኛ",
         "requiredAmount": "የሚፈለግ የ CPO መጠን",
         "selectLots": "ለመጫረት የሚመረጡ ሎቶች",
-        "selectLotsHint": "የሚፈለግ CPO = የተመረጡ ሎቶች ጠቅላላ መጠበቂያ × {{percentage}}%።",
+        "selectLotsHint": "የሚፈለግ CPO ከተመረጡት ሎቶች × {{percentage}}% ይሰላል።",
         "lotFallback": "ሎት",
         "lotsRequired": "ለመጫረት ቢያንስ አንድ ሎት ይምረጡ።",
         "document": "CPO ሰነድ",
@@ -1331,6 +1387,8 @@
         "verifiedAt": "የተረጋገጠበት",
         "rejectionReason": "የመተው ምክንያት",
         "receipt": "ደረሰኝ",
+        "viewReceipt": "ደረሰኝ ይመልከቱ",
+        "receiptPreview": "የክፍያ ደረሰኝ ቅድመ-እይታ",
         "approve": "ያጽድቁ",
         "reject": "አትቀበል",
         "refresh": "አድስ"
@@ -1357,6 +1415,7 @@
     "my": {
       "pageTitle": "የኔ ክፍያዎች",
       "subtitle": "ለጨረታዎች የላኳቸውን የሰነድ ክፍያዎች ይከታተሉ።",
+      "searchPlaceholder": "በጨረታ ርዕስ ክፍያዎችን ይፈልጉ",
       "payHintTitle": "የሰነድ ክፍያ እንዴት ይከፍላሉ",
       "payHintBody": "ከጨረታዎችን ይመልከቱ ውስጥ ንቁ ጨረታ ይክፈቱ፣ ከዚያ በመሳተፍ ደረጃዎች ውስጥ የሰነድ ክፍያ ይክፈሉ።",
       "browseCta": "ጨረታዎችን ይመልከቱ",
@@ -1444,6 +1503,7 @@
     "my": {
       "pageTitle": "የኔ CPO",
       "subtitle": "የተረጋገጠ የክፍያ ትዕዛዝ ማስገባቶችዎን ይከታተሉ።",
+      "searchPlaceholder": "በጨረታ ርዕስ CPO መዝገቦችን ይፈልጉ",
       "empty": "እስካሁን ምንም CPO አላስገቡም።",
       "viewAction": "የ CPO ዝርዝር ይመልከቱ",
       "table": {
@@ -1501,6 +1561,7 @@
     "myBids": {
       "pageTitle": "የእኔ ጨረታዎች",
       "subtitle": "በጨረታዎች ላይ ያስገቡት ጨረታዎች።",
+      "searchPlaceholder": "በጨረታ ርዕስ ጨረታዎችን ይፈልጉ",
       "empty": "ገና ምንም ጨረታ አላስገቡም።",
       "openDetail": "ጨረታ ለ {{name}} ይክፈቱ",
       "viewAction": "ዝርዝር ይመልከቱ",
@@ -1656,12 +1717,14 @@
     "center": {
       "pageTitle": "ማሳወቂያዎች",
       "subtitle": "የእርስዎ የመተግበሪያ ማሳወቂያዎች።",
+      "searchPlaceholder": "በርዕስ ወይም በመልዕክት ማሳወቂያዎችን ይፈልጉ",
       "filters": "ማሳወቂያ ማጣሪያዎች",
       "markAllRead": "ሁሉንም እንደተነበበ ምልክት አድርግ",
       "markRead": "እንደተነበበ ምልክት አድርግ",
       "markAllSuccess": "ሁሉም ማሳወቂያዎች እንደተነበቡ ምልክት ተደርጎባቸዋል።",
       "markAllFailed": "ሁሉንም እንደተነበበ ምልክት ማድረግ አልተሳካም።",
       "markReadFailed": "ማሳወቂያ እንደተነበበ ምልክት ማድረግ አልተሳካም።",
+      "reviewPayment": "ክፍያ ይገምግሙ",
       "empty": "ምንም ማሳወቂያ አልተገኘም።",
       "tabs": {
         "all": "ሁሉም",
@@ -1675,6 +1738,11 @@
       "table": {
         "footer": "{{from}}–{{to}} ከ {{total}} ማሳወቂያዎች ታይቷል"
       }
+    },
+    "banner": {
+      "unreadOne": "1 ያልተነበበ ማሳወቂያ አለዎት።",
+      "unreadMany": "{{count}} ያልተነበቡ ማሳወቂያዎች አሉዎት።",
+      "viewAll": "ማሳወቂያዎችን ይመልከቱ"
     }
   },
   "reports": {
@@ -1897,6 +1965,8 @@
     "profile": {
       "pageTitle": "መገለጫዬ",
       "subtitle": "የመለያዎ መረጃ እና የማረጋገጫ ሁኔታ።",
+      "searchPlaceholder": "የመገለጫ መስኮችን ይፈልጉ",
+      "searchEmpty": "ከፍለጋዎ ጋር የሚዛመዱ የመገለጫ መስኮች የሉም።",
       "title": "መገለጫ",
       "loading": "መገለጫ በመጫን ላይ...",
       "loadFailed": "መገለጫ ማስገባት አልተሳካም።",

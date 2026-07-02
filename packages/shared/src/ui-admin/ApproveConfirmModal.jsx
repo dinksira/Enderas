@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '../ui/Button.jsx';
+import { ModalCloseButton } from '../ui/ModalCloseButton.jsx';
 
 /**
  * @param {{
@@ -38,6 +39,7 @@ export function ApproveConfirmModal({
         aria-labelledby={titleId}
         onClick={(event) => event.stopPropagation()}
       >
+        <ModalCloseButton onClick={onCancel} disabled={loading} />
         <h2 id={titleId} className="kyc-modal__title">
           {title}
         </h2>

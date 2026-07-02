@@ -208,8 +208,8 @@ export const PAGE_REGISTRY = Object.freeze([
     group: 'account',
     titleKey: 'users.profile.pageTitle',
     subtitleKey: 'users.profile.subtitle',
-    searchPlaceholderKey: 'admin.searchPlaceholder',
-    searchEnabled: false,
+    searchPlaceholderKey: 'users.profile.searchPlaceholder',
+    searchEnabled: true,
   },
   {
     id: 'browse-auctions',
@@ -232,8 +232,8 @@ export const PAGE_REGISTRY = Object.freeze([
     group: 'bidder',
     titleKey: 'bids.myBids.pageTitle',
     subtitleKey: 'bids.myBids.subtitle',
-    searchPlaceholderKey: 'admin.searchPlaceholder',
-    searchEnabled: false,
+    searchPlaceholderKey: 'bids.myBids.searchPlaceholder',
+    searchEnabled: true,
   },
   {
     id: 'my-payments',
@@ -244,8 +244,8 @@ export const PAGE_REGISTRY = Object.freeze([
     group: 'bidder',
     titleKey: 'payments.my.pageTitle',
     subtitleKey: 'payments.my.subtitle',
-    searchPlaceholderKey: 'admin.searchPlaceholder',
-    searchEnabled: false,
+    searchPlaceholderKey: 'payments.my.searchPlaceholder',
+    searchEnabled: true,
   },
   {
     id: 'my-cpo',
@@ -256,8 +256,8 @@ export const PAGE_REGISTRY = Object.freeze([
     group: 'bidder',
     titleKey: 'cpo.my.pageTitle',
     subtitleKey: 'cpo.my.subtitle',
-    searchPlaceholderKey: 'admin.searchPlaceholder',
-    searchEnabled: false,
+    searchPlaceholderKey: 'cpo.my.searchPlaceholder',
+    searchEnabled: true,
   },
   {
     id: 'my-assets',
@@ -268,8 +268,8 @@ export const PAGE_REGISTRY = Object.freeze([
     group: 'owner',
     titleKey: 'assets.my.title',
     subtitleKey: 'assets.my.subtitle',
-    searchPlaceholderKey: 'admin.searchPlaceholder',
-    searchEnabled: false,
+    searchPlaceholderKey: 'assets.my.searchPlaceholder',
+    searchEnabled: true,
   },
 ]);
 
@@ -279,8 +279,8 @@ export const EXTRA_PAGE_REGISTRY = Object.freeze([
     path: '/app/notifications',
     titleKey: 'notifications.center.pageTitle',
     subtitleKey: 'notifications.center.subtitle',
-    searchPlaceholderKey: 'admin.searchPlaceholder',
-    searchEnabled: false,
+    searchPlaceholderKey: 'notifications.center.searchPlaceholder',
+    searchEnabled: true,
   },
   {
     id: 'documents',

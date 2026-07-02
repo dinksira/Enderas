@@ -447,7 +447,7 @@
     },
     "requestWizard": {
       "title": "Asset Request",
-      "subtitle": "Submit one or more assets in guided steps. Our team will review each request before it enters the auction pipeline.",
+      "subtitle": "Fill in all sections below, add assets to your list, then submit when ready. Our team will review each request before it enters the auction pipeline.",
       "stepProgress": "Asset request progress",
       "locationHint": "Location details help evaluators verify your asset. You can skip fields you prefer not to share yet.",
       "reviewIntro": "Confirm your details before sending the request to the admin team.",
@@ -460,6 +460,12 @@
         "reservePrice": "e.g. 2500000",
         "auctionConditions": "Any terms, viewing rules, payment expectations, or special notes..."
       },
+      "sectionHints": {
+        "details": "Tell us about the asset you want to auction.",
+        "location": "Where is the asset and what are your auction terms?",
+        "documents": "Upload ownership proof and supporting documents.",
+        "review": "Complete the form above, then click Add to List. Submit when your queue is ready."
+      },
       "steps": {
         "details": "Asset Details",
         "location": "Location & Terms",
@@ -469,7 +475,7 @@
       },
       "batchReview": {
         "intro": "Review every asset below. Add more assets or submit them together when you are ready.",
-        "empty": "No assets in your list yet. Go back and complete the form to add one.",
+        "empty": "No assets in your list yet. Complete the form above and click Add to List.",
         "assetLabel": "Asset {{index}}",
         "queuedCount": "{{count}} asset(s) already queued. You can add more after this one.",
         "editing": "You are editing a queued asset.",
@@ -479,6 +485,7 @@
         "back": "Back",
         "next": "Continue",
         "addToQueue": "Add to List",
+        "updateQueue": "Update in List",
         "cancel": "Cancel",
         "submit": "Submit Request",
         "submitAll": "Submit {{count}} Requests",

@@ -1,4 +1,4 @@
-import { Button } from '@enderass/shared/ui';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { useTranslation } from 'react-i18next';
 /**
  * @param {{
@@ -29,6 +29,7 @@ export function AssetApproveConfirmModal({
         aria-labelledby="asset-approve-modal-title"
         onClick={(event) => event.stopPropagation()}
       >
+        <ModalCloseButton onClick={onCancel} disabled={loading} />
         <h2 id="asset-approve-modal-title" className="kyc-modal__title">
           {t('assets.review.approveModalTitle')}
         </h2>

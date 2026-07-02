@@ -1,4 +1,4 @@
-import { Button, Input } from '@enderass/shared/ui';
+import { Button, Input, ModalCloseButton } from '@enderass/shared/ui';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { userService } from '@enderass/shared/services';
@@ -121,6 +121,7 @@ export function UserEditModal({ open, user, loading = false, onClose, onSubmit }
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
+        <ModalCloseButton onClick={onClose} disabled={loading} />
         <h2 id="user-edit-modal-title" className="kyc-modal__title">
           {t('users.management.editModal.title')}
         </h2>

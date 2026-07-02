@@ -1,4 +1,4 @@
-import { Button } from '@enderass/shared/ui';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@enderass/shared/auth';
@@ -72,6 +72,7 @@ export function SelectReplacementModal({ open, loading = false, winner, onClose,
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
+        <ModalCloseButton onClick={onClose} disabled={loading} />
         <h2 id="replace-winner-title" className="kyc-modal__title">
           {t('winners.management.replaceModal.title')}
         </h2>

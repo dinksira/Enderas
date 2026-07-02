@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../ui/Button.jsx';
+import { ModalCloseButton } from '../ui/ModalCloseButton.jsx';
 
 const DEFAULT_MAX_LENGTH = 500;
 
@@ -85,6 +86,7 @@ export function RejectReasonModal({
         aria-labelledby={titleId}
         onClick={(event) => event.stopPropagation()}
       >
+        <ModalCloseButton onClick={handleClose} disabled={loading} />
         <h2 id={titleId} className="kyc-modal__title">
           {title}
         </h2>
