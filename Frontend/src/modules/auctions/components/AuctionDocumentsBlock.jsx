@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { DocumentViewer } from '@enderass/shared/ui';
 import { toLoadableMediaUrl } from '../../public/utils/landing-utils.js';
 
+import { resolveAuctionDocumentHref } from '../utils/auction-document-utils.js';
+
 function resolveDocument(doc, t) {
   const rawUrl = typeof doc === 'string' ? doc : doc?.url || doc?.fileUrl || '';
   const url = toLoadableMediaUrl(rawUrl) || rawUrl;
@@ -17,12 +19,18 @@ function resolveDocument(doc, t) {
 
 /**
  * @param {{
+ *   auctionId?: string,
  *   documents?: Array<string|object>,
  *   unlocked?: boolean,
  *   compact?: boolean,
  * }} props
  */
-export function AuctionDocumentsBlock({ documents = [], unlocked = false, compact = false }) {
+export function AuctionDocumentsBlock({
+  auctionId,
+  documents = [],
+  unlocked = false,
+  compact = false,
+}) {
   const { t } = useTranslation();
   const [viewerDoc, setViewerDoc] = useState(null);
 

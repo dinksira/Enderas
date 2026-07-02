@@ -1,4 +1,4 @@
-import { authenticate as baseAuthenticate } from '../../middleware/auth.middleware.js';
+import { authenticate as baseAuthenticate, optionalAuthenticate as baseOptionalAuthenticate } from '../../middleware/auth.middleware.js';
 import { UnauthorizedError } from '../../utils/error.util.js';
 import { logAccessDenied } from '../../services/audit.service.js';
 import { buildPermissionContext, authorizationPermissionService } from './permission.service.js';
@@ -184,9 +184,11 @@ export function attachDataScope(moduleName) {
 }
 
 export const authenticate = baseAuthenticate;
+export const optionalAuthenticate = baseOptionalAuthenticate;
 
 export const authorizationMiddleware = Object.freeze({
   authenticate,
+  optionalAuthenticate,
   authorize,
   authorizeFromRoute,
   attachDataScope,

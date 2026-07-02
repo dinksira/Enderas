@@ -328,8 +328,11 @@ async function main() {
     fail('5d', 'Documents still locked after payment approval');
   }
 
-  // --- Checkpoint 6: CPO upload + CSO approve ---
-  console.log('\n--- Checkpoint 6: CPO & bid form unlock ---');
+  // --- Checkpoint 6: Bid drafts + CPO package (mobile flow) or legacy CPO ---
+  console.log('\n--- Checkpoint 6: CPO & bid unlock ---');
+  const reserve = Number(auction.reservePrice ?? auction.reserve ?? 100000);
+  const auctionDetail = await api(bidderActive.accessToken, 'GET', `/auctions/browse/${auctionId}`);
+  const auctionLots = auctionDetail.json.data?.auction?.lots ?? [];
   const partCpo = (await api(
     bidderActive.accessToken,
     'GET',
@@ -344,10 +347,33 @@ async function main() {
       pass('6a', 'CPO document upload succeeded');
     }
 
-    const cpoCreate = await api(bidderActive.accessToken, 'POST', '/cpo', {
+    let cpoPayload = {
       auctionId,
       documentUrl: cpoFile.fileUrl,
-    });
+    };
+
+    if (auctionLots.length > 0 && partCpo?.gates?.canEditBidDrafts !== false) {
+      const lot = auctionLots[0];
+      const bidAmount = Number(lot.reservePrice ?? reserve);
+      const draftUpsert = await api(bidderActive.accessToken, 'PUT', '/bid-drafts', {
+        auctionId,
+        auctionAssetId: lot.id,
+        amount: bidAmount,
+      });
+
+      if (draftUpsert.ok) {
+        pass('6a-draft', `Bid draft saved for lot ${lot.id} at ${bidAmount}`);
+        cpoPayload = {
+          ...cpoPayload,
+          proposedBids: [{ auctionAssetId: lot.id, amount: bidAmount }],
+          declaredCpoAmount: Math.round((bidAmount * Number(auction.cpoPercentage ?? 5)) / 100),
+        };
+      } else {
+        skip('6a-draft', `Bid draft upsert skipped: ${draftUpsert.json.message}`);
+      }
+    }
+
+    const cpoCreate = await api(bidderActive.accessToken, 'POST', '/cpo', cpoPayload);
 
     let cpoId = cpoCreate.json.data?.cpo?.id ?? cpoCreate.json.data?.id;
     if (cpoCreate.ok) {
@@ -386,18 +412,21 @@ async function main() {
 
   const canBid = partBid?.gates?.canPlaceBid;
   const cpoGate = partBid?.gates?.cpoApproved;
+  const hasSubmittedBid = partBid?.flags?.hasBid;
 
-  if (cpoGate && (canBid || partBid?.gates?.biddingWindowStatus === 'before')) {
-    pass('6d', `Bid form gate open — cpoApproved: true, canPlaceBid: ${Boolean(canBid)}, window: ${partBid?.gates?.biddingWindowStatus}`);
+  if (cpoGate && (hasSubmittedBid || canBid || partBid?.gates?.biddingWindowStatus === 'before')) {
+    pass(
+      '6d',
+      `Bid gate ready — cpoApproved: true, hasBid: ${Boolean(hasSubmittedBid)}, canPlaceBid: ${Boolean(canBid)}, window: ${partBid?.gates?.biddingWindowStatus}`,
+    );
   } else if (partBid?.flags?.hasBid) {
     skip('6d', 'Bid already placed from prior run');
   } else {
-    fail('6d', `Bid gate not ready — cpoApproved: ${cpoGate}, canPlaceBid: ${canBid}`);
+    fail('6d', `Bid gate not ready — cpoApproved: ${cpoGate}, hasBid: ${hasSubmittedBid}, canPlaceBid: ${canBid}`);
   }
 
-  // --- Checkpoint 7: Place bid + duplicate block ---
+  // --- Checkpoint 7: Place bid (legacy) if CPO package did not create bids ---
   console.log('\n--- Checkpoint 7: Bid placement ---');
-  const reserve = Number(auction.reservePrice ?? auction.reserve ?? 100000);
   const bidAmount = reserve;
 
   if (!partBid?.flags?.hasBid && !partBid?.bid) {
@@ -438,8 +467,16 @@ async function main() {
     fail('7b', `Unexpected second bid response: ${bid2.json.code}`);
   }
 
-  // --- Checkpoint 8: Browse published only ---
+  // --- Checkpoint 8: Browse published only (+ optional anonymous browse) ---
   console.log('\n--- Checkpoint 8: Browse filter ---');
+  const browseAnon = await fetch(`${BASE}/v1/auctions/browse`);
+  const browseAnonJson = await browseAnon.json().catch(() => ({}));
+  if (browseAnon.ok && browseAnonJson.success) {
+    pass('8a', `Anonymous browse allowed (${browseAnonJson.data?.items?.length ?? 0} auctions)`);
+  } else {
+    fail('8a', `Anonymous browse failed: ${browseAnonJson.message || browseAnon.status}`);
+  }
+
   const browse = await api(bidderActive.accessToken, 'GET', '/auctions/browse');
   const statuses = [...new Set((browse.json.data?.items ?? []).map((i) => i.dbStatus || i.status))];
   const nonPublished = statuses.filter((s) => String(s).toLowerCase() !== 'published');

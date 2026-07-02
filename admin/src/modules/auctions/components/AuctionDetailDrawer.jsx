@@ -589,7 +589,7 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
                             <p className="auction-drawer__document-size">{formatFileSize(doc.size)}</p>
                           </div>
                           <a
-                            href={doc.url}
+                            href={resolveMediaUrl(doc.url)}
                             className="auction-drawer__download-btn"
                             download={doc.name}
                             target="_blank"

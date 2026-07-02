@@ -288,7 +288,11 @@ export function AuctionParticipationPanel({
         </p>
       )}
 
-      <AuctionDocumentsBlock documents={documents} unlocked={showDocuments} />
+      <AuctionDocumentsBlock
+        auctionId={auction?.id}
+        documents={documents}
+        unlocked={showDocuments}
+      />
     </section>
   );
 }

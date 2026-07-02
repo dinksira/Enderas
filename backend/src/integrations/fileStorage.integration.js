@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { env } from '../config/env.config.js';
 import { v4 as uuidv4 } from 'uuid';
+import { env } from '../config/env.config.js';
+import { getPublicApiBaseUrl } from '../utils/media-url.util.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +20,11 @@ class LocalFileStorage {
     }
   }
 
+  /** Public static URL root — strips a trailing /v1 from API_BASE_URL when present. */
+  getPublicBaseUrl() {
+    return getPublicApiBaseUrl();
+  }
+
   async upload(file, folder = 'default') {
     const fileExt = path.extname(file.originalname);
     const fileName = `${uuidv4()}${fileExt}`;
@@ -31,7 +37,7 @@ class LocalFileStorage {
     const filePath = path.join(folderPath, fileName);
     fs.writeFileSync(filePath, file.buffer);
 
-    const fileUrl = `${env.apiBaseUrl}/uploads/${folder}/${fileName}`;
+    const fileUrl = `${this.getPublicBaseUrl()}/uploads/${folder}/${fileName}`;
 
     return {
       fileName,
@@ -53,7 +59,7 @@ class LocalFileStorage {
   }
 
   async getUrl(filePath) {
-    return `${env.apiBaseUrl}/uploads/${filePath}`;
+    return `${this.getPublicBaseUrl()}/uploads/${filePath}`;
   }
 }
 

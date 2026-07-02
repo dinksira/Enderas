@@ -6,11 +6,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '@/lib/appStore';
+import { resolveMediaUrl } from '@/lib/media-utils';
 import { getCategoryTheme } from '@/theme/categoryColors';
 import { toneToStatus, type UiTone } from '@/theme/statusTones';
 import { Typography, Spacing, Radii } from '@/theme';
 import { PressableScale } from '@/components/ui';
-import { ParticipationDemoChip } from '@/components/auction/ParticipationDemoChip';
 import { statusTone } from '@/lib/auctionUtils';
 import type { BrowseAuction } from '@/types/auction';
 
@@ -45,7 +45,7 @@ function BrowseAuctionCardImpl({ auction, onPress, compact }: BrowseAuctionCardP
   const statusColors = toneToStatus(tone, colors);
 
   const statusLabel = t(`dashboard.filters.${auction.status.toLowerCase()}`);
-  const thumbnailUri = auction.imageUrls[0];
+  const thumbnailUri = resolveMediaUrl(auction.imageUrls[0]);
   const categoryLabel = t(`dashboard.categories.${auction.category}`, {
     defaultValue: auction.category,
   });
@@ -119,7 +119,6 @@ function BrowseAuctionCardImpl({ auction, onPress, compact }: BrowseAuctionCardP
         </View>
 
         <View style={[styles.body, { padding: bodyPadding }]}>
-          <ParticipationDemoChip auctionId={auction.id} compact />
           <Text
             style={[Typography.cardTitle, { color: colors.cream }]}
             numberOfLines={titleLines}

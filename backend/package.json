@@ -6,11 +6,25 @@
   "scripts": {
     "start": "node --env-file=.env server.js",
     "dev": "node --watch --env-file=.env server.js",
-    "db:migrate": "sequelize-cli db:migrate",
+    "db": "node --env-file=.env scripts/db/cli.mjs",
+    "db:migrate": "node --env-file=.env scripts/db/cli.mjs migrate",
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
-    "db:seed:test": "node --env-file=.env seed-test-users.js",
+    "db:setup": "node --env-file=.env scripts/db/cli.mjs setup test",
+    "db:setup:normal": "node --env-file=.env scripts/db/cli.mjs setup normal",
+    "db:setup:test": "node --env-file=.env scripts/db/cli.mjs setup test",
+    "db:seed": "node --env-file=.env scripts/db/cli.mjs seed test",
+    "db:seed:normal": "node --env-file=.env scripts/db/cli.mjs seed normal",
+    "db:seed:test": "node --env-file=.env scripts/db/cli.mjs seed test",
+    "db:seed:auctions": "node --env-file=.env scripts/db/cli.mjs seed test --only=auctions",
+    "db:reseed": "node --env-file=.env scripts/db/cli.mjs reseed test",
+    "db:reseed:normal": "node --env-file=.env scripts/db/cli.mjs reseed normal",
+    "db:reseed:test": "node --env-file=.env scripts/db/cli.mjs reseed test",
+    "db:reset": "node --env-file=.env scripts/db/cli.mjs reset test",
+    "db:reset:normal": "node --env-file=.env scripts/db/cli.mjs reset normal",
+    "db:reset:test": "node --env-file=.env scripts/db/cli.mjs reset test",
     "test": "node --test tests/rbac.policy.test.js",
-    "test:rbac": "node --test tests/rbac.policy.test.js"
+    "test:rbac": "node --test tests/rbac.policy.test.js",
+    "test:auction-flow": "node --env-file=.env scripts/run-auction-flow-test.mjs"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

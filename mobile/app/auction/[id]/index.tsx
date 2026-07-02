@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Image } from 'expo-image';
@@ -7,68 +7,96 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { LockedActionButton } from '@/components/auction/LockedActionButton';
-import { ParticipationDemoChip } from '@/components/auction/ParticipationDemoChip';
+import { LotParticipationOverview } from '@/components/auction/LotParticipationOverview';
 import { ParticipationStatusBanner } from '@/components/auction/ParticipationStatusBanner';
+import { KycRequiredModal } from '@/components/kyc/KycRequiredModal';
 import { ScreenShell } from '@/components/shell/ScreenShell';
 import { GlassCard } from '@/components/shell/GlassCard';
-import { findMockAuctionById } from '@/data/mockAuctions';
-import { getMockLotsForAuction } from '@/data/mockAuctionLots';
+import { useAuctionActionGate } from '@/hooks/useAuctionActionGate';
 import { useAuctionParticipation } from '@/hooks/useAuctionParticipation';
+import { canShowBuyDocButton } from '@/lib/auctionParticipationUtils';
+import { openAuctionDocumentInBrowser } from '@/lib/auctionDocumentUtils';
 import { formatEtbAmount, getCategoryTheme, statusTone } from '@/lib/auctionUtils';
+import {
+  buildLotParticipationRows,
+  shouldShowLotParticipationOverview,
+} from '@/lib/lotParticipationUtils';
 import { useTheme } from '@/lib/appStore';
+import { useAuthStore } from '@/lib/authStore';
+import { resolveMediaUrl } from '@/lib/media-utils';
 import { Typography, Spacing } from '@/theme';
 import { toneToStatus, type UiTone } from '@/theme/statusTones';
+import type { BrowseAuction } from '@/types/auction';
 
 export default function AuctionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const auctionId = id ?? '';
+  const { auction, participation, lots, loading, error, documentApproved, kycVerified } =
+    useAuctionParticipation(auctionId);
+  const { isAuthenticated, gateReason } = useAuctionActionGate();
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const [kycModalVisible, setKycModalVisible] = useState(false);
 
-  const auction = useMemo(() => (id ? findMockAuctionById(id) : undefined), [id]);
-  const participation = useAuctionParticipation(id ?? '');
-  const lots = useMemo(() => (id ? getMockLotsForAuction(id) : []), [id]);
+  const paymentStatus = participation?.payment?.status ?? 'none';
+  const showBuyDoc = canShowBuyDocButton(participation);
+  const showParticipationOverview = shouldShowLotParticipationOverview(participation);
+  const participationRows = useMemo(
+    () => buildLotParticipationRows(lots, participation),
+    [lots, participation],
+  );
+  const participationLocked = !isAuthenticated || gateReason === 'kyc';
+  const viewDocLocked = !documentApproved || participationLocked;
+  const bidLocked = !documentApproved || !kycVerified || participationLocked;
 
-  if (!auction || !id) {
-    return (
-      <ScreenShell
-        title={t('dashboard.browse.detailTitle')}
-        showBack
-        onBack={() => router.back()}
-        bottomPadding={40}
-      >
-        <GlassCard padding={Spacing.lg}>
-          <Text style={[Typography.body, { color: colors.danger.fg }]}>
-            {t('dashboard.browse.detailError')}
-          </Text>
-        </GlassCard>
-      </ScreenShell>
-    );
-  }
+  const viewDocHint = !isAuthenticated
+    ? t('auction.participation.loginRequired')
+    : !kycVerified
+      ? t('auction.participation.bidKycLocked')
+      : !documentApproved
+        ? t('auction.participation.viewDocLocked')
+        : undefined;
 
-  const theme = getCategoryTheme(auction.category);
-  const tone: UiTone = statusTone(auction.status);
-  const statusColors = toneToStatus(tone, colors);
-  const thumbnailUri = auction.imageUrls[0];
-  const categoryLabel = t(`dashboard.categories.${auction.category}`, {
-    defaultValue: auction.category,
-  });
-  const statusLabel = t(`dashboard.filters.${auction.status.toLowerCase()}`);
+  const bidHint = !isAuthenticated
+    ? t('auction.participation.loginRequired')
+    : !kycVerified
+      ? t('auction.participation.bidKycLocked')
+      : !documentApproved
+        ? t('auction.participation.bidDocLocked')
+        : undefined;
 
-  const paymentStatus = participation.record.documentPayment.status;
-  const showBuyDoc =
-    paymentStatus === 'none' || paymentStatus === 'rejected';
-  const docUnlocked = participation.documentApproved;
-  const viewDocLocked = !docUnlocked;
-  const bidLocked = !participation.canBid;
+  const handleParticipationAction = (path: string) => {
+    if (!isAuthenticated) {
+      router.push(`/(auth)/login?returnTo=${encodeURIComponent(path)}` as any);
+      return;
+    }
+    if (!kycVerified) {
+      setKycModalVisible(true);
+      return;
+    }
+    router.push(path as any);
+  };
 
-  const viewDocHint = viewDocLocked
-    ? t('auction.participation.viewDocLocked')
-    : undefined;
-  const bidHint = !participation.kycVerified
-    ? t('auction.participation.bidKycLocked')
-    : viewDocLocked
-      ? t('auction.participation.bidDocLocked')
-      : undefined;
+  const handleViewDocument = async () => {
+    if (!isAuthenticated) {
+      router.push(`/(auth)/login?returnTo=${encodeURIComponent(`/auction/${id}/document`)}` as any);
+      return;
+    }
+    if (!kycVerified) {
+      setKycModalVisible(true);
+      return;
+    }
+    if (!documentApproved) {
+      router.push(`/auction/${id}/document` as any);
+      return;
+    }
+
+    const opened = await openAuctionDocumentInBrowser(id, auction?.documents, 0, accessToken);
+    if (!opened) {
+      Alert.alert(t('auction.participation.downloadErrorTitle'), t('auction.participation.downloadErrorBody'));
+    }
+  };
 
   const renderParticipationBanner = () => {
     if (paymentStatus === 'pending') {
@@ -81,27 +109,25 @@ export default function AuctionDetailScreen() {
         />
       );
     }
-    if (paymentStatus === 'approved' && participation.record.cpo.locked) {
-      if (participation.record.cpo.status === 'pending') {
-        return (
-          <ParticipationStatusBanner
-            tone="pending"
-            icon="shield-sync-outline"
-            title={t('auction.participation.cpoPendingTitle')}
-            message={t('auction.participation.cpoPendingBody')}
-          />
-        );
-      }
-      if (participation.record.cpo.status === 'approved') {
-        return (
-          <ParticipationStatusBanner
-            tone="won"
-            icon="check-decagram-outline"
-            title={t('auction.participation.cpoApprovedTitle')}
-            message={t('auction.participation.cpoApprovedBody')}
-          />
-        );
-      }
+    if (participation?.cpo?.status === 'pending') {
+      return (
+        <ParticipationStatusBanner
+          tone="pending"
+          icon="shield-sync-outline"
+          title={t('auction.participation.cpoPendingTitle')}
+          message={t('auction.participation.cpoPendingBodyDetailed')}
+        />
+      );
+    }
+    if (participation?.cpo?.status === 'approved' || participation?.flags?.hasBid) {
+      return (
+        <ParticipationStatusBanner
+          tone="won"
+          icon="check-decagram-outline"
+          title={t('auction.participation.cpoApprovedTitle')}
+          message={t('auction.participation.cpoApprovedBodyDetailed')}
+        />
+      );
     }
     if (paymentStatus === 'approved') {
       return (
@@ -116,6 +142,37 @@ export default function AuctionDetailScreen() {
     return null;
   };
 
+  if (loading && !auction) {
+    return (
+      <ScreenShell title={t('dashboard.browse.detailTitle')} showBack onBack={() => router.back()} bottomPadding={40}>
+        <View style={styles.centered}>
+          <ActivityIndicator color={colors.goldBright} />
+        </View>
+      </ScreenShell>
+    );
+  }
+
+  if (!auction || !id || error) {
+    return (
+      <ScreenShell title={t('dashboard.browse.detailTitle')} showBack onBack={() => router.back()} bottomPadding={40}>
+        <GlassCard padding={Spacing.lg}>
+          <Text style={[Typography.body, { color: colors.danger.fg }]}>
+            {error ?? t('dashboard.browse.detailError')}
+          </Text>
+        </GlassCard>
+      </ScreenShell>
+    );
+  }
+
+  const theme = getCategoryTheme(auction.category);
+  const tone: UiTone = statusTone(auction.status as BrowseAuction['status']);
+  const statusColors = toneToStatus(tone, colors);
+  const thumbnailUri = resolveMediaUrl(auction.imageUrls?.[0]);
+  const categoryLabel = t(`dashboard.categories.${auction.category}`, {
+    defaultValue: auction.category,
+  });
+  const statusLabel = t(`dashboard.filters.${auction.status.toLowerCase()}`);
+
   return (
     <ScreenShell
       title={t('dashboard.browse.detailEyebrow')}
@@ -124,7 +181,6 @@ export default function AuctionDetailScreen() {
       onBack={() => router.back()}
       bottomPadding={40}
     >
-      <ParticipationDemoChip auctionId={id} />
       {renderParticipationBanner()}
 
       <View style={styles.hero}>
@@ -165,14 +221,10 @@ export default function AuctionDetailScreen() {
 
       <GlassCard padding={16} style={styles.infoCard}>
         <View style={styles.infoRow}>
-          <InfoCell
-            label={t('dashboard.browse.category')}
-            value={categoryLabel}
-            colors={colors}
-          />
+          <InfoCell label={t('dashboard.browse.category')} value={categoryLabel} colors={colors} />
           <InfoCell
             label={t('dashboard.browse.ends')}
-            value={auction.endingDate}
+            value={auction.endingDate ?? auction.endDate ?? '—'}
             colors={colors}
             align="right"
           />
@@ -180,7 +232,7 @@ export default function AuctionDetailScreen() {
         <View style={[styles.infoRow, { marginTop: 12 }]}>
           <InfoCell
             label={t('auction.participation.documentFee')}
-            value={formatEtbAmount(auction.documentPrice)}
+            value={formatEtbAmount(auction.documentFee)}
             colors={colors}
           />
           <InfoCell
@@ -201,6 +253,10 @@ export default function AuctionDetailScreen() {
         </Text>
       </GlassCard>
 
+      {showParticipationOverview ? (
+        <LotParticipationOverview rows={participationRows} onlyActiveLots compact />
+      ) : null}
+
       <GlassCard padding={16}>
         <Text style={[styles.sectionTitle, { color: colors.goldChampagne, marginBottom: 12 }]}>
           {t('auction.participation.actions')}
@@ -210,7 +266,7 @@ export default function AuctionDetailScreen() {
             <LockedActionButton
               label={t('auction.participation.buyDoc')}
               locked={false}
-              onPress={() => router.push(`/auction/${id}/buy-doc`)}
+              onPress={() => handleParticipationAction(`/auction/${id}/buy-doc`)}
             />
           ) : paymentStatus === 'pending' ? (
             <LockedActionButton
@@ -226,19 +282,34 @@ export default function AuctionDetailScreen() {
             label={t('auction.participation.viewDoc')}
             locked={viewDocLocked}
             lockedHint={viewDocHint}
-            onPress={() => router.push(`/auction/${id}/document`)}
-            variant={showBuyDoc || paymentStatus === 'pending' ? 'outline' : 'primary'}
+            onPress={() => {
+              void handleViewDocument();
+            }}
+            variant="outline"
           />
 
           <LockedActionButton
-            label={t('auction.participation.placeBids')}
+            label={
+              showParticipationOverview
+                ? t('auction.participation.viewYourBids')
+                : t('auction.participation.placeBids')
+            }
             locked={bidLocked}
             lockedHint={bidHint}
-            onPress={() => router.push(`/auction/${id}/bid`)}
+            onPress={() => handleParticipationAction(`/auction/${id}/bid`)}
             variant="outline"
           />
         </View>
       </GlassCard>
+
+      <KycRequiredModal
+        visible={kycModalVisible}
+        onClose={() => setKycModalVisible(false)}
+        onVerify={() => {
+          setKycModalVisible(false);
+          router.push('/kyc' as any);
+        }}
+      />
     </ScreenShell>
   );
 }
@@ -265,6 +336,10 @@ function InfoCell({
 }
 
 const styles = StyleSheet.create({
+  centered: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
   hero: {
     height: 220,
     borderRadius: 18,

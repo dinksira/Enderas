@@ -6,11 +6,13 @@ import { generateUuid } from '../utils/crypto.util.js';
 import {
   normalizeLotIdList,
   computeRequiredCpoAmount,
+  computeRequiredCpoFromBidAmounts,
   roundMoney,
 } from '../utils/auction-lot.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
 import { paymentService } from './payment.service.js';
+import { bidDraftService } from './bid-draft.service.js';
 
 const cpoInclude = [
   {
@@ -74,6 +76,24 @@ function serializeCpoListRow(cpo) {
   };
 }
 
+function parseStoredProposedBids(value) {
+  let entries = value;
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      entries = JSON.parse(value);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(entries)) {
+    return [];
+  }
+  return entries.map((entry) => ({
+    auctionAssetId: entry?.auctionAssetId ?? entry?.auction_asset_id ?? null,
+    amount: Number(entry?.amount),
+  }));
+}
+
 function serializeCpoDetail(cpo) {
   const row = serializeCpoListRow(cpo);
   const plain = cpo.get ? cpo.get({ plain: true }) : cpo;
@@ -83,6 +103,7 @@ function serializeCpoDetail(cpo) {
     selectedAuctionAssetIds: normalizeLotIdList(plain.selected_auction_asset_ids),
     requiredCpoAmount: plain.required_cpo_amount != null ? Number(plain.required_cpo_amount) : null,
     declaredCpoAmount: plain.declared_cpo_amount != null ? Number(plain.declared_cpo_amount) : null,
+    proposedBids: parseStoredProposedBids(plain.proposed_bids),
     reviewedByStaffId: plain.reviewed_by_staff_id,
     reviewedByName: buildStaffDisplayName(plain.reviewedByStaff),
     reviewedAt: plain.reviewed_at,
@@ -173,7 +194,7 @@ export async function getCpoById(id, scope = {}) {
 }
 
 export async function createCpo(
-  { auctionId, documentUrl, selectedAuctionAssetIds, declaredCpoAmount },
+  { auctionId, documentUrl, selectedAuctionAssetIds, declaredCpoAmount, proposedBids },
   userId,
 ) {
   const resolvedAuctionId = auctionId;
@@ -212,10 +233,33 @@ export async function createCpo(
     order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
   });
 
+  const normalizedProposedBids = bidDraftService.normalizeProposedBids(proposedBids);
+  const usesBidPackageFlow = normalizedProposedBids.length > 0;
+
   let selectedIds = normalizeLotIdList(selectedAuctionAssetIds);
   const isMultiLot = auction.auction_mode === 'multi' || lots.length > 1;
 
-  if (lots.length === 1 && !selectedIds.length) {
+  if (usesBidPackageFlow) {
+    selectedIds = normalizedProposedBids
+      .map((entry) => entry.auctionAssetId)
+      .filter(Boolean);
+
+    if (lots.length === 1 && !selectedIds.length) {
+      selectedIds = [lots[0].id];
+      normalizedProposedBids[0].auctionAssetId = lots[0].id;
+    }
+
+    for (const proposed of normalizedProposedBids) {
+      await bidDraftService.upsertBidDraft(
+        {
+          auctionId: resolvedAuctionId,
+          auctionAssetId: proposed.auctionAssetId,
+          amount: proposed.amount,
+        },
+        userId,
+      );
+    }
+  } else if (lots.length === 1 && !selectedIds.length) {
     selectedIds = [lots[0].id];
   }
 
@@ -229,7 +273,12 @@ export async function createCpo(
   }
 
   let requiredCpoAmount = 0;
-  if (lots.length > 0) {
+  if (usesBidPackageFlow) {
+    requiredCpoAmount = computeRequiredCpoFromBidAmounts(
+      normalizedProposedBids,
+      auction.cpo_percentage,
+    );
+  } else if (lots.length > 0) {
     requiredCpoAmount = computeRequiredCpoAmount(lots, selectedIds, auction.cpo_percentage);
   } else {
     const reserve = Number(auction.reserve_price);
@@ -252,7 +301,17 @@ export async function createCpo(
     selected_auction_asset_ids: selectedIds.length > 0 ? selectedIds : null,
     required_cpo_amount: requiredCpoAmount > 0 ? requiredCpoAmount : null,
     declared_cpo_amount: Number.isFinite(declaredAmount) && declaredAmount > 0 ? declaredAmount : null,
+    proposed_bids: usesBidPackageFlow ? normalizedProposedBids : null,
   });
+
+  if (usesBidPackageFlow) {
+    await bidDraftService.lockBidDraftsForCpo({
+      userId,
+      auctionId: resolvedAuctionId,
+      cpoId: cpo.id,
+      proposedBids: normalizedProposedBids,
+    });
+  }
 
   await auditService.writeAuditLog({
     userId,
@@ -263,6 +322,7 @@ export async function createCpo(
       auctionId: resolvedAuctionId,
       selectedAuctionAssetIds: selectedIds,
       requiredCpoAmount,
+      proposedBids: usesBidPackageFlow ? normalizedProposedBids : null,
     },
   });
 
@@ -287,6 +347,11 @@ export async function approveCpo(id, staffId, expiryDate = null) {
     rejection_reason: null,
     expiry_date: expiryDate || null,
   });
+
+  const proposedBids = parseStoredProposedBids(cpo.proposed_bids);
+  if (proposedBids.length > 0) {
+    await bidDraftService.promoteBidDraftsOnCpoApproval(cpo);
+  }
 
   await auditService.writeAuditLog({
     staffId,
@@ -323,6 +388,8 @@ export async function rejectCpo(id, rejectionReason, staffId) {
     reviewed_at: new Date(),
     rejection_reason: reason,
   });
+
+  await bidDraftService.unlockBidDraftsForCpo(cpo.id);
 
   await auditService.writeAuditLog({
     staffId,

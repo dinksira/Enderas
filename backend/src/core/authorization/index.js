@@ -1,4 +1,4 @@
-import { authenticate, authorize, authorizeFromRoute, attachDataScope } from './authorization.middleware.js';
+import { authenticate, optionalAuthenticate, authorize, authorizeFromRoute, attachDataScope } from './authorization.middleware.js';
 import { policyEngine } from './policy.engine.js';
 import { authorizationPermissionService } from './permission.service.js';
 import { roleService } from './role.service.js';
@@ -14,6 +14,7 @@ import {
 
 export {
   authenticate,
+  optionalAuthenticate,
   authorize,
   authorizeFromRoute,
   attachDataScope,
@@ -31,6 +32,7 @@ export {
 
 export default {
   authenticate,
+  optionalAuthenticate,
   authorize,
   authorizeFromRoute,
   attachDataScope,

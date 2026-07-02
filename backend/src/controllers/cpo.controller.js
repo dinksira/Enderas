@@ -56,6 +56,7 @@ export async function createCpo(req, res, next) {
         selectedAuctionAssetIds:
           req.body.selectedAuctionAssetIds || req.body.selected_auction_asset_ids,
         declaredCpoAmount: req.body.declaredCpoAmount ?? req.body.declared_cpo_amount,
+        proposedBids: req.body.proposedBids ?? req.body.proposed_bids,
       },
       resolveUserId(req),
     );

@@ -1,6 +1,16 @@
 import { ENV } from '@/lib/env';
 
 /**
+ * Normalize upload URLs returned by the API so they match the static mount at /api/uploads.
+ * Handles legacy values that incorrectly include /api/v1/uploads.
+ */
+export function normalizeUploadUrl(url: string): string {
+  return url
+    .replace(/\/api\/v1\/uploads\//g, '/api/uploads/')
+    .replace(/\/v1\/uploads\//g, '/uploads/');
+}
+
+/**
  * Rewrites server file URLs so they are reachable from the device.
  * The backend may return localhost URLs even when the app talks to a LAN/WSL host.
  */
@@ -11,25 +21,38 @@ export function resolveMediaUrl(url?: string | null): string | undefined {
     return url;
   }
 
+  let normalized = normalizeUploadUrl(url);
+  const apiBase = ENV.apiBaseUrl.replace(/\/v1\/?$/, '').replace(/\/$/, '');
+
+  if (normalized.startsWith('/uploads/')) {
+    return `${apiBase}${normalized}`;
+  }
+
+  if (normalized.startsWith('/api/uploads/')) {
+    const origin = apiBase.replace(/\/api\/?$/, '');
+    return `${origin}${normalized}`;
+  }
+
   try {
-    const apiBase = new URL(ENV.apiBaseUrl);
-    const parsed = new URL(url);
+    const apiBaseUrl = new URL(apiBase.includes('://') ? apiBase : `http://${apiBase}`);
+    const parsed = new URL(normalized, apiBaseUrl.origin);
+
+    parsed.pathname = normalizeUploadUrl(parsed.pathname);
 
     if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
-      parsed.hostname = apiBase.hostname;
-      parsed.protocol = apiBase.protocol;
-      if (apiBase.port) {
-        parsed.port = apiBase.port;
+      parsed.hostname = apiBaseUrl.hostname;
+      parsed.protocol = apiBaseUrl.protocol;
+      if (apiBaseUrl.port) {
+        parsed.port = apiBaseUrl.port;
       } else {
         parsed.port = '';
       }
-      return parsed.toString();
     }
-  } catch {
-    return url;
-  }
 
-  return url;
+    return parsed.toString();
+  } catch {
+    return normalized;
+  }
 }
 
 export function isImageMimeType(mimeType?: string | null): boolean {

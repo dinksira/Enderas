@@ -14,7 +14,8 @@ export interface BrowseAuction {
   endingDate: string;
   endDate: string;
   /** Document fee required before viewing docs and bidding. */
-  documentPrice: number;
-  /** Simulated CPO percentage (backend: cpo_percentage). */
+  documentFee: number;
+  /** CPO percentage from auction settings. */
   cpoPercentage: number;
+  myParticipationStatus?: string;
 }

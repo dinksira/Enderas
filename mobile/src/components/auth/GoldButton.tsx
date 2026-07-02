@@ -98,12 +98,13 @@ export function GoldButton({
                 colors={[colors.goldDeep, colors.goldBright, colors.gold, colors.goldDeep]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={StyleSheet.absoluteFill}
+                style={[StyleSheet.absoluteFill, styles.gradientLayer]}
               />
-              <View style={authStyles.topHighlight} />
+              <View style={[authStyles.topHighlight, styles.gradientLayer]} />
               <Animated.View
                 style={[
                   authStyles.shimmerOverlay,
+                  styles.gradientLayer,
                   { transform: [{ translateX: shimmerTx }, { skewX: '-20deg' }] },
                 ]}
               />
@@ -128,6 +129,9 @@ export function GoldButton({
 const styles = StyleSheet.create({
   compactButton: {
     marginBottom: 0,
+  },
+  gradientLayer: {
+    zIndex: 0,
   },
 });
 

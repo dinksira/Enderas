@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   authenticate,
+  optionalAuthenticate,
   authorize,
   attachDataScope,
   MODULES,
@@ -21,6 +22,7 @@ import { evaluationController } from '../controllers/evaluation.controller.js';
 import { paymentController } from '../controllers/payment.controller.js';
 import { cpoController } from '../controllers/cpo.controller.js';
 import { bidController } from '../controllers/bid.controller.js';
+import { bidDraftController } from '../controllers/bid-draft.controller.js';
 import { winnerController } from '../controllers/winner.controller.js';
 import { notificationController } from '../controllers/notification.controller.js';
 import { dashboardController } from '../controllers/dashboard.controller.js';
@@ -324,12 +326,10 @@ v1Router.post(
   evaluationController.rescheduleEvaluation,
 );
 
-// Auctions
+// Auctions — public browse (optional auth for myParticipation)
 v1Router.get(
   '/auctions/browse',
-  authenticate,
-  attachDataScope(MODULES.BIDS),
-  authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
+  optionalAuthenticate,
   auctionController.listBrowseAuctions,
 );
 v1Router.get(
@@ -340,10 +340,22 @@ v1Router.get(
   auctionController.getAuctionParticipation,
 );
 v1Router.get(
-  '/auctions/browse/:id',
+  '/auctions/browse/:id/documents/:docIndex/stream',
   authenticate,
   attachDataScope(MODULES.BIDS),
   authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
+  auctionController.streamAuctionDocument,
+);
+v1Router.get(
+  '/auctions/browse/:id/bid-drafts',
+  authenticate,
+  attachDataScope(MODULES.BIDS),
+  authorize({ module: MODULES.BIDS, action: ACTIONS.READ }),
+  bidDraftController.listBidDraftsForAuction,
+);
+v1Router.get(
+  '/auctions/browse/:id',
+  optionalAuthenticate,
   auctionController.getBrowseAuctionById,
 );
 v1Router.get(
@@ -528,6 +540,22 @@ v1Router.post(
   authorize({ module: MODULES.BIDS, action: ACTIONS.CREATE }),
   requireKYCVerified,
   bidController.placeBid,
+);
+v1Router.put(
+  '/bid-drafts',
+  authenticate,
+  attachDataScope(MODULES.BIDS),
+  authorize({ module: MODULES.BIDS, action: ACTIONS.CREATE }),
+  requireKYCVerified,
+  bidDraftController.upsertBidDraft,
+);
+v1Router.delete(
+  '/bid-drafts/:id',
+  authenticate,
+  attachDataScope(MODULES.BIDS),
+  authorize({ module: MODULES.BIDS, action: ACTIONS.UPDATE }),
+  requireKYCVerified,
+  bidDraftController.deleteBidDraft,
 );
 
 // Winners

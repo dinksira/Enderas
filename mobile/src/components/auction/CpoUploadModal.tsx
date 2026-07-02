@@ -22,11 +22,12 @@ import { Typography } from '@/theme';
 interface CpoUploadModalProps {
   visible: boolean;
   cpoAmount: number;
+  submitting?: boolean;
   onClose: () => void;
-  onSubmit: (payload: { receiptUri: string; receiptName: string }) => void;
+  onSubmit: (payload: { receiptUri: string; receiptName: string; mimeType?: string }) => void | Promise<void>;
 }
 
-export function CpoUploadModal({ visible, cpoAmount, onClose, onSubmit }: CpoUploadModalProps) {
+export function CpoUploadModal({ visible, cpoAmount, submitting = false, onClose, onSubmit }: CpoUploadModalProps) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
   const anim = useRef(new Animated.Value(0)).current;
@@ -48,10 +49,14 @@ export function CpoUploadModal({ visible, cpoAmount, onClose, onSubmit }: CpoUpl
 
   const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] });
 
-  const handleSubmit = () => {
-    if (!receipt) return;
-    onSubmit({ receiptUri: receipt.uri, receiptName: receipt.name });
-    onClose();
+  const handleSubmit = async () => {
+    if (!receipt || submitting) return;
+    try {
+      await onSubmit({ receiptUri: receipt.uri, receiptName: receipt.name });
+      onClose();
+    } catch {
+      // Parent surfaces errors; keep modal open for retry.
+    }
   };
 
   return (
@@ -96,9 +101,9 @@ export function CpoUploadModal({ visible, cpoAmount, onClose, onSubmit }: CpoUpl
                 </View>
                 <View style={styles.actionButton}>
                   <GoldButton
-                    label={t('auction.participation.submitCpo')}
+                    label={submitting ? t('common.submitting') : t('auction.participation.submitCpo')}
                     onPress={handleSubmit}
-                    disabled={!receipt}
+                    disabled={!receipt || submitting}
                     compact
                   />
                 </View>

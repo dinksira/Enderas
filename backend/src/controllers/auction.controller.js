@@ -137,6 +137,28 @@ export async function deleteAuction(req, res, next) {
   }
 }
 
+export async function streamAuctionDocument(req, res, next) {
+  try {
+    const userId = req.user?.id ?? req.auth?.userId ?? null;
+    if (!userId) {
+      return next(new AppError('Authentication required', 401, 'UNAUTHORIZED'));
+    }
+
+    const docIndex = Number(req.params.docIndex);
+    const { absolutePath, fileName, mimeType } = await auctionService.resolveAuctionDocumentForStream(
+      req.params.id,
+      docIndex,
+      userId,
+    );
+
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `inline; filename="${fileName.replace(/"/g, '')}"`);
+    return res.sendFile(absolutePath);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const auctionController = Object.freeze({
   createAuction,
   listAuctions,
@@ -151,6 +173,7 @@ export const auctionController = Object.freeze({
   closeAuction,
   listEligibleAssetsForAuction,
   deleteAuction,
+  streamAuctionDocument,
 });
 
 export default auctionController;

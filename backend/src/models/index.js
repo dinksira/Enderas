@@ -14,6 +14,7 @@ import { Evaluation } from './evaluation.model.js';
 import { Payment } from './payment.model.js';
 import { Cpo } from './cpo.model.js';
 import { Bid } from './bid.model.js';
+import { BidDraft } from './bidDraft.model.js';
 import { Winner } from './winner.model.js';
 
 User.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
@@ -92,6 +93,15 @@ Auction.hasMany(Bid, { foreignKey: 'auction_id', as: 'bids' });
 Bid.belongsTo(AuctionAsset, { foreignKey: 'auction_asset_id', as: 'auctionAsset' });
 AuctionAsset.hasMany(Bid, { foreignKey: 'auction_asset_id', as: 'bids' });
 
+BidDraft.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(BidDraft, { foreignKey: 'user_id', as: 'bidDrafts' });
+BidDraft.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
+Auction.hasMany(BidDraft, { foreignKey: 'auction_id', as: 'bidDrafts' });
+BidDraft.belongsTo(AuctionAsset, { foreignKey: 'auction_asset_id', as: 'auctionAsset' });
+AuctionAsset.hasMany(BidDraft, { foreignKey: 'auction_asset_id', as: 'bidDrafts' });
+BidDraft.belongsTo(Cpo, { foreignKey: 'cpo_id', as: 'cpo' });
+Cpo.hasMany(BidDraft, { foreignKey: 'cpo_id', as: 'bidDrafts' });
+
 Winner.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
 Auction.hasMany(Winner, { foreignKey: 'auction_id', as: 'winners' });
 Winner.belongsTo(Bid, { foreignKey: 'bid_id', as: 'winningBid' });
@@ -118,6 +128,7 @@ export {
   Payment,
   Cpo,
   Bid,
+  BidDraft,
   Winner,
 };
 
@@ -138,5 +149,6 @@ export default {
   Payment,
   Cpo,
   Bid,
+  BidDraft,
   Winner,
 };

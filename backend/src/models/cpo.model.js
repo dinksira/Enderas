@@ -56,6 +56,10 @@ export const Cpo = sequelize.define(
       type: DataTypes.DECIMAL(18, 2),
       allowNull: true,
     },
+    proposed_bids: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
   },
   {
     tableName: 'cpos',
