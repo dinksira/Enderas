@@ -24,7 +24,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.webp"
     },
     "plugins": [
       "expo-system-ui",
