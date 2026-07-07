@@ -8,7 +8,7 @@ import { AuctionParticipationPanel } from './AuctionParticipationPanel.jsx';
 import { AuctionLotsPanel } from './AuctionLotsPanel.jsx';
 import { toLoadableMediaUrl } from '../../public/utils/landing-utils.js';
 import { DocumentPaymentModal } from './DocumentPaymentModal.jsx';
-import { CpoSubmitModal } from './CpoSubmitModal.jsx';
+import { CpoFinancialWizard } from './CpoFinancialWizard.jsx';
 import { auctionService } from '../services/auction-service.js';
 import {
   formatEtbAmount,
@@ -224,42 +224,130 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
   return (
     <>
       <div
-        className={`auction-drawer-overlay auction-drawer-overlay--bidder${visible ? ' auction-drawer-overlay--visible' : ''}`}
+        className={`kyc-modal-overlay${visible ? ' auction-drawer-overlay--visible' : ''}`}
         role="presentation"
         onClick={onClose}
+        style={{ zIndex: 1200 }}
       >
         <aside
-          className={`auction-drawer auction-drawer--bidder bidder-detail${visible ? ' auction-drawer--visible' : ''}`}
+          className={`kyc-modal bidder-detail-modal${visible ? ' auction-drawer--visible' : ''}`}
           role="dialog"
           aria-modal="true"
           aria-labelledby="bidder-auction-drawer-title"
           onClick={(event) => event.stopPropagation()}
         >
-          {hasGallery && (
-            <div className="bidder-detail__hero">
-              {!loading && !error && auction ? (
-                <AuctionImageGallery
-                  images={images}
-                  title={auction.title}
-                  activeIndex={galleryIndex}
-                  onActiveIndexChange={setGalleryIndex}
-                  onOpenViewer={setViewerIndex}
-                />
-              ) : (
-                <div className="bidder-detail__hero-placeholder" aria-hidden="true" />
+          <div style={{ width: '400px', backgroundColor: '#f9fafb', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+            {hasGallery && (
+              <div className="bidder-detail__hero" style={{ height: '300px', flexShrink: 0 }}>
+                {!loading && !error && auction ? (
+                  <AuctionImageGallery
+                    images={images}
+                    title={auction.title}
+                    activeIndex={galleryIndex}
+                    onActiveIndexChange={setGalleryIndex}
+                    onOpenViewer={setViewerIndex}
+                  />
+                ) : (
+                  <div className="bidder-detail__hero-placeholder" aria-hidden="true" />
+                )}
+              </div>
+            )}
+            <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+              <p className="bidder-detail__eyebrow">{t('bidder.browse.detailEyebrow')}</p>
+              <h2 id="bidder-auction-drawer-title" className="bidder-detail__title" style={{ marginTop: 8, marginBottom: 16 }}>
+                {auction?.title || t('bidder.browse.detailTitle')}
+              </h2>
+              
+              {!loading && auction && (
+                <div className="bidder-detail__chips" style={{ marginBottom: 24 }}>
+                  <StatusPill
+                    label={t(`bidder.participation.status.${participationStatus}.label`, {
+                      defaultValue: participationStatus,
+                    })}
+                    variant={participationVariant}
+                  />
+                  <span className={`bidder-detail__chip bidder-detail__chip--status dashboard-status-pill ${statusPillClass(displayStatus)}`}>
+                    {t(`dashboard.filters.${displayStatus.toLowerCase()}`, displayStatus)}
+                  </span>
+                  {auction.category && (
+                    <span className="bidder-detail__chip bidder-detail__chip--category">{auction.category}</span>
+                  )}
+                </div>
+              )}
+
+              {!loading && !error && auction && (
+                <section className="bidder-detail__stats" aria-label={t('bidder.browse.auctionInfo')}>
+                  <StatCard
+                    icon={(
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                    )}
+                    label={t('dashboard.table.headers.starting_date')}
+                    value={auction.startDateFormatted || auction.startingDate || '—'}
+                  />
+                  <StatCard
+                    icon={(
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    )}
+                    label={t('dashboard.table.headers.ending_date')}
+                    value={auction.endDateFormatted || auction.endingDate || '—'}
+                  />
+                  <StatCard
+                    icon={(
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                      </svg>
+                    )}
+                    label={t('bidder.participation.documentFee')}
+                    value={formatEtbAmount(auction.documentFee)}
+                  />
+                  {totalReserve > 0 && (
+                    <StatCard
+                      icon={(
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="12" y1="1" x2="12" y2="23" />
+                          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                        </svg>
+                      )}
+                      label={isMultiLot ? t('bidder.browse.lots.totalReserve') : t('bidder.browse.placeBid.reservePrice')}
+                      value={formatEtbAmount(totalReserve)}
+                    />
+                  )}
+                  {auction.cpoPercentage > 0 && (
+                    <StatCard
+                      icon={(
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 6v6l4 2" />
+                        </svg>
+                      )}
+                      label={t('bidder.browse.placeBid.cpoPercentage')}
+                      value={`${auction.cpoPercentage}%`}
+                    />
+                  )}
+                </section>
               )}
             </div>
-          )}
+          </div>
 
-          <div className="bidder-detail__below">
-          <header className="bidder-detail__header">
-            <div className="bidder-detail__header-top">
-              <p className="bidder-detail__eyebrow">{t('bidder.browse.detailEyebrow')}</p>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
               <button
                 type="button"
                 className="bidder-detail__close"
                 onClick={onClose}
                 aria-label={t('common.close')}
+                style={{ background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -268,158 +356,63 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
               </button>
             </div>
 
-            <h2 id="bidder-auction-drawer-title" className="bidder-detail__title">
-              {auction?.title || t('bidder.browse.detailTitle')}
-            </h2>
+            <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+              <div className="bidder-detail__scroll" style={{ padding: 0 }}>
+                {loading && <BidderDetailSkeleton withGallery={hasGallery} />}
 
-            {!loading && auction && (
-              <div className="bidder-detail__chips">
-                <StatusPill
-                  label={t(`bidder.participation.status.${participationStatus}.label`, {
-                    defaultValue: participationStatus,
-                  })}
-                  variant={participationVariant}
-                />
-                <span className={`bidder-detail__chip bidder-detail__chip--status dashboard-status-pill ${statusPillClass(displayStatus)}`}>
-                  {t(`dashboard.filters.${displayStatus.toLowerCase()}`, displayStatus)}
-                </span>
-                {auction.category && (
-                  <span className="bidder-detail__chip bidder-detail__chip--category">{auction.category}</span>
+                {!loading && error && (
+                  <div className="bidder-detail__error" role="alert">
+                    <span className="bidder-detail__error-icon" aria-hidden="true">!</span>
+                    <p>{t('dashboard.table.error', { message: error })}</p>
+                  </div>
+                )}
+
+                {!loading && !error && auction && (
+                  <>
+                    {lots.length > 0 && (
+                      <AuctionLotsPanel
+                        auction={auction}
+                        lots={lots}
+                        bidDrafts={participation?.bidDrafts}
+                      />
+                    )}
+
+                    <section className="bidder-detail__journey" style={{ marginTop: 32 }}>
+                      <AuctionParticipationPanel
+                        auction={auction}
+                        participation={participation}
+                        documents={documents}
+                        documentAccess={documentAccess}
+                        loading={participationLoading}
+                        participationError={participationError}
+                        onRetryParticipation={loadParticipation}
+                        onPayDocumentFee={() => setPaymentModalOpen(true)}
+                        onSubmitCpo={(data) => setCpoModalOpen(data || true)}
+                        onBidSuccess={handleBidSuccess}
+                      />
+                    </section>
+                    
+                    {(auction.description || auction.auctionConditions) && (
+                      <section className="bidder-detail__info" style={{ marginTop: 32 }}>
+                        <h3 className="bidder-detail__info-title">{t('bidder.browse.auctionInfo')}</h3>
+                        {auction.description && (
+                          <article className="bidder-detail__info-card">
+                            <h4>{t('bidder.browse.description')}</h4>
+                            <p>{auction.description}</p>
+                          </article>
+                        )}
+                        {auction.auctionConditions && (
+                          <article className="bidder-detail__info-card">
+                            <h4>{t('bidder.browse.conditions')}</h4>
+                            <p>{auction.auctionConditions}</p>
+                          </article>
+                        )}
+                      </section>
+                    )}
+                  </>
                 )}
               </div>
-            )}
-          </header>
-
-          <div className="bidder-detail__scroll">
-            {loading && <BidderDetailSkeleton withGallery={hasGallery} />}
-
-            {!loading && error && (
-              <div className="bidder-detail__error" role="alert">
-                <span className="bidder-detail__error-icon" aria-hidden="true">!</span>
-                <p>{t('dashboard.table.error', { message: error })}</p>
-              </div>
-            )}
-
-            {!loading && !error && auction && (
-              <>
-                <section className="bidder-detail__stats" aria-label={t('bidder.browse.auctionInfo')}>
-                    <StatCard
-                      icon={(
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                          <line x1="16" y1="2" x2="16" y2="6" />
-                          <line x1="8" y1="2" x2="8" y2="6" />
-                          <line x1="3" y1="10" x2="21" y2="10" />
-                        </svg>
-                      )}
-                      label={t('dashboard.table.headers.starting_date')}
-                      value={auction.startDateFormatted || auction.startingDate || '—'}
-                    />
-                    <StatCard
-                      icon={(
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10" />
-                          <polyline points="12 6 12 12 16 14" />
-                        </svg>
-                      )}
-                      label={t('dashboard.table.headers.ending_date')}
-                      value={auction.endDateFormatted || auction.endingDate || '—'}
-                    />
-                    <StatCard
-                      icon={(
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                          <polyline points="14 2 14 8 20 8" />
-                          <line x1="16" y1="13" x2="8" y2="13" />
-                          <line x1="16" y1="17" x2="8" y2="17" />
-                        </svg>
-                      )}
-                      label={t('bidder.participation.documentFee')}
-                      value={formatEtbAmount(auction.documentFee)}
-                    />
-                    {isMultiLot && lots.length > 1 && (
-                      <StatCard
-                        icon={(
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="3" width="7" height="7" />
-                            <rect x="14" y="3" width="7" height="7" />
-                            <rect x="3" y="14" width="7" height="7" />
-                            <rect x="14" y="14" width="7" height="7" />
-                          </svg>
-                        )}
-                        label={t('bidder.browse.lots.lotCount')}
-                        value={t('bidder.browse.lots.lotCountValue', { count: lots.length })}
-                      />
-                    )}
-                    {totalReserve > 0 && (
-                      <StatCard
-                        icon={(
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="1" x2="12" y2="23" />
-                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                          </svg>
-                        )}
-                        label={isMultiLot ? t('bidder.browse.lots.totalReserve') : t('bidder.browse.placeBid.reservePrice')}
-                        value={formatEtbAmount(totalReserve)}
-                      />
-                    )}
-                    {auction.cpoPercentage > 0 && (
-                      <StatCard
-                        icon={(
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M12 6v6l4 2" />
-                          </svg>
-                        )}
-                        label={t('bidder.browse.placeBid.cpoPercentage')}
-                        value={`${auction.cpoPercentage}%`}
-                      />
-                    )}
-                  </section>
-
-                  {lots.length > 0 && (
-                    <AuctionLotsPanel
-                      auction={auction}
-                      lots={lots}
-                      bidDrafts={participation?.bidDrafts}
-                    />
-                  )}
-
-                  <section className="bidder-detail__journey">
-                    <AuctionParticipationPanel
-                      auction={auction}
-                      participation={participation}
-                      documents={documents}
-                      documentAccess={documentAccess}
-                      loading={participationLoading}
-                      participationError={participationError}
-                      onRetryParticipation={loadParticipation}
-                      onPayDocumentFee={() => setPaymentModalOpen(true)}
-                      onSubmitCpo={() => setCpoModalOpen(true)}
-                      onBidSuccess={handleBidSuccess}
-                    />
-                  </section>
-
-                  {(auction.description || auction.auctionConditions) && (
-                    <section className="bidder-detail__info">
-                      <h3 className="bidder-detail__info-title">{t('bidder.browse.auctionInfo')}</h3>
-                      {auction.description && (
-                        <article className="bidder-detail__info-card">
-                          <h4>{t('bidder.browse.description')}</h4>
-                          <p>{auction.description}</p>
-                        </article>
-                      )}
-                      {auction.auctionConditions && (
-                        <article className="bidder-detail__info-card">
-                          <h4>{t('bidder.browse.conditions')}</h4>
-                          <p>{auction.auctionConditions}</p>
-                        </article>
-                      )}
-                    </section>
-                  )}
-                </>
-              )}
-          </div>
+            </div>
           </div>
         </aside>
       </div>
@@ -431,12 +424,12 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
         onSubmit={handlePaymentSuccess}
       />
 
-      <CpoSubmitModal
+      <CpoFinancialWizard
         open={cpoModalOpen}
         auction={auction}
-        participation={participation}
+        bidDrafts={participation?.bidDrafts ?? []}
         onClose={() => setCpoModalOpen(false)}
-        onSubmit={handleCpoSuccess}
+        onSuccess={handleCpoSuccess}
       />
 
       {viewerIndex !== null && images.length > 0 && (

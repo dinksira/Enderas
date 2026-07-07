@@ -965,7 +965,11 @@
         "waitingHint": "Come back between {{start}} and {{end}} to place your bid here.",
         "closedHint": "This auction's bidding window has ended. You can no longer place a bid for this auction.",
         "lotBidSubmitted": "{{lot}}: bid of {{amount}} submitted.",
-        "scrollHint": "Save your bid amounts in the form below before uploading CPO."
+        "scrollHint": "Save your bid amounts in the form below before uploading CPO.",
+        "windowLabel": "Bidding Window",
+        "submittedTitle": "Your submitted bids",
+        "statusBid": "Submitted",
+        "statusDraft": "Saved"
       },
       "paymentRejected": "Your payment was rejected. Review the reason and submit again.",
       "cpoRejected": "Your CPO was rejected. Review the reason and submit again.",

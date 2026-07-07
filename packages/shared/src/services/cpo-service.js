@@ -25,6 +25,10 @@ export const cpoService = Object.freeze({
     unwrapCpo(await api.post(`${CPO_BASE}/${id}/approve`, { expiryDate: expiryDate || null })),
   rejectCpo: async (id, rejectionReason) =>
     unwrapCpo(await api.post(`${CPO_BASE}/${id}/reject`, { rejectionReason })),
+  approveCpoDeposit: async (cpoPaymentId) =>
+    api.post(`${CPO_BASE}/${cpoPaymentId}/approve-deposit`, {}),
+  processRefund: async (cpoId, transactionReference = null) =>
+    unwrapCpo(await api.post(`${CPO_BASE}/${cpoId}/process-refund`, { transactionReference })),
   getAll: (params = {}) => api.get(`${CPO_BASE}${buildQuery(params)}`),
   getById: async (id) => unwrapCpo(await api.get(`${CPO_BASE}/${id}`)),
 });

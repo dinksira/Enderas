@@ -118,10 +118,10 @@ async function validateBidAmountForLot(auctionId, auctionAssetId, amount) {
   });
 
   const assertMinimumBid = (reservePrice) => {
-    const minimumBid = computeMinimumBidFromReserve(reservePrice, cpoPercentage);
+    const minimumBid = computeMinimumBidFromReserve(reservePrice);
     if (minimumBid > 0 && amount < minimumBid) {
       throw new AppError(
-        `Bid must be at least ${minimumBid} (${cpoPercentage || 0}% of reserve ${reservePrice})`,
+        `Bid must be at least ${minimumBid} (the asset reserve price)`,
         400,
         'BID_BELOW_MINIMUM',
       );

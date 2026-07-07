@@ -46,17 +46,22 @@ export function computeCpoFromBidAmount(bidAmount, cpoPercentage) {
   return roundMoney((amount * percentage) / 100);
 }
 
-/** Minimum bid = reserve × (auction CPO rate / 100). */
-export function computeMinimumBidFromReserve(reservePrice, cpoPercentage) {
+/** Minimum bid = Asset Reserve Price (hard floor). CPO% is NOT used for minimum bid. */
+export function computeMinimumBidFromReserve(reservePrice) {
   const reserve = Number(reservePrice);
   if (!Number.isFinite(reserve) || reserve <= 0) {
     return 0;
   }
-  const percentage = Number(cpoPercentage);
-  if (!Number.isFinite(percentage) || percentage <= 0) {
-    return reserve;
-  }
-  return roundMoney((reserve * percentage) / 100);
+  return roundMoney(reserve);
+}
+
+/** CPO deposit = reserve × (cpoPercentage / 100). Used only for deposit calc, NOT minimum bid. */
+export function computeCpoDepositAmount(reservePrice, cpoPercentage) {
+  const reserve = Number(reservePrice);
+  const pct = Number(cpoPercentage);
+  if (!Number.isFinite(reserve) || reserve <= 0) return 0;
+  if (!Number.isFinite(pct) || pct <= 0) return 0;
+  return roundMoney(reserve * (pct / 100));
 }
 
 function resolveReserveForBid(entry, lots, auctionReservePrice) {
@@ -96,7 +101,7 @@ export function computeRequiredCpoFromBidAmounts(
     if (reserve <= 0) {
       return sum;
     }
-    return sum + computeCpoFromBidAndReserve(amount, reserve, percentage);
+    return sum + computeCpoDepositAmount(reserve, percentage);
   }, 0);
 
   return roundMoney(total);
@@ -172,9 +177,5 @@ export function computeRequiredCpoAmount(lots, selectedLotIds, cpoPercentage) {
 }
 
 export function isMultiLotAuction(auction) {
-  const lots = auction?.lots;
-  if (Array.isArray(lots) && lots.length > 1) {
-    return true;
-  }
   return auction?.auctionMode === 'multi' || auction?.auction_mode === 'multi';
 }

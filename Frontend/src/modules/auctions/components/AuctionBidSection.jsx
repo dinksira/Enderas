@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PlaceBidForm } from './PlaceBidForm.jsx';
 import { AuctionLotsPanel } from './AuctionLotsPanel.jsx';
-import { formatEtbAmount } from '@enderass/shared/utils';
+import { Button } from '@enderass/shared/ui';
 import { isMultiLotAuction } from '../utils/auction-lot-utils.js';
 
 function resolveWindowStatus(participation, auction) {
@@ -67,6 +66,7 @@ export function AuctionBidSection({
   auctionId,
   participation,
   onSuccess,
+  onSubmitCpo,
 }) {
   const { t } = useTranslation();
   const [selectedLotIds, setSelectedLotIds] = useState([]);
@@ -74,143 +74,163 @@ export function AuctionBidSection({
   const allBidsSubmitted = Boolean(participation?.flags?.allBidsSubmitted);
   const canEditBidDrafts = Boolean(participation?.gates?.canEditBidDrafts);
   const hasBidDrafts = Array.isArray(participation?.bidDrafts) && participation.bidDrafts.length > 0;
-
-  const draftLotIds = useMemo(
-    () => (participation?.bidDrafts || [])
-      .map((draft) => draft.auctionAssetId)
-      .filter(Boolean),
-    [participation?.bidDrafts],
-  );
+  const [draftLotIds, setDraftLotIds] = useState([]);
+  const [draftBidAmounts, setDraftBidAmounts] = useState({});
 
   useEffect(() => {
-    if (!draftLotIds.length) {
+    if (!participation?.bidDrafts?.length) {
+      setDraftLotIds([]);
       return;
     }
-    setSelectedLotIds((current) => [...new Set([...current, ...draftLotIds])]);
+    const ids = participation.bidDrafts.map((d) => d.auctionAssetId).filter(Boolean);
+    setDraftLotIds(ids);
+  }, [participation?.bidDrafts]);
+
+  useEffect(() => {
+    if (draftLotIds.length > 0) {
+      setSelectedLotIds((current) => {
+        const toAdd = draftLotIds.filter((id) => !current.includes(id));
+        if (toAdd.length === 0) return current;
+        return [...current, ...toAdd];
+      });
+    }
   }, [draftLotIds]);
 
   const handleToggleLot = useCallback((lotId) => {
     if (draftLotIds.includes(lotId)) {
       return;
     }
-    setSelectedLotIds((current) => (
-      current.includes(lotId)
-        ? current.filter((id) => id !== lotId)
-        : [...current, lotId]
-    ));
+    setSelectedLotIds((current) => {
+      const isSelected = current.includes(lotId);
+      if (isSelected) {
+        setDraftBidAmounts(prev => {
+          const next = { ...prev };
+          delete next[lotId];
+          return next;
+        });
+        return current.filter((id) => id !== lotId);
+      }
+      return [...current, lotId];
+    });
   }, [draftLotIds]);
+
+  const handleBidAmountChange = useCallback((lotId, amount) => {
+    setDraftBidAmounts(prev => ({ ...prev, [lotId]: amount }));
+  }, []);
 
   if (!auctionId || (!canEditBidDrafts && !hasBidDrafts) || allBidsSubmitted) {
     return null;
   }
 
-  const cpoPercentage = getCpoPercentage(auction);
   const startLabel = auction?.startDateFormatted || auction?.startingDate || '—';
   const endLabel = auction?.endDateFormatted || auction?.endingDate || '—';
   const windowStatus = resolveWindowStatus(participation, auction);
   const bidLots = getBidLots(participation, auction);
   const isMultiLot = isMultiLotAuction({ ...auction, lots: bidLots });
   const catalogLots = auction?.lots?.length ? auction.lots : bidLots;
-  const selectedSet = new Set(selectedLotIds);
 
   const submittedLots = bidLots.filter((lot) => lot.draft || lot.bid);
   const pendingLots = isMultiLot
     ? bidLots.filter(
-        (lot) => selectedSet.has(lot.id) && !lot.draft && !lot.bid,
+        (lot) => selectedLotIds.includes(lot.id) && !lot.draft && !lot.bid,
       )
     : bidLots.filter((lot) => !lot.draft && !lot.bid);
-
-  const titleKey =
-    windowStatus === 'open'
-      ? (isMultiLot ? 'bidder.participation.bidCard.titleDraftMulti' : 'bidder.participation.bidCard.titleDraft')
-      : windowStatus === 'after'
-        ? 'bidder.participation.bidCard.titleClosed'
-        : 'bidder.participation.bidCard.titleWaiting';
-
-  const leadKey =
-    windowStatus === 'open'
-      ? (isMultiLot ? 'bidder.participation.bidCard.leadDraftMulti' : 'bidder.participation.bidCard.leadDraft')
-      : windowStatus === 'after'
-        ? 'bidder.participation.bidCard.leadClosed'
-        : 'bidder.participation.bidCard.leadWaiting';
 
   const hintKey =
     windowStatus === 'after'
       ? 'bidder.participation.bidCard.closedHint'
       : 'bidder.participation.bidCard.waitingHint';
 
+  const isAnyBidInvalid = useMemo(() => {
+    if (!selectedLotIds.length && isMultiLot) return true;
+    
+    const allAssets = [];
+    catalogLots.forEach(lot => {
+      if (lot.assets && lot.assets.length > 0) {
+        allAssets.push(...lot.assets);
+      } else {
+        allAssets.push(lot);
+      }
+    });
+
+    const idsToCheck = isMultiLot ? selectedLotIds : allAssets.map(a => a.id ?? a.assetId ?? a.auctionAssetId);
+
+    return idsToCheck.some(id => {
+      const amount = draftBidAmounts[id];
+      if (!amount) return true;
+      
+      const asset = allAssets.find(a => (a.id ?? a.assetId ?? a.auctionAssetId) === id);
+      if (!asset) return false;
+
+      const reserve = Number(asset.reservePrice ?? asset.reserve_price ?? 0);
+      return Number(amount) < reserve;
+    });
+  }, [selectedLotIds, draftBidAmounts, isMultiLot, catalogLots]);
+
+  const isSubmitDisabled = isAnyBidInvalid;
+
   return (
     <section className="auction-bid-card" aria-labelledby="auction-bid-card-title">
-      <header className="auction-bid-card__header">
-        <p className="auction-bid-card__eyebrow">{t('bidder.participation.bidCard.eyebrow')}</p>
-        <h4 id="auction-bid-card-title" className="auction-bid-card__title">
-          {t(titleKey)}
-        </h4>
-        <p className="auction-bid-card__lead">
-          {windowStatus === 'open'
-            ? (isMultiLot
-              ? t(leadKey, { count: pendingLots.length })
-              : t(leadKey))
-            : t(leadKey, { start: startLabel, end: endLabel })}
-        </p>
-      </header>
+      <div className="auction-bid-card__content">
+        {submittedLots.length > 0 && (
+          <div className="auction-bid-card__submitted-list">
+            <h4 className="auction-bid-card__submitted-title">
+              {t('bidder.participation.bidCard.submittedTitle')}
+            </h4>
+            <ul className="auction-bid-card__submitted-items">
+              {submittedLots.map((lot, idx) => (
+                <li key={lot.id || idx} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid #e2e8f0' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>
+                    {lot.lotTitle || lot.title || lot.lotLabel || `${t('bidder.browse.lots.lotFallback')} ${idx + 1}`}
+                  </span>
+                  {lot.bid && (
+                    <span className="auction-bid-card__tag auction-bid-card__tag--bid" style={{ background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: 12, fontSize: 12, fontWeight: 600 }}>
+                      {t('bidder.participation.bidCard.statusBid')}
+                    </span>
+                  )}
+                  {lot.draft && !lot.bid && (
+                    <span className="auction-bid-card__tag auction-bid-card__tag--draft" style={{ background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 12, fontSize: 12, fontWeight: 600 }}>
+                      {t('bidder.participation.bidCard.statusDraft')}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
 
-      {isMultiLot && catalogLots.length > 1 && (
-        <AuctionLotsPanel
-          auction={auction}
-          lots={catalogLots}
-          bidDrafts={participation?.bidDrafts}
-          compact
-          showSelectHint
-          selectable
-          selectedLotIds={selectedLotIds}
-          onToggleLot={handleToggleLot}
-        />
-      )}
+      <AuctionLotsPanel
+        auction={auction}
+        lots={catalogLots}
+        bidDrafts={participation?.bidDrafts}
+        selectable={canEditBidDrafts && isMultiLot}
+        selectedLotIds={selectedLotIds}
+        onToggleLot={handleToggleLot}
+        draftBidAmounts={draftBidAmounts}
+        onBidAmountChange={canEditBidDrafts ? handleBidAmountChange : undefined}
+      />
 
-      {submittedLots.length > 0 && (
-        <ul className="auction-bid-card__submitted" role="status">
-          {submittedLots.map((lot) => (
-            <li key={lot.id}>
-              {t('bidder.participation.bidCard.lotBidSubmitted', {
-                lot: lot.lotLabel || lot.assetTitle,
-                amount: formatEtbAmount(lot.bid?.amount ?? lot.draft?.amount),
-              })}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {canEditBidDrafts && pendingLots.length > 0 ? (
-        <div className="auction-bid-card__forms">
-          {pendingLots.map((lot) => (
-            <PlaceBidForm
-              key={lot.id}
-              auctionId={auctionId}
-              auctionAssetId={lot.id}
-              lotLabel={lot.lotLabel || lot.assetTitle}
-              reservePrice={lot.reservePrice ?? lot.reserve_price}
-              cpoPercentage={cpoPercentage}
-              onSuccess={onSuccess}
-            />
-          ))}
+      {canEditBidDrafts && (isMultiLot ? selectedLotIds.length > 0 : true) ? (
+        <div className="auction-bid-card__forms" style={{ marginTop: 16 }}>
+          {!isAnyBidInvalid && (
+            <Button variant="primary" onClick={() => onSubmitCpo?.({ selectedLotIds, draftBidAmounts })} disabled={isSubmitDisabled}>
+               {t('bidder.participation.actions.submitCpo', 'Enter Bids & Submit CPO')}
+            </Button>
+          )}
         </div>
       ) : canEditBidDrafts && isMultiLot && selectedLotIds.length === 0 ? (
         <p className="auction-bid-card__waiting" role="status">
           {t('bidder.browse.lots.selectToBid')}
         </p>
-      ) : canEditBidDrafts && !isMultiLot ? (
-        <PlaceBidForm
-          auctionId={auctionId}
-          reservePrice={auction?.reservePrice ?? auction?.reserve}
-          cpoPercentage={cpoPercentage}
-          onSuccess={onSuccess}
-        />
-      ) : (
+      ) : !canEditBidDrafts ? (
         <p className="auction-bid-card__waiting" role="status">
           {t(hintKey, { start: startLabel, end: endLabel })}
         </p>
-      )}
+      ) : null}
     </section>
   );
 }

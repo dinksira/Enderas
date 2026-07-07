@@ -24,6 +24,10 @@ export const bidService = Object.freeze({
     api.get(`${BIDS_BASE}/auction/${auctionId}${buildQuery(params)}`),
   getBidById: async (id) => unwrapBid(await api.get(`${BIDS_BASE}/${id}`)),
   placeBid: async (payload) => unwrapBid(await api.post(BIDS_BASE, payload)),
+  submitBidWithCpo: async (payload) => {
+    const response = await api.post(`${BIDS_BASE}/submit-with-cpo`, payload);
+    return response?.cpo ?? response;
+  },
   getAll: (params = {}) => api.get(`${BIDS_BASE}${buildQuery(params)}`),
   getById: async (id) => unwrapBid(await api.get(`${BIDS_BASE}/${id}`)),
 });

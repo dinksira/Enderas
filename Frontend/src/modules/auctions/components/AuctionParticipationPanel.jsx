@@ -268,6 +268,7 @@ export function AuctionParticipationPanel({
                     auctionId={auction?.id}
                     participation={participation}
                     onSuccess={onBidSuccess}
+                    onSubmitCpo={onSubmitCpo}
                   />
                 </div>
               )}

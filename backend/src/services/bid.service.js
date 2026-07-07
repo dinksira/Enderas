@@ -1,12 +1,17 @@
 import { Op } from 'sequelize';
 import { Bid } from '../models/bid.model.js';
+import { BidDraft } from '../models/bidDraft.model.js';
+import { Cpo } from '../models/cpo.model.js';
+import { CpoPayment } from '../models/cpoPayment.model.js';
 import { Auction, AuctionAsset, User } from '../models/index.js';
+import { sequelize } from '../config/db.config.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
-import { normalizeLotIdList, computeMinimumBidFromReserve } from '../utils/auction-lot.util.js';
+import { normalizeLotIdList, computeMinimumBidFromReserve, computeCpoDepositAmount } from '../utils/auction-lot.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { cpoService } from './cpo.service.js';
 import { paymentService } from './payment.service.js';
+import { notificationService } from './notification.service.js';
 
 const bidInclude = [
   {
@@ -206,7 +211,7 @@ export async function placeBid({ auctionId, auctionAssetId, amount }, userId) {
     }
 
     const reservePrice = Number(lot.reserve_price);
-    const minimumBid = computeMinimumBidFromReserve(reservePrice, auction.cpo_percentage);
+    const minimumBid = computeMinimumBidFromReserve(reservePrice);
     if (minimumBid > 0 && bidAmount < minimumBid) {
       throw new AppError(`Bid must be at least ${minimumBid}`, 400, 'BID_BELOW_MINIMUM');
     }
@@ -242,7 +247,7 @@ export async function placeBid({ auctionId, auctionAssetId, amount }, userId) {
   }
 
   const reservePrice = Number(auction.reserve_price);
-  const minimumBid = computeMinimumBidFromReserve(reservePrice, auction.cpo_percentage);
+  const minimumBid = computeMinimumBidFromReserve(reservePrice);
   if (minimumBid > 0 && bidAmount < minimumBid) {
     throw new AppError(`Bid must be at least ${minimumBid}`, 400, 'BID_BELOW_MINIMUM');
   }
@@ -328,6 +333,191 @@ export async function getHighestValidBidForLot(auctionId, auctionAssetId) {
   });
 }
 
+export async function submitBidWithCpo({ auctionId, bids, cpoDocumentUrl, transactionReference }, userId) {
+  if (!auctionId) {
+    throw new AppError('Auction is required', 400, 'AUCTION_REQUIRED');
+  }
+  if (!Array.isArray(bids) || bids.length === 0) {
+    throw new AppError('At least one bid is required', 400, 'BIDS_REQUIRED');
+  }
+  if (!cpoDocumentUrl?.trim()) {
+    throw new AppError('CPO receipt upload is required', 400, 'RECEIPT_REQUIRED');
+  }
+
+  const auction = await Auction.findOne({ where: { id: auctionId, deleted_at: null } });
+  if (!auction) {
+    throw new AppError('Auction not found', 404, 'AUCTION_NOT_FOUND');
+  }
+  if (auction.status !== 'published') {
+    throw new AppError('Auction is not open for bidding', 400, 'AUCTION_NOT_PUBLISHED');
+  }
+
+  const now = new Date();
+  if (now < new Date(auction.start_date)) {
+    throw new AppError('Auction has not started yet', 400, 'AUCTION_NOT_STARTED');
+  }
+  if (now > new Date(auction.end_date)) {
+    throw new AppError('Auction has already ended', 400, 'AUCTION_ENDED');
+  }
+
+  const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, auctionId);
+  if (!hasPayment) {
+    throw new AppError('Approved document payment required', 400, 'PAYMENT_REQUIRED');
+  }
+
+  const existing = await Cpo.findOne({
+    where: { user_id: userId, auction_id: auctionId, deleted_at: null },
+    order: [['created_at', 'DESC']],
+  });
+  if (existing && existing.status !== 'rejected') {
+    throw new AppError('CPO already submitted for this auction', 409, 'CPO_EXISTS');
+  }
+
+  const lots = await AuctionAsset.findAll({
+    where: { auction_id: auctionId },
+    order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
+  });
+
+  const lotMap = new Map(lots.map(l => [l.id, l]));
+  const cpoPercentage = Number(auction.cpo_percentage);
+  let totalDeposit = 0;
+  const validatedBids = [];
+
+  for (const entry of bids) {
+    if (!entry.auctionAssetId) {
+      throw new AppError('auctionAssetId is required for each bid', 400, 'ASSET_ID_REQUIRED');
+    }
+
+    const lot = lotMap.get(entry.auctionAssetId);
+    if (!lot) {
+      throw new AppError(`Asset ${entry.auctionAssetId} not found in this auction`, 404, 'ASSET_NOT_FOUND');
+    }
+
+    const amount = Number(entry.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new AppError(`Invalid bid amount for asset ${entry.auctionAssetId}`, 400, 'INVALID_BID_AMOUNT');
+    }
+
+    const reservePrice = Number(lot.reserve_price);
+    const minimumBid = computeMinimumBidFromReserve(reservePrice);
+    if (amount < minimumBid) {
+      throw new AppError(
+        `Bid for "${lot.lot_label || 'asset'}" must be at least ${minimumBid} (asset reserve price)`,
+        400,
+        'BID_BELOW_MINIMUM',
+      );
+    }
+
+    const existingBid = await Bid.findOne({
+      where: { auction_id: auctionId, user_id: userId, auction_asset_id: entry.auctionAssetId },
+    });
+    if (existingBid) {
+      throw new AppError(
+        `You already have a bid for this asset`,
+        409,
+        'BID_EXISTS',
+      );
+    }
+
+    const deposit = computeCpoDepositAmount(reservePrice, cpoPercentage);
+    totalDeposit += deposit;
+
+    validatedBids.push({
+      auctionAssetId: entry.auctionAssetId,
+      amount,
+      reservePrice,
+      deposit,
+    });
+  }
+
+  const cpoId = generateUuid();
+  const proposedBids = validatedBids.map(b => ({
+    auctionAssetId: b.auctionAssetId,
+    amount: b.amount,
+  }));
+
+  await sequelize.transaction(async (transaction) => {
+    await Cpo.create({
+      id: cpoId,
+      user_id: userId,
+      auction_id: auctionId,
+      document_url: cpoDocumentUrl.trim(),
+      status: 'pending',
+      deposit_amount: totalDeposit > 0 ? totalDeposit : null,
+      selected_auction_asset_ids: validatedBids.map(b => b.auctionAssetId),
+      required_cpo_amount: totalDeposit > 0 ? totalDeposit : null,
+      proposed_bids: proposedBids,
+    }, { transaction });
+
+    await CpoPayment.create({
+      id: generateUuid(),
+      cpo_id: cpoId,
+      user_id: userId,
+      auction_id: auctionId,
+      amount: totalDeposit,
+      currency: auction.currency || 'ETB',
+      payment_method: 'manual',
+      receipt_url: cpoDocumentUrl.trim(),
+      transaction_reference: transactionReference?.trim() || null,
+      status: 'pending',
+    }, { transaction });
+
+    for (const bid of validatedBids) {
+      const where = {
+        user_id: userId,
+        auction_id: auctionId,
+        auction_asset_id: bid.auctionAssetId,
+      };
+      const existingDraft = await BidDraft.findOne({ where, transaction });
+
+      if (existingDraft) {
+        await existingDraft.update(
+          { amount: bid.amount, status: 'locked', cpo_id: cpoId },
+          { transaction },
+        );
+      } else {
+        await BidDraft.create({
+          id: generateUuid(),
+          user_id: userId,
+          auction_id: auctionId,
+          auction_asset_id: bid.auctionAssetId,
+          amount: bid.amount,
+          status: 'locked',
+          cpo_id: cpoId,
+        }, { transaction });
+      }
+    }
+  });
+
+  await auditService.writeAuditLog({
+    userId,
+    action: AUDIT_ACTIONS.CREATE,
+    entityType: 'Cpo',
+    entityId: cpoId,
+    metadata: { auctionId, depositAmount: totalDeposit, bidCount: validatedBids.length },
+  });
+
+  await notificationService.notifyFinanceOfficersCpoDepositPending({
+    cpoId,
+    bidderName: null,
+    auctionTitle: auction.title,
+    amount: totalDeposit,
+  });
+
+  return {
+    cpo: {
+      id: cpoId,
+      status: 'pending',
+      depositAmount: totalDeposit,
+    },
+    bidDrafts: validatedBids.map(b => ({
+      auctionAssetId: b.auctionAssetId,
+      amount: b.amount,
+      status: 'locked',
+    })),
+  };
+}
+
 export const bidService = Object.freeze({
   listBids,
   listMyBids,
@@ -337,6 +527,7 @@ export const bidService = Object.freeze({
   invalidateBid,
   getHighestValidBid,
   getHighestValidBidForLot,
+  submitBidWithCpo,
 });
 
 export default bidService;

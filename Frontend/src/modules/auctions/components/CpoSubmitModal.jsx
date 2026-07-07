@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { FileUpload } from '../../../components/FileUpload.jsx';
-import { cpoService } from '../../cpo-management/services/cpo-service.js';
+import { bidService } from '@enderass/shared/services';
 import { formatEtbAmount } from '@enderass/shared/utils';
-import { computeBidCoveragePercent, computeRequiredCpoFromBidAmounts } from '../utils/auction-lot-utils.js';
+import { computeCpoDepositAmount } from '../utils/auction-lot-utils.js';
 
 /**
  * @param {{
@@ -19,25 +19,22 @@ import { computeBidCoveragePercent, computeRequiredCpoFromBidAmounts } from '../
 export function CpoSubmitModal({ open, loading = false, auction, participation, onClose, onSubmit }) {
   const { t } = useTranslation();
   const [documentUrl, setDocumentUrl] = useState('');
+  const [transactionRef, setTransactionRef] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const lots = useMemo(() => auction?.lots || [], [auction?.lots]);
   const cpoPercentage = Number(auction?.cpoPercentage ?? auction?.cpo_percentage ?? 0);
   const draftBids = useMemo(() => participation?.bidDrafts || [], [participation?.bidDrafts]);
-  const selectedLotIds = useMemo(
-    () => draftBids.map((draft) => draft.auctionAssetId).filter(Boolean),
-    [draftBids],
-  );
 
-  const auctionReserve = Number(auction?.reservePrice ?? auction?.reserve_price ?? 0) || null;
-
-  const requiredCpoAmount = useMemo(() => {
-    if (participation?.requiredCpoAmountPreview) {
-      return Number(participation.requiredCpoAmountPreview) || 0;
-    }
-    return computeRequiredCpoFromBidAmounts(draftBids, cpoPercentage, lots, auctionReserve);
-  }, [auctionReserve, cpoPercentage, draftBids, lots, participation?.requiredCpoAmountPreview]);
+  const depositAmount = useMemo(() => {
+    if (cpoPercentage <= 0) return 0;
+    return draftBids.reduce((sum, draft) => {
+      const lot = lots.find((entry) => entry.id === draft.auctionAssetId);
+      const reserve = Number(lot?.reservePrice ?? lot?.reserve_price ?? 0);
+      return sum + computeCpoDepositAmount(reserve, cpoPercentage);
+    }, 0);
+  }, [cpoPercentage, draftBids, lots]);
 
   if (!open) return null;
 
@@ -59,17 +56,18 @@ export function CpoSubmitModal({ open, loading = false, auction, participation, 
     setError('');
     setSubmitting(true);
     try {
-      await cpoService.createCpo({
+      await bidService.submitBidWithCpo({
         auctionId: auction.id,
-        documentUrl,
-        selectedAuctionAssetIds: selectedLotIds.length ? selectedLotIds : undefined,
-        proposedBids: draftBids.map((draft) => ({
-          auctionAssetId: draft.auctionAssetId || undefined,
+        bids: draftBids.map((draft) => ({
+          auctionAssetId: draft.auctionAssetId,
           amount: draft.amount,
         })),
+        cpoDocumentUrl: documentUrl,
+        transactionReference: transactionRef || undefined,
       });
       await onSubmit();
       setDocumentUrl('');
+      setTransactionRef('');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('bidder.participation.cpoModal.failed'));
       throw err;
@@ -100,13 +98,13 @@ export function CpoSubmitModal({ open, loading = false, auction, participation, 
           {cpoPercentage > 0 && (
             <>
               <dt>{t('bidder.participation.cpoModal.cpoPercentage')}</dt>
-              <dd>{t('bidder.participation.cpoModal.cpoRateAtFullReserve', { percentage: cpoPercentage })}</dd>
+              <dd>{cpoPercentage}%</dd>
             </>
           )}
-          {requiredCpoAmount > 0 && (
+          {depositAmount > 0 && (
             <>
               <dt>{t('bidder.participation.cpoModal.requiredAmount')}</dt>
-              <dd>{formatEtbAmount(requiredCpoAmount)}</dd>
+              <dd>{formatEtbAmount(depositAmount)}</dd>
             </>
           )}
         </dl>
@@ -116,27 +114,19 @@ export function CpoSubmitModal({ open, loading = false, auction, participation, 
             <legend className="auction-lot-picker__legend">
               {t('bidder.participation.cpoModal.selectedBids')}
             </legend>
-            <p className="auction-lot-picker__hint">
-              {t('bidder.participation.cpoModal.selectedBidsHint', { percentage: cpoPercentage })}
-            </p>
             <ul className="auction-lot-picker__list">
               {draftBids.map((draft, index) => {
                 const lot = lots.find((entry) => entry.id === draft.auctionAssetId);
                 const label = lot?.lotLabel || lot?.assetTitle || t('bidder.participation.cpoModal.lotFallback', { index: index + 1 });
-                const lotReserve = Number(lot?.reservePrice ?? lot?.reserve_price ?? auctionReserve ?? 0);
-                const coverage = lotReserve > 0
-                  ? computeBidCoveragePercent(draft.amount, lotReserve)
-                  : 0;
+                const lotReserve = Number(lot?.reservePrice ?? lot?.reserve_price ?? 0);
+                const deposit = computeCpoDepositAmount(lotReserve, cpoPercentage);
                 return (
                   <li key={draft.id || draft.auctionAssetId || index} className="auction-lot-picker__item">
                     <div className="auction-lot-picker__label">
                       <span className="auction-lot-picker__copy">
                         <strong>{label}</strong>
                         <span>
-                          {formatEtbAmount(draft.amount)}
-                          {coverage > 0 && (
-                            <> · {t('bidder.participation.cpoModal.bidCoverage', { percentage: coverage })}</>
-                          )}
+                          {formatEtbAmount(draft.amount)} · Deposit: {formatEtbAmount(deposit)}
                         </span>
                       </span>
                     </div>
@@ -145,6 +135,23 @@ export function CpoSubmitModal({ open, loading = false, auction, participation, 
               })}
             </ul>
           </fieldset>
+        )}
+
+        {transactionRef !== undefined && (
+          <div className="kyc-modal__field">
+            <label className="kyc-modal__label" htmlFor="cpo-transaction-ref">
+              {t('bidder.participation.cpoModal.transactionRef', { defaultValue: 'Transaction Reference (optional)' })}
+            </label>
+            <input
+              id="cpo-transaction-ref"
+              type="text"
+              className="input-field__control"
+              value={transactionRef}
+              onChange={(e) => setTransactionRef(e.target.value)}
+              disabled={busy}
+              placeholder="TXN-..."
+            />
+          </div>
         )}
 
         <FileUpload

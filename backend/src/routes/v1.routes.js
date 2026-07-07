@@ -511,6 +511,20 @@ v1Router.post(
   requireStaff,
   cpoController.rejectCpo,
 );
+v1Router.post(
+  '/cpo/:id/approve-deposit',
+  authenticate,
+  authorize({ module: MODULES.CPO, action: ACTIONS.APPROVE }),
+  requireStaff,
+  cpoController.approveDeposit,
+);
+v1Router.post(
+  '/cpo/:id/process-refund',
+  authenticate,
+  authorize({ module: MODULES.CPO, action: ACTIONS.UPDATE }),
+  requireStaff,
+  cpoController.processRefund,
+);
 
 // Bids
 v1Router.get(
@@ -549,6 +563,14 @@ v1Router.post(
   requireKYCVerified,
   bidController.placeBid,
 );
+v1Router.post(
+  '/bids/submit-with-cpo',
+  authenticate,
+  attachDataScope(MODULES.BIDS),
+  authorize({ module: MODULES.BIDS, action: ACTIONS.CREATE }),
+  requireKYCVerified,
+  bidController.submitBidWithCpo,
+);
 v1Router.put(
   '/bid-drafts',
   authenticate,
@@ -582,6 +604,14 @@ v1Router.get(
   authorize({ module: MODULES.WINNERS, action: ACTIONS.READ }),
   requireStaff,
   winnerController.getWinnersForAuction,
+);
+v1Router.get(
+  '/winners/auction/:auctionId/grouped',
+  authenticate,
+  attachDataScope(MODULES.WINNERS),
+  authorize({ module: MODULES.WINNERS, action: ACTIONS.READ }),
+  requireStaff,
+  winnerController.getWinnersForAuctionGrouped,
 );
 v1Router.get(
   '/winners/:id',

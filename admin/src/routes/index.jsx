@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../config/routes.js';
 import { MODULES, ACTIONS } from '../config/navigation.config.js';
 import { AuthLayout } from '../layouts/AuthLayout.jsx';
@@ -23,8 +23,10 @@ import { CpoManagementView } from '../modules/cpo-management/views/CpoManagement
 import { WinnerManagementView } from '../modules/winners/views/WinnerManagementView.jsx';
 import { NotificationCenterView } from '../modules/notifications/views/NotificationCenterView.jsx';
 import { ReportsAnalyticsView } from '../modules/analytics-report/views/ReportsAnalyticsView.jsx';
-import { BrowseAuctionsView } from '../../../frontend/src/modules/auctions/views/BrowseAuctionsView.jsx';
-
+import { BrowseAuctionsView } from '../../../frontend/src/modules/auctions/views/BrowseAuctionsView.jsx';
+import { CreateAuctionView } from '../modules/auctions/views/CreateAuctionView.jsx';
+
+
 function AdminBrowseAuctionsRoute() {
   const isStaff = useAuthStore((state) => state.user?.isStaff);
   if (isStaff) {
@@ -33,6 +35,17 @@ function AdminBrowseAuctionsRoute() {
   return <BrowseAuctionsView />;
 }
 
+function CreateAuctionRoute() {
+  const navigate = useNavigate();
+  return (
+    <CreateAuctionView
+      open
+      onClose={() => navigate('/app/auctions')}
+      onSuccess={() => navigate('/app/auctions')}
+    />
+  );
+}
+
 function guard(module, action = ACTIONS.READ, element) {
   return (
     <ProtectedRoute module={module} action={action}>
@@ -90,6 +103,8 @@ export function AppRoutes() {
         <Route path="bids" element={guard(MODULES.BIDS, ACTIONS.READ, <BidManagementView />)} />
         <Route path="winners" element={guard(MODULES.WINNERS, ACTIONS.READ, <WinnerManagementView />)} />
         <Route path="payments" element={guard(MODULES.PAYMENTS, ACTIONS.READ, <PaymentManagementView />)} />
+        <Route path="create-auction" element={guard(MODULES.AUCTIONS, ACTIONS.CREATE, <CreateAuctionRoute />)} />
+        <Route path="auctions/create" element={guard(MODULES.AUCTIONS, ACTIONS.CREATE, <CreateAuctionRoute />)} />
         <Route path="cpo" element={guard(MODULES.CPO, ACTIONS.READ, <CpoManagementView />)} />
         <Route path="reports" element={guard(MODULES.DASHBOARD, ACTIONS.EXPORT, <ReportsAnalyticsView />)} />
         <Route path="notifications" element={guard(MODULES.NOTIFICATIONS, ACTIONS.READ, <NotificationCenterView />)} />

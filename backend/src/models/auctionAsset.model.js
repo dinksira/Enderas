@@ -20,6 +20,10 @@ export const AuctionAsset = sequelize.define(
       type: DataTypes.CHAR(36),
       allowNull: false,
     },
+    lot_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: true,
+    },
     asset_id: {
       type: DataTypes.CHAR(36),
       allowNull: false,
@@ -35,6 +39,10 @@ export const AuctionAsset = sequelize.define(
     },
     lot_label: {
       type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    tags: {
+      type: DataTypes.JSON,
       allowNull: true,
     },
     outcome_status: {

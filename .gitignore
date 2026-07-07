@@ -143,12 +143,7 @@ vite.config.ts.timestamp-*
 .vite/
 
 # Documentation files
-docs/DevelopmentRules.txt
-docs/Front-End coding standard.md
-docs/Frontend Rule.md
-docs/KYC-IMPLEMENTATION-PROMPT.md
-docs/KYC-VERIFICATION-IMPLEMENTATION.md
-docs/RBAC-IMPLEMENTATION.md
+docs/
 frontend/DEVELOPMENT_RULES.md
 
 # E2E test specs
@@ -165,6 +160,9 @@ test-results/
 
 # OpenCode agent metadata
 .agents/
+
+# User uploads
+backend/uploads/
 frontend/FRONTEND_DOCUMENTATION.md
 backend/DEVELOPMENT_RULES.md
 backend/BACKEND_DOCUMENTATION.md

@@ -2170,10 +2170,41 @@
   width: min(520px, 100%);
 }
 
+.bidder-detail-modal {
+  width: min(90vw, 1200px);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
+}
+
+@media (max-width: 900px) {
+  .bidder-detail-modal {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+}
+
 .kyc-modal--scrollable {
   max-height: calc(100vh - (2 * var(--core-space-5)));
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.kyc-modal--borderless {
+  border: none !important;
+  outline: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.bidder-detail-modal {
+  border: none !important;
+  outline: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
 }
 
 .kyc-modal > .modal-close-btn {
@@ -5163,3 +5194,164 @@
     grid-template-columns: 1fr;
   }
 }
+/* --- Premium Bidder UI Redesign --- */
+
+.bidder-detail__lot-section {
+  background: #ffffff;
+  border: 1px solid rgba(10, 15, 30, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.bidder-detail__lot-section:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-color: rgba(10, 15, 30, 0.12);
+}
+
+.bidder-detail__lot-heading-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+}
+
+.bidder-detail__lot-heading-btn:hover {
+  background: rgba(10, 15, 30, 0.02);
+}
+
+.bidder-detail__lot-heading-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bidder-detail__lot-heading-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bidder-detail__lot-heading-meta {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.bidder-detail__lot-icon {
+  color: #c8922e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bidder-detail__lot-chevron {
+  color: #9ca3af;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bidder-detail__lot-chevron--expanded {
+  transform: rotate(180deg);
+}
+
+.bidder-detail__lot-assets {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bidder-detail__asset-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.bidder-detail__asset-card:hover {
+  background: #ffffff;
+  border-color: #d1d5db;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.bidder-detail__asset-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1f2937;
+  margin: 0 0 6px;
+}
+
+.bidder-detail__asset-reserve {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #b91c1c;
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bidder-detail__asset-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bidder-detail__tag-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(28, 100, 242, 0.1);
+  color: #1c64f2;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Browse Card Enhancements */
+.browse-auction-card {
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+  border: 1px solid rgba(10, 15, 30, 0.08);
+}
+
+.browse-auction-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(10, 15, 30, 0.08), 0 4px 8px rgba(10, 15, 30, 0.04);
+  border-color: rgba(212, 168, 76, 0.3);
+}
+
+.browse-auction-card__title {
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.browse-auction-card__category {
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+

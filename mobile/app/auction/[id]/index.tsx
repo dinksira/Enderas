@@ -357,6 +357,15 @@ export default function AuctionDetailScreen() {
             icon="gavel"
             helperText="Join the auction"
           />
+          {documentApproved && !participation?.cpo && !participationLocked ? (
+            <LockedActionButton
+              label={t('auction.participation.uploadCpo')}
+              locked={bidLocked}
+              lockedHint={bidHint}
+              onPress={() => handleParticipationAction(`/auction/${id}/cpo-wizard`)}
+              variant="outline"
+            />
+          ) : null}
         </View>
       </GlassCard>
 

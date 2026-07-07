@@ -1,10 +1,10 @@
 import { DashboardToast } from '@enderass/shared/ui';
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@enderass/shared/auth';
 import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
 import { useAuctions } from '../../auctions/hooks/use-auctions.js';
-import { CreateAuctionModal } from '../../auctions/components/CreateAuctionModal.jsx';
 import { AuctionDetailDrawer } from '../../auctions/components/AuctionDetailDrawer.jsx';
 import { AuctionSuspendConfirmModal } from '../../auctions/components/AuctionSuspendConfirmModal.jsx';
 import { AuctionDeleteConfirmModal } from '../../auctions/components/AuctionDeleteConfirmModal.jsx';
@@ -69,7 +69,7 @@ export function SuperAdminDashboardView() {
 
   const [activeFilter, setActiveFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const navigate = useNavigate();
   const [selectedAuctionId, setSelectedAuctionId] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', variant: 'success' });
@@ -97,20 +97,6 @@ export function SuperAdminDashboardView() {
       return activeFilter === 'all' || record.status === activeFilter.toUpperCase();
     });
   }, [normalizedRecords, activeFilter]);
-
-  const handleCreateSuccess = (auction) => {
-    setToast({
-      open: true,
-      message: t('auctions.create.success'),
-      variant: 'success',
-    });
-    refetch();
-    setCreateModalOpen(false);
-    if (auction?.id) {
-      setSelectedAuctionId(auction.id);
-      setDrawerOpen(true);
-    }
-  };
 
   const handleRowClick = (record) => {
     setSelectedAuctionId(record.id);
@@ -220,7 +206,7 @@ export function SuperAdminDashboardView() {
           <button
             type="button"
             className="dashboard-filters__cta"
-            onClick={() => setCreateModalOpen(true)}
+            onClick={() => navigate('/app/auctions/create')}
           >
             {t('dashboard.buttons.create_auction')}
           </button>
@@ -349,12 +335,6 @@ export function SuperAdminDashboardView() {
           </div>
         )}
       </section>
-
-      <CreateAuctionModal
-        open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onSuccess={handleCreateSuccess}
-      />
 
       <AuctionDetailDrawer
         auctionId={selectedAuctionId}

@@ -23,6 +23,7 @@ export function CpoDetailDrawer({
   onClose,
   onApprove,
   onReject,
+  onProcessRefund,
   onRefresh,
 }) {
   const { t, i18n } = useTranslation();
@@ -60,18 +61,24 @@ export function CpoDetailDrawer({
   const canApprove = can(MODULES.CPO, ACTIONS.APPROVE);
   const canReject = can(MODULES.CPO, ACTIONS.REJECT);
   const isPending = cpo?.status === 'pending';
+  const canRefund = cpo?.refundStatus === 'pending' && can(MODULES.CPO, ACTIONS.UPDATE);
 
   const footer =
-    !loading && !error && cpo && isPending && (canApprove || canReject) ? (
+    !loading && !error && cpo ? (
       <>
-        {canApprove && (
+        {isPending && canApprove && (
           <Button variant="primary" disabled={actionLoading} onClick={() => onApprove(cpo)}>
             {t('cpo.management.drawer.approve')}
           </Button>
         )}
-        {canReject && (
+        {isPending && canReject && (
           <Button variant="secondary" disabled={actionLoading} onClick={() => onReject(cpo)}>
             {t('cpo.management.drawer.reject')}
+          </Button>
+        )}
+        {canRefund && onProcessRefund && (
+          <Button variant="secondary" disabled={actionLoading} onClick={() => onProcessRefund(cpo)}>
+            {t('cpo.management.drawer.processRefund', { defaultValue: 'Process Refund' })}
           </Button>
         )}
         <Button variant="secondary" onClick={onRefresh}>
@@ -80,15 +87,55 @@ export function CpoDetailDrawer({
       </>
     ) : null;
 
+  const backingInfo =
+    cpo?.depositAmount != null && cpo?.proposedBids?.length > 0 ? (
+      <div className="admin-drawer__info-box" style={{ background: '#f0f7ff', border: '1px solid #b3d4ff', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
+        <p style={{ margin: 0, fontSize: 14 }}>
+          {t('cpo.management.drawer.backingInfo', 'This CPO deposit is backing a bid of {{amount}} ETB for {{count}} asset(s).', {
+            amount: Number(cpo.depositAmount).toLocaleString(),
+            count: cpo.proposedBids.length,
+          })}
+        </p>
+        {cpo.proposedBids.slice(0, 3).map((bid, i) => (
+          <p key={i} style={{ margin: '4px 0 0 16px', fontSize: 13, color: '#555' }}>
+            • {bid.auctionAssetId ? `${t('cpo.management.drawer.assetId', 'Asset')}: ${bid.auctionAssetId}` : ''}
+            {bid.amount ? ` — ${Number(bid.amount).toLocaleString()} ETB` : ''}
+            {bid.lotTitle ? ` (${bid.lotTitle})` : ''}
+          </p>
+        ))}
+        {cpo.proposedBids.length > 3 && (
+          <p style={{ margin: '4px 0 0 16px', fontSize: 13, color: '#888' }}>
+            {t('cpo.management.drawer.moreBids', '+{{n}} more', { n: cpo.proposedBids.length - 3 })}
+          </p>
+        )}
+      </div>
+    ) : null;
+
   const sections = cpo
     ? [
         {
           key: 'cpo',
           title: t('cpo.management.drawer.cpoSection'),
           children: (
-            <dl className="admin-drawer__meta-grid">
+            <>
+              {backingInfo}
+              <dl className="admin-drawer__meta-grid">
               <MetaField label={t('cpo.management.drawer.bidder')} value={cpo.bidderName} />
               <MetaField label={t('cpo.management.drawer.auction')} value={cpo.auctionTitle} />
+              <MetaField
+                label={t('cpo.management.drawer.depositAmount', { defaultValue: 'Deposit' })}
+                value={cpo.depositAmount != null ? `${Number(cpo.depositAmount).toLocaleString()} ETB` : '—'}
+              />
+              <MetaField
+                label={t('cpo.management.drawer.refundStatus', { defaultValue: 'Refund' })}
+                value={cpo.refundStatus || 'none'}
+              />
+              {cpo.refundProcessedAt && (
+                <MetaField
+                  label={t('cpo.management.drawer.refundProcessedAt', { defaultValue: 'Refund Processed' })}
+                  value={formatDate(cpo.refundProcessedAt, locale)}
+                />
+              )}
               <MetaField
                 label={t('cpo.management.drawer.expiryDate')}
                 value={formatDate(cpo.expiryDate, locale)}
@@ -108,6 +155,7 @@ export function CpoDetailDrawer({
                 />
               )}
             </dl>
+            </>
           ),
         },
         ...(cpo.documentUrl

@@ -7,6 +7,7 @@ import {
   computeBidCoveragePercent,
   computeCpoFromBidAndReserve,
   computeMinimumBidFromReserve,
+  computeCpoDepositAmount,
 } from '../utils/auction-lot-utils.js';
 
 /**
@@ -37,7 +38,7 @@ export function PlaceBidForm({
   const cpoRate = Number(cpoPercentage);
   const hasReserve = Number.isFinite(reserve) && reserve > 0;
   const hasCpoRate = Number.isFinite(cpoRate) && cpoRate > 0;
-  const minimumBid = hasReserve ? computeMinimumBidFromReserve(reserve, cpoRate) : 0;
+  const minimumBid = hasReserve ? computeMinimumBidFromReserve(reserve) : 0;
 
   const enteredAmount = Number(amount);
   const coveragePercent = useMemo(() => {
@@ -64,7 +65,6 @@ export function PlaceBidForm({
     if (minimumBid > 0 && bidAmount < minimumBid) {
       setError(t('bidder.browse.placeBid.belowMinimum', {
         amount: formatEtbAmount(minimumBid),
-        percentage: hasCpoRate ? cpoRate : 0,
         reserve: hasReserve ? formatEtbAmount(reserve) : '—',
       }));
       return;

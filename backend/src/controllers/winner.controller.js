@@ -101,6 +101,18 @@ export async function replaceWinner(req, res, next) {
   }
 }
 
+export async function getWinnersForAuctionGrouped(req, res, next) {
+  try {
+    const result = await winnerService.getWinnersForAuctionGrouped(
+      req.params.auctionId,
+      resolveRoleCode(req),
+    );
+    return sendSuccess(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const winnerController = Object.freeze({
   listWinners,
   getWinnersForAuction,
@@ -109,6 +121,7 @@ export const winnerController = Object.freeze({
   confirmWinner,
   declineWinner,
   replaceWinner,
+  getWinnersForAuctionGrouped,
 });
 
 export default winnerController;
