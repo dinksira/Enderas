@@ -150,6 +150,21 @@ docs/KYC-IMPLEMENTATION-PROMPT.md
 docs/KYC-VERIFICATION-IMPLEMENTATION.md
 docs/RBAC-IMPLEMENTATION.md
 frontend/DEVELOPMENT_RULES.md
+
+# E2E test specs
+e2e/
+
+# Changelog
+changelog.md
+
+# One-time migration/dev scripts
+scripts/
+
+# Playwright test results
+test-results/
+
+# OpenCode agent metadata
+.agents/
 frontend/FRONTEND_DOCUMENTATION.md
 backend/DEVELOPMENT_RULES.md
 backend/BACKEND_DOCUMENTATION.md
