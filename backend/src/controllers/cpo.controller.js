@@ -92,12 +92,39 @@ export async function rejectCpo(req, res, next) {
   }
 }
 
+export async function approveDeposit(req, res, next) {
+  try {
+    const payment = await cpoService.approveCpoDeposit(
+      req.params.id,
+      resolveStaffId(req),
+    );
+    return sendSuccess(res, { payment });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function processRefund(req, res, next) {
+  try {
+    const cpo = await cpoService.processRefund(
+      req.params.id,
+      resolveStaffId(req),
+      req.body.transactionReference || req.body.transaction_reference,
+    );
+    return sendSuccess(res, { cpo });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const cpoController = Object.freeze({
   listCpos,
   getCpoById,
   createCpo,
   approveCpo,
   rejectCpo,
+  approveDeposit,
+  processRefund,
 });
 
 export default cpoController;

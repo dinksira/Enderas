@@ -1,11 +1,13 @@
 import { Op } from 'sequelize';
-import { Cpo, CPO_STATUSES } from '../models/cpo.model.js';
+import { Cpo, CPO_STATUSES, CPO_REFUND_STATUSES } from '../models/cpo.model.js';
+import { CpoPayment } from '../models/cpoPayment.model.js';
 import { Auction, AuctionAsset, User, Staff } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import {
   normalizeLotIdList,
   computeRequiredCpoFromBidAmounts,
+  computeCpoDepositAmount,
 } from '../utils/auction-lot.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
@@ -69,6 +71,8 @@ function serializeCpoListRow(cpo) {
     auctionId: plain.auction_id,
     auctionTitle: plain.auction?.title ?? null,
     status: plain.status,
+    depositAmount: plain.deposit_amount != null ? Number(plain.deposit_amount) : null,
+    refundStatus: plain.refund_status,
     expiryDate: plain.expiry_date,
     createdAt: plain.created_at,
   };
@@ -101,6 +105,10 @@ function serializeCpoDetail(cpo) {
     selectedAuctionAssetIds: normalizeLotIdList(plain.selected_auction_asset_ids),
     requiredCpoAmount: plain.required_cpo_amount != null ? Number(plain.required_cpo_amount) : null,
     declaredCpoAmount: plain.declared_cpo_amount != null ? Number(plain.declared_cpo_amount) : null,
+    depositAmount: plain.deposit_amount != null ? Number(plain.deposit_amount) : null,
+    refundStatus: plain.refund_status,
+    refundProcessedAt: plain.refund_processed_at,
+    refundProcessedByStaffId: plain.refund_processed_by_staff_id,
     proposedBids: parseStoredProposedBids(plain.proposed_bids),
     reviewedByStaffId: plain.reviewed_by_staff_id,
     reviewedByName: buildStaffDisplayName(plain.reviewedByStaff),
@@ -410,6 +418,86 @@ export async function rejectCpo(id, rejectionReason, staffId) {
   return getCpoById(id, { isStaff: true });
 }
 
+export async function approveCpoDeposit(cpoPaymentId, staffId) {
+  if (!staffId) {
+    throw new AppError('Staff profile required', 403, 'STAFF_REQUIRED');
+  }
+
+  const payment = await CpoPayment.findOne({ where: { id: cpoPaymentId, status: 'pending' } });
+  if (!payment) {
+    throw new AppError('CPO payment not found or already processed', 404, 'CPO_PAYMENT_NOT_FOUND');
+  }
+
+  const now = new Date();
+  await payment.update({
+    status: 'approved',
+    verified_by_staff_id: staffId,
+    verified_at: now,
+  });
+
+  const cpo = await Cpo.findOne({ where: { id: payment.cpo_id } });
+  if (cpo) {
+    const proposedBids = parseStoredProposedBids(cpo.proposed_bids);
+    if (proposedBids.length > 0) {
+      await bidDraftService.promoteBidDraftsOnCpoApproval(cpo);
+    }
+  }
+
+  await auditService.writeAuditLog({
+    staffId,
+    userId: payment.user_id,
+    action: AUDIT_ACTIONS.APPROVE,
+    entityType: 'CpoPayment',
+    entityId: cpoPaymentId,
+    metadata: { cpoId: payment.cpo_id, depositAmount: Number(payment.amount) },
+  });
+
+  await notificationService.createInAppNotification({
+    userId: payment.user_id,
+    type: 'cpo_approved',
+    title: 'CPO Deposit Approved',
+    message: 'Your CPO deposit has been approved. Your bids are now active.',
+  });
+
+  return payment;
+}
+
+export async function processRefund(cpoId, staffId, transactionReference = null) {
+  if (!staffId) {
+    throw new AppError('Staff profile required', 403, 'STAFF_REQUIRED');
+  }
+
+  const cpo = await findCpoOrThrow(cpoId);
+  if (cpo.refund_status !== 'pending') {
+    throw new AppError('CPO refund is not pending', 400, 'REFUND_NOT_PENDING');
+  }
+
+  const now = new Date();
+  await cpo.update({
+    refund_status: 'paid',
+    refund_processed_at: now,
+    refund_processed_by_staff_id: staffId,
+  });
+
+  await auditService.writeAuditLog({
+    staffId,
+    userId: cpo.user_id,
+    action: AUDIT_ACTIONS.UPDATE,
+    entityType: 'Cpo',
+    entityId: cpoId,
+    metadata: { action: 'process_refund', transactionReference },
+  });
+
+  await notificationService.createInAppNotification({
+    userId: cpo.user_id,
+    type: 'general',
+    title: 'CPO Deposit Refunded',
+    message: 'Your CPO deposit has been refunded.',
+  });
+
+  return getCpoById(cpoId, { isStaff: true });
+}
+
 export async function getApprovedCpoRecord(userId, auctionId) {
   const now = new Date();
   return Cpo.findOne({
@@ -438,6 +526,8 @@ export const cpoService = Object.freeze({
   createCpo,
   approveCpo,
   rejectCpo,
+  approveCpoDeposit,
+  processRefund,
   hasApprovedCpo,
   getApprovedCpoRecord,
 });

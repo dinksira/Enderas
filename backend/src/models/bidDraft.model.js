@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../config/db.config.js';
 
-export const BID_DRAFT_STATUSES = Object.freeze(['draft', 'locked', 'submitted']);
+export const BID_DRAFT_STATUSES = Object.freeze(['draft', 'locked', 'submitted', 'expired']);
 
 export const BidDraft = sequelize.define(
   'BidDraft',

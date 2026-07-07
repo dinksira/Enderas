@@ -1,13 +1,13 @@
 import { Op } from 'sequelize';
 import { Winner, WINNER_STATUSES } from '../models/winner.model.js';
-import { Auction, AuctionAsset, Bid, User, Staff } from '../models/index.js';
+import { Auction, AuctionAsset, Bid, User, Staff, Cpo } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
 import { bidService } from './bid.service.js';
 
-const BID_AMOUNT_VIEWER_ROLES = Object.freeze(['super_admin', 'auction_manager']);
+const BID_AMOUNT_VIEWER_ROLES = Object.freeze(['super_admin', 'auction_manager', 'finance_officer']);
 
 const winnerInclude = [
   {
@@ -468,6 +468,7 @@ export async function autoSelectWinner(auctionId, staffId) {
 
   const winners = [];
   let sawBid = false;
+  let noReserveMet = false;
 
   for (const target of targets) {
     const existing = await findActiveWinnerForLot(auctionId, target.lotId);
@@ -489,6 +490,12 @@ export async function autoSelectWinner(auctionId, staffId) {
     sawBid = true;
     const amount = Number(highestBid.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
+      await markLotOutcome(target.lotId, 'unsold');
+      continue;
+    }
+
+    if (Number.isFinite(target.reserve) && target.reserve > 0 && amount < target.reserve) {
+      noReserveMet = true;
       await markLotOutcome(target.lotId, 'unsold');
       continue;
     }
@@ -524,6 +531,10 @@ export async function autoSelectWinner(auctionId, staffId) {
     winners.push(await getWinnerById(winner.id, 'super_admin'));
   }
 
+  if (winners.length > 0) {
+    await flagLoserCposForRefund(auctionId, winners.map(w => w.userId ?? w.user_id));
+  }
+
   if (!sawBid) {
     await auditService.writeAuditLog({
       staffId: resolvedStaffId ?? null,
@@ -537,9 +548,29 @@ export async function autoSelectWinner(auctionId, staffId) {
   return {
     winners,
     winner: winners[0] ?? null,
-    noReserveMet: false,
+    noReserveMet,
     noBids: !sawBid && winners.length === 0,
   };
+}
+
+export async function flagLoserCposForRefund(auctionId, winningUserIds) {
+  const winners = new Set(winningUserIds.filter(Boolean));
+  if (winners.size === 0) return;
+
+  const cpos = await Cpo.findAll({
+    where: {
+      auction_id: auctionId,
+      status: 'approved',
+      user_id: { [Op.notIn]: [...winners] },
+    },
+  });
+
+  if (cpos.length === 0) return;
+
+  await Cpo.update(
+    { refund_status: 'pending' },
+    { where: { id: { [Op.in]: cpos.map(c => c.id) } } },
+  );
 }
 
 export async function confirmWinner(id, staffId) {
@@ -676,6 +707,50 @@ export async function getActiveWinnerSummaryForAuction(auctionId, roleCode = nul
   return serializeWinnerListRow(winner, roleCode);
 }
 
+export async function getWinnersForAuctionGrouped(auctionId, roleCode = null) {
+  const winners = await Winner.findAll({
+    where: { auction_id: auctionId, deleted_at: null },
+    include: winnerInclude,
+    order: [['selected_at', 'DESC']],
+  });
+
+  const lots = await AuctionAsset.findAll({
+    where: { auction_id: auctionId },
+    include: [{ model: Auction, as: 'auction', attributes: [] }],
+    order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
+  });
+
+  const lotMap = new Map();
+  for (const asset of lots) {
+    const lotId = asset.lot_id ?? asset.id;
+    if (!lotMap.has(lotId)) {
+      lotMap.set(lotId, {
+        id: lotId,
+        title: asset.lot_label || 'Legacy Asset',
+        assets: [],
+      });
+    }
+    lotMap.get(lotId).assets.push({
+      assetId: asset.id,
+      assetTitle: asset.lot_label || null,
+      reservePrice: Number(asset.reserve_price),
+      winner: null,
+    });
+  }
+
+  for (const winner of winners) {
+    const assetId = winner.auction_asset_id;
+    for (const [, lot] of lotMap) {
+      const asset = lot.assets.find(a => a.assetId === assetId);
+      if (asset) {
+        asset.winner = serializeWinnerListRow(winner, roleCode);
+      }
+    }
+  }
+
+  return [...lotMap.values()];
+}
+
 export const winnerService = Object.freeze({
   listWinners,
   getWinnerStats,
@@ -684,10 +759,12 @@ export const winnerService = Object.freeze({
   getActiveWinnerSummaryForAuction,
   selectWinner,
   autoSelectWinner,
+  flagLoserCposForRefund,
   confirmWinner,
   declineWinner,
   replaceWinner,
   canViewBidAmounts,
+  getWinnersForAuctionGrouped,
 });
 
 export default winnerService;

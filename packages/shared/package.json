@@ -13,7 +13,8 @@
     "./services": "./src/services/index.js",
     "./ui": "./src/ui/index.js",
     "./ui-admin": "./src/ui-admin/index.js",
-    "./utils": "./src/utils/index.js"
+    "./utils": "./src/utils/index.js",
+    "./stores": "./src/stores/index.js"
   },
   "peerDependencies": {
     "react": ">=18",

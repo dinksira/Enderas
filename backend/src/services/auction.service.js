@@ -107,6 +107,10 @@ function serializeLot(lot) {
     assetTitle: asset?.title ?? null,
     assetType: asset?.asset_type ?? null,
     assetLocation: asset?.location ?? null,
+    assetDescription: asset?.description ?? null,
+    assetConditionNotes: asset?.condition_notes ?? null,
+    assetImages: normalizeAssetImageUrls(asset?.image_urls),
+    assetDocuments: asset?.additional_document_urls ?? null,
   };
 }
 
@@ -1187,7 +1191,7 @@ export async function getBrowseAuctionById(id, userId = null) {
       {
         model: Asset,
         as: 'asset',
-        attributes: ['id', 'title', 'asset_type', 'location'],
+        attributes: ['id', 'title', 'asset_type', 'location', 'description', 'condition_notes', 'image_urls', 'additional_document_urls'],
       },
     ],
     order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
@@ -1233,7 +1237,7 @@ export async function getAuctionById(id) {
       {
         model: Asset,
         as: 'asset',
-        attributes: ['id', 'title', 'asset_type', 'location'],
+        attributes: ['id', 'title', 'asset_type', 'location', 'description', 'condition_notes', 'image_urls', 'additional_document_urls'],
       },
     ],
     order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
@@ -1423,6 +1427,16 @@ export async function closeAuction(id, staffId) {
     'closed',
     staffId,
     AUDIT_ACTIONS.CLOSE,
+  );
+
+  await BidDraft.update(
+    { status: 'expired' },
+    {
+      where: {
+        auction_id: id,
+        status: 'draft',
+      },
+    },
   );
 
   let winnerSelection = {

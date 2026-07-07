@@ -24,6 +24,10 @@ export const winnerService = Object.freeze({
     const response = await api.get(`${WINNERS_BASE}/auction/${auctionId}`);
     return response?.items ?? [];
   },
+  getWinnersForAuctionGrouped: async (auctionId) => {
+    const response = await api.get(`${WINNERS_BASE}/auction/${auctionId}/grouped`);
+    return response?.lots ?? response ?? [];
+  },
   selectWinner: async (payload) => unwrapWinner(await api.post(WINNERS_BASE, payload)),
   confirmWinner: async (id) => unwrapWinner(await api.post(`${WINNERS_BASE}/${id}/confirm`, {})),
   declineWinner: async (id, declineReason) =>

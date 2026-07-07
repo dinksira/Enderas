@@ -26,3 +26,15 @@ export interface BidListResponse {
 }
 
 export type BidTabFilter = '' | 'active' | 'winning' | 'outbid' | 'won' | 'lost';
+
+export interface CpoRecord {
+  id: string;
+  status: string;
+  depositAmount: number;
+}
+
+export interface BidDraftRecord {
+  auctionAssetId: string;
+  amount: number;
+  status: string;
+}

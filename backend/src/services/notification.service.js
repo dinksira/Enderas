@@ -317,6 +317,27 @@ export async function notifyFinanceOfficersPaymentPending({ payment, auction, pa
   ]);
 }
 
+/**
+ * Notify finance staff that a bidder submitted a CPO deposit for review.
+ */
+export async function notifyFinanceOfficersCpoDepositPending({ cpoId, bidderName, auctionTitle, amount }) {
+  const name = bidderName?.trim() || 'A bidder';
+  const title = auctionTitle?.trim() || 'an auction';
+  const amountLabel = Number.isFinite(amount) ? `${amount} ETB` : 'ETB';
+
+  const payload = {
+    type: 'general',
+    title: 'CPO Deposit Submitted',
+    message: `${name} submitted a CPO deposit of ${amountLabel} for "${title}". Review and verify the payment.`,
+    metadata: { cpoId, auctionTitle, bidderName, amount },
+  };
+
+  await Promise.all([
+    notifyActiveStaffByRole('finance_officer', payload),
+    notifyActiveStaffByRole('super_admin', payload),
+  ]);
+}
+
 export async function sendPaymentApproved(userId) {
   return createInAppNotification({
     userId,
@@ -405,6 +426,7 @@ export const notificationService = Object.freeze({
   notifyEvaluationOfficersAssetReady,
   notifySuperAdminsEvaluationPending,
   notifyFinanceOfficersPaymentPending,
+  notifyFinanceOfficersCpoDepositPending,
   sendPaymentApproved,
   sendPaymentRejected,
   sendCpoApproved,

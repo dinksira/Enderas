@@ -86,12 +86,30 @@ export async function placeBid(req, res, next) {
   }
 }
 
+export async function submitBidWithCpo(req, res, next) {
+  try {
+    const result = await bidService.submitBidWithCpo(
+      {
+        auctionId: req.body.auctionId || req.body.auction_id,
+        bids: req.body.bids,
+        cpoDocumentUrl: req.body.cpoDocumentUrl || req.body.cpo_document_url,
+        transactionReference: req.body.transactionReference || req.body.transaction_reference,
+      },
+      resolveUserId(req),
+    );
+    return sendSuccess(res, result, 201);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const bidController = Object.freeze({
   listBids,
   listMyBids,
   listBidsForAuction,
   getBidById,
   placeBid,
+  submitBidWithCpo,
 });
 
 export default bidController;

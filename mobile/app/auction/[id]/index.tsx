@@ -299,6 +299,15 @@ export default function AuctionDetailScreen() {
             onPress={() => handleParticipationAction(`/auction/${id}/bid`)}
             variant="outline"
           />
+          {documentApproved && !participation?.cpo && !participationLocked ? (
+            <LockedActionButton
+              label={t('auction.participation.uploadCpo')}
+              locked={bidLocked}
+              lockedHint={bidHint}
+              onPress={() => handleParticipationAction(`/auction/${id}/cpo-wizard`)}
+              variant="outline"
+            />
+          ) : null}
         </View>
       </GlassCard>
 

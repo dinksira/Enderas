@@ -1,3 +1,10 @@
+export {
+  roundMoney,
+  computeBidCoveragePercent,
+  computeCpoFromBidAndReserve,
+  computeMinimumBidFromReserve,
+  computeCpoDepositAmount,
+} from './auction-lot-utils.js';
 export { canAccess, hasWildcardAccess, default as permissions } from './permissions.js';
 export {
   ETHIOPIAN_MOBILE_STORAGE_PATTERN,

@@ -2,6 +2,7 @@ import { DataTypes } from 'sequelize';
 import { sequelize } from '../config/db.config.js';
 
 export const CPO_STATUSES = Object.freeze(['pending', 'approved', 'rejected']);
+export const CPO_REFUND_STATUSES = Object.freeze(['none', 'pending', 'approved', 'paid']);
 
 export const Cpo = sequelize.define(
   'Cpo',
@@ -27,6 +28,23 @@ export const Cpo = sequelize.define(
       type: DataTypes.ENUM(...CPO_STATUSES),
       allowNull: false,
       defaultValue: 'pending',
+    },
+    deposit_amount: {
+      type: DataTypes.DECIMAL(18, 2),
+      allowNull: true,
+    },
+    refund_status: {
+      type: DataTypes.ENUM(...CPO_REFUND_STATUSES),
+      allowNull: false,
+      defaultValue: 'none',
+    },
+    refund_processed_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    refund_processed_by_staff_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: true,
     },
     reviewed_by_staff_id: {
       type: DataTypes.CHAR(36),

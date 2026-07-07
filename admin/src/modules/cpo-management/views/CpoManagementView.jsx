@@ -1,5 +1,5 @@
-import { AdminDataTable, StatusPill } from '@enderass/shared/ui-admin';
-import { DashboardToast } from '@enderass/shared/ui';
+import { AdminDataTable, StatusPill, ApproveConfirmModal } from '@enderass/shared/ui-admin';
+import { Button, DashboardToast } from '@enderass/shared/ui';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRegisterPageSearch } from '../../../contexts/PageSearchContext.jsx';
@@ -14,6 +14,7 @@ import {
   CPO_TABLE_COLUMNS,
   formatDate,
   getCpoStatusVariant,
+  getRefundStatusVariant,
 } from '../utils/cpo-management-utils.js';
 
 function ViewActionButton({ label, onClick }) {
@@ -62,6 +63,7 @@ export function CpoManagementView() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [approveTarget, setApproveTarget] = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
+  const [refundTarget, setRefundTarget] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', variant: 'success' });
 
@@ -122,6 +124,22 @@ export function CpoManagementView() {
     }
   };
 
+  const handleProcessRefund = async () => {
+    if (!refundTarget) return;
+    setActionLoading(true);
+    try {
+      await cpoService.processRefund(refundTarget.id);
+      setRefundTarget(null);
+      closeDrawer();
+      await refetch();
+      showToast(t('cpo.management.refundModal.success', { defaultValue: 'Refund processed' }));
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Refund failed', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const footerSummary = t('cpo.management.table.footer', {
     from: cpos.length === 0 ? 0 : (page - 1) * CPO_PAGE_SIZE + 1,
     to: (page - 1) * CPO_PAGE_SIZE + cpos.length,
@@ -169,6 +187,15 @@ export function CpoManagementView() {
                 variant={getCpoStatusVariant(row.status)}
               />
             </td>
+            <td className="dashboard-table__cell">
+              {row.depositAmount != null ? `${Number(row.depositAmount).toLocaleString()} ETB` : '—'}
+            </td>
+            <td className="dashboard-table__cell">
+              <StatusPill
+                label={row.refundStatus || 'none'}
+                variant={getRefundStatusVariant(row.refundStatus)}
+              />
+            </td>
             <td className="dashboard-table__cell">{formatDate(row.expiryDate, locale)}</td>
             <td className="dashboard-table__cell">{formatDate(row.createdAt, locale)}</td>
             <td className="dashboard-table__cell">
@@ -193,6 +220,7 @@ export function CpoManagementView() {
         onClose={closeDrawer}
         onApprove={(cpo) => setApproveTarget(cpo)}
         onReject={(cpo) => setRejectTarget(cpo)}
+        onProcessRefund={(cpo) => setRefundTarget(cpo)}
         onRefresh={refetch}
       />
 
@@ -216,6 +244,19 @@ export function CpoManagementView() {
         loading={actionLoading}
         onConfirm={handleRejectConfirm}
         onCancel={() => setRejectTarget(null)}
+      />
+
+      <ApproveConfirmModal
+        open={Boolean(refundTarget)}
+        title={t('cpo.management.refundModal.title', { defaultValue: 'Process Refund' })}
+        body={t('cpo.management.refundModal.body', {
+          defaultValue: 'Mark this CPO deposit as refunded?',
+          name: refundTarget?.bidderName,
+        })}
+        confirmLabel={t('cpo.management.refundModal.confirm', { defaultValue: 'Process Refund' })}
+        loading={actionLoading}
+        onConfirm={handleProcessRefund}
+        onCancel={() => setRefundTarget(null)}
       />
 
       <DashboardToast

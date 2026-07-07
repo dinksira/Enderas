@@ -13,8 +13,10 @@ import { SystemSetting } from './systemSetting.model.js';
 import { Evaluation } from './evaluation.model.js';
 import { Payment } from './payment.model.js';
 import { Cpo } from './cpo.model.js';
+import { CpoPayment } from './cpoPayment.model.js';
 import { Bid } from './bid.model.js';
 import { BidDraft } from './bidDraft.model.js';
+import { Lot } from './lot.model.js';
 import { Winner } from './winner.model.js';
 
 User.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
@@ -64,6 +66,11 @@ AuctionAsset.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
 AuctionAsset.belongsTo(Asset, { foreignKey: 'asset_id', as: 'asset' });
 Asset.hasMany(AuctionAsset, { foreignKey: 'asset_id', as: 'auctionLots' });
 
+Lot.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
+Auction.hasMany(Lot, { foreignKey: 'auction_id', as: 'lots' });
+Lot.hasMany(AuctionAsset, { foreignKey: 'lot_id', as: 'auctionAssets' });
+AuctionAsset.belongsTo(Lot, { foreignKey: 'lot_id', as: 'lot' });
+
 Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
 
@@ -85,6 +92,12 @@ Cpo.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
 Auction.hasMany(Cpo, { foreignKey: 'auction_id', as: 'cpos' });
 Cpo.belongsTo(Staff, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedByStaff' });
 Staff.hasMany(Cpo, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedCpos' });
+Cpo.hasMany(CpoPayment, { foreignKey: 'cpo_id', as: 'cpoPayments' });
+
+CpoPayment.belongsTo(Cpo, { foreignKey: 'cpo_id', as: 'cpo' });
+CpoPayment.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+CpoPayment.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
+CpoPayment.belongsTo(Staff, { foreignKey: 'verified_by_staff_id', as: 'verifiedByStaff' });
 
 Bid.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(Bid, { foreignKey: 'user_id', as: 'bids' });
@@ -129,8 +142,10 @@ export {
   Evaluation,
   Payment,
   Cpo,
+  CpoPayment,
   Bid,
   BidDraft,
+  Lot,
   Winner,
 };
 
@@ -150,7 +165,9 @@ export default {
   Evaluation,
   Payment,
   Cpo,
+  CpoPayment,
   Bid,
   BidDraft,
+  Lot,
   Winner,
 };
