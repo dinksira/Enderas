@@ -238,7 +238,7 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
         >
           <div style={{ width: '400px', backgroundColor: '#f9fafb', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
             {hasGallery && (
-              <div className="bidder-detail__hero" style={{ height: '300px', flexShrink: 0 }}>
+              <div className="bidder-detail__hero" style={{ flexShrink: 0 }}>
                 {!loading && !error && auction ? (
                   <AuctionImageGallery
                     images={images}
@@ -252,7 +252,7 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
                 )}
               </div>
             )}
-            <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+            <div className="bidder-detail__below" style={{ padding: '24px' }}>
               <p className="bidder-detail__eyebrow">{t('bidder.browse.detailEyebrow')}</p>
               <h2 id="bidder-auction-drawer-title" className="bidder-detail__title" style={{ marginTop: 8, marginBottom: 16 }}>
                 {auction?.title || t('bidder.browse.detailTitle')}
@@ -369,7 +369,7 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
 
                 {!loading && !error && auction && (
                   <>
-                    {lots.length > 0 && (
+                    {lots.length > 0 && documentAccess && (
                       <AuctionLotsPanel
                         auction={auction}
                         lots={lots}
@@ -377,7 +377,23 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
                       />
                     )}
 
-                    <section className="bidder-detail__journey" style={{ marginTop: 32 }}>
+                    {lots.length > 0 && !documentAccess && (
+                      <section style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8,
+                        padding: '10px 14px', marginBottom: 12,
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        <span style={{ fontSize: 13, color: '#64748b', lineHeight: 1.4 }}>
+                          {t('bidder.browse.lots.gatedBody', 'Pay the document fee to view the full asset breakdown and prepare your bids.')}
+                        </span>
+                      </section>
+                    )}
+
+                    <section className="bidder-detail__journey" style={{ marginTop: 12 }}>
                       <AuctionParticipationPanel
                         auction={auction}
                         participation={participation}

@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/use-auth.js';
 import { usePermission } from '@enderass/shared/auth';
 import { PageSearchProvider, usePageSearch } from '../contexts/PageSearchContext.jsx';
 import { notificationService } from '@enderass/shared/services';
-import iconSrc from '../assets/images/enderas_icon.svg';
+import iconSrc from '../assets/images/frontend_logo.svg';
 import { KYCStatusBanner } from '../components/KYCStatusBanner.jsx';
 import { AdminUnreadNotificationsBanner } from '../components/AdminUnreadNotificationsBanner.jsx';
 
