@@ -204,7 +204,7 @@ function LotSection({ lot, index, cpoPercentage, draftsByAsset, t, selectable, s
               const assetId = asset.id ?? asset.assetId ?? asset.auctionAssetId;
               const isSelected = selectedLotIds.includes(assetId);
               const draftBidAmount = draftBidAmounts?.[assetId] ?? '';
-              
+
               return (
                 <AssetCard
                   key={assetId ?? ai}
@@ -219,7 +219,7 @@ function LotSection({ lot, index, cpoPercentage, draftsByAsset, t, selectable, s
                   onToggle={onToggleLot}
                   onOpenDetails={onOpenDetails}
                   draftBidAmount={draftBidAmount}
-                  onBidAmountChange={(amount) => onBidAmountChange?.(assetId, amount)}
+                  onBidAmountChange={onBidAmountChange ? (amount) => onBidAmountChange(assetId, amount) : undefined}
                 />
               );
             })

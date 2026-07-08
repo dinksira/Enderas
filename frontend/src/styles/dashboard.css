@@ -4038,6 +4038,7 @@
   flex-shrink: 0;
   padding: 16px 20px 12px;
   background: rgba(10, 15, 30, 0.02);
+  border-bottom: 1px solid rgba(10, 15, 30, 0.1);
 }
 
 .bidder-detail__below {

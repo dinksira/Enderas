@@ -35,7 +35,16 @@ class LocalFileStorage {
     }
 
     const filePath = path.join(folderPath, fileName);
-    fs.writeFileSync(filePath, file.buffer);
+
+    try {
+      fs.writeFileSync(filePath, file.buffer);
+    } catch (err) {
+      throw new Error(`Failed to write file to disk: ${err.message}`);
+    }
+
+    if (!fs.existsSync(filePath)) {
+      throw new Error('File was not persisted to disk after write');
+    }
 
     const fileUrl = `${this.getPublicBaseUrl()}/uploads/${folder}/${fileName}`;
 

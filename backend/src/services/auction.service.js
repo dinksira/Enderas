@@ -21,6 +21,7 @@ import { BidDraft } from '../models/bidDraft.model.js';
 import { normalizeLotIdList, computeRequiredCpoFromBidAmounts } from '../utils/auction-lot.util.js';
 import { env } from '../config/env.config.js';
 import { resolvePublicUploadUrl } from '../utils/media-url.util.js';
+import { enrichAuctionsWithPrimaryImages } from '../utils/auction-image.util.js';
 
 const DISPLAY_STATUS_MAP = Object.freeze({
   published: 'ACTIVE',
@@ -855,6 +856,17 @@ export async function listBrowseAuctions(options = {}, userId = null) {
   let items = (await attachBidCounts(auctions)).map((row) => sanitizeBrowseAuction(row));
   items = await attachBrowseLotSummaries(items);
   items = await attachUserParticipationSummaries(items, userId);
+  items = await enrichAuctionsWithPrimaryImages(items);
+
+  items = items.map((item) => {
+    const hasAccess = item.myParticipation?.documentAccess ?? false;
+    if (!hasAccess) {
+      item.reservePrice = null;
+      item.totalReservePrice = null;
+      item.reserve = null;
+    }
+    return item;
+  });
 
   return {
     items,
@@ -871,6 +883,9 @@ function sanitizeBrowseAuction(auction, { documentAccess = false } = {}) {
   if (!documentAccess) {
     sanitized.documents = [];
     sanitized.documentAccess = false;
+    sanitized.reservePrice = null;
+    sanitized.totalReservePrice = null;
+    sanitized.reserve = null;
   } else {
     sanitized.documentAccess = true;
   }
@@ -1205,13 +1220,29 @@ export async function getBrowseAuctionById(id, userId = null) {
     ? Number(auction.total_reserve_price)
     : serialized.lots.reduce((sum, lot) => sum + Number(lot.reservePrice || 0), 0);
 
+  const lotImages = serialized.lots
+    .flatMap((lot) => lot.assetImages || [])
+    .filter(Boolean);
+  const auctionImages = normalizeAssetImageUrls(auction.image_urls);
+  const allImages = [...new Set([...auctionImages, ...lotImages])];
+  serialized.imageUrls = allImages.length > 0 ? allImages : null;
+
   let documentAccess = false;
 
   if (userId) {
     documentAccess = await paymentService.hasApprovedDocumentPayment(userId, id);
   }
 
-  return sanitizeBrowseAuction(serialized, { documentAccess });
+  const sanitized = sanitizeBrowseAuction(serialized, { documentAccess });
+
+  if (!documentAccess && sanitized.lots) {
+    sanitized.lots = sanitized.lots.map((lot) => ({
+      ...lot,
+      reservePrice: null,
+    }));
+  }
+
+  return sanitized;
 }
 
 /**

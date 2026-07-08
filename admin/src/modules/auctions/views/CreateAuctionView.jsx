@@ -1,10 +1,85 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { assetService, auctionService } from '@enderass/shared/services';
 import { formatEtbAmount } from '@enderass/shared/utils';
 import { Input, Button, FileUpload } from '@enderass/shared/ui';
 import { QuickCreateAssetModal } from '../components/QuickCreateAssetModal.jsx';
 import '../styles/create-auction.css';
+
+function formatCommas(value) {
+  if (!value || value === '') return '';
+  const num = Number(value);
+  if (isNaN(num)) return value;
+  return num.toLocaleString('en-US');
+}
+
+function TagChips({ tags = [], onChange, placeholder }) {
+  const [input, setInput] = useState('');
+  const { t } = useTranslation();
+
+  const tagList = typeof tags === 'string'
+    ? tags.split(',').map((s) => s.trim()).filter(Boolean)
+    : tags.filter(Boolean);
+
+  const addTag = (raw) => {
+    const tag = raw.trim();
+    if (!tag || tagList.includes(tag)) return;
+    const next = [...tagList, tag];
+    onChange(next.join(','));
+    setInput('');
+  };
+
+  const removeTag = (tag) => {
+    const next = tagList.filter((t) => t !== tag);
+    onChange(next.join(','));
+  };
+
+  const handleKey = (e) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      addTag(input);
+    }
+    if (e.key === 'Backspace' && !input && tagList.length) {
+      removeTag(tagList[tagList.length - 1]);
+    }
+  };
+
+  return (
+    <div style={{
+      display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center',
+      padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: 8,
+      background: '#fff', minHeight: 42, cursor: 'text',
+    }} onClick={(e) => { if (e.target === e.currentTarget) e.currentTarget.querySelector('input')?.focus(); }}>
+      {tagList.map((tag) => (
+        <span key={tag} style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          padding: '2px 8px', borderRadius: 6, fontSize: 13, fontWeight: 500,
+          background: '#e0e7ff', color: '#3730a3',
+        }}>
+          {tag}
+          <button type="button" onClick={() => removeTag(tag)} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            padding: 0, fontSize: 16, lineHeight: 1, color: '#6366f1',
+            display: 'flex', alignItems: 'center',
+          }} aria-label={t('common.remove', 'Remove')}>
+            &times;
+          </button>
+        </span>
+      ))}
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKey}
+        placeholder={!tagList.length ? placeholder : ''}
+        style={{
+          border: 'none', outline: 'none', flex: 1, minWidth: 80,
+          fontSize: 14, padding: '2px 0', background: 'transparent',
+        }}
+      />
+    </div>
+  );
+}
 
 const AUCTION_CATEGORIES = [
   'vehicles', 'machinery', 'buildings', 'land', 'equipment', 'salvage_assets', 'other_assets'
@@ -59,15 +134,13 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
   const openAssetPicker = (lotId) => {
     setAssetPickerTarget(lotId);
     setAssetSearch('');
-    setAssetResults([]);
+    searchAssets('');
   };
 
   const searchAssets = useCallback(async (query) => {
-    if (!query?.trim()) { setAssetResults([]); return; }
     setSearchingAsset(true);
     try {
-      const resp = await assetService.getEligibleAssets?.({ search: query, status: 'approved' })
-        ?? await assetService.getAll?.({ search: query, status: 'approved' });
+      const resp = await auctionService.getEligibleAssets?.({ search: query });
       const list = Array.isArray(resp) ? resp : resp?.data ?? resp?.items ?? [];
       setAssetResults(list);
     } catch {
@@ -77,8 +150,19 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
     }
   }, []);
 
+  const assignedAssetIds = useMemo(() => {
+    const ids = new Set();
+    lots.forEach((lot) => {
+      (lot.assets || []).forEach((a) => {
+        if (a.assetId) ids.add(a.assetId);
+      });
+    });
+    return ids;
+  }, [lots]);
+
   const pickAsset = (asset) => {
     if (!assetPickerTarget) return;
+    if (assignedAssetIds.has(asset.id)) return;
     const targetLot = lots.find(l => l.id === assetPickerTarget);
     if (targetLot) {
       updateLot(assetPickerTarget, 'assets', [
@@ -375,14 +459,7 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
                       />
                     </div>
                     
-                    <div>
-                      <Input
-                        label={t('auction.create.sortOrder', 'Sort Order')}
-                        type="number"
-                        value={lot.sortOrder}
-                        onChange={(e) => updateLot(lot.id, 'sortOrder', Number(e.target.value))}
-                      />
-                    </div>
+
                   </div>
                 </div>
               ))}
@@ -412,32 +489,88 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
                     <div key={asset.id} className="ca-asset-row">
                       <div className="ca-asset-info">
                         <span className="ca-asset-name">{asset.assetTitle || '—'}</span>
-                        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginTop: '12px' }}>
+                        <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
                           <div style={{ flex: 1 }}>
-                            <Input
-                              label={t('auction.create.reservePrice', 'Reserve Price (ETB)')}
-                              type="number"
-                              value={asset.reservePrice}
-                              onChange={(e) => { updateAsset(lot.id, asset.id, 'reservePrice', e.target.value); clearError(`reserve_${asset.id}`); }}
-                              placeholder="0.00"
-                              error={fieldErrors[`reserve_${asset.id}`]}
-                            />
+                            <div style={{ marginBottom: 4 }}>
+                              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                {t('auction.create.reservePrice', 'Reserve Price (ETB)')}
+                              </label>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={formatCommas(asset.reservePrice)}
+                                onChange={(e) => {
+                                  const raw = e.target.value.replace(/[^0-9.]/g, '');
+                                  if (/^\d*\.?\d*$/.test(raw) || raw === '') {
+                                    updateAsset(lot.id, asset.id, 'reservePrice', raw);
+                                    clearError(`reserve_${asset.id}`);
+                                  }
+                                }}
+                                placeholder="0.00"
+                                style={{
+                                  width: '100%', padding: '10px 12px', fontSize: 14,
+                                  border: `1px solid ${fieldErrors[`reserve_${asset.id}`] ? '#ef4444' : '#cbd5e1'}`,
+                                  borderRadius: 8, outline: 'none', boxSizing: 'border-box',
+                                  fontFamily: 'inherit',
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderColor = '#06436a';
+                                  e.target.style.boxShadow = '0 0 0 3px rgba(6,67,106,0.15)';
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderColor = fieldErrors[`reserve_${asset.id}`] ? '#ef4444' : '#cbd5e1';
+                                  e.target.style.boxShadow = 'none';
+                                }}
+                              />
+                              {fieldErrors[`reserve_${asset.id}`] && (
+                                <p style={{ margin: '4px 0 0', fontSize: 12, color: '#ef4444' }}>{fieldErrors[`reserve_${asset.id}`]}</p>
+                              )}
+                            </div>
                           </div>
                           
                           <div style={{ flex: 1 }}>
-                            <Input
-                              label={t('auction.create.tags', 'Tags (comma separated)')}
-                              value={asset.tags}
-                              onChange={(e) => updateAsset(lot.id, asset.id, 'tags', e.target.value)}
-                              placeholder="e.g., damaged, premium"
-                            />
+                            <div>
+                              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                {t('auction.create.tags', 'Tags')}
+                              </label>
+                              <TagChips
+                                tags={asset.tags}
+                                onChange={(val) => updateAsset(lot.id, asset.id, 'tags', val)}
+                                placeholder={t('auction.create.tagsPlaceholder', 'Type and press space')}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
                       
-                      <Button variant="danger" onClick={() => removeAsset(lot.id, asset.id)} style={{ padding: '6px 12px' }}>
-                        {t('common.remove', 'Remove')}
-                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => removeAsset(lot.id, asset.id)}
+                        aria-label={t('common.remove', 'Remove')}
+                        title={t('common.remove', 'Remove')}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          width: 28,
+                          height: 28,
+                          borderRadius: 8,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          color: '#94a3b8',
+                          transition: 'all 0.15s ease',
+                          marginTop: 4,
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#94a3b8'; }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
                     </div>
                   ))}
 
@@ -524,14 +657,42 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
             <div className="ca-picker-results">
               {searchingAsset && <p style={{ color: '#64748b', marginTop: '12px' }}>{t('common.loading', 'Loading...')}</p>}
               
-              {assetResults.map((a) => (
-                <button key={a.id} type="button" className="ca-picker-option" onClick={() => pickAsset(a)}>
-                  {a.title ?? a.name ?? a.id}
-                </button>
-              ))}
+              {assetResults.map((a) => {
+                const alreadyUsed = assignedAssetIds.has(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    className="ca-picker-option"
+                    onClick={() => !alreadyUsed && pickAsset(a)}
+                    disabled={alreadyUsed}
+                    style={{
+                      opacity: alreadyUsed ? 0.5 : 1,
+                      cursor: alreadyUsed ? 'not-allowed' : 'pointer',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',
+                      padding: '10px 16px', border: 'none', background: alreadyUsed ? '#f1f5f9' : '#fff',
+                      borderRadius: 8, fontSize: 14, textAlign: 'left',
+                      transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={(e) => { if (!alreadyUsed) e.currentTarget.style.background = '#f8fafc'; }}
+                    onMouseLeave={(e) => { if (!alreadyUsed) e.currentTarget.style.background = '#fff'; }}
+                  >
+                    <span>{a.title ?? a.name ?? a.id}</span>
+                    {alreadyUsed && (
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>
+                        Assigned
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
               
-              {!searchingAsset && assetSearch && assetResults.length === 0 && (
-                <p style={{ color: '#94a3b8', marginTop: '12px' }}>{t('auction.create.noAssetsFound', 'No assets found matching your search.')}</p>
+              {!searchingAsset && assetResults.length === 0 && (
+                <p style={{ color: '#94a3b8', marginTop: '12px' }}>
+                  {assetSearch
+                    ? t('auction.create.noAssetsFound', 'No assets found matching your search.')
+                    : t('auction.create.noEligibleAssets', 'No eligible evaluated assets available.')}
+                </p>
               )}
             </div>
           </div>
@@ -543,6 +704,7 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
         open={Boolean(quickCreateTarget)}
         onClose={() => setQuickCreateTarget(null)}
         onSuccess={(newAsset) => {
+          if (assignedAssetIds.has(newAsset.id)) return;
           const targetLot = lots.find(l => l.id === quickCreateTarget);
           if (targetLot) {
             updateLot(quickCreateTarget, 'assets', [
