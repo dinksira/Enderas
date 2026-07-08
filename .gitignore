@@ -142,19 +142,6 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
-# Documentation files
-docs/
-frontend/DEVELOPMENT_RULES.md
-
-# E2E test specs
-e2e/
-
-# Changelog
-changelog.md
-
-# One-time migration/dev scripts
-scripts/
-
 # Playwright test results
 test-results/
 

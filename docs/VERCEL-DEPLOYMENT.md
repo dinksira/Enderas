@@ -86,7 +86,7 @@ In each Vercel project: **Settings → Domains**. Then update env vars to use th
 
 ## How the monorepo build works
 
-Both apps import `@enderass/shared` from `packages/shared`.  
+Both apps import `@enderass/shared` from a local `src/shared/` copy within each project.  
 `vercel.json` runs `cd .. && npm ci` so the whole workspace installs before `npm run build` in `frontend/` or `admin/`.
 
 ---
