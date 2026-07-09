@@ -7,7 +7,8 @@ import {
   SEED_ASSET_IDS,
   SEED_ASSET_OWNER_ID,
   SEED_EVALUATION_IDS,
-  SEED_LOT_IDS,
+  SEED_AUCTION_ASSET_IDS,
+  SEED_LOT_GROUP_IDS,
 } from '../data/seed-ids.mjs';
 
 async function disableForeignKeyChecks(transaction) {
@@ -62,7 +63,8 @@ async function deleteAuctionDependents(auctionIds, transaction) {
 
 export async function purgeTestCatalog({ transaction, logger = console }) {
   await deleteAuctionDependents(SEED_AUCTION_IDS, transaction);
-  await deleteByIds('auction_assets', SEED_LOT_IDS, transaction);
+  await deleteByIds('auction_assets', SEED_AUCTION_ASSET_IDS, transaction);
+  await deleteByIds('lots', SEED_LOT_GROUP_IDS, transaction);
   await deleteByIds('auctions', SEED_AUCTION_IDS, transaction);
   await deleteByIds('evaluations', SEED_EVALUATION_IDS, transaction);
   await deleteByIds('assets', SEED_ASSET_IDS, transaction);

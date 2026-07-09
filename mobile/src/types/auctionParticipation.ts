@@ -35,10 +35,12 @@ export interface AuctionLot {
   id: string;
   auctionId: string;
   lotLabel: string;
+  lotTitle?: string;
   title: string;
   description: string;
   category: string;
   imageUrls: string[];
+  tags?: string[];
   reservePrice: number;
   sortOrder: number;
 }

@@ -11,6 +11,8 @@ import {
 import { sendSuccess } from '../../utils/response.util.js';
 import { InvalidCredentialsError, AppError } from '../../utils/error.util.js';
 import { logLogin } from '../../services/audit.service.js';
+import { userService } from '../../services/user.service.js';
+import { authorizationPermissionService } from '../../core/authorization/permission.service.js';
 
 export async function login(req, res, next) {
   const mobileNumber = req.body?.mobile_number ?? req.body?.phoneNumber;
@@ -169,6 +171,65 @@ export async function verifyResetOtp(req, res, next) {
   }
 }
 
+function serializeAuthMe(principal) {
+  return {
+    id: principal.userId,
+    roleId: principal.effectiveRoleId,
+    roleCode: principal.role.code,
+    userType: principal.userType,
+    staffId: principal.staffId,
+    status: principal.userStatus,
+    permissions: {
+      wildcard: principal.wildcard,
+      modules: principal.modules,
+      actions: principal.actions,
+      routes: principal.routes,
+      moduleActions: principal.moduleActions ?? {},
+    },
+    identity: {
+      displayName: principal.displayName,
+      mobileNumber: principal.mobileNumber,
+      email: principal.email,
+      firstName: principal.firstName ?? null,
+      lastName: principal.lastName ?? null,
+      organizationName: principal.organizationName ?? null,
+      preferredLanguage: principal.preferredLanguage ?? null,
+      isStaff: principal.isStaff,
+    },
+  };
+}
+
+export async function getMe(req, res, next) {
+  try {
+    const principal = await authorizationPermissionService.resolvePrincipal(req.user.id);
+    return sendSuccess(res, serializeAuthMe(principal));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function updateMe(req, res, next) {
+  try {
+    const profile = await userService.updateMyProfile(req.user.id, {
+      email: req.body.email,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      organizationName: req.body.organizationName,
+      preferredLanguage: req.body.preferredLanguage,
+    });
+
+    await authorizationPermissionService.invalidateUserPermissions(req.user.id);
+    const principal = await authorizationPermissionService.resolvePrincipal(req.user.id);
+
+    return sendSuccess(res, {
+      ...serializeAuthMe(principal),
+      profile,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const authController = Object.freeze({
   login,
   register,
@@ -177,6 +238,8 @@ export const authController = Object.freeze({
   forgotPassword,
   resetPassword,
   verifyResetOtp,
+  getMe,
+  updateMe,
 });
 
 export default authController;

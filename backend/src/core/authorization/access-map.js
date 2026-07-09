@@ -174,6 +174,7 @@ export const API_ACCESS_MAP = Object.freeze({
 
   // Auth session (authenticated, no module gate)
   'GET /api/v1/auth/me': { module: null, action: null },
+  'PATCH /api/v1/auth/me': { module: null, action: null },
 });
 
 /**

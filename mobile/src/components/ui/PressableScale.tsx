@@ -1,5 +1,6 @@
-import { useEffect, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -108,6 +109,7 @@ export function ListItemEntrance({
   style,
 }: ListItemEntranceProps) {
   const progress = useSharedValue(0);
+  const isFirstFocus = useRef(true);
 
   useEffect(() => {
     // Cap the stagger so a 20-item list doesn't take 800ms to finish.
@@ -118,6 +120,21 @@ export function ListItemEntrance({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Tab screens freeze while inactive (e.g. during auction detail / buy-doc
+  // navigation). Reanimated entrance can stall at opacity 0 while children
+  // remain touchable — mirror the ScreenShell focus-recovery pattern.
+  useFocusEffect(
+    useCallback(() => {
+      if (isFirstFocus.current) {
+        isFirstFocus.current = false;
+        return;
+      }
+      if (progress.value < 1) {
+        progress.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.cubic) });
+      }
+    }, [progress]),
+  );
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: progress.value,

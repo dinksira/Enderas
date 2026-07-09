@@ -4,6 +4,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { GoldButton } from '@/components/auth';
+import { AuctionAssetDetailModal } from '@/components/auction/AuctionAssetDetailModal';
 import { CpoUploadModal } from '@/components/auction/CpoUploadModal';
 import { LotBidCard } from '@/components/auction/LotBidCard';
 import { LotParticipationOverview } from '@/components/auction/LotParticipationOverview';
@@ -13,8 +14,10 @@ import { ScreenShell } from '@/components/shell/ScreenShell';
 import { GlassCard } from '@/components/shell/GlassCard';
 import { useAuctionActionGate } from '@/hooks/useAuctionActionGate';
 import { useAuctionParticipation } from '@/hooks/useAuctionParticipation';
+import { formatLotOrderLabel, mapAuctionAssetForDisplay } from '@/lib/auctionAssetUtils';
 import { formatEtbAmount } from '@/lib/auctionUtils';
 import { validateLotBid, getLotBidFeedback } from '@/lib/auctionParticipationUtils';
+import { computeRequiredCpoFromBidAmounts } from '@/lib/auctionLotUtils';
 import {
   buildLotParticipationRows,
   shouldShowLotParticipationOverview,
@@ -26,30 +29,6 @@ import { fileUploadApi } from '@/services/fileUploadApi';
 import { Typography, Spacing } from '@/theme';
 import type { AuctionLot } from '@/types/auctionParticipation';
 
-function mapLotForCard(lot: {
-  id: string;
-  auctionId: string;
-  lotLabel: string;
-  reservePrice: number;
-  sortOrder: number;
-  assetTitle?: string | null;
-  assetType?: string | null;
-  assetLocation?: string | null;
-  imageUrls?: string[];
-}): AuctionLot {
-  return {
-    id: lot.id,
-    auctionId: lot.auctionId,
-    lotLabel: lot.lotLabel,
-    title: lot.assetTitle ?? lot.lotLabel,
-    description: lot.assetLocation ?? '',
-    category: lot.assetType ?? 'other_assets',
-    imageUrls: lot.imageUrls ?? [],
-    reservePrice: lot.reservePrice,
-    sortOrder: lot.sortOrder,
-  };
-}
-
 export default function AuctionBidScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
@@ -59,6 +38,7 @@ export default function AuctionBidScreen() {
     auction,
     participation,
     lots,
+    auctionAssets,
     loading,
     error,
     kycVerified,
@@ -73,6 +53,7 @@ export default function AuctionBidScreen() {
   const [submittingCpo, setSubmittingCpo] = useState(false);
   const [lotBids, setLotBids] = useState<Record<string, string>>({});
   const [focusLotId, setFocusLotId] = useState<string | null>(null);
+  const [detailAsset, setDetailAsset] = useState<AuctionLot | null>(null);
   const hydratedDraftIdsRef = useRef<Set<string>>(new Set());
 
   const bidDrafts = participation?.bidDrafts ?? [];
@@ -119,34 +100,53 @@ export default function AuctionBidScreen() {
   };
 
   const summary = useMemo(() => {
-    const selectedLots = lots.filter((lot) => selectedLotIds.includes(lot.id));
+    const selectedLots = auctionAssets.filter((lot) => selectedLotIds.includes(lot.id));
     const totalBidAmount = selectedLots.reduce((sum, lot) => sum + parseBidAmount(lotBids[lot.id] ?? ''), 0);
+
+    const validProposedBids = selectedLots
+      .map((lot) => ({
+        auctionAssetId: lot.id,
+        amount: parseBidAmount(lotBids[lot.id] ?? ''),
+      }))
+      .filter((entry) => {
+        const lot = selectedLots.find((item) => item.id === entry.auctionAssetId);
+        return lot != null && validateLotBid(entry.amount, mapAuctionAssetForDisplay(lot)) === null;
+      });
+
+    const liveCpoAmount = computeRequiredCpoFromBidAmounts(
+      validProposedBids,
+      auction?.cpoPercentage ?? 0,
+      auctionAssets.map((lot) => ({ id: lot.id, reservePrice: lot.reservePrice })),
+      auction?.reservePrice,
+    );
+
     const cpoAmount =
-      participation?.requiredCpoAmountPreview ??
-      participation?.cpo?.requiredCpoAmount ??
-      0;
+      liveCpoAmount > 0
+        ? liveCpoAmount
+        : participation?.requiredCpoAmountPreview ?? participation?.cpo?.requiredCpoAmount ?? 0;
+
     return {
       selectedLots,
       totalBidAmount,
       cpoAmount: Number(cpoAmount),
     };
-  }, [lots, lotBids, participation, selectedLotIds]);
+  }, [auction, auctionAssets, lotBids, participation, selectedLotIds]);
 
   const bidErrors = useMemo(() => {
     const errors: Record<string, string | null> = {};
-    for (const lot of lots) {
+    for (const lot of auctionAssets) {
       if (!selectedLotIds.includes(lot.id)) continue;
-      errors[lot.id] = validateLotBid(parseBidAmount(lotBids[lot.id] ?? ''), mapLotForCard(lot));
+      errors[lot.id] = validateLotBid(parseBidAmount(lotBids[lot.id] ?? ''), mapAuctionAssetForDisplay(lot));
     }
     return errors;
-  }, [lotBids, lots, selectedLotIds]);
+  }, [lotBids, auctionAssets, selectedLotIds]);
 
   const hasBidErrors = Object.values(bidErrors).some(Boolean);
   const allSelectedLotsSaved = selectedLotIds.every((lotId) => {
-    const lot = lots.find((item) => item.id === lotId);
+    const lot = auctionAssets.find((item) => item.id === lotId);
     if (!lot) return false;
     const amount = parseBidAmount(lotBids[lotId] ?? '');
-    if (validateLotBid(amount, mapLotForCard(lot)) !== null) return false;
+    if (validateLotBid(amount, mapAuctionAssetForDisplay(lot)) !== null) return false;
     return selectedDrafts.some((draft) => draft.auctionAssetId === lotId && draft.amount === amount);
   });
   const canUploadCpo =
@@ -185,10 +185,10 @@ export default function AuctionBidScreen() {
       return;
     }
 
-    const lot = lots.find((item) => item.id === lotId);
+    const lot = auctionAssets.find((item) => item.id === lotId);
     if (!lot) return;
 
-    const validationError = validateLotBid(amount, mapLotForCard(lot));
+    const validationError = validateLotBid(amount, mapAuctionAssetForDisplay(lot));
     if (validationError) {
       if (existing) {
         await clearLotSelection(lotId, existing.id);
@@ -396,34 +396,42 @@ export default function AuctionBidScreen() {
         <LotParticipationOverview rows={participationRows} />
       ) : null}
 
-      {lots.length === 0 ? (
+      {auctionAssets.length === 0 ? (
         <GlassCard padding={Spacing.lg}>
           <Text style={[Typography.body, { color: colors.textSecondary }]}>
             {t('auction.participation.noLots')}
           </Text>
         </GlassCard>
       ) : showParticipationOverview ? null : (
-        lots.map((lot) => {
-          const selected = lot.id in lotBids;
-          return (
-            <LotBidCard
-              key={lot.id}
-              lot={mapLotForCard(lot)}
-              selected={selected}
-              bidText={lotBids[lot.id] ?? ''}
-              locked={locked || !canEdit}
-              autoFocus={focusLotId === lot.id}
-              feedback={getLotBidFeedback(lotBids[lot.id] ?? '', mapLotForCard(lot), {
-                forceShow: showErrors,
-              })}
-              onToggle={() => void handleToggleLot(lot.id)}
-              onBidChange={(text) => void handleBidChange(lot.id, text)}
-              onAutoFocusHandled={() => {
-                setFocusLotId((current) => (current === lot.id ? null : current));
-              }}
-            />
-          );
-        })
+        lots.map((lot, lotIndex) => (
+          <View key={lot.id} style={{ marginBottom: 14 }}>
+            <Text style={[Typography.bodyMedium, { color: colors.goldChampagne, marginBottom: 8 }]}>
+              {formatLotOrderLabel(lotIndex)}{lot.title ? ` · ${lot.title}` : ''}
+            </Text>
+            {(lot.assets ?? []).map((asset) => {
+              const selected = asset.id in lotBids;
+              return (
+                <LotBidCard
+                  key={asset.id}
+                  lot={mapAuctionAssetForDisplay(asset)}
+                  selected={selected}
+                  bidText={lotBids[asset.id] ?? ''}
+                  locked={locked || !canEdit}
+                  autoFocus={focusLotId === asset.id}
+                  feedback={getLotBidFeedback(lotBids[asset.id] ?? '', mapAuctionAssetForDisplay(asset), {
+                    forceShow: showErrors,
+                  })}
+                  onToggle={() => void handleToggleLot(asset.id)}
+                  onOpenDetail={() => setDetailAsset(mapAuctionAssetForDisplay(asset))}
+                  onBidChange={(text) => void handleBidChange(asset.id, text)}
+                  onAutoFocusHandled={() => {
+                    setFocusLotId((current) => (current === asset.id ? null : current));
+                  }}
+                />
+              );
+            })}
+          </View>
+        ))
       )}
 
       {canEdit && !locked ? (
@@ -448,6 +456,12 @@ export default function AuctionBidScreen() {
         submitting={submittingCpo}
         onClose={() => setCpoModalVisible(false)}
         onSubmit={handleUploadCpo}
+      />
+
+      <AuctionAssetDetailModal
+        visible={detailAsset != null}
+        asset={detailAsset}
+        onClose={() => setDetailAsset(null)}
       />
     </ScreenShell>
   );

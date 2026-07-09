@@ -4,6 +4,7 @@ import path from 'path';
 import { sequelize } from '../config/db.config.js';
 import { Auction, AUCTION_CATEGORIES, AUCTION_STATUSES } from '../models/auction.model.js';
 import { AuctionAsset } from '../models/auctionAsset.model.js';
+import { Lot } from '../models/lot.model.js';
 import { Asset } from '../models/asset.model.js';
 import { Evaluation } from '../models/evaluation.model.js';
 import { Bid } from '../models/bid.model.js';
@@ -19,8 +20,15 @@ import { winnerService } from './winner.service.js';
 import { paymentService } from './payment.service.js';
 import { BidDraft } from '../models/bidDraft.model.js';
 import { normalizeLotIdList, computeRequiredCpoFromBidAmounts } from '../utils/auction-lot.util.js';
+import {
+  normalizeLotGroupInputs,
+  buildNestedLotGroups,
+  flattenNestedLotGroups,
+  countNestedAssets,
+  serializeAuctionAssetRow,
+} from '../utils/auction-lot-group.util.js';
 import { env } from '../config/env.config.js';
-import { resolvePublicUploadUrl } from '../utils/media-url.util.js';
+import { normalizePublicImageUrl } from '../utils/auction-image.util.js';
 import { enrichAuctionsWithPrimaryImages } from '../utils/auction-image.util.js';
 
 const DISPLAY_STATUS_MAP = Object.freeze({
@@ -75,44 +83,48 @@ async function findActiveAuctionForAsset(assetId) {
   return activeLot?.auction ?? null;
 }
 
-/**
- * @param {object[]} assets
- */
-function normalizeLotInputs(assets) {
-  if (!Array.isArray(assets)) {
-    return [];
-  }
+const ASSET_INCLUDE_ATTRIBUTES = [
+  'id', 'title', 'asset_type', 'location', 'description', 'condition_notes', 'image_urls', 'additional_document_urls',
+];
 
-  return assets
-    .map((entry, index) => ({
-      assetId: entry?.assetId ?? entry?.asset_id,
-      reservePrice: Number(entry?.reservePrice ?? entry?.reserve_price),
-      sortOrder: Number.isFinite(Number(entry?.sortOrder)) ? Number(entry.sortOrder) : index,
-      lotLabel: entry?.lotLabel?.trim() || entry?.lot_label?.trim() || `Lot ${index + 1}`,
-    }))
-    .filter((entry) => entry.assetId);
+async function loadAuctionLotGroups(auctionId) {
+  const [parentLots, auctionAssets] = await Promise.all([
+    Lot.findAll({
+      where: { auction_id: auctionId },
+      order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
+    }),
+    AuctionAsset.findAll({
+      where: { auction_id: auctionId },
+      include: [
+        {
+          model: Asset,
+          as: 'asset',
+          attributes: ASSET_INCLUDE_ATTRIBUTES,
+        },
+      ],
+      order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
+    }),
+  ]);
+
+  return buildNestedLotGroups(parentLots, auctionAssets, normalizeAssetImageUrls);
 }
 
 function serializeLot(lot) {
-  const plain = lot.get ? lot.get({ plain: true }) : lot;
-  const asset = plain.asset;
+  return serializeAuctionAssetRow(lot, normalizeAssetImageUrls);
+}
 
-  return {
-    id: plain.id,
-    auctionId: plain.auction_id,
-    assetId: plain.asset_id,
-    reservePrice: Number(plain.reserve_price),
-    sortOrder: plain.sort_order,
-    lotLabel: plain.lot_label,
-    outcomeStatus: plain.outcome_status,
-    assetTitle: asset?.title ?? null,
-    assetType: asset?.asset_type ?? null,
-    assetLocation: asset?.location ?? null,
-    assetDescription: asset?.description ?? null,
-    assetConditionNotes: asset?.condition_notes ?? null,
-    assetImages: normalizeAssetImageUrls(asset?.image_urls),
-    assetDocuments: asset?.additional_document_urls ?? null,
-  };
+function sanitizeNestedLotReserves(lotGroups, documentAccess) {
+  if (documentAccess || !Array.isArray(lotGroups)) {
+    return lotGroups;
+  }
+
+  return lotGroups.map((lot) => ({
+    ...lot,
+    assets: (lot.assets || []).map((asset) => ({
+      ...asset,
+      reservePrice: null,
+    })),
+  }));
 }
 
 const ASSET_TYPE_TO_AUCTION_CATEGORY = Object.freeze({
@@ -146,7 +158,8 @@ function normalizeAssetImageUrls(urls) {
   }
   return urls
     .filter((url) => typeof url === 'string' && url.trim().length > 0)
-    .map((url) => resolvePublicUploadUrl(url.trim()));
+    .map((url) => normalizePublicImageUrl(url.trim()))
+    .filter(Boolean);
 }
 
 function normalizeAssetAdditionalDocuments(documents) {
@@ -231,7 +244,7 @@ function normalizeDocumentFiles(documents) {
     .filter((doc) => doc && typeof doc.url === 'string' && doc.url.length > 0)
     .map((doc) => ({
       name: doc.name || doc.fileName || 'document.pdf',
-      url: resolvePublicUploadUrl(doc.url),
+      url: normalizePublicImageUrl(doc.url) ?? doc.url,
       size: Number(doc.size) || 0,
     }));
 }
@@ -353,7 +366,7 @@ function validateAuctionFields(payload, { requireDocuments = false } = {}) {
 /**
  * @param {string} assetId
  */
-async function assertAssetEligibleForAuction(assetId) {
+async function assertAssetEligibleForAuction(assetId, excludeAuctionId = null) {
   const asset = await Asset.findOne({ where: { id: assetId, deleted_at: null } });
   if (!asset) {
     throw new AppError('Asset not found', 404, 'ASSET_NOT_FOUND');
@@ -369,7 +382,7 @@ async function assertAssetEligibleForAuction(assetId) {
 
   const existingAuction = await findActiveAuctionForAsset(assetId);
 
-  if (existingAuction) {
+  if (existingAuction && existingAuction.id !== excludeAuctionId) {
     throw new AppError('An active auction already exists for this asset', 409, 'ASSET_AUCTION_EXISTS');
   }
 
@@ -506,6 +519,7 @@ export async function createAuction(payload, staffId) {
     assetId,
     auctionMode,
     assets,
+    lots,
   } = payload;
 
   if (!title?.trim()) {
@@ -543,29 +557,35 @@ export async function createAuction(payload, staffId) {
   }
 
   const normalizedImages = normalizeImageUrls(imageUrls);
-  const resolvedMode = auctionMode === 'multi' ? 'multi' : 'single';
-  let lotInputs = normalizeLotInputs(assets);
+  let lotGroups = normalizeLotGroupInputs({ lots, assets });
 
-  if (resolvedMode === 'single' && lotInputs.length === 0 && assetId) {
+  if (lotGroups.length === 0 && assetId) {
     const reserve = Number(reservePrice);
     if (!Number.isFinite(reserve) || reserve <= 0) {
       throw new AppError('Reserve price must be a positive number', 400, 'INVALID_RESERVE_PRICE');
     }
-    lotInputs = [{
-      assetId,
-      reservePrice: reserve,
+    lotGroups = [{
+      title: 'Lot 1',
+      description: null,
       sortOrder: 0,
-      lotLabel: 'Lot 1',
+      assets: [{
+        assetId,
+        reservePrice: reserve,
+        sortOrder: 0,
+        tags: [],
+      }],
     }];
   }
 
-  if (resolvedMode === 'multi') {
-    if (lotInputs.length < 2) {
-      throw new AppError('Multi-asset auctions require at least two assets', 400, 'MULTI_ASSETS_REQUIRED');
-    }
+  const flatAssets = flattenNestedLotGroups(lotGroups);
+  const totalAssetCount = flatAssets.length;
+  const resolvedMode = auctionMode === 'multi' || totalAssetCount > 1 ? 'multi' : 'single';
+
+  if (resolvedMode === 'multi' && totalAssetCount < 2) {
+    throw new AppError('Multi-asset auctions require at least two assets', 400, 'MULTI_ASSETS_REQUIRED');
   }
 
-  if (lotInputs.length > MAX_LOTS_PER_AUCTION) {
+  if (totalAssetCount > MAX_LOTS_PER_AUCTION) {
     throw new AppError(
       `Maximum ${MAX_LOTS_PER_AUCTION} assets per auction`,
       400,
@@ -573,36 +593,37 @@ export async function createAuction(payload, staffId) {
     );
   }
 
-  const uniqueAssetIds = new Set(lotInputs.map((lot) => lot.assetId));
-  if (uniqueAssetIds.size !== lotInputs.length) {
+  const uniqueAssetIds = new Set(flatAssets.map((asset) => asset.assetId));
+  if (uniqueAssetIds.size !== flatAssets.length) {
     throw new AppError('Each asset can only appear once in an auction', 400, 'DUPLICATE_AUCTION_ASSET');
   }
 
-  for (const lot of lotInputs) {
-    if (!Number.isFinite(lot.reservePrice) || lot.reservePrice <= 0) {
-      throw new AppError('Each lot must have a positive reserve price', 400, 'INVALID_LOT_RESERVE');
+  for (const asset of flatAssets) {
+    if (!Number.isFinite(asset.reservePrice) || asset.reservePrice <= 0) {
+      throw new AppError('Each asset must have a positive reserve price', 400, 'INVALID_LOT_RESERVE');
     }
-    await assertAssetEligibleForAuction(lot.assetId);
+    await assertAssetEligibleForAuction(asset.assetId);
   }
 
   let auctionReserve = Number(reservePrice);
   let totalReservePrice = null;
 
   if (resolvedMode === 'multi') {
-    totalReservePrice = lotInputs.reduce((sum, lot) => sum + lot.reservePrice, 0);
+    totalReservePrice = flatAssets.reduce((sum, asset) => sum + asset.reservePrice, 0);
     auctionReserve = totalReservePrice;
   } else if (!Number.isFinite(auctionReserve) || auctionReserve <= 0) {
-    if (lotInputs.length === 1) {
-      auctionReserve = lotInputs[0].reservePrice;
+    if (flatAssets.length === 1) {
+      auctionReserve = flatAssets[0].reservePrice;
     } else {
       throw new AppError('Reserve price must be a positive number', 400, 'INVALID_RESERVE_PRICE');
     }
-  } else if (lotInputs.length === 1) {
-    lotInputs[0].reservePrice = auctionReserve;
+  } else if (flatAssets.length === 1) {
+    flatAssets[0].reservePrice = auctionReserve;
+    lotGroups[0].assets[0].reservePrice = auctionReserve;
   }
 
-  const primaryAssetId = resolvedMode === 'single' && lotInputs.length === 1
-    ? lotInputs[0].assetId
+  const primaryAssetId = resolvedMode === 'single' && flatAssets.length === 1
+    ? flatAssets[0].assetId
     : null;
 
   const auction = await sequelize.transaction(async (transaction) => {
@@ -627,16 +648,33 @@ export async function createAuction(payload, staffId) {
       status: 'pending_approval',
     }, { transaction });
 
-    for (const lot of lotInputs) {
-      await AuctionAsset.create({
+    let globalSortOrder = 0;
+    for (const [lotIndex, lotGroup] of lotGroups.entries()) {
+      const parentLot = await Lot.create({
         id: generateUuid(),
         auction_id: createdAuction.id,
-        asset_id: lot.assetId,
-        reserve_price: lot.reservePrice,
-        sort_order: lot.sortOrder,
-        lot_label: lot.lotLabel,
-        outcome_status: 'pending',
+        title: lotGroup.title,
+        description: lotGroup.description,
+        sort_order: lotGroup.sortOrder ?? lotIndex,
       }, { transaction });
+
+      for (const [assetIndex, asset] of lotGroup.assets.entries()) {
+        await AuctionAsset.create({
+          id: generateUuid(),
+          auction_id: createdAuction.id,
+          lot_id: parentLot.id,
+          asset_id: asset.assetId,
+          reserve_price: asset.reservePrice,
+          sort_order: asset.sortOrder ?? globalSortOrder,
+          lot_label: lotGroup.title,
+          tags: asset.tags?.length ? asset.tags : null,
+          outcome_status: 'pending',
+        }, { transaction });
+        globalSortOrder += 1;
+        if (asset.sortOrder == null) {
+          asset.sortOrder = globalSortOrder - 1;
+        }
+      }
     }
 
     return createdAuction;
@@ -651,7 +689,8 @@ export async function createAuction(payload, staffId) {
       title: auction.title,
       category: auction.category,
       auctionMode: resolvedMode,
-      lotCount: lotInputs.length,
+      lotCount: lotGroups.length,
+      assetCount: totalAssetCount,
     },
   });
 
@@ -691,6 +730,7 @@ function serializeAuction(auction, bidCount = 0, extras = {}) {
     auctionMode: plain.auction_mode || 'single',
     lots: extras.lots ?? [],
     lotCount: extras.lotCount ?? (extras.lots?.length ?? 0),
+    assetCount: extras.assetCount ?? countNestedAssets(extras.lots ?? []),
     documentFee: Number(plain.document_price),
     cpoPercentage: Number(plain.cpo_percentage),
     currency: plain.currency,
@@ -738,10 +778,20 @@ async function attachBrowseLotSummaries(items) {
   const auctionIds = items.map((item) => item.id);
   const rows = await sequelize.query(
     `
-    SELECT auction_id, COUNT(*) AS lot_count, COALESCE(SUM(reserve_price), 0) AS total_reserve
-    FROM auction_assets
-    WHERE auction_id IN (:auctionIds)
-    GROUP BY auction_id
+    SELECT
+      aa.auction_id,
+      COUNT(aa.id) AS asset_count,
+      COALESCE(NULLIF(lg.parent_lot_count, 0), COUNT(DISTINCT COALESCE(aa.lot_label, aa.id))) AS lot_count,
+      COALESCE(SUM(aa.reserve_price), 0) AS total_reserve
+    FROM auction_assets aa
+    LEFT JOIN (
+      SELECT auction_id, COUNT(*) AS parent_lot_count
+      FROM lots
+      WHERE deleted_at IS NULL
+      GROUP BY auction_id
+    ) lg ON lg.auction_id = aa.auction_id
+    WHERE aa.auction_id IN (:auctionIds)
+    GROUP BY aa.auction_id, lg.parent_lot_count
     `,
     {
       replacements: { auctionIds },
@@ -754,6 +804,7 @@ async function attachBrowseLotSummaries(items) {
       row.auction_id,
       {
         lotCount: Number(row.lot_count) || 0,
+        assetCount: Number(row.asset_count) || 0,
         totalReserve: Number(row.total_reserve) || 0,
       },
     ]),
@@ -768,7 +819,8 @@ async function attachBrowseLotSummaries(items) {
     return {
       ...item,
       lotCount: summary.lotCount,
-      totalReservePrice: item.totalReservePrice ?? (summary.lotCount > 1 ? summary.totalReserve : item.totalReservePrice),
+      assetCount: summary.assetCount,
+      totalReservePrice: item.totalReservePrice ?? (summary.assetCount > 1 ? summary.totalReserve : item.totalReservePrice),
     };
   });
 }
@@ -986,7 +1038,8 @@ async function attachUserParticipationSummaries(items, userId) {
  */
 export async function getAuctionParticipation(auctionId, userId) {
   const auction = await getBrowseAuctionById(auctionId, userId);
-  const lots = auction.lots || [];
+  const lotGroups = auction.lots || [];
+  const flatAssets = flattenNestedLotGroups(lotGroups);
 
   const [payment, cpo, bids, bidDraftRecords] = await Promise.all([
     Payment.findOne({
@@ -1026,15 +1079,15 @@ export async function getAuctionParticipation(auctionId, userId) {
   );
   const legacyBid = bids.find((bid) => !bid.auction_asset_id) || null;
 
-  const lotParticipation = lots.map((lot) => {
-    const selected = selectedLotIds.includes(lot.id);
-    const lotBid = bidByLotId.get(lot.id);
+  const lotParticipation = flatAssets.map((asset) => {
+    const selected = selectedLotIds.includes(asset.id);
+    const lotBid = bidByLotId.get(asset.id);
     const canPlaceBidOnLot = Boolean(
       cpoApproved && selected && !lotBid && auctionOpen && inWindow,
     );
 
     return {
-      ...lot,
+      ...asset,
       selected,
       bid: lotBid
         ? {
@@ -1072,7 +1125,7 @@ export async function getAuctionParticipation(auctionId, userId) {
   }
 
   const canPlaceBid = lotParticipation.some((lot) => lot.canPlaceBid)
-    || Boolean(cpoApproved && !legacyBid && lots.length === 0 && auctionOpen && inWindow);
+    || Boolean(cpoApproved && !legacyBid && flatAssets.length === 0 && auctionOpen && inWindow);
 
   const editableDrafts = bidDraftRecords.filter((draft) => draft.status === 'draft');
   const lockedDrafts = bidDraftRecords.filter((draft) => draft.status === 'locked');
@@ -1093,7 +1146,7 @@ export async function getAuctionParticipation(auctionId, userId) {
           amount: Number(draft.amount),
         })),
         auction.cpoPercentage ?? auction.cpo_percentage,
-        lots,
+        flatAssets,
         auction.reservePrice ?? auction.reserve_price,
       )
     : null;
@@ -1128,7 +1181,7 @@ export async function getAuctionParticipation(auctionId, userId) {
     auctionId,
     participationStatus,
     isRegisteredBidder: summary.isRegisteredBidder,
-    isMultiLot: lots.length > 1,
+    isMultiLot: flatAssets.length > 1,
     payment: payment
       ? {
           id: payment.id,
@@ -1161,7 +1214,7 @@ export async function getAuctionParticipation(auctionId, userId) {
           status: legacyBid.status,
           submittedAt: legacyBid.submitted_at,
         }
-      : (serializedBids.length === 1 && lots.length <= 1 ? serializedBids[0] : null),
+      : (serializedBids.length === 1 && flatAssets.length <= 1 ? serializedBids[0] : null),
     gates: {
       documentAccess: paymentApproved,
       cpoApproved,
@@ -1200,28 +1253,20 @@ export async function getBrowseAuctionById(id, userId = null) {
     throw new AppError('Auction not available', 404, 'AUCTION_NOT_FOUND');
   }
 
-  const lots = await AuctionAsset.findAll({
-    where: { auction_id: id },
-    include: [
-      {
-        model: Asset,
-        as: 'asset',
-        attributes: ['id', 'title', 'asset_type', 'location', 'description', 'condition_notes', 'image_urls', 'additional_document_urls'],
-      },
-    ],
-    order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
-  });
+  const nestedLots = await loadAuctionLotGroups(id);
+  const flatAssets = flattenNestedLotGroups(nestedLots);
 
   const [serialized] = await attachBidCounts([auction]);
-  serialized.lots = lots.map(serializeLot);
-  serialized.lotCount = serialized.lots.length;
-  serialized.auctionMode = auction.auction_mode || (serialized.lotCount > 1 ? 'multi' : 'single');
+  serialized.lots = nestedLots;
+  serialized.lotCount = nestedLots.length;
+  serialized.assetCount = flatAssets.length;
+  serialized.auctionMode = auction.auction_mode || (flatAssets.length > 1 ? 'multi' : 'single');
   serialized.totalReservePrice = auction.total_reserve_price != null
     ? Number(auction.total_reserve_price)
-    : serialized.lots.reduce((sum, lot) => sum + Number(lot.reservePrice || 0), 0);
+    : flatAssets.reduce((sum, asset) => sum + Number(asset.reservePrice || 0), 0);
 
-  const lotImages = serialized.lots
-    .flatMap((lot) => lot.assetImages || [])
+  const lotImages = flatAssets
+    .flatMap((asset) => asset.assetImages || asset.imageUrls || [])
     .filter(Boolean);
   const auctionImages = normalizeAssetImageUrls(auction.image_urls);
   const allImages = [...new Set([...auctionImages, ...lotImages])];
@@ -1236,10 +1281,7 @@ export async function getBrowseAuctionById(id, userId = null) {
   const sanitized = sanitizeBrowseAuction(serialized, { documentAccess });
 
   if (!documentAccess && sanitized.lots) {
-    sanitized.lots = sanitized.lots.map((lot) => ({
-      ...lot,
-      reservePrice: null,
-    }));
+    sanitized.lots = sanitizeNestedLotReserves(sanitized.lots, false);
   }
 
   return sanitized;
@@ -1262,23 +1304,13 @@ export async function getAuctionById(id) {
     ],
   });
 
-  const lots = await AuctionAsset.findAll({
-    where: { auction_id: id },
-    include: [
-      {
-        model: Asset,
-        as: 'asset',
-        attributes: ['id', 'title', 'asset_type', 'location', 'description', 'condition_notes', 'image_urls', 'additional_document_urls'],
-      },
-    ],
-    order: [['sort_order', 'ASC'], ['created_at', 'ASC']],
-  });
-
-  const serializedLots = lots.map(serializeLot);
+  const nestedLots = await loadAuctionLotGroups(id);
+  const flatAssets = flattenNestedLotGroups(nestedLots);
   const [serialized] = await attachBidCounts([auction]);
   serialized.createdByName = buildStaffDisplayName(staff?.get({ plain: true }));
-  serialized.lots = serializedLots;
-  serialized.lotCount = serializedLots.length;
+  serialized.lots = nestedLots;
+  serialized.lotCount = nestedLots.length;
+  serialized.assetCount = flatAssets.length;
   return serialized;
 }
 
@@ -1348,6 +1380,10 @@ export async function updateAuction(id, payload) {
 
   await auction.update(updateData);
 
+  if (payload.lots !== undefined) {
+    await syncAuctionLotGroups(auction.id, payload);
+  }
+
   await auditService.writeAuditLog({
     action: AUDIT_ACTIONS.UPDATE,
     entityType: 'Auction',
@@ -1356,6 +1392,131 @@ export async function updateAuction(id, payload) {
   });
 
   return getAuctionById(id);
+}
+
+async function syncAuctionLotGroups(auctionId, payload) {
+  const lotGroups = normalizeLotGroupInputs(payload);
+  const flatAssets = flattenNestedLotGroups(lotGroups);
+  const removedLotIds = Array.isArray(payload.removedLotIds)
+    ? payload.removedLotIds.filter((id) => typeof id === 'string' && id.trim())
+    : [];
+  const removedAssetIds = Array.isArray(payload.removedAssetIds)
+    ? payload.removedAssetIds.filter((id) => typeof id === 'string' && id.trim())
+    : [];
+
+  if (flatAssets.length > MAX_LOTS_PER_AUCTION) {
+    throw new AppError(
+      `Maximum ${MAX_LOTS_PER_AUCTION} assets per auction`,
+      400,
+      'AUCTION_LOT_LIMIT',
+    );
+  }
+
+  const uniqueAssetIds = new Set(flatAssets.map((asset) => asset.assetId));
+  if (uniqueAssetIds.size !== flatAssets.length) {
+    throw new AppError('Each asset can only appear once in an auction', 400, 'DUPLICATE_AUCTION_ASSET');
+  }
+
+  for (const asset of flatAssets) {
+    if (!Number.isFinite(asset.reservePrice) || asset.reservePrice <= 0) {
+      throw new AppError('Each asset must have a positive reserve price', 400, 'INVALID_LOT_RESERVE');
+    }
+    await assertAssetEligibleForAuction(asset.assetId, auctionId);
+  }
+
+  await sequelize.transaction(async (transaction) => {
+    if (removedAssetIds.length > 0) {
+      await AuctionAsset.destroy({
+        where: { id: { [Op.in]: removedAssetIds }, auction_id: auctionId },
+        transaction,
+      });
+    }
+
+    if (removedLotIds.length > 0) {
+      await AuctionAsset.update(
+        { lot_id: null },
+        { where: { lot_id: { [Op.in]: removedLotIds }, auction_id: auctionId }, transaction },
+      );
+      await Lot.destroy({
+        where: { id: { [Op.in]: removedLotIds }, auction_id: auctionId },
+        transaction,
+      });
+    }
+
+    let globalSortOrder = 0;
+    for (const [lotIndex, lotGroup] of lotGroups.entries()) {
+      let parentLot;
+      if (lotGroup.id) {
+        parentLot = await Lot.findOne({
+          where: { id: lotGroup.id, auction_id: auctionId },
+          transaction,
+        });
+        if (parentLot) {
+          await parentLot.update({
+            title: lotGroup.title,
+            description: lotGroup.description,
+            sort_order: lotGroup.sortOrder ?? lotIndex,
+          }, { transaction });
+        }
+      }
+
+      if (!parentLot) {
+        parentLot = await Lot.create({
+          id: generateUuid(),
+          auction_id: auctionId,
+          title: lotGroup.title,
+          description: lotGroup.description,
+          sort_order: lotGroup.sortOrder ?? lotIndex,
+        }, { transaction });
+      }
+
+      for (const [assetIndex, asset] of lotGroup.assets.entries()) {
+        const sortOrder = asset.sortOrder ?? globalSortOrder;
+        const assetPayload = {
+          auction_id: auctionId,
+          lot_id: parentLot.id,
+          asset_id: asset.assetId,
+          reserve_price: asset.reservePrice,
+          sort_order: sortOrder,
+          lot_label: lotGroup.title,
+          tags: asset.tags?.length ? asset.tags : null,
+        };
+
+        if (asset.id) {
+          const existingAsset = await AuctionAsset.findOne({
+            where: { id: asset.id, auction_id: auctionId },
+            transaction,
+          });
+          if (existingAsset) {
+            await existingAsset.update(assetPayload, { transaction });
+            globalSortOrder += 1;
+            continue;
+          }
+        }
+
+        await AuctionAsset.create({
+          id: generateUuid(),
+          ...assetPayload,
+          outcome_status: 'pending',
+        }, { transaction });
+        globalSortOrder += 1;
+        if (asset.sortOrder == null) {
+          asset.sortOrder = sortOrder;
+        }
+      }
+    }
+
+    const totalReservePrice = flatAssets.reduce((sum, asset) => sum + asset.reservePrice, 0);
+    await Auction.update(
+      {
+        auction_mode: flatAssets.length > 1 ? 'multi' : 'single',
+        total_reserve_price: flatAssets.length > 1 ? totalReservePrice : null,
+        reserve_price: totalReservePrice,
+        asset_id: flatAssets.length === 1 ? flatAssets[0].assetId : null,
+      },
+      { where: { id: auctionId }, transaction },
+    );
+  });
 }
 
 async function transitionAuctionStatus(id, allowedFrom, nextStatus, staffId, auditAction) {

@@ -5,15 +5,14 @@ import { Asset } from '../../../src/models/asset.model.js';
 import { Evaluation } from '../../../src/models/evaluation.model.js';
 import { Auction } from '../../../src/models/auction.model.js';
 import { AuctionAsset } from '../../../src/models/auctionAsset.model.js';
+import { Lot } from '../../../src/models/lot.model.js';
 import {
   ADMIN_STAFF_ID,
   BIDDER_USER_ID,
   SEED_ASSET_OWNER_ID,
-  SEED_AUCTION_DOC,
-  SEED_AUCTIONS,
-  SEED_OWNERSHIP_DOC,
+  SEED_AUCTION_CATALOG,
 } from '../data/auctions.mjs';
-import { ensureSeedUploadFiles } from '../lib/ensure-seed-uploads.mjs';
+import { resolveSeedMedia } from '../lib/seed-media.mjs';
 
 function ownershipDocumentType(assetType) {
   if (assetType === 'vehicle') return 'vehicle_registration_book';
@@ -26,6 +25,10 @@ function auctionWindow() {
   const start = new Date(Date.now() - 60 * 60 * 1000);
   const end = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
   return { start, end };
+}
+
+function flattenSeedAssets(seed) {
+  return seed.lotGroups.flatMap((group) => group.assets);
 }
 
 async function assertPrerequisites(transaction) {
@@ -61,22 +64,25 @@ async function ensureAssetOwner(transaction) {
   return owner;
 }
 
-async function ensureEvaluatedAsset(lot, ownerId, staffId, transaction) {
+async function ensureEvaluatedAsset(assetSeed, ownerId, staffId, transaction) {
   const now = new Date();
 
   await Asset.upsert(
     {
-      id: lot.assetId,
+      id: assetSeed.assetId,
       asset_owner_id: ownerId,
-      asset_type: lot.assetType,
-      title: lot.title,
-      description: lot.description,
-      location: lot.location,
-      ownership_document_type: ownershipDocumentType(lot.assetType),
-      ownership_document_url: SEED_OWNERSHIP_DOC,
-      image_urls: lot.imageUrls,
-      desired_reserve_price: lot.reservePrice,
-      auction_conditions: 'Standard Enderass auction terms apply.',
+      asset_type: assetSeed.assetType,
+      title: assetSeed.title,
+      description: assetSeed.description,
+      location: assetSeed.location,
+      address: assetSeed.address ?? null,
+      ownership_document_type: ownershipDocumentType(assetSeed.assetType),
+      ownership_document_url: assetSeed.ownershipDocumentUrl,
+      additional_document_urls: assetSeed.additionalDocumentUrls ?? null,
+      condition_notes: assetSeed.conditionNotes ?? null,
+      image_urls: assetSeed.imageUrls,
+      desired_reserve_price: assetSeed.reservePrice,
+      auction_conditions: assetSeed.auctionConditions ?? 'Standard Enderass auction terms apply.',
       status: 'evaluated',
       reviewed_by_staff_id: staffId,
       reviewed_at: now,
@@ -87,17 +93,19 @@ async function ensureEvaluatedAsset(lot, ownerId, staffId, transaction) {
 
   await Evaluation.upsert(
     {
-      id: lot.evaluationId,
-      asset_id: lot.assetId,
+      id: assetSeed.evaluationId,
+      asset_id: assetSeed.assetId,
       evaluated_by_staff_id: staffId,
       scheduled_at: now,
       started_at: now,
       completed_at: now,
-      valuation_amount: lot.reservePrice,
-      reserve_price_recommendation: lot.reservePrice,
+      valuation_amount: assetSeed.reservePrice,
+      reserve_price_recommendation: assetSeed.reservePrice,
+      photo_urls: assetSeed.evaluationPhotoUrls ?? assetSeed.imageUrls?.slice(0, 4) ?? null,
+      report_url: assetSeed.evaluationReportUrl ?? null,
       recommendation: 'approved',
       status: 'approved',
-      notes: 'Seeded evaluation for development catalog.',
+      notes: assetSeed.evaluationNotes ?? 'Seeded evaluation for development catalog.',
       deleted_at: null,
     },
     { transaction },
@@ -107,31 +115,36 @@ async function ensureEvaluatedAsset(lot, ownerId, staffId, transaction) {
 async function ensureAuctionCatalogEntry(seed, staffId, transaction, logger) {
   const existing = await Auction.findByPk(seed.id, { transaction });
   const { start, end } = auctionWindow();
-  const totalReserve = seed.lots.reduce((sum, lot) => sum + lot.reservePrice, 0);
+  const flatAssets = flattenSeedAssets(seed);
+  const totalReserve = flatAssets.reduce((sum, asset) => sum + asset.reservePrice, 0);
   const now = new Date();
+  const coverImages = seed.auctionCoverImages?.length
+    ? seed.auctionCoverImages
+    : seed.coverImage
+      ? [seed.coverImage]
+      : null;
+
+  const auctionPayload = {
+    title: seed.title,
+    category: seed.category,
+    description: seed.description,
+    auction_conditions: seed.auctionConditions,
+    image_urls: coverImages,
+    document_files: seed.documentFiles,
+    start_date: start,
+    end_date: end,
+    reserve_price: totalReserve,
+    total_reserve_price: totalReserve,
+    document_price: seed.documentFee,
+    cpo_percentage: seed.cpoPercentage,
+    status: 'published',
+    auction_mode: 'multi',
+    published_at: existing?.published_at ?? now,
+    deleted_at: null,
+  };
 
   if (existing) {
-    await existing.update(
-      {
-        title: seed.title,
-        category: seed.category,
-        description: seed.description,
-        auction_conditions: seed.auctionConditions,
-        image_urls: [seed.lots[0].imageUrls[0]],
-        document_files: [SEED_AUCTION_DOC],
-        start_date: start,
-        end_date: end,
-        reserve_price: totalReserve,
-        total_reserve_price: totalReserve,
-        document_price: seed.documentFee,
-        cpo_percentage: seed.cpoPercentage,
-        status: 'published',
-        auction_mode: 'multi',
-        published_at: existing.published_at ?? now,
-        deleted_at: null,
-      },
-      { transaction },
-    );
+    await existing.update(auctionPayload, { transaction });
     logger.log(`[seed] refreshed auction: ${seed.title}`);
   } else {
     await Auction.create(
@@ -139,56 +152,67 @@ async function ensureAuctionCatalogEntry(seed, staffId, transaction, logger) {
         id: seed.id,
         asset_id: null,
         created_by_staff_id: staffId,
-        title: seed.title,
-        category: seed.category,
-        description: seed.description,
-        auction_conditions: seed.auctionConditions,
-        image_urls: [seed.lots[0].imageUrls[0]],
-        document_files: [SEED_AUCTION_DOC],
-        start_date: start,
-        end_date: end,
-        reserve_price: totalReserve,
-        total_reserve_price: totalReserve,
-        document_price: seed.documentFee,
-        cpo_percentage: seed.cpoPercentage,
         currency: 'ETB',
-        status: 'published',
-        auction_mode: 'multi',
-        published_at: now,
+        ...auctionPayload,
       },
       { transaction },
     );
     logger.log(`[seed] created auction: ${seed.title}`);
   }
 
-  for (const [index, lot] of seed.lots.entries()) {
-    await AuctionAsset.upsert(
+  let globalSortOrder = 0;
+  for (const [groupIndex, lotGroup] of seed.lotGroups.entries()) {
+    await Lot.upsert(
       {
-        id: lot.id,
+        id: lotGroup.id,
         auction_id: seed.id,
-        asset_id: lot.assetId,
-        reserve_price: lot.reservePrice,
-        sort_order: index,
-        lot_label: `Lot ${index + 1}`,
-        outcome_status: 'pending',
+        title: lotGroup.title,
+        description: lotGroup.description ?? null,
+        sort_order: lotGroup.sortOrder ?? groupIndex,
+        deleted_at: null,
       },
       { transaction },
     );
+
+    for (const assetSeed of lotGroup.assets) {
+      await AuctionAsset.upsert(
+        {
+          id: assetSeed.id,
+          auction_id: seed.id,
+          lot_id: lotGroup.id,
+          asset_id: assetSeed.assetId,
+          reserve_price: assetSeed.reservePrice,
+          sort_order: assetSeed.sortOrder ?? globalSortOrder,
+          lot_label: lotGroup.title,
+          tags: assetSeed.tags ?? null,
+          outcome_status: 'pending',
+        },
+        { transaction },
+      );
+      globalSortOrder += 1;
+    }
   }
 }
 
 export async function seedAuctionCatalog({ transaction, logger = console }) {
-  ensureSeedUploadFiles(logger);
+  const resolvedAuctions = await resolveSeedMedia(SEED_AUCTION_CATALOG, logger);
   await assertPrerequisites(transaction);
 
   const owner = await ensureAssetOwner(transaction);
+  const totalAssets = resolvedAuctions.reduce(
+    (sum, auction) => sum + flattenSeedAssets(auction).length,
+    0,
+  );
+  const totalLots = resolvedAuctions.reduce((sum, auction) => sum + auction.lotGroups.length, 0);
 
-  for (const seed of SEED_AUCTIONS) {
-    for (const lot of seed.lots) {
-      await ensureEvaluatedAsset(lot, owner.id, ADMIN_STAFF_ID, transaction);
+  for (const seed of resolvedAuctions) {
+    for (const assetSeed of flattenSeedAssets(seed)) {
+      await ensureEvaluatedAsset(assetSeed, owner.id, ADMIN_STAFF_ID, transaction);
     }
     await ensureAuctionCatalogEntry(seed, ADMIN_STAFF_ID, transaction, logger);
   }
 
-  logger.log(`[seed] upserted ${SEED_AUCTIONS.length} published auctions with catalog assets`);
+  logger.log(
+    `[seed] upserted ${resolvedAuctions.length} auctions, ${totalLots} lots, ${totalAssets} assets with media`,
+  );
 }

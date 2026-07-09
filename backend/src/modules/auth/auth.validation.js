@@ -200,6 +200,54 @@ export function validateResetPasswordBody(req, res, next) {
   return next();
 }
 
+export function validateUpdateProfileBody(req, res, next) {
+  const {
+    email,
+    firstName,
+    lastName,
+    organizationName,
+    preferredLanguage,
+  } = req.body ?? {};
+
+  const errors = [];
+
+  if (email !== undefined && email !== null && email !== '') {
+    if (typeof email !== 'string' || !email.includes('@')) {
+      errors.push('email must be a valid email address');
+    }
+  }
+
+  if (firstName !== undefined && firstName !== null && firstName !== '') {
+    if (typeof firstName !== 'string' || !firstName.trim()) {
+      errors.push('firstName must be a non-empty string');
+    }
+  }
+
+  if (lastName !== undefined && lastName !== null && lastName !== '') {
+    if (typeof lastName !== 'string') {
+      errors.push('lastName must be a string');
+    }
+  }
+
+  if (organizationName !== undefined && organizationName !== null && organizationName !== '') {
+    if (typeof organizationName !== 'string' || !organizationName.trim()) {
+      errors.push('organizationName must be a non-empty string');
+    }
+  }
+
+  if (preferredLanguage !== undefined && preferredLanguage !== null && preferredLanguage !== '') {
+    if (!['en', 'am'].includes(preferredLanguage)) {
+      errors.push('preferredLanguage must be en or am');
+    }
+  }
+
+  if (errors.length > 0) {
+    return next(new AppError(errors.join('; '), 400, 'VALIDATION_ERROR'));
+  }
+
+  return next();
+}
+
 export default {
   validateLoginBody,
   validateRegistrationBody,
@@ -208,4 +256,5 @@ export default {
   validateForgotPasswordBody,
   validateVerifyResetOtpBody,
   validateResetPasswordBody,
+  validateUpdateProfileBody,
 };

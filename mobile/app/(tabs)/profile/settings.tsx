@@ -1,11 +1,15 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, Modal, TouchableWithoutFeedback } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import { useAppStore, useTheme } from '@/lib/appStore';
+import { useAuthStore } from '@/lib/authStore';
 import { useRefreshSession } from '@/hooks/useRefreshSession';
+import { forgotPassword } from '@/services/authApi';
+import { AuthSuccessModal } from '@/components/auth';
+import { maskMobileNumber } from '@/utils/mobile-utils';
 
 import { type ThemePreference } from '@/theme';
 import { glassElevation } from '@/lib/glassStyles';
@@ -75,12 +79,71 @@ function Row({
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
+  const { passwordChanged } = useLocalSearchParams<{ passwordChanged?: string }>();
   const themeMode = useAppStore((s) => s.themeMode);
   const setThemeMode = useAppStore((s) => s.setThemeMode);
   const language = useAppStore((s) => s.language);
   const setLanguage = useAppStore((s) => s.setLanguage);
   const [showLangModal, setShowLangModal] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [changePasswordError, setChangePasswordError] = useState<string | null>(null);
+  const [showOtpSentModal, setShowOtpSentModal] = useState(false);
+  const [showPasswordChangedBanner, setShowPasswordChangedBanner] = useState(false);
+  const passwordChangedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const passwordChangedShownRef = useRef(false);
   const { refreshing, refresh } = useRefreshSession();
+  const userMobile = useAuthStore((s) => s.user?.mobileNumber);
+  const setPendingPasswordReset = useAuthStore((s) => s.setPendingPasswordReset);
+
+  useEffect(() => {
+    if (passwordChanged !== '1' || passwordChangedShownRef.current) return;
+
+    passwordChangedShownRef.current = true;
+    setShowPasswordChangedBanner(true);
+
+    if (passwordChangedTimeoutRef.current) {
+      clearTimeout(passwordChangedTimeoutRef.current);
+    }
+    passwordChangedTimeoutRef.current = setTimeout(() => {
+      setShowPasswordChangedBanner(false);
+    }, 5000);
+  }, [passwordChanged]);
+
+  useEffect(() => {
+    return () => {
+      if (passwordChangedTimeoutRef.current) {
+        clearTimeout(passwordChangedTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleChangePassword = async () => {
+    if (changingPassword) return;
+
+    setChangePasswordError(null);
+
+    if (!userMobile) {
+      router.push('/(auth)/forgot-password');
+      return;
+    }
+
+    setChangingPassword(true);
+    setPendingPasswordReset(userMobile, 'settings');
+
+    try {
+      await forgotPassword({ mobileNumber: userMobile, phoneNumber: userMobile });
+      setShowOtpSentModal(true);
+    } catch {
+      setChangePasswordError(t('auth.errors.resetRequestFailed'));
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleOtpSentContinue = () => {
+    setShowOtpSentModal(false);
+    router.push('/(auth)/verify-reset-otp');
+  };
 
   const THEME_OPTIONS: {
     value: ThemePreference;
@@ -101,6 +164,37 @@ export default function SettingsScreen() {
       refreshing={refreshing}
       onRefresh={refresh}
     >
+      {showPasswordChangedBanner ? (
+        <View
+          style={[
+            styles.successBanner,
+            {
+              backgroundColor: colors.success.soft,
+              borderColor: colors.success.border,
+            },
+          ]}
+        >
+          <MaterialCommunityIcons name="check-circle" size={16} color={colors.success.fg} />
+          <Text style={[styles.successBannerText, { color: colors.success.fg }]}>
+            {t('settings.account.passwordChanged')}
+          </Text>
+        </View>
+      ) : null}
+
+      {changePasswordError ? (
+        <View
+          style={[
+            styles.errorBanner,
+            {
+              backgroundColor: colors.danger.soft,
+              borderColor: colors.danger.border,
+            },
+          ]}
+        >
+          <Text style={[styles.errorBannerText, { color: colors.danger.fg }]}>{changePasswordError}</Text>
+        </View>
+      ) : null}
+
       <View style={styles.section}>
         <GlassCard padding={4}>
           <View style={[styles.inlineSectionHeader, { borderBottomColor: colors.divider }]}>
@@ -178,7 +272,12 @@ export default function SettingsScreen() {
             icon="lock-reset"
             label={t('settings.account.changePassword')}
             description={t('settings.account.changePasswordDesc')}
-            onPress={() => {}}
+            onPress={handleChangePassword}
+            right={
+              changingPassword ? (
+                <ActivityIndicator size="small" color={colors.goldBright} />
+              ) : undefined
+            }
             isLast
           />
         </GlassCard>
@@ -234,6 +333,16 @@ export default function SettingsScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+      {userMobile ? (
+        <AuthSuccessModal
+          visible={showOtpSentModal}
+          title={t('auth.otpSentTitle')}
+          message={t('auth.otpSentBody', { mobileNumber: maskMobileNumber(userMobile) })}
+          ctaLabel={t('common.continue')}
+          onContinue={handleOtpSentContinue}
+        />
+      ) : null}
     </ScreenShell>
   );
 }
@@ -241,6 +350,34 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   section: {
     marginBottom: 18,
+  },
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  successBannerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  errorBanner: {
+    marginBottom: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  errorBannerText: {
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   row: {
     flexDirection: 'row',

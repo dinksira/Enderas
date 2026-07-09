@@ -7,6 +7,9 @@ const AUTH_ENDPOINTS = Object.freeze({
   REGISTER: '/auth/register',
   VERIFY_OTP: '/auth/verify-otp',
   RESEND_OTP: '/auth/resend-otp',
+  FORGOT_PASSWORD: '/auth/forgot-password',
+  VERIFY_RESET_OTP: '/auth/verify-reset-otp',
+  RESET_PASSWORD: '/auth/reset-password',
   ME: `${ENV.apiV1Prefix}/auth/me`,
 });
 
@@ -24,6 +27,17 @@ function normalizeAuthMobile(value: string): string {
   return normalized;
 }
 
+export interface AuthMeIdentity {
+  displayName: string;
+  mobileNumber: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  organizationName?: string | null;
+  preferredLanguage?: string | null;
+  isStaff: boolean;
+}
+
 export interface AuthMeResponse {
   id: string;
   roleId: string;
@@ -31,12 +45,22 @@ export interface AuthMeResponse {
   userType: string;
   staffId: string | null;
   status: string;
-  identity: {
-    displayName: string;
-    mobileNumber: string;
-    email: string;
-    isStaff: boolean;
-  };
+  identity: AuthMeIdentity;
+}
+
+export interface UpdateProfilePayload {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  organizationName?: string;
+  preferredLanguage?: 'en' | 'am';
+}
+
+export interface PasswordResetRequestResponse {
+  success?: boolean;
+  otpExpiresIn?: number;
+  otpExpiresAt?: string;
+  devOtp?: string;
 }
 
 export async function login(credentials: { phoneNumber: string; password: string }) {
@@ -101,8 +125,54 @@ export async function resendOtp(payload: { phoneNumber?: string; mobileNumber?: 
   });
 }
 
+export async function forgotPassword(payload: {
+  phoneNumber?: string;
+  mobileNumber?: string;
+}): Promise<PasswordResetRequestResponse> {
+  const mobileNumber = normalizeAuthMobile(payload.mobileNumber ?? payload.phoneNumber ?? '');
+
+  return api.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, {
+    mobileNumber,
+    phoneNumber: mobileNumber,
+  });
+}
+
+export async function verifyResetOtp(payload: {
+  phoneNumber?: string;
+  mobileNumber?: string;
+  otp: string;
+}): Promise<{ valid: boolean }> {
+  const mobileNumber = normalizeAuthMobile(payload.mobileNumber ?? payload.phoneNumber ?? '');
+
+  return api.post(AUTH_ENDPOINTS.VERIFY_RESET_OTP, {
+    mobileNumber,
+    phoneNumber: mobileNumber,
+    otp: payload.otp,
+  });
+}
+
+export async function resetPassword(payload: {
+  phoneNumber?: string;
+  mobileNumber?: string;
+  otp: string;
+  newPassword: string;
+}) {
+  const mobileNumber = normalizeAuthMobile(payload.mobileNumber ?? payload.phoneNumber ?? '');
+
+  return api.post(AUTH_ENDPOINTS.RESET_PASSWORD, {
+    mobileNumber,
+    phoneNumber: mobileNumber,
+    otp: payload.otp,
+    newPassword: payload.newPassword,
+  });
+}
+
 export async function getMe(): Promise<AuthMeResponse> {
   return api.get<AuthMeResponse>(AUTH_ENDPOINTS.ME);
+}
+
+export async function updateMyProfile(payload: UpdateProfilePayload): Promise<AuthMeResponse> {
+  return api.patch<AuthMeResponse>(AUTH_ENDPOINTS.ME, payload);
 }
 
 export const authApi = Object.freeze({
@@ -110,7 +180,11 @@ export const authApi = Object.freeze({
   register,
   verifyOtp,
   resendOtp,
+  forgotPassword,
+  verifyResetOtp,
+  resetPassword,
   getMe,
+  updateMyProfile,
 });
 
 export default authApi;

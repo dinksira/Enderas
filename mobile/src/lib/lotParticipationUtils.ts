@@ -1,4 +1,5 @@
-import type { AuctionLotApi, AuctionParticipationApi } from '@/types/auctionApi';
+import { flattenAuctionAssets } from '@/lib/normalizeBrowseAuction';
+import type { AuctionAssetApi, AuctionLotApi, AuctionParticipationApi } from '@/types/auctionApi';
 
 export type LotParticipationRowStatus =
   | 'bid_submitted'
@@ -18,11 +19,11 @@ export interface LotParticipationRow {
   bidAmount?: number;
 }
 
-function mapLotRow(lot: AuctionLotApi): Omit<LotParticipationRow, 'status' | 'bidAmount'> {
+function mapLotRow(lot: AuctionAssetApi): Omit<LotParticipationRow, 'status' | 'bidAmount'> {
   return {
     lotId: lot.id,
-    lotLabel: lot.lotLabel,
-    title: lot.assetTitle ?? lot.lotLabel,
+    lotLabel: lot.lotLabel ?? lot.lotTitle ?? 'Lot',
+    title: lot.assetTitle ?? lot.lotLabel ?? lot.lotTitle ?? 'Asset',
     description: lot.assetLocation ?? '',
     category: lot.assetType ?? 'other_assets',
     imageUrls: lot.imageUrls ?? [],
@@ -34,7 +35,8 @@ export function buildLotParticipationRows(
   lots: AuctionLotApi[],
   participation: AuctionParticipationApi | null,
 ): LotParticipationRow[] {
-  if (!lots.length || !participation) {
+  const assets = flattenAuctionAssets(lots);
+  if (!assets.length || !participation) {
     return [];
   }
 
@@ -64,7 +66,7 @@ export function buildLotParticipationRows(
   const cpoPending = participation.cpo?.status === 'pending';
   const cpoApproved = Boolean(participation.flags?.cpoApproved || participation.cpo?.status === 'approved');
 
-  return lots.map((lot) => {
+  return assets.map((lot) => {
     const base = mapLotRow(lot);
     const lotPart = participation.lotParticipation?.find((item) => item.id === lot.id);
     const inPackage = selectedLotIds.has(lot.id) || Boolean(lotPart?.selected);

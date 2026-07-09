@@ -516,12 +516,91 @@ export async function deleteUser(id, actorStaffId, actorUserId = null) {
   return { deleted: true, id };
 }
 
+export async function updateMyProfile(userId, payload = {}) {
+  const user = await User.findByPk(userId, {
+    include: [{ model: Role, as: 'role', attributes: ['id', 'code', 'name'] }],
+  });
+
+  if (!user) {
+    throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+  }
+
+  const oldValues = {
+    email: user.email,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    organization_name: user.organization_name,
+    preferred_language: user.preferred_language,
+  };
+
+  const updates = {};
+
+  if (payload.email !== undefined) {
+    updates.email = payload.email?.trim() ? payload.email.trim() : null;
+  }
+
+  if (payload.preferredLanguage !== undefined) {
+    const lang = payload.preferredLanguage;
+    if (!['en', 'am'].includes(lang)) {
+      throw new AppError('preferredLanguage must be en or am', 400, 'VALIDATION_ERROR');
+    }
+    updates.preferred_language = lang;
+  }
+
+  if (user.user_type === 'organization') {
+    if (payload.organizationName !== undefined) {
+      const name = payload.organizationName?.trim();
+      if (!name) {
+        throw new AppError('organizationName is required', 400, 'VALIDATION_ERROR');
+      }
+      updates.organization_name = name;
+    }
+  } else {
+    if (payload.firstName !== undefined) {
+      const firstName = payload.firstName?.trim();
+      if (!firstName) {
+        throw new AppError('firstName is required', 400, 'VALIDATION_ERROR');
+      }
+      updates.first_name = firstName;
+    }
+    if (payload.lastName !== undefined) {
+      updates.last_name = payload.lastName?.trim() ? payload.lastName.trim() : null;
+    }
+    if (payload.organizationName !== undefined) {
+      updates.organization_name = payload.organizationName?.trim() ? payload.organizationName.trim() : null;
+    }
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return serializeUserDetail(user);
+  }
+
+  await user.update(updates);
+
+  await auditService.writeAuditLog({
+    userId,
+    action: AUDIT_ACTIONS.UPDATE,
+    entityType: 'User',
+    entityId: user.id,
+    oldValues,
+    newValues: updates,
+    metadata: { action: 'self_profile_update' },
+  });
+
+  await user.reload({
+    include: [{ model: Role, as: 'role', attributes: ['id', 'code', 'name'] }],
+  });
+
+  return serializeUserDetail(user);
+}
+
 export const userService = Object.freeze({
   listUsers,
   getUserStats,
   getUserById,
   createUser,
   updateUser,
+  updateMyProfile,
   updateUserStatus,
   deleteUser,
   serializeUserListRow,

@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { GlassCard } from '@/components/shell/GlassCard';
 import { formatEtbAmount, getCategoryTheme } from '@/lib/auctionUtils';
+import { resolveMediaUrl } from '@/lib/media-utils';
 import type { LotParticipationRow, LotParticipationRowStatus } from '@/lib/lotParticipationUtils';
 import { countActiveLotParticipation } from '@/lib/lotParticipationUtils';
 import { useTheme } from '@/lib/appStore';
@@ -72,7 +73,7 @@ export function LotParticipationOverview({
           const meta = statusMeta(row.status);
           const statusColors = toneToStatus(meta.tone, colors);
           const theme = getCategoryTheme(row.category);
-          const thumbnailUri = row.imageUrls[0];
+          const thumbnailUri = resolveMediaUrl(row.imageUrls[0]);
           const isActive = row.status !== 'not_bidding';
 
           return (

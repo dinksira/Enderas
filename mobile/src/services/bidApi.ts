@@ -1,6 +1,6 @@
 import { ENV } from '@/lib/env';
 import { api } from '@/services/api';
-import type { BidListResponse, CpoRecord } from '@/types/bid';
+import type { BidListResponse } from '@/types/bid';
 
 const BIDS_BASE = `${ENV.apiV1Prefix}/bids`;
 
@@ -23,20 +23,8 @@ export async function getMyBids(params: {
   return api.get<BidListResponse>(`${BIDS_BASE}/my${buildQuery(params)}`);
 }
 
-export interface SubmitBidWithCpoPayload {
-  auctionId: string;
-  bids: Array<{ auctionAssetId: string; amount: number }>;
-  cpoDocumentUrl: string;
-  transactionReference?: string;
-}
-
-export async function submitBidWithCpo(payload: SubmitBidWithCpoPayload): Promise<CpoRecord> {
-  return api.post<CpoRecord>(`${BIDS_BASE}/submit-with-cpo`, payload);
-}
-
 export const bidApi = Object.freeze({
   getMyBids,
-  submitBidWithCpo,
 });
 
 export default bidApi;

@@ -24,6 +24,10 @@ export function resolveMediaUrl(url?: string | null): string | undefined {
   let normalized = normalizeUploadUrl(url);
   const apiBase = ENV.apiBaseUrl.replace(/\/v1\/?$/, '').replace(/\/$/, '');
 
+  if (normalized.startsWith('uploads/')) {
+    return `${apiBase}/${normalized}`;
+  }
+
   if (normalized.startsWith('/uploads/')) {
     return `${apiBase}${normalized}`;
   }
