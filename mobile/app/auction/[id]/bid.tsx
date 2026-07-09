@@ -25,28 +25,26 @@ import { cpoApi } from '@/services/cpoApi';
 import { fileUploadApi } from '@/services/fileUploadApi';
 import { Typography, Spacing } from '@/theme';
 import type { AuctionLot } from '@/types/auctionParticipation';
+import type { AuctionAssetApi } from '@/types/auctionApi';
 
-function mapLotForCard(lot: {
-  id: string;
-  auctionId: string;
-  lotLabel: string;
-  reservePrice: number;
-  sortOrder: number;
-  assetTitle?: string | null;
-  assetType?: string | null;
-  assetLocation?: string | null;
-  imageUrls?: string[];
-}): AuctionLot {
+function formatLotOrderLabel(sortOrder?: number): string {
+  const order = Number.isFinite(Number(sortOrder)) ? Number(sortOrder) + 1 : 1;
+  return `Lot-${order}`;
+}
+
+function mapLotForCard(lot: AuctionAssetApi): AuctionLot {
   return {
     id: lot.id,
-    auctionId: lot.auctionId,
-    lotLabel: lot.lotLabel,
-    title: lot.assetTitle ?? lot.lotLabel,
+    auctionId: lot.auctionId ?? '',
+    lotLabel: lot.lotLabel ?? lot.lotTitle ?? 'Lot',
+    lotTitle: lot.lotTitle,
+    title: lot.assetTitle ?? lot.lotLabel ?? lot.lotTitle ?? 'Asset',
     description: lot.assetLocation ?? '',
     category: lot.assetType ?? 'other_assets',
     imageUrls: lot.imageUrls ?? [],
+    tags: lot.tags ?? [],
     reservePrice: lot.reservePrice,
-    sortOrder: lot.sortOrder,
+    sortOrder: lot.sortOrder ?? 0,
   };
 }
 
@@ -59,6 +57,7 @@ export default function AuctionBidScreen() {
     auction,
     participation,
     lots,
+    auctionAssets,
     loading,
     error,
     kycVerified,
@@ -119,7 +118,7 @@ export default function AuctionBidScreen() {
   };
 
   const summary = useMemo(() => {
-    const selectedLots = lots.filter((lot) => selectedLotIds.includes(lot.id));
+    const selectedLots = auctionAssets.filter((lot) => selectedLotIds.includes(lot.id));
     const totalBidAmount = selectedLots.reduce((sum, lot) => sum + parseBidAmount(lotBids[lot.id] ?? ''), 0);
     const cpoAmount =
       participation?.requiredCpoAmountPreview ??
@@ -130,20 +129,20 @@ export default function AuctionBidScreen() {
       totalBidAmount,
       cpoAmount: Number(cpoAmount),
     };
-  }, [lots, lotBids, participation, selectedLotIds]);
+  }, [auctionAssets, lotBids, participation, selectedLotIds]);
 
   const bidErrors = useMemo(() => {
     const errors: Record<string, string | null> = {};
-    for (const lot of lots) {
+    for (const lot of auctionAssets) {
       if (!selectedLotIds.includes(lot.id)) continue;
       errors[lot.id] = validateLotBid(parseBidAmount(lotBids[lot.id] ?? ''), mapLotForCard(lot));
     }
     return errors;
-  }, [lotBids, lots, selectedLotIds]);
+  }, [lotBids, auctionAssets, selectedLotIds]);
 
   const hasBidErrors = Object.values(bidErrors).some(Boolean);
   const allSelectedLotsSaved = selectedLotIds.every((lotId) => {
-    const lot = lots.find((item) => item.id === lotId);
+    const lot = auctionAssets.find((item) => item.id === lotId);
     if (!lot) return false;
     const amount = parseBidAmount(lotBids[lotId] ?? '');
     if (validateLotBid(amount, mapLotForCard(lot)) !== null) return false;
@@ -185,7 +184,7 @@ export default function AuctionBidScreen() {
       return;
     }
 
-    const lot = lots.find((item) => item.id === lotId);
+    const lot = auctionAssets.find((item) => item.id === lotId);
     if (!lot) return;
 
     const validationError = validateLotBid(amount, mapLotForCard(lot));
@@ -396,34 +395,41 @@ export default function AuctionBidScreen() {
         <LotParticipationOverview rows={participationRows} />
       ) : null}
 
-      {lots.length === 0 ? (
+      {auctionAssets.length === 0 ? (
         <GlassCard padding={Spacing.lg}>
           <Text style={[Typography.body, { color: colors.textSecondary }]}>
             {t('auction.participation.noLots')}
           </Text>
         </GlassCard>
       ) : showParticipationOverview ? null : (
-        lots.map((lot) => {
-          const selected = lot.id in lotBids;
-          return (
-            <LotBidCard
-              key={lot.id}
-              lot={mapLotForCard(lot)}
-              selected={selected}
-              bidText={lotBids[lot.id] ?? ''}
-              locked={locked || !canEdit}
-              autoFocus={focusLotId === lot.id}
-              feedback={getLotBidFeedback(lotBids[lot.id] ?? '', mapLotForCard(lot), {
-                forceShow: showErrors,
-              })}
-              onToggle={() => void handleToggleLot(lot.id)}
-              onBidChange={(text) => void handleBidChange(lot.id, text)}
-              onAutoFocusHandled={() => {
-                setFocusLotId((current) => (current === lot.id ? null : current));
-              }}
-            />
-          );
-        })
+        lots.map((lot, lotIndex) => (
+          <View key={lot.id} style={{ marginBottom: 14 }}>
+            <Text style={[Typography.bodyMedium, { color: colors.goldChampagne, marginBottom: 8 }]}>
+              {formatLotOrderLabel(lotIndex)}{lot.title ? ` · ${lot.title}` : ''}
+            </Text>
+            {(lot.assets ?? []).map((asset) => {
+              const selected = asset.id in lotBids;
+              return (
+                <LotBidCard
+                  key={asset.id}
+                  lot={mapLotForCard(asset)}
+                  selected={selected}
+                  bidText={lotBids[asset.id] ?? ''}
+                  locked={locked || !canEdit}
+                  autoFocus={focusLotId === asset.id}
+                  feedback={getLotBidFeedback(lotBids[asset.id] ?? '', mapLotForCard(asset), {
+                    forceShow: showErrors,
+                  })}
+                  onToggle={() => void handleToggleLot(asset.id)}
+                  onBidChange={(text) => void handleBidChange(asset.id, text)}
+                  onAutoFocusHandled={() => {
+                    setFocusLotId((current) => (current === asset.id ? null : current));
+                  }}
+                />
+              );
+            })}
+          </View>
+        ))
       )}
 
       {canEdit && !locked ? (

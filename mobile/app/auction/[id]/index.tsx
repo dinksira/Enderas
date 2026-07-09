@@ -32,7 +32,7 @@ export default function AuctionDetailScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const auctionId = id ?? '';
-  const { auction, participation, lots, loading, error, documentApproved, kycVerified } =
+  const { auction, participation, lots, auctionAssets, loading, error, documentApproved, kycVerified } =
     useAuctionParticipation(auctionId);
   const { isAuthenticated, gateReason } = useAuctionActionGate();
   const [kycModalVisible, setKycModalVisible] = useState(false);
@@ -277,7 +277,7 @@ export default function AuctionDetailScreen() {
           />
           <InfoCell
             label={t('auction.participation.lots')}
-            value={String(lots.length)}
+            value={String(auction?.lotCount ?? lots.length)}
             colors={colors}
             align="right"
           />
@@ -357,15 +357,6 @@ export default function AuctionDetailScreen() {
             icon="gavel"
             helperText="Join the auction"
           />
-          {documentApproved && !participation?.cpo && !participationLocked ? (
-            <LockedActionButton
-              label={t('auction.participation.uploadCpo')}
-              locked={bidLocked}
-              lockedHint={bidHint}
-              onPress={() => handleParticipationAction(`/auction/${id}/cpo-wizard`)}
-              variant="outline"
-            />
-          ) : null}
         </View>
       </GlassCard>
 

@@ -5,14 +5,15 @@ import { ApiError } from '@/services/api';
 import { auctionApi } from '@/services/auctionApi';
 import { bidDraftApi } from '@/services/bidDraftApi';
 import { isKycVerified } from '@/lib/auth-utils';
-import { normalizeBrowseAuctionApi } from '@/lib/normalizeBrowseAuction';
+import { flattenAuctionAssets, normalizeBrowseAuctionApi } from '@/lib/normalizeBrowseAuction';
 import { useAuthStore } from '@/lib/authStore';
-import type { AuctionLotApi, AuctionParticipationApi, BrowseAuctionApi } from '@/types/auctionApi';
+import type { AuctionAssetApi, AuctionLotApi, AuctionParticipationApi, BrowseAuctionApi } from '@/types/auctionApi';
 
 interface UseAuctionParticipationResult {
   auction: BrowseAuctionApi | null;
   participation: AuctionParticipationApi | null;
   lots: AuctionLotApi[];
+  auctionAssets: AuctionAssetApi[];
   loading: boolean;
   refreshing: boolean;
   error: string | null;
@@ -84,6 +85,7 @@ export function useAuctionParticipation(auctionId: string): UseAuctionParticipat
   const canBid = Boolean(documentApproved && kycVerified && participation?.gates?.canEditBidDrafts);
 
   const lots = useMemo(() => auction?.lots ?? [], [auction?.lots]);
+  const auctionAssets = useMemo(() => flattenAuctionAssets(lots), [lots]);
 
   const load = useCallback(async () => {
     if (!auctionId) return;
@@ -186,6 +188,7 @@ export function useAuctionParticipation(auctionId: string): UseAuctionParticipat
     auction,
     participation,
     lots,
+    auctionAssets,
     loading,
     refreshing,
     error,

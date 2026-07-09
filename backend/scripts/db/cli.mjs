@@ -16,7 +16,7 @@ Commands:
   seed [normal|test]      Seed baseline (normal) or full test data (test, default)
   setup [normal|test]     migrate + seed
   reseed [normal|test]    purge seeded data, then seed again
-  reset [normal|test]     undo all migrations, migrate, then seed (destructive)
+  reset [normal|test]     drop all tables, migrate, then seed (destructive)
   help                    Show this help
 
 Options:
@@ -112,7 +112,7 @@ export async function runCli(argv) {
 
     case 'reset':
       assertSafeReset(force);
-      resetDatabase();
+      await resetDatabase();
       await runSeed({ mode, only, logger: console });
       printSeedCredentials(mode, console);
       break;

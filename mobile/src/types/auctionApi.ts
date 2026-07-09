@@ -12,17 +12,29 @@ export type ParticipationStatus =
 
 export type ReviewStatus = 'pending' | 'approved' | 'rejected';
 
-export interface AuctionLotApi {
+export interface AuctionAssetApi {
   id: string;
-  auctionId: string;
+  auctionId?: string;
+  lotId?: string | null;
+  lotTitle?: string;
   assetId?: string;
   reservePrice: number;
-  sortOrder: number;
-  lotLabel: string;
+  sortOrder?: number;
+  lotLabel?: string;
   assetTitle?: string | null;
   assetType?: string | null;
   assetLocation?: string | null;
   imageUrls?: string[];
+  assetImages?: string[];
+  tags?: string[];
+}
+
+export interface AuctionLotApi {
+  id: string;
+  title: string;
+  description?: string | null;
+  sortOrder: number;
+  assets: AuctionAssetApi[];
 }
 
 export interface AuctionDocumentApi {
@@ -48,6 +60,7 @@ export interface BrowseAuctionApi {
   endingDate?: string;
   lots?: AuctionLotApi[];
   lotCount?: number;
+  assetCount?: number;
   documents?: AuctionDocumentApi[];
   documentAccess?: boolean;
   myParticipation?: {
@@ -105,7 +118,7 @@ export interface AuctionParticipationApi {
   } | null;
   bids: ParticipationBidApi[];
   bidDrafts: BidDraftApi[];
-  lotParticipation?: (AuctionLotApi & {
+  lotParticipation?: (AuctionAssetApi & {
     selected?: boolean;
     bid?: ParticipationBidApi | null;
     canPlaceBid?: boolean;

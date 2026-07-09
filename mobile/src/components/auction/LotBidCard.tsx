@@ -113,10 +113,14 @@ export function LotBidCard({
           </View>
 
           <View style={styles.copy}>
-            <Text style={[Typography.microCaps, { color: colors.goldChampagne }]}>{lot.lotLabel}</Text>
             <Text style={[Typography.cardTitle, { color: colors.cream }]} numberOfLines={2}>
               {lot.title}
             </Text>
+            {lot.tags?.length ? (
+              <Text style={[Typography.caption, { color: colors.goldChampagne }]}>
+                {lot.tags.join(' · ')}
+              </Text>
+            ) : null}
             <Text style={[Typography.caption, { color: colors.textMuted }]} numberOfLines={2}>
               {lot.description}
             </Text>
