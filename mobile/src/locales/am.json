@@ -324,6 +324,10 @@
       "cpoRejectedTitle": "CPO ተቀባይነት አላገኘም",
       "cpoRejectedBody": "CPOዎ አልጸደቀም። ጨረታዎን ያዘምኑ እና አዲስ ደረሰኝ ይስቀሉ።",
       "noLots": "ለዚህ ጨረታ ዕቃዎች አልተገኙም።",
+      "assetsTitle": "የጨረታ ዕቃዎች",
+      "tapForDetails": "ፎቶዎች እና ዝርዝሮች ለማየት ይንኩ",
+      "viewAssetDetails": "የ{{title}} ዝርዝሮችን ይመልከቱ",
+      "selectLotForBid": "{{title}} ለጨረታ ይምረጡ",
       "bidErrors": {
         "invalid": "ትክክለኛ የጨረታ መጠን ያስገቡ።",
         "belowReserve": "ጨረታ ቢያንስ {{reserve}} መሆን አለበት (ዝቅተኛ ዋጋ)።"

@@ -1,5 +1,6 @@
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef } from 'react';
 import { Animated, Easing } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 
 import { GlassSurface, type GlassSurfaceProps } from './GlassSurface';
 
@@ -25,6 +26,7 @@ export function GlassCard({
   noAnimation,
 }: GlassCardProps) {
   const anim = useRef(new Animated.Value(noAnimation ? 1 : 0)).current;
+  const isFirstFocus = useRef(true);
 
   useEffect(() => {
     if (noAnimation) return;
@@ -35,6 +37,28 @@ export function GlassCard({
       useNativeDriver: true,
     }).start();
   }, [anim, noAnimation]);
+
+  // Parent screens freeze while a child route is open. A mount-only fade can
+  // stall at opacity 0 and leave card content invisible but still tappable.
+  useFocusEffect(
+    useCallback(() => {
+      if (noAnimation) return;
+      if (isFirstFocus.current) {
+        isFirstFocus.current = false;
+        return;
+      }
+      anim.stopAnimation((value) => {
+        if (value < 1) {
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 150,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }).start();
+        }
+      });
+    }, [anim, noAnimation]),
+  );
 
   return (
     <Animated.View

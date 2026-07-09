@@ -11,18 +11,18 @@ export function resolveAuctionDocumentUrl(
   docIndex = 0,
   accessToken?: string | null,
 ): string | undefined {
-  if (auctionId && accessToken) {
-    const streamUrl = auctionApi.getDocumentStreamUrl(auctionId, docIndex);
-    const separator = streamUrl.includes('?') ? '&' : '?';
-    return `${streamUrl}${separator}access_token=${encodeURIComponent(accessToken)}`;
-  }
-
   const docUrl = documents?.[docIndex]?.url;
   if (docUrl) {
     const resolved = resolveMediaUrl(docUrl);
     if (resolved) {
       return resolved;
     }
+  }
+
+  if (auctionId && accessToken) {
+    const streamUrl = auctionApi.getDocumentStreamUrl(auctionId, docIndex);
+    const separator = streamUrl.includes('?') ? '&' : '?';
+    return `${streamUrl}${separator}access_token=${encodeURIComponent(accessToken)}`;
   }
 
   if (!auctionId) {

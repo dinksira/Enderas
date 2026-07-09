@@ -40,9 +40,15 @@ function downloadPdfAsDataUrl(
 
     request.onload = async () => {
       if (request.status >= 200 && request.status < 300 && request.response) {
+        const blob = request.response as Blob;
+        const contentType = blob.type || request.getResponseHeader('content-type') || '';
+        if (contentType.includes('application/json')) {
+          reject(new Error('Document response was not a PDF file'));
+          return;
+        }
         try {
           onProgress(1);
-          const dataUrl = await blobToDataUrl(request.response as Blob);
+          const dataUrl = await blobToDataUrl(blob);
           resolve(dataUrl);
         } catch (error) {
           reject(error);

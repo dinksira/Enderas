@@ -28,7 +28,7 @@ import {
   serializeAuctionAssetRow,
 } from '../utils/auction-lot-group.util.js';
 import { env } from '../config/env.config.js';
-import { resolvePublicUploadUrl } from '../utils/media-url.util.js';
+import { normalizePublicImageUrl } from '../utils/auction-image.util.js';
 import { enrichAuctionsWithPrimaryImages } from '../utils/auction-image.util.js';
 
 const DISPLAY_STATUS_MAP = Object.freeze({
@@ -158,7 +158,8 @@ function normalizeAssetImageUrls(urls) {
   }
   return urls
     .filter((url) => typeof url === 'string' && url.trim().length > 0)
-    .map((url) => resolvePublicUploadUrl(url.trim()));
+    .map((url) => normalizePublicImageUrl(url.trim()))
+    .filter(Boolean);
 }
 
 function normalizeAssetAdditionalDocuments(documents) {
@@ -243,7 +244,7 @@ function normalizeDocumentFiles(documents) {
     .filter((doc) => doc && typeof doc.url === 'string' && doc.url.length > 0)
     .map((doc) => ({
       name: doc.name || doc.fileName || 'document.pdf',
-      url: resolvePublicUploadUrl(doc.url),
+      url: normalizePublicImageUrl(doc.url) ?? doc.url,
       size: Number(doc.size) || 0,
     }));
 }

@@ -1,17 +1,16 @@
 import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Image } from 'expo-image';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
+import { ImageGallery } from '@/components/shared/ImageGallery';
 import { GlassCard } from '@/components/shell/GlassCard';
 import { PressableScale } from '@/components/ui';
-import { formatEtbAmount, getCategoryTheme } from '@/lib/auctionUtils';
+import { formatEtbAmount } from '@/lib/auctionUtils';
 import { useTheme } from '@/lib/appStore';
 import { Typography, Spacing, Radii } from '@/theme';
 import type { AuctionLot } from '@/types/auctionParticipation';
 import type { LotBidFeedbackKind } from '@/lib/auctionParticipationUtils';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface LotBidFeedback {
   kind: LotBidFeedbackKind;
@@ -27,8 +26,11 @@ interface LotBidCardProps {
   autoFocus?: boolean;
   onToggle: () => void;
   onBidChange: (text: string) => void;
+  onOpenDetail: () => void;
   onAutoFocusHandled?: () => void;
 }
+
+const THUMB_SIZE = 88;
 
 export function LotBidCard({
   lot,
@@ -39,12 +41,11 @@ export function LotBidCard({
   autoFocus = false,
   onToggle,
   onBidChange,
+  onOpenDetail,
   onAutoFocusHandled,
 }: LotBidCardProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const theme = getCategoryTheme(lot.category);
-  const thumbnailUri = lot.imageUrls[0];
   const categoryLabel = t(`dashboard.categories.${lot.category}`, { defaultValue: lot.category });
   const inputRef = useRef<TextInput>(null);
 
@@ -68,11 +69,7 @@ export function LotBidCard({
 
   const handleBodyPress = () => {
     if (locked) return;
-    if (!selected) {
-      onToggle();
-      return;
-    }
-    focusInput();
+    onOpenDetail();
   };
 
   const handleCheckboxPress = () => {
@@ -100,17 +97,18 @@ export function LotBidCard({
           onPress={handleBodyPress}
           disabled={locked}
           style={styles.bodyPressable}
+          accessibilityRole="button"
+          accessibilityLabel={t('auction.participation.viewAssetDetails', { title: lot.title })}
         >
-          <View style={styles.thumb}>
-            {thumbnailUri ? (
-              <Image source={{ uri: thumbnailUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-            ) : (
-              <LinearGradient colors={theme.colors} style={StyleSheet.absoluteFill} />
-            )}
-            {!thumbnailUri ? (
-              <MaterialCommunityIcons name={theme.icon} size={22} color="rgba(255,250,240,0.45)" />
-            ) : null}
-          </View>
+          <ImageGallery
+            imageUrls={lot.imageUrls}
+            width={THUMB_SIZE}
+            height={THUMB_SIZE}
+            category={lot.category}
+            mode="auto"
+            showDots={lot.imageUrls.length > 1}
+            borderRadius={Radii.input}
+          />
 
           <View style={styles.copy}>
             <Text style={[Typography.cardTitle, { color: colors.cream }]} numberOfLines={2}>
@@ -127,6 +125,9 @@ export function LotBidCard({
             <Text style={[Typography.caption, { color: colors.textSecondary, marginTop: 4 }]}>
               {categoryLabel} · {t('auction.participation.reserve')}: {formatEtbAmount(lot.reservePrice)}
             </Text>
+            <Text style={[Typography.caption, { color: colors.goldChampagne, marginTop: 2 }]}>
+              {t('auction.participation.tapForDetails')}
+            </Text>
           </View>
         </PressableScale>
 
@@ -135,6 +136,9 @@ export function LotBidCard({
           disabled={locked}
           hitSlop={10}
           style={styles.checkboxHit}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: selected }}
+          accessibilityLabel={t('auction.participation.selectLotForBid', { title: lot.title })}
         >
           <View
             style={[
@@ -233,14 +237,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-  },
-  thumb: {
-    width: 72,
-    height: 72,
-    borderRadius: Radii.input,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   copy: {
     flex: 1,

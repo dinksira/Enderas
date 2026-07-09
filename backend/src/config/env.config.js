@@ -73,6 +73,10 @@ export const env = Object.freeze({
     enabled: optionalEnv('AUCTION_AUTO_CLOSE_ENABLED', 'true') === 'true',
     intervalMs: Number(optionalEnv('AUCTION_AUTO_CLOSE_INTERVAL_MS', '60000')),
   }),
+
+  unsplash: Object.freeze({
+    accessKey: optionalEnv('UNSPLASH_ACCESS_KEY', ''),
+  }),
 });
 
 export default env;

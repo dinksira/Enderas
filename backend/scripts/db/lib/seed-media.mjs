@@ -5,39 +5,70 @@ import path from 'path';
 import { env } from '../../../src/config/env.config.js';
 import { buildMinimalPdf } from './minimal-pdf.mjs';
 
+/** Only PDF seed artifacts are written to disk; images use remote Unsplash URLs. */
 const SEED_UPLOAD_DIRS = [
-  'assets/images',
-  'assets/photos',
   'assets/ownership',
   'assets/documents',
   'auctions/documents',
-  'auctions/images',
-  'evaluations/photos',
   'evaluations/reports',
 ];
 
 const IMAGE_COUNT_MIN = 5;
 const IMAGE_COUNT_MAX = 10;
-const DOWNLOAD_TIMEOUT_MS = 15_000;
-const DOWNLOAD_CONCURRENCY = 6;
-const WIKIMEDIA_USER_AGENT = 'EnderassSeedBot/1.0 (local development seed)';
+const UNSPLASH_API = 'https://api.unsplash.com';
+const API_TIMEOUT_MS = 12_000;
 
-async function mapWithConcurrency(items, concurrency, mapper) {
-  const results = new Array(items.length);
-  let nextIndex = 0;
+const CATEGORY_QUERIES = Object.freeze({
+  vehicles: 'luxury car automobile',
+  machinery: 'construction excavator industrial equipment',
+  buildings: 'modern architecture building interior',
+  land: 'farmland landscape aerial field',
+});
 
-  async function worker() {
-    while (nextIndex < items.length) {
-      const currentIndex = nextIndex;
-      nextIndex += 1;
-      results[currentIndex] = await mapper(items[currentIndex], currentIndex);
-    }
-  }
+const CURATED_UNSPLASH_PHOTOS = Object.freeze({
+  vehicles: [
+    'photo-1492144534655-ae79c964c9d7',
+    'photo-1503376780353-7e6692767b70',
+    'photo-1549317661-bd32c8ce0db2',
+    'photo-1552519507-da3b142c6e3d',
+    'photo-1583121274602-3e2820c50d8d',
+    'photo-1618843479313-40f8afb4b4d8',
+    'photo-1619767886558-efdc259cde1a',
+    'photo-1621007947412-aaf19d4a3dcf',
+  ],
+  machinery: [
+    'photo-1581091226825-a6a2a5aee158',
+    'photo-1504307651254-35680f356dfd',
+    'photo-1589939705384-5185137a7f0f',
+    'photo-1590644365607-65151d5f72be',
+    'photo-1621905252507-b35492cc74b4',
+    'photo-1565008576549-5756a22d8705',
+    'photo-1541888946425-d81bb19240f5',
+    'photo-1503387762-592deb58ef4e',
+  ],
+  buildings: [
+    'photo-1600596542815-ffad4c1539a9',
+    'photo-1600585154340-be6161a56a0c',
+    'photo-1600607687939-ce8a6c25118c',
+    'photo-1600566753190-17f0baa2a6c3',
+    'photo-1600047509807-ba8f88d28fc7',
+    'photo-1560448204-e02f11c57d0b',
+    'photo-1613490493576-7fde63acd811',
+    'photo-1512917774080-9991f1c4c750',
+  ],
+  land: [
+    'photo-1500382017468-9049fed747f7',
+    'photo-1625246333195-78d9c38ad449',
+    'photo-1574944985070-8f3ebc6b79c2',
+    'photo-1464226184884-fa280b87c399',
+    'photo-1500595046743-cd271d1d9eec',
+    'photo-1416879595882-3373a0480b5b',
+    'photo-1592982537447-6a4d4f8a0a0a',
+    'photo-1625246333195-78d9c38ad449',
+  ],
+});
 
-  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
-  await Promise.all(workers);
-  return results;
-}
+const unsplashUrlCache = new Map();
 
 function uploadDir() {
   return path.resolve(process.cwd(), env.storage.uploadDir);
@@ -47,33 +78,20 @@ function toApiUploadUrl(relativePath) {
   return `/api/uploads/${relativePath.replace(/\\/g, '/')}`;
 }
 
-function uploadRelativePath(storedUrl) {
-  const marker = '/uploads/';
-  const index = storedUrl.indexOf(marker);
-  if (index === -1) {
-    throw new Error(`Seed upload path is missing /uploads/ marker: ${storedUrl}`);
-  }
-  return storedUrl.slice(index + marker.length);
-}
-
 function ensureDirectory(relativeDir) {
   const absoluteDir = path.join(uploadDir(), relativeDir);
   if (!fs.existsSync(absoluteDir)) {
     fs.mkdirSync(absoluteDir, { recursive: true });
   }
-  return absoluteDir;
-}
-
-function writeFileAtRelativePath(relativePath, buffer, logger = console) {
-  const absolutePath = path.join(uploadDir(), relativePath);
-  ensureDirectory(path.dirname(relativePath));
-  fs.writeFileSync(absolutePath, buffer);
-  logger.log(`[seed] wrote upload file: ${relativePath} (${buffer.length} bytes)`);
-  return toApiUploadUrl(relativePath);
 }
 
 function writePdf(relativePath, title, logger = console) {
-  return writeFileAtRelativePath(relativePath, buildMinimalPdf(title), logger);
+  const absolutePath = path.join(uploadDir(), relativePath);
+  ensureDirectory(path.dirname(relativePath));
+  const pdf = buildMinimalPdf(title);
+  fs.writeFileSync(absolutePath, pdf);
+  logger.log(`[seed] wrote upload file: ${relativePath} (${pdf.length} bytes)`);
+  return toApiUploadUrl(relativePath);
 }
 
 function removeDirectoryContents(relativeDir) {
@@ -99,146 +117,144 @@ export function cleanSeedUploadDirs(logger = console) {
   }
 }
 
-async function fetchWithTimeout(url, options = {}) {
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getUnsplashAccessKey() {
+  return process.env.UNSPLASH_ACCESS_KEY || env.unsplash?.accessKey || '';
+}
+
+function simplifySearchQuery(title) {
+  return String(title)
+    .replace(/^\d{4}\s+/, '')
+    .replace(/\s+\([^)]*\)\s*$/, '')
+    .replace(/\s+\d[\d,.]*\s*(m²|m3|ha|kVA|km|hp|tons?)\b.*$/i, '')
+    .trim();
+}
+
+function buildSearchQuery(assetSeed, category) {
+  const simplified = simplifySearchQuery(assetSeed.title);
+  const extra = assetSeed.imageQueries?.[0];
+  return extra || simplified || CATEGORY_QUERIES[category] || CATEGORY_QUERIES.machinery;
+}
+
+function unsplashCdnUrl(photoIdOrUrl) {
+  if (photoIdOrUrl.startsWith('http')) {
+    return photoIdOrUrl.includes('?')
+      ? photoIdOrUrl
+      : `${photoIdOrUrl}?auto=format&fit=crop&w=1200&q=80`;
+  }
+
+  const slug = photoIdOrUrl.startsWith('photo-') ? photoIdOrUrl : `photo-${photoIdOrUrl}`;
+  return `https://images.unsplash.com/${slug}?auto=format&fit=crop&w=1200&q=80`;
+}
+
+function hashString(value) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+  return hash;
+}
+
+function curatedUnsplashUrls(category, count, seedKey) {
+  const pool = CURATED_UNSPLASH_PHOTOS[category] ?? CURATED_UNSPLASH_PHOTOS.machinery;
+  const offset = Math.abs(hashString(seedKey)) % pool.length;
+  const urls = [];
+
+  for (let index = 0; index < count; index += 1) {
+    urls.push(unsplashCdnUrl(pool[(offset + index) % pool.length]));
+  }
+
+  return urls;
+}
+
+async function fetchJson(url, options = {}) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), DOWNLOAD_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
   try {
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
       headers: {
-        'User-Agent': WIKIMEDIA_USER_AGENT,
+        'User-Agent': 'EnderassSeedBot/1.0',
         ...(options.headers ?? {}),
       },
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status} for ${url}`);
+      throw new Error(`HTTP ${response.status}`);
     }
 
-    const buffer = Buffer.from(await response.arrayBuffer());
-    if (buffer.length < 1024) {
-      throw new Error(`Response too small (${buffer.length} bytes) for ${url}`);
-    }
-
-    return buffer;
+    return response.json();
   } finally {
     clearTimeout(timeout);
   }
 }
 
-async function searchWikimediaImages(query, limit) {
+async function fetchUnsplashPhotoUrls(query, count, accessKey) {
   const params = new URLSearchParams({
-    action: 'query',
-    generator: 'search',
-    gsrsearch: `filetype:bitmap ${query}`,
-    gsrlimit: String(Math.min(limit * 3, 30)),
-    prop: 'imageinfo',
-    iiprop: 'url|mime|size',
-    iiurlwidth: '1200',
-    format: 'json',
-    origin: '*',
+    query,
+    count: String(Math.min(Math.max(count, 1), 30)),
+    orientation: 'landscape',
+    content_filter: 'high',
   });
 
-  const response = await fetchWithTimeout(
-    `https://commons.wikimedia.org/w/api.php?${params.toString()}`,
-  );
-  const payload = JSON.parse(response.toString('utf8'));
-  const pages = Object.values(payload?.query?.pages ?? {});
-
-  const images = [];
-  for (const page of pages) {
-    const info = page?.imageinfo?.[0];
-    if (!info?.thumburl && !info?.url) {
-      continue;
-    }
-
-    const mime = info.mime ?? '';
-    if (!mime.startsWith('image/')) {
-      continue;
-    }
-
-    images.push({
-      url: info.thumburl ?? info.url,
-      ext: mime === 'image/png' ? '.png' : '.jpg',
-    });
-
-    if (images.length >= limit) {
-      break;
-    }
-  }
-
-  return images;
-}
-
-async function downloadPicsumFallback(seed, index) {
-  const url = `https://picsum.photos/seed/${encodeURIComponent(`${seed}-${index}`)}/1200/800.jpg`;
-  const buffer = await fetchWithTimeout(url);
-  return { buffer, ext: '.jpg' };
-}
-
-async function downloadImageCandidates(queries, assetId, count, logger = console) {
-  const seenUrls = new Set();
-  const candidates = [];
-
-  for (const query of queries) {
-    if (candidates.length >= count) {
-      break;
-    }
-
-    try {
-      const results = await searchWikimediaImages(query, count - candidates.length);
-      for (const result of results) {
-        if (seenUrls.has(result.url)) {
-          continue;
-        }
-        seenUrls.add(result.url);
-        candidates.push(result);
-        if (candidates.length >= count) {
-          break;
-        }
-      }
-    } catch (error) {
-      logger.log(`[seed] wikimedia search failed for "${query}": ${error.message}`);
-    }
-  }
-
-  const downloaded = await mapWithConcurrency(
-    Array.from({ length: count }, (_, index) => index),
-    DOWNLOAD_CONCURRENCY,
-    async (index) => {
-      const candidate = candidates[index];
-
-      try {
-        let buffer;
-        let ext = candidate?.ext ?? '.jpg';
-
-        if (candidate?.url) {
-          buffer = await fetchWithTimeout(candidate.url);
-        } else {
-          const fallback = await downloadPicsumFallback(assetId, index);
-          buffer = fallback.buffer;
-          ext = fallback.ext;
-        }
-
-        const fileName = `${crypto.randomUUID()}${ext}`;
-        return writeFileAtRelativePath(`assets/images/${fileName}`, buffer, logger);
-      } catch (error) {
-        logger.log(`[seed] image download failed for asset ${assetId} #${index + 1}: ${error.message}`);
-        try {
-          const fallback = await downloadPicsumFallback(assetId, index);
-          const fallbackName = `${crypto.randomUUID()}${fallback.ext}`;
-          return writeFileAtRelativePath(`assets/images/${fallbackName}`, fallback.buffer, logger);
-        } catch (fallbackError) {
-          logger.log(`[seed] fallback image failed for asset ${assetId}: ${fallbackError.message}`);
-          return null;
-        }
-      }
+  const payload = await fetchJson(`${UNSPLASH_API}/photos/random?${params}`, {
+    headers: {
+      Authorization: `Client-ID ${accessKey}`,
+      'Accept-Version': 'v1',
     },
-  );
+  });
 
-  return downloaded.filter(Boolean);
+  const results = Array.isArray(payload) ? payload : [payload];
+  return results
+    .map((photo) => unsplashCdnUrl(photo.urls?.regular ?? photo.urls?.full ?? ''))
+    .filter(Boolean);
+}
+
+async function resolveUnsplashImageUrls(query, category, count, seedKey, logger = console) {
+  const cacheKey = `${category}::${query}`;
+  if (unsplashUrlCache.has(cacheKey)) {
+    return pickUrlCount(unsplashUrlCache.get(cacheKey), count, seedKey);
+  }
+
+  const accessKey = getUnsplashAccessKey();
+  let pool = [];
+
+  if (accessKey) {
+    try {
+      pool = await fetchUnsplashPhotoUrls(query, Math.max(count, 8), accessKey);
+      logger.log(`[seed] unsplash urls for "${query}": ${pool.length}`);
+      await sleep(200);
+    } catch (error) {
+      logger.log(`[seed] unsplash API failed for "${query}": ${error.message}`);
+    }
+  }
+
+  if (pool.length === 0) {
+    pool = curatedUnsplashUrls(category, Math.max(count, 8), seedKey);
+    logger.log(`[seed] unsplash curated urls for "${query}": ${pool.length}`);
+  }
+
+  unsplashUrlCache.set(cacheKey, pool);
+  return pickUrlCount(pool, count, seedKey);
+}
+
+function pickUrlCount(pool, count, seedKey) {
+  if (pool.length === 0) {
+    return [];
+  }
+
+  const offset = Math.abs(hashString(seedKey)) % pool.length;
+  const urls = [];
+  for (let index = 0; index < count; index += 1) {
+    urls.push(pool[(offset + index) % pool.length]);
+  }
+  return urls;
 }
 
 function imageCountForAsset(assetSeed) {
@@ -295,27 +311,8 @@ function buildAuctionDocuments(auctionSeed, logger = console) {
   });
 }
 
-function buildAuctionCoverImages(flatAssets, logger = console) {
-  const coverCount = Math.min(3, flatAssets[0]?.resolvedImageUrls?.length ?? 0);
-  const covers = [];
-
-  for (let index = 0; index < coverCount; index += 1) {
-    const sourceUrl = flatAssets[0].resolvedImageUrls[index];
-    const relativeSource = uploadRelativePath(sourceUrl);
-    const absoluteSource = path.join(uploadDir(), relativeSource);
-    const fileName = `${crypto.randomUUID()}${path.extname(relativeSource) || '.jpg'}`;
-    const relativeTarget = `auctions/images/${fileName}`;
-
-    if (fs.existsSync(absoluteSource)) {
-      const buffer = fs.readFileSync(absoluteSource);
-      covers.push(writeFileAtRelativePath(relativeTarget, buffer, logger));
-    }
-  }
-
-  return covers;
-}
-
 export async function resolveSeedMedia(auctionSeeds, logger = console) {
+  unsplashUrlCache.clear();
   cleanSeedUploadDirs(logger);
 
   const resolvedAuctions = [];
@@ -328,10 +325,12 @@ export async function resolveSeedMedia(auctionSeeds, logger = console) {
 
       for (const assetSeed of lotGroup.assets) {
         const count = imageCountForAsset(assetSeed);
-        const imageUrls = await downloadImageCandidates(
-          assetSeed.imageQueries ?? [assetSeed.title, auctionSeed.category],
-          assetSeed.assetId,
+        const query = buildSearchQuery(assetSeed, auctionSeed.category);
+        const imageUrls = await resolveUnsplashImageUrls(
+          query,
+          auctionSeed.category,
           count,
+          assetSeed.assetId,
           logger,
         );
 
@@ -343,7 +342,6 @@ export async function resolveSeedMedia(auctionSeeds, logger = console) {
         resolvedAssets.push({
           ...assetSeed,
           imageUrls,
-          resolvedImageUrls: imageUrls,
           ownershipDocumentUrl,
           additionalDocumentUrls,
           evaluationReportUrl,
@@ -359,7 +357,7 @@ export async function resolveSeedMedia(auctionSeeds, logger = console) {
 
     const flatAssets = resolvedLotGroups.flatMap((group) => group.assets);
     const documentFiles = buildAuctionDocuments(auctionSeed, logger);
-    const auctionCoverImages = buildAuctionCoverImages(flatAssets, logger);
+    const auctionCoverImages = flatAssets[0]?.imageUrls?.slice(0, 3) ?? [];
 
     resolvedAuctions.push({
       ...auctionSeed,
@@ -370,5 +368,6 @@ export async function resolveSeedMedia(auctionSeeds, logger = console) {
     });
   }
 
+  logger.log('[seed] resolved remote Unsplash image URLs (no image downloads)');
   return resolvedAuctions;
 }

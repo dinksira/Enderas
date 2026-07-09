@@ -1,31 +1,32 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Dimensions, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Image } from 'expo-image';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { LockedActionButton } from '@/components/auction/LockedActionButton';
 import { LotParticipationOverview } from '@/components/auction/LotParticipationOverview';
 import { ParticipationStatusBanner } from '@/components/auction/ParticipationStatusBanner';
 import { KycRequiredModal } from '@/components/kyc/KycRequiredModal';
+import { ImageGallery } from '@/components/shared/ImageGallery';
 import { ScreenShell } from '@/components/shell/ScreenShell';
 import { GlassCard } from '@/components/shell/GlassCard';
 import { useAuctionActionGate } from '@/hooks/useAuctionActionGate';
 import { useAuctionParticipation } from '@/hooks/useAuctionParticipation';
+import { collectAuctionGalleryImages } from '@/lib/auctionAssetUtils';
 import { canShowBuyDocButton } from '@/lib/auctionParticipationUtils';
 import { useAuctionCountdown } from '@/lib/auctionCountdown';
-import { formatEtbAmount, getCategoryTheme, statusTone } from '@/lib/auctionUtils';
+import { formatEtbAmount, statusTone } from '@/lib/auctionUtils';
 import {
   buildLotParticipationRows,
   shouldShowLotParticipationOverview,
 } from '@/lib/lotParticipationUtils';
 import { useTheme } from '@/lib/appStore';
-import { resolveMediaUrl } from '@/lib/media-utils';
 import { Typography, Spacing } from '@/theme';
 import { toneToStatus, type UiTone } from '@/theme/statusTones';
 import type { BrowseAuction } from '@/types/auction';
+
+const HERO_HEIGHT = 220;
+const HERO_WIDTH = Dimensions.get('window').width - Spacing.md * 2;
 
 export default function AuctionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -47,6 +48,10 @@ export default function AuctionDetailScreen() {
   const participationRows = useMemo(
     () => buildLotParticipationRows(lots, participation),
     [lots, participation],
+  );
+  const galleryImageUrls = useMemo(
+    () => collectAuctionGalleryImages(auction?.imageUrls ?? [], auctionAssets),
+    [auction?.imageUrls, auctionAssets],
   );
   const participationLocked = !isAuthenticated || gateReason === 'kyc';
   const viewDocLocked = !documentApproved || participationLocked;
@@ -165,9 +170,7 @@ export default function AuctionDetailScreen() {
     typeof auction.description === 'string' && auction.description.length > 0
       ? auction.description
       : '—';
-  const auctionImageUrls = Array.isArray(auction.imageUrls) ? auction.imageUrls : [];
 
-  const theme = getCategoryTheme(auction.category);
   const tone: UiTone = statusTone(auctionStatus as BrowseAuction['status']);
   const statusColors = toneToStatus(tone, colors);
   const countdownTone =
@@ -180,7 +183,6 @@ export default function AuctionDetailScreen() {
           : urgency === 'expired'
             ? null
             : { fg: colors.goldChampagne, soft: colors.glassFillActive, border: colors.goldBorder };
-  const thumbnailUri = resolveMediaUrl(auctionImageUrls[0]);
   const categoryLabel = t(`dashboard.categories.${auction.category}`, {
     defaultValue: auction.category,
   });
@@ -197,26 +199,16 @@ export default function AuctionDetailScreen() {
       {renderParticipationBanner()}
 
       <View style={styles.hero}>
-        {thumbnailUri ? (
-          <Image source={{ uri: thumbnailUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-        ) : (
-          <LinearGradient
-            colors={theme.colors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-        )}
-        <LinearGradient
-          colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.7)']}
-          style={StyleSheet.absoluteFill}
+        <ImageGallery
+          imageUrls={galleryImageUrls}
+          width={HERO_WIDTH}
+          height={HERO_HEIGHT}
+          category={auction.category}
+          mode="manual"
+          showDots
+          borderRadius={18}
         />
-        {!thumbnailUri ? (
-          <View style={styles.heroIcon}>
-            <MaterialCommunityIcons name={theme.icon} size={48} color="rgba(255,250,240,0.4)" />
-          </View>
-        ) : null}
-        <View style={styles.heroBottom}>
+        <View style={styles.heroBottom} pointerEvents="none">
           <View
             style={[
               styles.statusChip,
@@ -411,16 +403,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   hero: {
-    height: 220,
-    borderRadius: 18,
-    overflow: 'hidden',
     marginBottom: 14,
     position: 'relative',
-  },
-  heroIcon: {
-    ...StyleSheet.absoluteFill,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   heroBottom: {
     position: 'absolute',

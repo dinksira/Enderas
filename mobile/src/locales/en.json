@@ -324,6 +324,10 @@
       "cpoRejectedTitle": "CPO rejected",
       "cpoRejectedBody": "Your CPO was not approved. Update your bids and upload a new receipt.",
       "noLots": "No lots are available for this auction yet.",
+      "assetsTitle": "Auction Assets",
+      "tapForDetails": "Tap for photos & details",
+      "viewAssetDetails": "View details for {{title}}",
+      "selectLotForBid": "Select {{title}} for bidding",
       "bidErrors": {
         "invalid": "Enter a valid bid amount.",
         "belowReserve": "Bid must be at least {{reserve}} (reserve price)."
