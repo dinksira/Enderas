@@ -18,6 +18,9 @@ export interface AuthUser {
   userType?: string;
   staffId?: string | null;
   displayName?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  organizationName?: string | null;
   mobileNumber?: string;
   email?: string;
   isStaff?: boolean;
@@ -35,11 +38,16 @@ interface SessionPayload {
   permissions?: Record<string, unknown>;
 }
 
+export type PasswordResetReturnTo = 'login' | 'settings';
+
 interface AuthState {
   status: AuthStatus;
   accessToken: string | null;
   user: AuthUser | null;
   pendingOtpMobile: string | null;
+  pendingPasswordResetMobile: string | null;
+  verifiedPasswordResetOtp: string | null;
+  passwordResetReturnTo: PasswordResetReturnTo | null;
   pendingRegistration: { userType?: string; tinNumber?: string | null } | null;
   hasHydrated: boolean;
 
@@ -51,6 +59,10 @@ interface AuthState {
     metadata?: { userType?: string; tinNumber?: string | null },
   ) => void;
   clearPendingOtpVerification: () => void;
+  setPendingPasswordReset: (mobileNumber: string, returnTo?: PasswordResetReturnTo) => void;
+  setVerifiedPasswordResetOtp: (otp: string) => void;
+  clearPasswordResetFlow: () => void;
+  updateUserFields: (fields: Partial<AuthUser>) => void;
   updateUserStatus: (status: string) => void;
   isAuthenticated: () => boolean;
 }
@@ -67,6 +79,9 @@ function mapUser(payload: SessionPayload): AuthUser {
     userType: String(userPayload.userType || identity.userType || ''),
     staffId: (userPayload.staffId ?? identity.staffId ?? null) as string | null,
     displayName: String(userPayload.displayName || identity.displayName || ''),
+    firstName: (userPayload.firstName ?? identity.firstName ?? null) as string | null,
+    lastName: (userPayload.lastName ?? identity.lastName ?? null) as string | null,
+    organizationName: (userPayload.organizationName ?? identity.organizationName ?? null) as string | null,
     mobileNumber: String(userPayload.mobileNumber || identity.mobileNumber || ''),
     email: String(userPayload.email || identity.email || ''),
     isStaff: Boolean(userPayload.isStaff ?? identity.isStaff),
@@ -86,6 +101,9 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       user: null,
       pendingOtpMobile: null,
+      pendingPasswordResetMobile: null,
+      verifiedPasswordResetOtp: null,
+      passwordResetReturnTo: null,
       pendingRegistration: null,
       hasHydrated: false,
 
@@ -98,6 +116,9 @@ export const useAuthStore = create<AuthState>()(
           accessToken: payload.accessToken,
           user,
           pendingOtpMobile: null,
+          pendingPasswordResetMobile: null,
+          verifiedPasswordResetOtp: null,
+          passwordResetReturnTo: null,
           pendingRegistration: null,
         });
       },
@@ -108,6 +129,9 @@ export const useAuthStore = create<AuthState>()(
           accessToken: null,
           user: null,
           pendingOtpMobile: null,
+          pendingPasswordResetMobile: null,
+          verifiedPasswordResetOtp: null,
+          passwordResetReturnTo: null,
           pendingRegistration: null,
         });
       },
@@ -127,6 +151,32 @@ export const useAuthStore = create<AuthState>()(
           pendingOtpMobile: null,
           pendingRegistration: null,
         });
+      },
+
+      setPendingPasswordReset: (mobileNumber, returnTo = 'login') => {
+        set({
+          pendingPasswordResetMobile: mobileNumber,
+          verifiedPasswordResetOtp: null,
+          passwordResetReturnTo: returnTo,
+        });
+      },
+
+      setVerifiedPasswordResetOtp: (otp) => {
+        set({ verifiedPasswordResetOtp: otp });
+      },
+
+      clearPasswordResetFlow: () => {
+        set({
+          pendingPasswordResetMobile: null,
+          verifiedPasswordResetOtp: null,
+          passwordResetReturnTo: null,
+        });
+      },
+
+      updateUserFields: (fields) => {
+        const { user } = get();
+        if (!user) return;
+        set({ user: { ...user, ...fields } });
       },
 
       updateUserStatus: (status) => {
@@ -152,6 +202,7 @@ export const useAuthStore = create<AuthState>()(
         accessToken: state.accessToken,
         user: state.user,
         pendingOtpMobile: state.pendingOtpMobile,
+        pendingPasswordResetMobile: state.pendingPasswordResetMobile,
         pendingRegistration: state.pendingRegistration,
       }),
       onRehydrateStorage: () => (state) => {

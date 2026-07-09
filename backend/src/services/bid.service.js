@@ -7,7 +7,7 @@ import { Auction, AuctionAsset, User } from '../models/index.js';
 import { sequelize } from '../config/db.config.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
-import { normalizeLotIdList, computeMinimumBidFromReserve, computeCpoDepositAmount } from '../utils/auction-lot.util.js';
+import { normalizeLotIdList, computeMinimumBidFromReserve, computeCpoFromBidAndReserve } from '../utils/auction-lot.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { cpoService } from './cpo.service.js';
 import { paymentService } from './payment.service.js';
@@ -419,7 +419,7 @@ export async function submitBidWithCpo({ auctionId, bids, cpoDocumentUrl, transa
       );
     }
 
-    const deposit = computeCpoDepositAmount(reservePrice, cpoPercentage);
+    const deposit = computeCpoFromBidAndReserve(amount, reservePrice, cpoPercentage);
     totalDeposit += deposit;
 
     validatedBids.push({

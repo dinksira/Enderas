@@ -76,6 +76,8 @@ export const api = Object.freeze({
     }),
   put: <T = unknown>(endpoint: string, body?: unknown) =>
     apiRequest<T>(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
+  patch: <T = unknown>(endpoint: string, body?: unknown) =>
+    apiRequest<T>(endpoint, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: <T = unknown>(endpoint: string) => apiRequest<T>(endpoint, { method: 'DELETE' }),
 });
 

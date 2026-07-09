@@ -6,3 +6,4 @@ export { UserTypeCard } from './UserTypeCard';
 export { AuthShell } from './AuthShell';
 export { OtpInput } from './OtpInput';
 export { AuthRequired } from './AuthRequired';
+export { AuthSuccessModal } from './AuthSuccessModal';

@@ -182,7 +182,7 @@ export default function LoginScreen() {
 
       <GoldButton label={t('auth.login')} onPress={handleLogin} loading={loading} />
 
-      <TouchableOpacity style={authStyles.backLink} onPress={() => {}} activeOpacity={0.7}>
+      <TouchableOpacity style={authStyles.backLink} onPress={() => router.push('/(auth)/forgot-password')} activeOpacity={0.7}>
         <Text style={[authStyles.linkAction, { textDecorationLine: 'none' }]}>
           {t('auth.forgotPassword')}
         </Text>

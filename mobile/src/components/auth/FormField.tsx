@@ -30,6 +30,7 @@ export interface FormFieldProps {
     | 'none';
   autoComplete?: 'off' | 'email' | 'password' | 'password-new' | 'tel' | 'name' | 'organization';
   blurOnSubmit?: boolean;
+  editable?: boolean;
 }
 
 export const FormField = forwardRef<TextInput, FormFieldProps>(function FormField(
@@ -48,6 +49,7 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(function FormFiel
     textContentType,
     autoComplete,
     blurOnSubmit,
+    editable = true,
   },
   ref,
 ) {
@@ -85,6 +87,7 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(function FormFiel
           textContentType={textContentType}
           autoComplete={autoComplete}
           blurOnSubmit={blurOnSubmit}
+          editable={editable}
         />
         {onToggleSecure && (
           <TouchableOpacity style={authStyles.passwordToggle} onPress={onToggleSecure} activeOpacity={0.7}>

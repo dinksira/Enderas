@@ -26,6 +26,8 @@ import { bidDraftController } from '../controllers/bid-draft.controller.js';
 import { winnerController } from '../controllers/winner.controller.js';
 import { notificationController } from '../controllers/notification.controller.js';
 import { dashboardController } from '../controllers/dashboard.controller.js';
+import { authController } from '../modules/auth/auth.controller.js';
+import { validateUpdateProfileBody } from '../modules/auth/auth.validation.js';
 import { requireKYCVerified } from '../middleware/kyc.middleware.js';
 import { requireStaff } from '../middleware/staff.middleware.js';
 import fileUploadRoutes from './fileUpload.routes.js';
@@ -835,30 +837,8 @@ v1Router.put(
 );
 
 // Session introspection
-v1Router.get('/auth/me', authenticate, async (req, res) => {
-  const principal = await authorizationPermissionService.resolvePrincipal(req.user.id);
-  return sendSuccess(res, {
-    id: principal.userId,
-    roleId: principal.effectiveRoleId,
-    roleCode: principal.role.code,
-    userType: principal.userType,
-    staffId: principal.staffId,
-    status: principal.userStatus,
-    permissions: {
-      wildcard: principal.wildcard,
-      modules: principal.modules,
-      actions: principal.actions,
-      routes: principal.routes,
-      moduleActions: principal.moduleActions ?? {},
-    },
-    identity: {
-      displayName: principal.displayName,
-      mobileNumber: principal.mobileNumber,
-      email: principal.email,
-      isStaff: principal.isStaff,
-    },
-  });
-});
+v1Router.get('/auth/me', authenticate, authController.getMe);
+v1Router.patch('/auth/me', authenticate, validateUpdateProfileBody, authController.updateMe);
 
 // Navigation manifest for dynamic sidebar (permission-filtered on client too)
 v1Router.get('/auth/navigation', authenticate, async (req, res) => {

@@ -78,7 +78,20 @@ export function computeMinimumBidFromReserve(reservePrice) {
   return roundMoney(reserve);
 }
 
-/** CPO deposit = reserve × (cpoPercentage / 100). Used only for deposit calc, NOT minimum bid. */
+/** CPO = bid × (cpoPercentage / 100). */
+export function computeCpoFromBidAmount(bidAmount, cpoPercentage) {
+  const amount = Number(bidAmount);
+  const percentage = Number(cpoPercentage);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 0;
+  }
+  if (!Number.isFinite(percentage) || percentage <= 0) {
+    return 0;
+  }
+  return roundMoney((amount * percentage) / 100);
+}
+
+/** CPO at full reserve coverage = reserve × (cpoPercentage / 100). */
 export function computeCpoDepositAmount(reservePrice, cpoPercentage) {
   const reserve = Number(reservePrice);
   const pct = Number(cpoPercentage);
@@ -128,9 +141,9 @@ export function computeRequiredCpoFromBidAmounts(
     }
     const reserve = resolveReserveForBid(entry, lots, auctionReservePrice);
     if (reserve <= 0) {
-      return sum;
+      return sum + computeCpoFromBidAmount(amount, percentage);
     }
-    return sum + computeCpoDepositAmount(reserve, percentage);
+    return sum + computeCpoFromBidAndReserve(amount, reserve, percentage);
   }, 0);
 
   return roundMoney(total);
@@ -187,6 +200,7 @@ export default {
   roundMoney,
   computeBidCoveragePercent,
   computeCpoFromBidAndReserve,
+  computeCpoFromBidAmount,
   computeCpoDepositAmount,
   computeRequiredCpoAmount,
   computeRequiredCpoFromBidAmounts,

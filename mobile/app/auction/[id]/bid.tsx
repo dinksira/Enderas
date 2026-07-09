@@ -15,6 +15,7 @@ import { useAuctionActionGate } from '@/hooks/useAuctionActionGate';
 import { useAuctionParticipation } from '@/hooks/useAuctionParticipation';
 import { formatEtbAmount } from '@/lib/auctionUtils';
 import { validateLotBid, getLotBidFeedback } from '@/lib/auctionParticipationUtils';
+import { computeRequiredCpoFromBidAmounts } from '@/lib/auctionLotUtils';
 import {
   buildLotParticipationRows,
   shouldShowLotParticipationOverview,
@@ -120,16 +121,35 @@ export default function AuctionBidScreen() {
   const summary = useMemo(() => {
     const selectedLots = auctionAssets.filter((lot) => selectedLotIds.includes(lot.id));
     const totalBidAmount = selectedLots.reduce((sum, lot) => sum + parseBidAmount(lotBids[lot.id] ?? ''), 0);
+
+    const validProposedBids = selectedLots
+      .map((lot) => ({
+        auctionAssetId: lot.id,
+        amount: parseBidAmount(lotBids[lot.id] ?? ''),
+      }))
+      .filter((entry) => {
+        const lot = selectedLots.find((item) => item.id === entry.auctionAssetId);
+        return lot != null && validateLotBid(entry.amount, mapLotForCard(lot)) === null;
+      });
+
+    const liveCpoAmount = computeRequiredCpoFromBidAmounts(
+      validProposedBids,
+      auction?.cpoPercentage ?? 0,
+      auctionAssets.map((lot) => ({ id: lot.id, reservePrice: lot.reservePrice })),
+      auction?.reservePrice,
+    );
+
     const cpoAmount =
-      participation?.requiredCpoAmountPreview ??
-      participation?.cpo?.requiredCpoAmount ??
-      0;
+      liveCpoAmount > 0
+        ? liveCpoAmount
+        : participation?.requiredCpoAmountPreview ?? participation?.cpo?.requiredCpoAmount ?? 0;
+
     return {
       selectedLots,
       totalBidAmount,
       cpoAmount: Number(cpoAmount),
     };
-  }, [auctionAssets, lotBids, participation, selectedLotIds]);
+  }, [auction, auctionAssets, lotBids, participation, selectedLotIds]);
 
   const bidErrors = useMemo(() => {
     const errors: Record<string, string | null> = {};
