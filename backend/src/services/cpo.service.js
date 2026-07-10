@@ -13,6 +13,7 @@ import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
 import { paymentService } from './payment.service.js';
 import { bidDraftService } from './bid-draft.service.js';
+import { assertNotAuctionOwner } from '../utils/auction-owner.util.js';
 
 const cpoInclude = [
   {
@@ -220,6 +221,8 @@ export async function createCpo(
   if (auction.status !== 'published') {
     throw new AppError('Auction is not open for CPO requests', 400, 'AUCTION_NOT_PUBLISHED');
   }
+
+  await assertNotAuctionOwner(userId, resolvedAuctionId);
 
   const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, resolvedAuctionId);
   if (!hasPayment) {

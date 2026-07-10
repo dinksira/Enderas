@@ -237,6 +237,20 @@
     }
   },
   "auction": {
+    "owner": {
+      "overviewTitle": "የጨረታ ክትትል",
+      "overviewSubtitle": "{{totalBids}} የታሸጉ ቅናሾች ተቀብለዋል · የሰነድ ክፍያ {{documentFee}}",
+      "reserve": "ዝቅተኛ ዋጋ",
+      "bidCount": "ቅናሾች",
+      "unnamedLot": "የጨረታ ንብረት",
+      "bannerTitle": "ይህ ጨረታ የእርስዎ ነው",
+      "bannerBody": "ንብረቶችን፣ ሰነዶችን፣ ዝቅተኛ ዋጋዎችን እና የቅናሽ ብዛትን ይከታተሉ። የቅናሽ መጠኖች የታሸጉ ናቸው።",
+      "actionsTitle": "የባለቤት መሳሪያዎች",
+      "actionsIntro": "የጨረታ ሰነዶችን ይመልከቱ እና በንብረቶችዎ ላይ የታሸጉ ቅናሾችን ይከታተሉ።",
+      "viewDocsHelper": "የጨረታ ሰነዶች",
+      "myAuctionsTitle": "የእኔ ቀጣይ ጨረታዎች",
+      "myAuctionsSubtitle": "ንብረቶችዎን የያዙ ጨረታዎችን ይከታተሉ።"
+    },
     "participation": {
       "actions": "ተሳትፎ",
       "buyDoc": "የጨረታ ሰነድ ይግዙ",

@@ -10,6 +10,7 @@ import { computeRequiredCpoFromBidAmounts, computeMinimumBidFromReserve } from '
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { paymentService } from './payment.service.js';
 import { Cpo } from '../models/cpo.model.js';
+import { assertNotAuctionOwner } from '../utils/auction-owner.util.js';
 
 function serializeBidDraft(draft) {
   const plain = draft.get ? draft.get({ plain: true }) : draft;
@@ -88,6 +89,8 @@ async function getLatestCpo(userId, auctionId) {
 }
 
 async function assertCanEditBidDrafts(userId, auctionId) {
+  await assertNotAuctionOwner(userId, auctionId);
+
   const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, auctionId);
   if (!hasPayment) {
     throw new AppError(

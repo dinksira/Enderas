@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { LockedActionButton } from '@/components/auction/LockedActionButton';
 import { LotParticipationOverview } from '@/components/auction/LotParticipationOverview';
+import { OwnerAuctionOverview } from '@/components/auction/OwnerAuctionOverview';
 import { ParticipationStatusBanner } from '@/components/auction/ParticipationStatusBanner';
 import { KycRequiredModal } from '@/components/kyc/KycRequiredModal';
 import { ImageGallery } from '@/components/shared/ImageGallery';
@@ -43,8 +44,12 @@ export default function AuctionDetailScreen() {
   );
 
   const paymentStatus = participation?.payment?.status ?? 'none';
-  const showBuyDoc = canShowBuyDocButton(participation);
-  const showParticipationOverview = shouldShowLotParticipationOverview(participation);
+  const isAuctionOwner = Boolean(
+    auction?.isAuctionOwner || participation?.isAuctionOwner || participation?.gates?.isAuctionOwner,
+  );
+  const ownerLots = participation?.ownerOverview?.lots ?? [];
+  const showBuyDoc = !isAuctionOwner && canShowBuyDocButton(participation);
+  const showParticipationOverview = !isAuctionOwner && shouldShowLotParticipationOverview(participation);
   const participationRows = useMemo(
     () => buildLotParticipationRows(lots, participation),
     [lots, participation],
@@ -98,6 +103,16 @@ export default function AuctionDetailScreen() {
   };
 
   const renderParticipationBanner = () => {
+    if (isAuctionOwner) {
+      return (
+        <ParticipationStatusBanner
+          tone="live"
+          icon="eye-outline"
+          title={t('auction.owner.bannerTitle')}
+          message={t('auction.owner.bannerBody')}
+        />
+      );
+    }
     if (paymentStatus === 'pending') {
       return (
         <ParticipationStatusBanner
@@ -289,17 +304,27 @@ export default function AuctionDetailScreen() {
         <LotParticipationOverview rows={participationRows} onlyActiveLots compact />
       ) : null}
 
+      {isAuctionOwner && ownerLots.length > 0 ? (
+        <OwnerAuctionOverview
+          lots={ownerLots}
+          documentFee={participation?.ownerOverview?.documentFee ?? auction.documentFee}
+          totalBidCount={participation?.ownerOverview?.totalBidCount ?? auction.bidCount}
+        />
+      ) : null}
+
       <GlassCard padding={16}>
         <Text style={[styles.sectionTitle, { color: colors.goldChampagne, marginBottom: 12 }]}>
-          {t('auction.participation.actions')}
+          {isAuctionOwner ? t('auction.owner.actionsTitle') : t('auction.participation.actions')}
         </Text>
         <Text style={[styles.actionsIntro, { color: colors.textSecondary }]}>
-          {showParticipationOverview
-            ? 'Review your participation or jump back into bidding.'
-            : 'Unlock documents, inspect the lot pack, and place your bids when you are ready.'}
+          {isAuctionOwner
+            ? t('auction.owner.actionsIntro')
+            : showParticipationOverview
+              ? 'Review your participation or jump back into bidding.'
+              : 'Unlock documents, inspect the lot pack, and place your bids when you are ready.'}
         </Text>
         <View style={styles.actions}>
-          {showBuyDoc ? (
+          {!isAuctionOwner && showBuyDoc ? (
             <LockedActionButton
               label={t('auction.participation.buyDoc')}
               locked={false}
@@ -309,7 +334,7 @@ export default function AuctionDetailScreen() {
               icon="file-document-plus-outline"
               helperText="Unlock auction docs"
             />
-          ) : paymentStatus === 'pending' ? (
+          ) : !isAuctionOwner && paymentStatus === 'pending' ? (
             <LockedActionButton
               label={t('auction.participation.docUnderReview')}
               locked
@@ -324,31 +349,33 @@ export default function AuctionDetailScreen() {
 
           <LockedActionButton
             label={t('auction.participation.viewDoc')}
-            locked={viewDocLocked}
-            disabled={viewDocLocked}
-            lockedHint={viewDocHint}
+            locked={!isAuctionOwner && viewDocLocked}
+            disabled={!isAuctionOwner && viewDocLocked}
+            lockedHint={isAuctionOwner ? undefined : viewDocHint}
             onPress={() => {
               void handleViewDocument();
             }}
             variant="primary"
             icon="eye-outline"
-            helperText="Preview documents"
+            helperText={isAuctionOwner ? t('auction.owner.viewDocsHelper') : 'Preview documents'}
           />
 
-          <LockedActionButton
-            label={
-              showParticipationOverview
-                ? t('auction.participation.viewYourBids')
-                : t('auction.participation.placeBids')
-            }
-            locked={bidLocked}
-            disabled={bidLocked}
-            lockedHint={bidHint}
-            onPress={() => handleParticipationAction(`/auction/${id}/bid`)}
-            variant="primary"
-            icon="gavel"
-            helperText="Join the auction"
-          />
+          {!isAuctionOwner ? (
+            <LockedActionButton
+              label={
+                showParticipationOverview
+                  ? t('auction.participation.viewYourBids')
+                  : t('auction.participation.placeBids')
+              }
+              locked={bidLocked}
+              disabled={bidLocked}
+              lockedHint={bidHint}
+              onPress={() => handleParticipationAction(`/auction/${id}/bid`)}
+              variant="primary"
+              icon="gavel"
+              helperText="Join the auction"
+            />
+          ) : null}
         </View>
       </GlassCard>
 

@@ -12,6 +12,7 @@ import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { cpoService } from './cpo.service.js';
 import { paymentService } from './payment.service.js';
 import { notificationService } from './notification.service.js';
+import { assertNotAuctionOwner } from '../utils/auction-owner.util.js';
 
 const bidInclude = [
   {
@@ -165,6 +166,8 @@ export async function placeBid({ auctionId, auctionAssetId, amount }, userId) {
   if (auction.status !== 'published') {
     throw new AppError('Auction is not open for bidding', 400, 'AUCTION_NOT_OPEN');
   }
+
+  await assertNotAuctionOwner(userId, auctionId);
 
   const now = new Date();
   if (now < new Date(auction.start_date) || now > new Date(auction.end_date)) {
@@ -351,6 +354,8 @@ export async function submitBidWithCpo({ auctionId, bids, cpoDocumentUrl, transa
   if (auction.status !== 'published') {
     throw new AppError('Auction is not open for bidding', 400, 'AUCTION_NOT_PUBLISHED');
   }
+
+  await assertNotAuctionOwner(userId, auctionId);
 
   const now = new Date();
   if (now < new Date(auction.start_date)) {

@@ -239,6 +239,7 @@ module.exports = {
       id: { type: CHAR(36), allowNull: false, primaryKey: true },
       asset_id: { type: CHAR(36), allowNull: true },
       created_by_staff_id: { type: CHAR(36), allowNull: false },
+      owner_id: { type: CHAR(36), allowNull: true },
       title: { type: STRING(255), allowNull: false },
       category: {
         type: ENUM(
@@ -287,14 +288,17 @@ module.exports = {
     await queryInterface.addIndex('auctions', ['end_date'], { name: 'auctions_end_date_idx' });
     await queryInterface.addIndex('auctions', ['status', 'end_date'], { name: 'auctions_status_end_date_idx' });
     await queryInterface.addIndex('auctions', ['asset_id'], { name: 'auctions_asset_id_idx' });
+    await queryInterface.addIndex('auctions', ['owner_id'], { name: 'auctions_owner_id_idx' });
 
     await queryInterface.createTable('auction_assets', {
       id: { type: CHAR(36), allowNull: false, primaryKey: true },
       auction_id: { type: CHAR(36), allowNull: false },
+      lot_id: { type: CHAR(36), allowNull: true },
       asset_id: { type: CHAR(36), allowNull: false },
       reserve_price: { type: DECIMAL(18, 2), allowNull: false },
       sort_order: { type: INTEGER, allowNull: false, defaultValue: 0 },
       lot_label: { type: STRING(50), allowNull: true },
+      tags: { type: JSON, allowNull: true },
       outcome_status: {
         type: ENUM('pending', 'sold', 'unsold', 'withdrawn'),
         allowNull: false,
@@ -310,6 +314,21 @@ module.exports = {
     });
     await queryInterface.addIndex('auction_assets', ['auction_id'], { name: 'auction_assets_auction_id_idx' });
     await queryInterface.addIndex('auction_assets', ['asset_id'], { name: 'auction_assets_asset_id_idx' });
+    await queryInterface.addIndex('auction_assets', ['lot_id'], { name: 'auction_assets_lot_id_idx' });
+
+    await queryInterface.createTable('lots', {
+      id: { type: CHAR(36), allowNull: false, primaryKey: true },
+      auction_id: { type: CHAR(36), allowNull: false },
+      title: { type: STRING(255), allowNull: false },
+      description: { type: TEXT, allowNull: true },
+      sort_order: { type: INTEGER, allowNull: false, defaultValue: 0 },
+      created_at: { type: DATE, allowNull: false, defaultValue: NOW },
+      updated_at: { type: DATE, allowNull: false, defaultValue: NOW },
+      deleted_at: { type: DATE, allowNull: true },
+    });
+
+    await queryInterface.addIndex('lots', ['auction_id'], { name: 'lots_auction_id_idx' });
+    await queryInterface.addIndex('lots', ['auction_id', 'sort_order'], { name: 'lots_sort_order_idx' });
 
     await queryInterface.createTable('auction_documents', {
       id: { type: CHAR(36), allowNull: false, primaryKey: true },
@@ -363,6 +382,33 @@ module.exports = {
       name: 'bids_auction_user_lot_unique',
     });
 
+    await queryInterface.createTable('bid_drafts', {
+      id: { type: CHAR(36), allowNull: false, primaryKey: true },
+      user_id: { type: CHAR(36), allowNull: false },
+      auction_id: { type: CHAR(36), allowNull: false },
+      auction_asset_id: { type: CHAR(36), allowNull: true },
+      amount: { type: DECIMAL(18, 2), allowNull: false },
+      status: {
+        type: ENUM('draft', 'locked', 'submitted', 'expired'),
+        allowNull: false,
+        defaultValue: 'draft',
+      },
+      cpo_id: { type: CHAR(36), allowNull: true },
+      created_at: { type: DATE, allowNull: false, defaultValue: NOW },
+      updated_at: { type: DATE, allowNull: false, defaultValue: NOW },
+    });
+
+    await queryInterface.addIndex('bid_drafts', ['user_id'], { name: 'bid_drafts_user_id_idx' });
+    await queryInterface.addIndex('bid_drafts', ['auction_id'], { name: 'bid_drafts_auction_id_idx' });
+    await queryInterface.addIndex('bid_drafts', ['cpo_id'], { name: 'bid_drafts_cpo_id_idx' });
+    await queryInterface.addIndex('bid_drafts', ['user_id', 'auction_id'], {
+      name: 'bid_drafts_user_auction_idx',
+    });
+    await queryInterface.addIndex('bid_drafts', ['user_id', 'auction_id', 'auction_asset_id'], {
+      unique: true,
+      name: 'bid_drafts_user_auction_lot_unique',
+    });
+
     await queryInterface.createTable('cpos', {
       id: { type: CHAR(36), allowNull: false, primaryKey: true },
       user_id: { type: CHAR(36), allowNull: false },
@@ -371,11 +417,20 @@ module.exports = {
       selected_auction_asset_ids: { type: JSON, allowNull: true },
       required_cpo_amount: { type: DECIMAL(18, 2), allowNull: true },
       declared_cpo_amount: { type: DECIMAL(18, 2), allowNull: true },
+      deposit_amount: { type: DECIMAL(18, 2), allowNull: true },
       status: {
         type: ENUM('pending', 'approved', 'rejected'),
         allowNull: false,
         defaultValue: 'pending',
       },
+      refund_status: {
+        type: ENUM('none', 'pending', 'approved', 'paid'),
+        allowNull: false,
+        defaultValue: 'none',
+      },
+      refund_processed_at: { type: DATE, allowNull: true },
+      refund_processed_by_staff_id: { type: CHAR(36), allowNull: true },
+      proposed_bids: { type: JSON, allowNull: true },
       reviewed_by_staff_id: { type: CHAR(36), allowNull: true },
       reviewed_at: { type: DATE, allowNull: true },
       rejection_reason: { type: TEXT, allowNull: true },
@@ -390,6 +445,7 @@ module.exports = {
     await queryInterface.addIndex('cpos', ['status'], { name: 'cpos_status_idx' });
     await queryInterface.addIndex('cpos', ['reviewed_by_staff_id'], { name: 'cpos_reviewed_by_staff_id_idx' });
     await queryInterface.addIndex('cpos', ['user_id', 'auction_id'], { name: 'cpos_user_id_auction_id_idx' });
+    await queryInterface.addIndex('cpos', ['refund_status'], { name: 'cpos_refund_status_idx' });
 
     await queryInterface.createTable('payments', {
       id: { type: CHAR(36), allowNull: false, primaryKey: true },
@@ -421,6 +477,36 @@ module.exports = {
     await queryInterface.addIndex('payments', ['payment_method'], { name: 'payments_payment_method_idx' });
     await queryInterface.addIndex('payments', ['verified_by_staff_id'], { name: 'payments_verified_by_staff_id_idx' });
     await queryInterface.addIndex('payments', ['user_id', 'auction_id'], { name: 'payments_user_id_auction_id_idx' });
+
+    await queryInterface.createTable('cpo_payments', {
+      id: { type: CHAR(36), allowNull: false, primaryKey: true },
+      cpo_id: { type: CHAR(36), allowNull: false },
+      user_id: { type: CHAR(36), allowNull: false },
+      auction_id: { type: CHAR(36), allowNull: false },
+      amount: { type: DECIMAL(18, 2), allowNull: false },
+      currency: { type: STRING(3), allowNull: false, defaultValue: 'ETB' },
+      payment_method: {
+        type: ENUM('addis_pay', 'manual'),
+        allowNull: false,
+      },
+      receipt_url: { type: STRING(500), allowNull: true },
+      transaction_reference: { type: STRING(255), allowNull: true },
+      status: {
+        type: ENUM('pending', 'approved', 'rejected'),
+        allowNull: false,
+        defaultValue: 'pending',
+      },
+      verified_by_staff_id: { type: CHAR(36), allowNull: true },
+      verified_at: { type: DATE, allowNull: true },
+      rejection_reason: { type: TEXT, allowNull: true },
+      created_at: { type: DATE, allowNull: false, defaultValue: NOW },
+      updated_at: { type: DATE, allowNull: false, defaultValue: NOW },
+    });
+
+    await queryInterface.addIndex('cpo_payments', ['cpo_id'], { name: 'cpo_payments_cpo_id_idx' });
+    await queryInterface.addIndex('cpo_payments', ['status'], { name: 'cpo_payments_status_idx' });
+    await queryInterface.addIndex('cpo_payments', ['user_id'], { name: 'cpo_payments_user_id_idx' });
+    await queryInterface.addIndex('cpo_payments', ['auction_id'], { name: 'cpo_payments_auction_id_idx' });
 
     await queryInterface.createTable('winners', {
       id: { type: CHAR(36), allowNull: false, primaryKey: true },
@@ -615,13 +701,23 @@ module.exports = {
     `);
 
     await queryInterface.sequelize.query(`
+      ALTER TABLE lots
+        ADD CONSTRAINT lots_auction_id_fk
+          FOREIGN KEY (auction_id) REFERENCES auctions (id)
+          ON DELETE CASCADE ON UPDATE CASCADE
+    `);
+
+    await queryInterface.sequelize.query(`
       ALTER TABLE auction_assets
         ADD CONSTRAINT auction_assets_auction_id_fk
           FOREIGN KEY (auction_id) REFERENCES auctions (id)
           ON DELETE CASCADE ON UPDATE CASCADE,
         ADD CONSTRAINT auction_assets_asset_id_fk
           FOREIGN KEY (asset_id) REFERENCES assets (id)
-          ON DELETE RESTRICT ON UPDATE CASCADE
+          ON DELETE RESTRICT ON UPDATE CASCADE,
+        ADD CONSTRAINT fk_auction_assets_lot_id
+          FOREIGN KEY (lot_id) REFERENCES lots (id)
+          ON DELETE SET NULL ON UPDATE CASCADE
     `);
 
     await queryInterface.sequelize.query(`
@@ -631,7 +727,10 @@ module.exports = {
           ON DELETE SET NULL ON UPDATE CASCADE,
         ADD CONSTRAINT fk_auctions_created_by_staff_id
           FOREIGN KEY (created_by_staff_id) REFERENCES staff (id)
-          ON UPDATE CASCADE
+          ON UPDATE CASCADE,
+        ADD CONSTRAINT auctions_owner_id_fk
+          FOREIGN KEY (owner_id) REFERENCES users (id)
+          ON DELETE SET NULL ON UPDATE CASCADE
     `);
 
     await queryInterface.sequelize.query(`
@@ -658,6 +757,22 @@ module.exports = {
     `);
 
     await queryInterface.sequelize.query(`
+      ALTER TABLE bid_drafts
+        ADD CONSTRAINT bid_drafts_user_id_fk
+          FOREIGN KEY (user_id) REFERENCES users (id)
+          ON DELETE CASCADE ON UPDATE CASCADE,
+        ADD CONSTRAINT bid_drafts_auction_id_fk
+          FOREIGN KEY (auction_id) REFERENCES auctions (id)
+          ON DELETE CASCADE ON UPDATE CASCADE,
+        ADD CONSTRAINT bid_drafts_auction_asset_id_fk
+          FOREIGN KEY (auction_asset_id) REFERENCES auction_assets (id)
+          ON DELETE SET NULL ON UPDATE CASCADE,
+        ADD CONSTRAINT bid_drafts_cpo_id_fk
+          FOREIGN KEY (cpo_id) REFERENCES cpos (id)
+          ON DELETE SET NULL ON UPDATE CASCADE
+    `);
+
+    await queryInterface.sequelize.query(`
       ALTER TABLE cpos
         ADD CONSTRAINT cpos_user_id_fk
           FOREIGN KEY (user_id) REFERENCES users (id)
@@ -667,6 +782,9 @@ module.exports = {
           ON UPDATE CASCADE,
         ADD CONSTRAINT fk_cpos_reviewed_by_staff_id
           FOREIGN KEY (reviewed_by_staff_id) REFERENCES staff (id)
+          ON DELETE SET NULL ON UPDATE CASCADE,
+        ADD CONSTRAINT fk_cpos_refund_processed_by_staff_id
+          FOREIGN KEY (refund_processed_by_staff_id) REFERENCES staff (id)
           ON DELETE SET NULL ON UPDATE CASCADE
     `);
 
@@ -679,6 +797,22 @@ module.exports = {
           FOREIGN KEY (auction_id) REFERENCES auctions (id)
           ON UPDATE CASCADE,
         ADD CONSTRAINT fk_payments_verified_by_staff_id
+          FOREIGN KEY (verified_by_staff_id) REFERENCES staff (id)
+          ON DELETE SET NULL ON UPDATE CASCADE
+    `);
+
+    await queryInterface.sequelize.query(`
+      ALTER TABLE cpo_payments
+        ADD CONSTRAINT cpo_payments_cpo_id_fk
+          FOREIGN KEY (cpo_id) REFERENCES cpos (id)
+          ON DELETE CASCADE ON UPDATE CASCADE,
+        ADD CONSTRAINT cpo_payments_user_id_fk
+          FOREIGN KEY (user_id) REFERENCES users (id)
+          ON UPDATE CASCADE,
+        ADD CONSTRAINT cpo_payments_auction_id_fk
+          FOREIGN KEY (auction_id) REFERENCES auctions (id)
+          ON UPDATE CASCADE,
+        ADD CONSTRAINT cpo_payments_verified_by_staff_id_fk
           FOREIGN KEY (verified_by_staff_id) REFERENCES staff (id)
           ON DELETE SET NULL ON UPDATE CASCADE
     `);
@@ -729,11 +863,14 @@ module.exports = {
       'audit_logs',
       'notifications',
       'winners',
+      'cpo_payments',
       'payments',
       'cpos',
+      'bid_drafts',
       'bids',
       'auction_documents',
       'auction_assets',
+      'lots',
       'auctions',
       'evaluations',
       'assets',

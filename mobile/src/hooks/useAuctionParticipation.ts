@@ -58,6 +58,8 @@ function normalizeParticipationApi(
       biddingWindowStatus: participation.gates?.biddingWindowStatus,
       paymentPending: Boolean(participation.gates?.paymentPending),
       cpoPending: Boolean(participation.gates?.cpoPending),
+      isAuctionOwner: Boolean(participation.gates?.isAuctionOwner),
+      biddingBlockedReason: participation.gates?.biddingBlockedReason ?? null,
     },
     flags: {
       paymentApproved: Boolean(participation.flags?.paymentApproved),
@@ -67,7 +69,10 @@ function normalizeParticipationApi(
       hasBid: Boolean(participation.flags?.hasBid),
       allBidsSubmitted: Boolean(participation.flags?.allBidsSubmitted),
       pendingLotCount: Number(participation.flags?.pendingLotCount ?? 0),
+      isAuctionOwner: Boolean(participation.flags?.isAuctionOwner),
     },
+    isAuctionOwner: Boolean(participation.isAuctionOwner),
+    ownerOverview: participation.ownerOverview,
   };
 }
 

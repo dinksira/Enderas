@@ -10,7 +10,7 @@ import { sequelize } from '../src/config/db.config.js';
 const BASE = `http://localhost:${process.env.PORT || 3000}/api`;
 
 const USERS = {
-  bidder: { mobile: '0987654321', password: 'pass2' },
+  bidder: { mobile: '0998765432', password: 'pass3' },
   admin: { mobile: '0912345678', password: 'pass1' },
 };
 

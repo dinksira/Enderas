@@ -39,7 +39,7 @@ async function upload(token, folder) {
   return json.data.fileUrl;
 }
 
-const bidder = await login('0987654321', 'pass2');
+const bidder = await login('0998765432', 'pass3');
 const fin = await login('0944444444', 'pass1');
 const cso = await login('0955555555', 'pass1');
 const mgr = await login('0922222222', 'pass1');

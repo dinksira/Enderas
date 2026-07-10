@@ -237,6 +237,20 @@
     }
   },
   "auction": {
+    "owner": {
+      "overviewTitle": "Auction monitor",
+      "overviewSubtitle": "{{totalBids}} sealed bids received · document fee {{documentFee}}",
+      "reserve": "Reserve",
+      "bidCount": "Bids",
+      "unnamedLot": "Auction item",
+      "bannerTitle": "You own this auction",
+      "bannerBody": "Monitor items, documents, reserve prices, and bid counts. Bid amounts stay sealed.",
+      "actionsTitle": "Owner tools",
+      "actionsIntro": "Review auction documents and track sealed bid activity on your assets.",
+      "viewDocsHelper": "Auction documents",
+      "myAuctionsTitle": "My live auctions",
+      "myAuctionsSubtitle": "Track bid activity on auctions that include your assets."
+    },
     "participation": {
       "actions": "Participation",
       "buyDoc": "Buy Auction Document",

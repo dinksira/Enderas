@@ -283,6 +283,21 @@ export default function AuctionBidScreen() {
     );
   }
 
+  if (participation?.isAuctionOwner || participation?.gates?.isAuctionOwner) {
+    return (
+      <ScreenShell title={t('auction.participation.placeBids')} showBack onBack={() => router.back()} bottomPadding={40}>
+        <GlassCard padding={Spacing.lg}>
+          <Text style={[Typography.cardTitle, { color: colors.cream, marginBottom: 8 }]}>
+            {t('auction.owner.bannerTitle')}
+          </Text>
+          <Text style={[Typography.body, { color: colors.textSecondary }]}>
+            {t('auction.owner.bannerBody')}
+          </Text>
+        </GlassCard>
+      </ScreenShell>
+    );
+  }
+
   if (!documentApproved) {
     return (
       <ScreenShell
