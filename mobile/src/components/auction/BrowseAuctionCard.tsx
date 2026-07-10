@@ -75,7 +75,13 @@ function BrowseAuctionCardImpl({ auction, onPress, compact }: BrowseAuctionCardP
       >
         <View style={[styles.thumbWrap, { height: thumbHeight }]}>
           {thumbnailUri ? (
-            <Image source={{ uri: thumbnailUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <Image
+              source={{ uri: thumbnailUri }}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={0}
+            />
           ) : (
             <LinearGradient
               colors={theme.colors}

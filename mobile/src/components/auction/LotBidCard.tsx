@@ -1,16 +1,15 @@
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { ImageGallery } from '@/components/shared/ImageGallery';
-import { GlassCard } from '@/components/shell/GlassCard';
 import { PressableScale } from '@/components/ui';
 import { formatEtbAmount } from '@/lib/auctionUtils';
 import { useTheme } from '@/lib/appStore';
 import { Typography, Spacing, Radii } from '@/theme';
 import type { AuctionLot } from '@/types/auctionParticipation';
 import type { LotBidFeedbackKind } from '@/lib/auctionParticipationUtils';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface LotBidFeedback {
   kind: LotBidFeedbackKind;
@@ -30,9 +29,9 @@ interface LotBidCardProps {
   onAutoFocusHandled?: () => void;
 }
 
-const THUMB_SIZE = 88;
+const THUMB_SIZE = 80;
 
-export function LotBidCard({
+function LotBidCardImpl({
   lot,
   selected,
   bidText,
@@ -67,16 +66,6 @@ export function LotBidCard({
     inputRef.current?.focus();
   };
 
-  const handleBodyPress = () => {
-    if (locked) return;
-    onOpenDetail();
-  };
-
-  const handleCheckboxPress = () => {
-    if (locked) return;
-    onToggle();
-  };
-
   const reserveLabel = formatEtbAmount(lot.reservePrice);
   const inputBorderColor =
     feedback.kind === 'error'
@@ -86,15 +75,19 @@ export function LotBidCard({
         : colors.goldBorder;
 
   return (
-    <GlassCard
-      padding={14}
-      active={selected}
-      style={styles.card}
-      noAnimation
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: selected ? colors.glassFillActive : colors.glassFill,
+          borderColor: selected ? colors.goldBorderActive : colors.goldBorder,
+          borderLeftColor: selected ? colors.goldBright : colors.goldBorder,
+        },
+      ]}
     >
       <View style={styles.topRow}>
         <PressableScale
-          onPress={handleBodyPress}
+          onPress={() => !locked && onOpenDetail()}
           disabled={locked}
           style={styles.bodyPressable}
           accessibilityRole="button"
@@ -106,33 +99,32 @@ export function LotBidCard({
             height={THUMB_SIZE}
             category={lot.category}
             mode="auto"
-            showDots={lot.imageUrls.length > 1}
-            borderRadius={Radii.input}
+            showCounter={false}
+            borderRadius={Radii.sm}
           />
 
           <View style={styles.copy}>
-            <Text style={[Typography.cardTitle, { color: colors.cream }]} numberOfLines={2}>
+            <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '700' }]} numberOfLines={2}>
               {lot.title}
             </Text>
             {lot.tags?.length ? (
-              <Text style={[Typography.caption, { color: colors.goldChampagne }]}>
+              <Text style={[Typography.caption, { color: colors.goldChampagne }]} numberOfLines={1}>
                 {lot.tags.join(' · ')}
               </Text>
             ) : null}
-            <Text style={[Typography.caption, { color: colors.textMuted }]} numberOfLines={2}>
-              {lot.description}
-            </Text>
-            <Text style={[Typography.caption, { color: colors.textSecondary, marginTop: 4 }]}>
-              {categoryLabel} · {t('auction.participation.reserve')}: {formatEtbAmount(lot.reservePrice)}
-            </Text>
-            <Text style={[Typography.caption, { color: colors.goldChampagne, marginTop: 2 }]}>
-              {t('auction.participation.tapForDetails')}
-            </Text>
+            <View style={styles.metaRow}>
+              <Text style={[Typography.caption, { color: colors.textMuted }]}>
+                {categoryLabel}
+              </Text>
+              <Text style={[Typography.caption, { color: colors.textSecondary, fontWeight: '600' }]}>
+                {t('auction.participation.reserve')}: {reserveLabel}
+              </Text>
+            </View>
           </View>
         </PressableScale>
 
         <PressableScale
-          onPress={handleCheckboxPress}
+          onPress={() => !locked && onToggle()}
           disabled={locked}
           hitSlop={10}
           style={styles.checkboxHit}
@@ -158,9 +150,6 @@ export function LotBidCard({
 
       {selected ? (
         <View style={styles.bidSection}>
-          <Text style={[Typography.microCaps, { color: colors.goldChampagne }]}>
-            {t('auction.participation.yourBid')}
-          </Text>
           <Pressable
             onPress={focusInput}
             disabled={locked}
@@ -168,12 +157,12 @@ export function LotBidCard({
               styles.inputWrap,
               {
                 borderColor: inputBorderColor,
-                backgroundColor: pressed ? colors.glassFillActive : colors.glassFill,
+                backgroundColor: pressed ? colors.baseElevated : colors.base,
                 opacity: locked ? 0.65 : 1,
               },
             ]}
           >
-            <Text style={[Typography.bodyMedium, { color: colors.textMuted }]}>ETB</Text>
+            <Text style={[Typography.caption, { color: colors.textMuted, fontWeight: '600' }]}>ETB</Text>
             <TextInput
               ref={inputRef}
               value={bidText}
@@ -184,48 +173,38 @@ export function LotBidCard({
               autoCorrect={false}
               autoCapitalize="none"
               returnKeyType="done"
-              placeholder={t('auction.participation.bidPlaceholder', {
-                reserve: reserveLabel,
-              })}
+              placeholder={t('auction.participation.bidPlaceholder', { reserve: reserveLabel })}
               placeholderTextColor={colors.textMuted}
               style={[styles.input, { color: colors.cream }]}
             />
             {feedback.kind === 'valid' ? (
-              <MaterialCommunityIcons name="check-circle" size={20} color={colors.success.fg} />
+              <MaterialCommunityIcons name="check-circle" size={18} color={colors.success.fg} />
+            ) : feedback.kind === 'error' ? (
+              <MaterialCommunityIcons name="alert-circle-outline" size={18} color={colors.danger.fg} />
             ) : null}
           </Pressable>
           {feedback.kind === 'error' && feedback.errorKey ? (
-            <View style={styles.feedbackRow}>
-              <MaterialCommunityIcons name="alert-circle-outline" size={14} color={colors.danger.fg} />
-              <Text style={[Typography.caption, styles.feedbackText, { color: colors.danger.fg }]}>
-                {t(`auction.participation.bidErrors.${feedback.errorKey}`, {
-                  reserve: reserveLabel,
-                })}
-              </Text>
-            </View>
-          ) : null}
-          {feedback.kind === 'valid' ? (
-            <View style={styles.feedbackRow}>
-              <MaterialCommunityIcons name="check-circle-outline" size={14} color={colors.success.fg} />
-              <Text style={[Typography.caption, styles.feedbackText, { color: colors.success.fg }]}>
-                {t('auction.participation.bidValid')}
-              </Text>
-            </View>
-          ) : null}
-          {feedback.kind === 'hint' ? (
+            <Text style={[Typography.caption, { color: colors.danger.fg }]}>
+              {t(`auction.participation.bidErrors.${feedback.errorKey}`, { reserve: reserveLabel })}
+            </Text>
+          ) : feedback.kind === 'hint' ? (
             <Text style={[Typography.caption, { color: colors.textMuted }]}>
               {t('auction.participation.bidHint', { reserve: reserveLabel })}
             </Text>
           ) : null}
         </View>
       ) : null}
-    </GlassCard>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
     marginBottom: Spacing.sm,
+    borderRadius: Radii.lg,
+    borderWidth: 1,
+    borderLeftWidth: 3,
+    padding: 12,
   },
   topRow: {
     flexDirection: 'row',
@@ -236,27 +215,33 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: 10,
   },
   copy: {
     flex: 1,
-    gap: 2,
+    gap: 3,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 2,
   },
   checkboxHit: {
     paddingTop: 2,
     paddingLeft: 4,
   },
   checkbox: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 7,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   bidSection: {
-    marginTop: 12,
-    gap: 6,
+    marginTop: 10,
+    gap: 4,
   },
   inputWrap: {
     flexDirection: 'row',
@@ -264,24 +249,17 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderRadius: Radii.input,
-    paddingHorizontal: 14,
-    minHeight: 52,
+    paddingHorizontal: 12,
+    minHeight: 48,
   },
   input: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    paddingVertical: 12,
+    paddingVertical: 10,
     padding: 0,
-  },
-  feedbackRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-  },
-  feedbackText: {
-    flex: 1,
   },
 });
 
+export const LotBidCard = memo(LotBidCardImpl);
 export default LotBidCard;

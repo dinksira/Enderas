@@ -97,7 +97,6 @@ export function AuctionAssetDetailModal({ visible, asset, onClose }: AuctionAsse
                   height={GALLERY_HEIGHT}
                   category={asset.category}
                   mode="manual"
-                  showDots
                   showThumbnails
                   borderRadius={14}
                 />
