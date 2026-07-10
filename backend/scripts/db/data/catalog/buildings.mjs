@@ -2,12 +2,12 @@ import { auction, BUILDING_DOCS } from './helpers.mjs';
 
 export const BUILDINGS_AUCTION = auction({
   id: 'd1000003-0003-4003-8003-000000000003',
-  title: 'Prime Real Estate Portfolio',
+  title: 'Prime Real Estate Portfolio — Summer 2025',
   category: 'buildings',
   description:
-    'Residential, commercial, industrial, and hospitality properties in high-demand districts with clear title documentation and recent valuations.',
+    'Portfolio auction of 12 income-producing and owner-occupied properties across Addis Ababa\'s Bole, Kazanchis, Piassa, Kality, and Sarbet districts. Title deeds, survey plans, tenancy schedules, and recent valuations on file. Guided viewings 15–22 July 2025; sealed bids accepted online throughout the auction window.',
   auctionConditions:
-    'Transfer fees and stamp duties payable by bidder within 30 days. Vacant possession timelines vary by property.',
+    'Properties sold with vacant or occupied status as stated per lot. Transfer taxes, stamp duty, and legal fees borne by buyer. Settlement within 30 days of award. Vacant possession timelines per individual lot description.',
   documentFee: 10000,
   cpoPercentage: 12,
   auctionDocuments: [

@@ -574,7 +574,10 @@
     },
     "editProfileScreen": {
       "photoHint": "የመገለጫ ፎቶ",
-      "photoSub": "የመገለጫ ፎቶ ማስገባት በቅርቡ ይመጣል",
+      "photoSub": "የመገለጫ ፎቶዎን ለመቀየር ይንኩ",
+      "changePhoto": "ፎቶ ቀይር",
+      "removePhoto": "ፎቶ አስወግድ",
+      "uploadingPhoto": "ፎቶ በመጫን ላይ…",
       "personalInfo": "የግል መረጃ",
       "fullName": "ሙሉ ስም",
       "fullNamePlaceholder": "ሙሉ ስምዎን ያስገቡ",
@@ -591,7 +594,8 @@
         "invalidEmail": "ትክክለኛ የኢሜይል አድራሻ ያስገቡ።",
         "fullNameRequired": "ሙሉ ስም ያስፈልጋል።",
         "organizationRequired": "የድርጅት ስም ያስፈልጋል።",
-        "saveFailed": "መገለጫ ማስቀመጥ አልተቻለም። እንደገና ይሞክሩ።"
+        "saveFailed": "መገለጫ ማስቀመጥ አልተቻለም። እንደገና ይሞክሩ።",
+        "photoUploadFailed": "ፎቶ ማስገባት አልተቻለም። እንደገና ይሞክሩ።"
       }
     },
     "helpScreen": {

@@ -574,7 +574,10 @@
     },
     "editProfileScreen": {
       "photoHint": "Profile Photo",
-      "photoSub": "Profile photo upload is coming soon",
+      "photoSub": "Tap to change your profile photo",
+      "changePhoto": "Change Photo",
+      "removePhoto": "Remove Photo",
+      "uploadingPhoto": "Uploading photo…",
       "personalInfo": "Personal Information",
       "fullName": "Full Name",
       "fullNamePlaceholder": "Enter your full name",
@@ -591,7 +594,8 @@
         "invalidEmail": "Enter a valid email address.",
         "fullNameRequired": "Full name is required.",
         "organizationRequired": "Organization name is required.",
-        "saveFailed": "Unable to save profile. Please try again."
+        "saveFailed": "Unable to save profile. Please try again.",
+        "photoUploadFailed": "Unable to upload photo. Please try again."
       }
     },
     "helpScreen": {

@@ -33,6 +33,7 @@ module.exports = {
       first_name: { type: STRING(100), allowNull: true },
       last_name: { type: STRING(100), allowNull: true },
       organization_name: { type: STRING(255), allowNull: true },
+      profile_picture: { type: STRING(500), allowNull: true },
       preferred_language: {
         type: ENUM('en', 'am'),
         allowNull: false,

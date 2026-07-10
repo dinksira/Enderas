@@ -193,6 +193,7 @@ function serializeAuthMe(principal) {
       firstName: principal.firstName ?? null,
       lastName: principal.lastName ?? null,
       organizationName: principal.organizationName ?? null,
+      profilePicture: principal.profilePicture ?? null,
       preferredLanguage: principal.preferredLanguage ?? null,
       isStaff: principal.isStaff,
     },
@@ -216,6 +217,7 @@ export async function updateMe(req, res, next) {
       lastName: req.body.lastName,
       organizationName: req.body.organizationName,
       preferredLanguage: req.body.preferredLanguage,
+      profilePicture: req.body.profilePicture ?? req.body.profile_picture,
     });
 
     await authorizationPermissionService.invalidateUserPermissions(req.user.id);

@@ -14,6 +14,7 @@ import { getMobileLookupCandidates, resolveMobileForStorage } from '../utils/mob
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { USER_STATUSES } from './kyc.service.js';
 import { isAssignableEndUserRoleCode } from '../constants/end-user-role.constants.js';
+import { resolvePublicUploadUrl } from '../utils/media-url.util.js';
 
 const STAFF_ROLE_CODES = Object.freeze([
   'super_admin',
@@ -115,6 +116,7 @@ export function serializeUserListRow(user) {
     email: user.email,
     userType: user.user_type,
     status: user.status,
+    profilePicture: resolvePublicUploadUrl(user.profile_picture) ?? null,
     roleCode: user.role?.code ?? null,
     roleName: user.role?.name ?? null,
     kycStatus: kyc?.status ?? null,
@@ -138,6 +140,7 @@ export function serializeUserDetail(user) {
     firstName: user.first_name,
     lastName: user.last_name,
     organizationName: user.organization_name,
+    profilePicture: resolvePublicUploadUrl(user.profile_picture) ?? null,
     preferredLanguage: user.preferred_language,
     isMobileVerified: user.is_mobile_verified,
     isEmailVerified: user.is_email_verified,
@@ -531,12 +534,17 @@ export async function updateMyProfile(userId, payload = {}) {
     last_name: user.last_name,
     organization_name: user.organization_name,
     preferred_language: user.preferred_language,
+    profile_picture: user.profile_picture,
   };
 
   const updates = {};
 
   if (payload.email !== undefined) {
     updates.email = payload.email?.trim() ? payload.email.trim() : null;
+  }
+
+  if (payload.profilePicture !== undefined) {
+    updates.profile_picture = payload.profilePicture?.trim() ? payload.profilePicture.trim() : null;
   }
 
   if (payload.preferredLanguage !== undefined) {

@@ -7,7 +7,7 @@ export const BIDDER_USER_ID = 'a1000002-0002-4002-8002-000000000002';
 export const ADMIN_STAFF_ID = 'a2000001-0001-4001-8001-000000000001';
 export const SEED_ASSET_OWNER_ID = 'b3000001-0001-4001-8001-000000000001';
 
-/** Raw catalog definitions (image URLs resolved at seed time). */
+/** Raw catalog definitions (images downloaded locally at seed time). */
 export const SEED_AUCTION_CATALOG = Object.freeze([
   VEHICLES_AUCTION,
   MACHINERY_AUCTION,

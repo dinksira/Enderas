@@ -28,6 +28,7 @@ export interface AuthUser {
   department?: string | null;
   status?: string;
   preferredLanguage?: string | null;
+  profilePicture?: string | null;
 }
 
 interface SessionPayload {
@@ -91,6 +92,7 @@ function mapUser(payload: SessionPayload): AuthUser {
     preferredLanguage: (userPayload.preferredLanguage ||
       identity.preferredLanguage ||
       null) as string | null,
+    profilePicture: (userPayload.profilePicture ?? identity.profilePicture ?? null) as string | null,
   };
 }
 
