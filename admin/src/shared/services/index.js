@@ -1,4 +1,4 @@
-export { authApi, login, register, verifyOtp, resendOtp, forgotPassword, verifyResetOtp, resetPassword, default } from './authApi.js';
+export { authApi, login, register, verifyOtp, resendOtp, forgotPassword, verifyResetOtp, resetPassword, getMe, updateMyProfile, default } from './authApi.js';
 export { fileUploadService, uploadFile, uploadMultipleFiles, deleteFile } from './file-upload.service.js';
 export { staffService } from './staff-service.js';
 export { evaluationService } from './evaluation-service.js';

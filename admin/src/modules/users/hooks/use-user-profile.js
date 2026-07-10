@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { userService } from '@enderass/shared/services';
+import { getMyKYC, userService } from '@enderass/shared/services';
 import { formatDate } from '@enderass/shared/utils';
 export function useUserProfile() {
   const { t } = useTranslation();
