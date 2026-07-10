@@ -1,9 +1,37 @@
 /**
- * Build a tiny but valid PDF for local seed uploads.
+ * Build a valid multi-line PDF for local seed uploads.
+ * Accepts a string title or an array of text lines.
  */
-export function buildMinimalPdf(title = 'Enderass Auction Catalog') {
-  const safeTitle = String(title).replace(/[()\\]/g, '');
-  const stream = `BT /F1 20 Tf 72 700 Td (${safeTitle}) Tj ET`;
+export function buildMinimalPdf(titleOrLines = 'Enderass Auction Catalog') {
+  const lines = Array.isArray(titleOrLines)
+    ? titleOrLines.map((line) => String(line))
+    : [String(titleOrLines)];
+
+  const commands = [];
+  let y = 740;
+  const lineHeight = 14;
+
+  for (const line of lines) {
+    const safeLine = String(line)
+      .replace(/\\/g, '\\\\')
+      .replace(/[()]/g, '')
+      .replace(/[^\x20-\x7E]/g, ' ')
+      .slice(0, 100);
+
+    if (safeLine.length === 0) {
+      y -= lineHeight;
+      continue;
+    }
+
+    commands.push(`1 0 0 1 72 ${y} Tm (${safeLine}) Tj`);
+    y -= lineHeight;
+
+    if (y < 72) {
+      break;
+    }
+  }
+
+  const stream = `BT /F1 11 Tf ${commands.join(' ')} ET`;
   const objects = [
     '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n',
     '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n',

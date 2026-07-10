@@ -237,6 +237,20 @@
     }
   },
   "auction": {
+    "owner": {
+      "overviewTitle": "Auction monitor",
+      "overviewSubtitle": "{{totalBids}} sealed bids received · document fee {{documentFee}}",
+      "reserve": "Reserve",
+      "bidCount": "Bids",
+      "unnamedLot": "Auction item",
+      "bannerTitle": "You own this auction",
+      "bannerBody": "Monitor items, documents, reserve prices, and bid counts. Bid amounts stay sealed.",
+      "actionsTitle": "Owner tools",
+      "actionsIntro": "Review auction documents and track sealed bid activity on your assets.",
+      "viewDocsHelper": "Auction documents",
+      "myAuctionsTitle": "My live auctions",
+      "myAuctionsSubtitle": "Track bid activity on auctions that include your assets."
+    },
     "participation": {
       "actions": "Participation",
       "buyDoc": "Buy Auction Document",
@@ -289,6 +303,10 @@
       "selectedLots": "Selected lots",
       "totalBidAmount": "Total bid amount",
       "cpoAmount": "CPO ({{percent}}% of your bids)",
+      "cpoShort": "CPO {{percent}}%",
+      "locked": "Locked",
+      "summaryLotsSelected": "{{count}} of {{total}} lots selected",
+      "summaryNoLots": "Select lots to bid on",
       "selectLotsHint": "Select lots and enter your bid for each. Bids must meet or exceed the reserve price. CPO updates as you type.",
       "bidsLockedHint": "Your lot selections and bids are locked while your CPO payment is under review.",
       "reserve": "Reserve",
@@ -574,7 +592,10 @@
     },
     "editProfileScreen": {
       "photoHint": "Profile Photo",
-      "photoSub": "Profile photo upload is coming soon",
+      "photoSub": "Tap to change your profile photo",
+      "changePhoto": "Change Photo",
+      "removePhoto": "Remove Photo",
+      "uploadingPhoto": "Uploading photo…",
       "personalInfo": "Personal Information",
       "fullName": "Full Name",
       "fullNamePlaceholder": "Enter your full name",
@@ -591,7 +612,8 @@
         "invalidEmail": "Enter a valid email address.",
         "fullNameRequired": "Full name is required.",
         "organizationRequired": "Organization name is required.",
-        "saveFailed": "Unable to save profile. Please try again."
+        "saveFailed": "Unable to save profile. Please try again.",
+        "photoUploadFailed": "Unable to upload photo. Please try again."
       }
     },
     "helpScreen": {

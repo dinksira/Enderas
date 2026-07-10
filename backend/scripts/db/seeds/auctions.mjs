@@ -8,7 +8,7 @@ import { AuctionAsset } from '../../../src/models/auctionAsset.model.js';
 import { Lot } from '../../../src/models/lot.model.js';
 import {
   ADMIN_STAFF_ID,
-  BIDDER_USER_ID,
+  OWNER_USER_ID,
   SEED_ASSET_OWNER_ID,
   SEED_AUCTION_CATALOG,
 } from '../data/auctions.mjs';
@@ -32,9 +32,9 @@ function flattenSeedAssets(seed) {
 }
 
 async function assertPrerequisites(transaction) {
-  const bidder = await User.findByPk(BIDDER_USER_ID, { attributes: ['id'], transaction });
-  if (!bidder) {
-    throw new Error('Bidder test user not found. Seed test users first.');
+  const owner = await User.findByPk(OWNER_USER_ID, { attributes: ['id'], transaction });
+  if (!owner) {
+    throw new Error('Test owner user not found. Seed test users first.');
   }
 
   const staff = await Staff.findOne({
@@ -51,7 +51,7 @@ async function ensureAssetOwner(transaction) {
   const [owner] = await AssetOwner.upsert(
     {
       id: SEED_ASSET_OWNER_ID,
-      user_id: BIDDER_USER_ID,
+      user_id: OWNER_USER_ID,
       contact_phone: '0987654321',
       city: 'Addis Ababa',
       country: 'Ethiopia',
@@ -112,7 +112,7 @@ async function ensureEvaluatedAsset(assetSeed, ownerId, staffId, transaction) {
   );
 }
 
-async function ensureAuctionCatalogEntry(seed, staffId, transaction, logger) {
+async function ensureAuctionCatalogEntry(seed, staffId, ownerUserId, transaction, logger) {
   const existing = await Auction.findByPk(seed.id, { transaction });
   const { start, end } = auctionWindow();
   const flatAssets = flattenSeedAssets(seed);
@@ -139,6 +139,7 @@ async function ensureAuctionCatalogEntry(seed, staffId, transaction, logger) {
     cpo_percentage: seed.cpoPercentage,
     status: 'published',
     auction_mode: 'multi',
+    owner_id: ownerUserId,
     published_at: existing?.published_at ?? now,
     deleted_at: null,
   };
@@ -209,7 +210,7 @@ export async function seedAuctionCatalog({ transaction, logger = console }) {
     for (const assetSeed of flattenSeedAssets(seed)) {
       await ensureEvaluatedAsset(assetSeed, owner.id, ADMIN_STAFF_ID, transaction);
     }
-    await ensureAuctionCatalogEntry(seed, ADMIN_STAFF_ID, transaction, logger);
+    await ensureAuctionCatalogEntry(seed, ADMIN_STAFF_ID, owner.user_id, transaction, logger);
   }
 
   logger.log(

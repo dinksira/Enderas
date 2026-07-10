@@ -49,6 +49,9 @@ Staff.hasMany(KYCVerification, { foreignKey: 'reviewed_by_staff_id', as: 'review
 Staff.hasMany(Auction, { foreignKey: 'created_by_staff_id', as: 'createdAuctions' });
 Auction.belongsTo(Staff, { foreignKey: 'created_by_staff_id', as: 'createdByStaff' });
 
+User.hasMany(Auction, { foreignKey: 'owner_id', as: 'ownedAuctions' });
+Auction.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
+
 User.hasOne(AssetOwner, { foreignKey: 'user_id', as: 'assetOwnerProfile' });
 AssetOwner.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 

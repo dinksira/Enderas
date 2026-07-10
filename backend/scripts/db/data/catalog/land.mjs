@@ -2,12 +2,12 @@ import { auction, LAND_DOCS } from './helpers.mjs';
 
 export const LAND_AUCTION = auction({
   id: 'd1000004-0004-4004-8004-000000000004',
-  title: 'Land & Development Parcels',
+  title: 'Land & Development Parcels — July 2025',
   category: 'land',
   description:
-    'Urban, commercial, agricultural, and industrial land parcels with registered survey plans and title documentation.',
+    'Registered urban, commercial, agricultural, and industrial land parcels totaling 13 lots across Addis Ababa, Bishoftu, Hawassa, Holeta, and Modjo. Each parcel includes cadastral survey, title deed extract, and zoning confirmation. Site visits coordinated with licensed surveyor; boundary beacons to be verified on site before bidding.',
   auctionConditions:
-    'Parcels sold with survey maps and title docs. Development permits are buyer responsibility. Verify boundary beacons on site.',
+    'Land sold with title and survey documentation as described. Development permits, environmental approvals, and utility connections are buyer responsibility. Settlement within 30 days. Buyer must verify boundaries on site; Enderass does not warrant future rezoning.',
   documentFee: 7500,
   cpoPercentage: 10,
   auctionDocuments: [

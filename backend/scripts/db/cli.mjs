@@ -24,9 +24,11 @@ Options:
   --force                       Required for reset on non-development NODE_ENV
 
 Examples:
-  npm run db -- setup test
-  npm run db -- seed test
-  npm run db -- reseed test
+  npm run db:test
+  npm run db:test:reseed
+  npm run db:setup
+  npm run db:setup:reseed
+  npm run db -- migrate
   npm run db -- seed test --only=auctions
 `.trim();
 

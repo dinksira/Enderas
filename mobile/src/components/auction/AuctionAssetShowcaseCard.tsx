@@ -41,7 +41,6 @@ export function AuctionAssetShowcaseCard({ asset }: AuctionAssetShowcaseCardProp
         height={GALLERY_HEIGHT}
         category={asset.category}
         mode="manual"
-        showDots
         showThumbnails
         borderRadius={14}
       />

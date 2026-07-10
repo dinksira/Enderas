@@ -38,6 +38,10 @@ interface ScreenShellProps {
   /** Pull-to-refresh state for scrollable shell screens. */
   refreshing?: boolean;
   onRefresh?: () => void | Promise<void>;
+  /** Fixed footer rendered below the scroll area (e.g. sticky bid summary). */
+  stickyFooter?: ReactNode;
+  /** When false, children render in a flex View instead of ScrollView (for nested lists). */
+  scrollable?: boolean;
 }
 
 /**
@@ -63,6 +67,8 @@ export function ScreenShell({
   keyboardBottomOffset = 12,
   refreshing = false,
   onRefresh,
+  stickyFooter,
+  scrollable = true,
   ...header
 }: ScreenShellProps) {
   const { colors } = useTheme();
@@ -126,20 +132,29 @@ export function ScreenShell({
       <AppHeader {...header} />
       {useKeyboard ? (
         <View style={styles.keyboardHost}>
-          <KeyboardAwareScrollView
-            style={styles.scroll}
-            contentContainerStyle={contentContainerStyle}
-            showsVerticalScrollIndicator={false}
-            bounces
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            bottomOffset={keyboardBottomOffset}
-            extraKeyboardSpace={keyboardToolbar ? 44 : 0}
-            mode="insets"
-            refreshControl={refreshControl}
-          >
-            {content}
-          </KeyboardAwareScrollView>
+          {scrollable ? (
+            <KeyboardAwareScrollView
+              style={styles.scroll}
+              contentContainerStyle={contentContainerStyle}
+              showsVerticalScrollIndicator={false}
+              bounces
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+              bottomOffset={keyboardBottomOffset}
+              extraKeyboardSpace={keyboardToolbar ? 44 : 0}
+              mode="insets"
+              refreshControl={refreshControl}
+            >
+              {content}
+            </KeyboardAwareScrollView>
+          ) : (
+            <View style={[styles.scroll, { paddingHorizontal: 16, paddingTop: 12 }]}>
+              {pageTitle ? (
+                <Text style={[Typography.h1, styles.pageTitle, { color: colors.cream }]}>{pageTitle}</Text>
+              ) : null}
+              {children}
+            </View>
+          )}
           {keyboardToolbar ? (
             <KeyboardToolbar theme={toolbarTheme}>
               {keyboardToolbarArrows ? <KeyboardToolbar.Prev /> : null}
@@ -148,7 +163,7 @@ export function ScreenShell({
             </KeyboardToolbar>
           ) : null}
         </View>
-      ) : (
+      ) : scrollable ? (
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={contentContainerStyle}
@@ -159,7 +174,15 @@ export function ScreenShell({
         >
           {content}
         </ScrollView>
+      ) : (
+        <View style={[styles.scroll, { paddingHorizontal: 16, paddingTop: 12 }]}>
+          {pageTitle ? (
+            <Text style={[Typography.h1, styles.pageTitle, { color: colors.cream }]}>{pageTitle}</Text>
+          ) : null}
+          {children}
+        </View>
       )}
+      {stickyFooter}
     </View>
   );
 }

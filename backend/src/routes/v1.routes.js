@@ -338,6 +338,20 @@ v1Router.post(
 
 // Auctions — public browse (optional auth for myParticipation)
 v1Router.get(
+  '/auctions/my-owned',
+  authenticate,
+  attachDataScope(MODULES.ASSETS),
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.READ }),
+  auctionController.listOwnedAuctions,
+);
+v1Router.get(
+  '/auctions/browse/:id/owner-overview',
+  authenticate,
+  attachDataScope(MODULES.ASSETS),
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.READ }),
+  auctionController.getAuctionOwnerOverview,
+);
+v1Router.get(
   '/auctions/browse',
   optionalAuthenticate,
   auctionController.listBrowseAuctions,

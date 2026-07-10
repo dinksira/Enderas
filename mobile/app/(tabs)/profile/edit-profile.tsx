@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 
 import { FormField, GoldButton } from '@/components/auth';
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { GlassCard } from '@/components/shell/GlassCard';
 import { ScreenShell } from '@/components/shell/ScreenShell';
 import { useRefreshSession } from '@/hooks/useRefreshSession';
@@ -13,6 +14,7 @@ import { useAuthStore } from '@/lib/authStore';
 import { useTheme } from '@/lib/appStore';
 import { ApiError } from '@/services/api';
 import { getMe, updateMyProfile } from '@/services/authApi';
+import { fileUploadApi, type PickedFile } from '@/services/fileUploadApi';
 
 function splitFullName(fullName: string) {
   const trimmed = fullName.trim();
@@ -46,6 +48,9 @@ export default function EditProfileScreen() {
   const [organizationName, setOrganizationName] = useState('');
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [localPreviewUri, setLocalPreviewUri] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -71,12 +76,14 @@ export default function EditProfileScreen() {
         setOrganizationName(me.identity.organizationName ?? '');
         setEmail(me.identity.email ?? '');
         setMobile(me.identity.mobileNumber ?? '');
+        setProfilePicture(me.identity.profilePicture ?? null);
       } catch {
         if (cancelled) return;
         setFullName(joinFullName(user?.firstName, user?.lastName) || user?.displayName || '');
         setOrganizationName(user?.organizationName ?? '');
         setEmail(user?.email ?? '');
         setMobile(user?.mobileNumber ?? '');
+        setProfilePicture(user?.profilePicture ?? null);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -86,7 +93,7 @@ export default function EditProfileScreen() {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, user?.displayName, user?.email, user?.firstName, user?.lastName, user?.mobileNumber, user?.organizationName]);
+  }, [accessToken, user?.displayName, user?.email, user?.firstName, user?.lastName, user?.mobileNumber, user?.organizationName, user?.profilePicture]);
 
   const initials = useMemo(() => {
     const source = isOrganization ? organizationName : fullName;
@@ -98,6 +105,60 @@ export default function EditProfileScreen() {
       .join('')
       .toUpperCase() || '?';
   }, [fullName, isOrganization, organizationName]);
+
+  const pickProfilePhoto = useCallback(async () => {
+    if (saving || uploadingPhoto) return;
+
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        t('profile.editProfileScreen.photoHint'),
+        t('profile.editProfileScreen.photoSub'),
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.85,
+    });
+
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const asset = result.assets[0];
+    const extension = asset.uri.split('.').pop() || 'jpg';
+    const fileName = asset.fileName || `profile-${Date.now()}.${extension}`;
+    const picked: PickedFile = {
+      uri: asset.uri,
+      name: fileName,
+      mimeType: asset.mimeType || (fileName.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg'),
+    };
+
+    setLocalPreviewUri(picked.uri);
+    setUploadingPhoto(true);
+    setFormError(null);
+
+    try {
+      const uploaded = await fileUploadApi.uploadFile(picked, 'users/profile');
+      setProfilePicture(uploaded.fileUrl);
+      setLocalPreviewUri(null);
+    } catch (err) {
+      setLocalPreviewUri(null);
+      setFormError(
+        err instanceof ApiError
+          ? err.message
+          : t('profile.editProfileScreen.errors.photoUploadFailed'),
+      );
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }, [saving, t, uploadingPhoto]);
+
+  const removeProfilePhoto = useCallback(() => {
+    if (saving || uploadingPhoto) return;
+    setProfilePicture(null);
+    setLocalPreviewUri(null);
+  }, [saving, uploadingPhoto]);
 
   const handleSave = async () => {
     if (saving) return;
@@ -129,11 +190,13 @@ export default function EditProfileScreen() {
         ? {
             organizationName: organizationName.trim(),
             email: trimmedEmail || undefined,
+            profilePicture,
           }
         : {
             firstName,
             lastName: lastName || undefined,
             email: trimmedEmail || undefined,
+            profilePicture,
           };
 
       const me = await updateMyProfile(payload);
@@ -146,6 +209,7 @@ export default function EditProfileScreen() {
         email: me.identity.email,
         mobileNumber: me.identity.mobileNumber,
         preferredLanguage: me.identity.preferredLanguage ?? null,
+        profilePicture: me.identity.profilePicture ?? null,
       });
 
       await refresh();
@@ -183,21 +247,48 @@ export default function EditProfileScreen() {
     >
       <GlassCard padding={18}>
         <View style={styles.avatarSection}>
-          <LinearGradient
-            colors={[colors.gold, colors.goldDeep]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.avatar}
+          <Pressable
+            onPress={pickProfilePhoto}
+            disabled={saving || uploadingPhoto}
+            style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
           >
-            <Text style={[styles.avatarText, { color: colors.textOnGold }]}>{initials}</Text>
-          </LinearGradient>
+            <View style={styles.avatarWrap}>
+              <ProfileAvatar
+                profilePicture={localPreviewUri || profilePicture}
+                initials={initials}
+                size={64}
+              />
+              {uploadingPhoto ? (
+                <View style={[styles.avatarOverlay, { backgroundColor: colors.scrim }]}>
+                  <ActivityIndicator color={colors.goldBright} />
+                </View>
+              ) : (
+                <View style={[styles.avatarBadge, { backgroundColor: colors.gold, borderColor: colors.base }]}>
+                  <MaterialCommunityIcons name="camera" size={14} color={colors.textOnGold} />
+                </View>
+              )}
+            </View>
+          </Pressable>
           <View style={styles.avatarMeta}>
             <Text style={[styles.avatarHint, { color: colors.cream }]}>
               {t('profile.editProfileScreen.photoHint')}
             </Text>
             <Text style={[styles.avatarSub, { color: colors.textMuted }]}>
-              {t('profile.editProfileScreen.photoSub')}
+              {uploadingPhoto
+                ? t('profile.editProfileScreen.uploadingPhoto')
+                : t('profile.editProfileScreen.photoSub')}
             </Text>
+            {profilePicture || localPreviewUri ? (
+              <Pressable
+                onPress={removeProfilePhoto}
+                disabled={saving || uploadingPhoto}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, marginTop: 6 })}
+              >
+                <Text style={[styles.removePhoto, { color: colors.danger.fg }]}>
+                  {t('profile.editProfileScreen.removePhoto')}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         </View>
       </GlassCard>
@@ -291,17 +382,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
   },
-  avatar: {
-    width: 64,
-    height: 64,
+  avatarWrap: {
+    position: 'relative',
+  },
+  avatarOverlay: {
+    ...StyleSheet.absoluteFillObject,
     borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: {
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 1,
+  avatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarMeta: {
     flex: 1,
@@ -316,6 +415,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '500',
     lineHeight: 15,
+  },
+  removePhoto: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   form: {
     marginTop: 12,

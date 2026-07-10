@@ -20,6 +20,7 @@ import { AppHeader } from '@/components/shell/AppHeader';
 import { ListItemEntrance, Skeleton } from '@/components/ui';
 import { useTheme } from '@/lib/appStore';
 import { useBrowseAuctions } from '@/hooks/useBrowseAuctions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { Typography, Spacing, Radii } from '@/theme';
 import type { AuctionStatusFilter, BrowseAuction } from '@/types/auction';
 
@@ -76,11 +77,12 @@ export default function DashboardScreen() {
   const [statusFilter, setStatusFilter] = useState<AuctionStatusFilter>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 350);
 
   const { records, loading, refreshing, error, refresh } = useBrowseAuctions({
     status: statusFilter,
     category: categoryFilter,
-    search,
+    search: debouncedSearch,
   });
 
   // Responsive column count — 2 on phones, 3 on larger screens.

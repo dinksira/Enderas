@@ -30,6 +30,11 @@ import {
 import { env } from '../config/env.config.js';
 import { normalizePublicImageUrl } from '../utils/auction-image.util.js';
 import { enrichAuctionsWithPrimaryImages } from '../utils/auction-image.util.js';
+import {
+  assertNotAuctionOwner,
+  isUserAuctionOwner,
+  resolveOwnerUserIdFromAssetIds,
+} from '../utils/auction-owner.util.js';
 
 const DISPLAY_STATUS_MAP = Object.freeze({
   published: 'ACTIVE',
@@ -626,11 +631,14 @@ export async function createAuction(payload, staffId) {
     ? flatAssets[0].assetId
     : null;
 
+  const ownerUserId = await resolveOwnerUserIdFromAssetIds([...uniqueAssetIds]);
+
   const auction = await sequelize.transaction(async (transaction) => {
     const createdAuction = await Auction.create({
       id: generateUuid(),
       asset_id: primaryAssetId,
       created_by_staff_id: staffId,
+      owner_id: ownerUserId,
       title: title.trim(),
       category,
       description: description?.trim() || null,
@@ -737,6 +745,7 @@ function serializeAuction(auction, bidCount = 0, extras = {}) {
     bids: bidCount,
     bidCount,
     assetId: plain.asset_id,
+    ownerId: plain.owner_id ?? null,
     createdByStaffId: plain.created_by_staff_id,
     createdByName: extras.createdByName ?? null,
     publishedAt: plain.published_at,
@@ -752,6 +761,16 @@ const BID_COUNT_SQL = `
   FROM bids
   WHERE auction_id IN (:auctionIds)
   GROUP BY auction_id
+`;
+
+const BID_COUNT_BY_LOT_SQL = `
+  SELECT auction_asset_id, COUNT(*) AS bid_count
+  FROM bids
+  WHERE auction_id = :auctionId
+    AND is_valid = 1
+    AND status = 'submitted'
+    AND auction_asset_id IS NOT NULL
+  GROUP BY auction_asset_id
 `;
 
 async function attachBidCounts(auctions) {
@@ -770,7 +789,7 @@ async function attachBidCounts(auctions) {
   return auctions.map((auction) => serializeAuction(auction, countMap.get(auction.id) || 0));
 }
 
-async function attachBrowseLotSummaries(items) {
+async function attachBrowseLotSummaries(items, userId = null) {
   if (!items.length) {
     return items;
   }
@@ -812,15 +831,18 @@ async function attachBrowseLotSummaries(items) {
 
   return items.map((item) => {
     const summary = summaryMap.get(item.id);
-    if (!summary) {
-      return item;
-    }
+    const nextItem = summary
+      ? {
+          ...item,
+          lotCount: summary.lotCount,
+          assetCount: summary.assetCount,
+          totalReservePrice: item.totalReservePrice ?? (summary.assetCount > 1 ? summary.totalReserve : item.totalReservePrice),
+        }
+      : item;
 
     return {
-      ...item,
-      lotCount: summary.lotCount,
-      assetCount: summary.assetCount,
-      totalReservePrice: item.totalReservePrice ?? (summary.assetCount > 1 ? summary.totalReserve : item.totalReservePrice),
+      ...nextItem,
+      isAuctionOwner: Boolean(userId && nextItem.ownerId && nextItem.ownerId === userId),
     };
   });
 }
@@ -906,13 +928,14 @@ export async function listBrowseAuctions(options = {}, userId = null) {
   });
 
   let items = (await attachBidCounts(auctions)).map((row) => sanitizeBrowseAuction(row));
-  items = await attachBrowseLotSummaries(items);
+  items = await attachBrowseLotSummaries(items, userId);
   items = await attachUserParticipationSummaries(items, userId);
   items = await enrichAuctionsWithPrimaryImages(items);
 
   items = items.map((item) => {
     const hasAccess = item.myParticipation?.documentAccess ?? false;
-    if (!hasAccess) {
+    const isOwner = Boolean(userId && item.ownerId && item.ownerId === userId);
+    if (!hasAccess && !isOwner) {
       item.reservePrice = null;
       item.totalReservePrice = null;
       item.reserve = null;
@@ -1037,6 +1060,10 @@ async function attachUserParticipationSummaries(items, userId) {
  * @param {string} userId
  */
 export async function getAuctionParticipation(auctionId, userId) {
+  if (await isUserAuctionOwner(userId, auctionId)) {
+    return buildOwnerParticipationState(auctionId, userId);
+  }
+
   const auction = await getBrowseAuctionById(auctionId, userId);
   const lotGroups = auction.lots || [];
   const flatAssets = flattenNestedLotGroups(lotGroups);
@@ -1273,18 +1300,196 @@ export async function getBrowseAuctionById(id, userId = null) {
   serialized.imageUrls = allImages.length > 0 ? allImages : null;
 
   let documentAccess = false;
+  const isOwner = userId ? await isUserAuctionOwner(userId, id) : false;
 
   if (userId) {
-    documentAccess = await paymentService.hasApprovedDocumentPayment(userId, id);
+    documentAccess = isOwner || await paymentService.hasApprovedDocumentPayment(userId, id);
   }
 
   const sanitized = sanitizeBrowseAuction(serialized, { documentAccess });
+  sanitized.isAuctionOwner = isOwner;
+  sanitized.ownerId = auction.owner_id ?? null;
 
   if (!documentAccess && sanitized.lots) {
     sanitized.lots = sanitizeNestedLotReserves(sanitized.lots, false);
   }
 
   return sanitized;
+}
+
+async function loadLotBidCountMap(auctionId) {
+  const rows = await sequelize.query(BID_COUNT_BY_LOT_SQL, {
+    replacements: { auctionId },
+    type: QueryTypes.SELECT,
+  });
+
+  return new Map(
+    rows.map((row) => [row.auction_asset_id, Number(row.bid_count) || 0]),
+  );
+}
+
+function attachLotBidCountsToGroups(lotGroups, bidCountByLotId) {
+  return lotGroups.map((lot) => ({
+    ...lot,
+    assets: (lot.assets || []).map((asset) => ({
+      ...asset,
+      bidCount: bidCountByLotId.get(asset.id) ?? 0,
+    })),
+  }));
+}
+
+async function buildOwnerParticipationState(auctionId, userId) {
+  const auction = await getBrowseAuctionById(auctionId, userId);
+  const lotGroups = auction.lots || [];
+  const flatAssets = flattenNestedLotGroups(lotGroups);
+  const bidCountByLotId = await loadLotBidCountMap(auctionId);
+  const flatOwnerLots = flatAssets.map((asset) => ({
+    id: asset.id,
+    lotId: asset.lotId ?? null,
+    lotTitle: asset.lotTitle ?? asset.lotLabel ?? null,
+    assetId: asset.assetId,
+    assetTitle: asset.assetTitle,
+    assetType: asset.assetType,
+    assetLocation: asset.assetLocation,
+    reservePrice: asset.reservePrice,
+    bidCount: bidCountByLotId.get(asset.id) ?? 0,
+    imageUrls: asset.imageUrls ?? asset.assetImages ?? [],
+    tags: asset.tags ?? [],
+  }));
+
+  return {
+    auctionId,
+    participationStatus: 'owner_monitoring',
+    isRegisteredBidder: false,
+    isAuctionOwner: true,
+    isMultiLot: flatAssets.length > 1,
+    payment: null,
+    cpo: null,
+    bids: [],
+    bidDrafts: [],
+    requiredCpoAmountPreview: null,
+    lotParticipation: flatOwnerLots.map((asset) => ({
+      ...asset,
+      selected: false,
+      bid: null,
+      canPlaceBid: false,
+    })),
+    bid: null,
+    ownerOverview: {
+      lots: flatOwnerLots,
+      totalBidCount: auction.bidCount ?? 0,
+      documents: auction.documents ?? [],
+      documentFee: auction.documentFee,
+      reservePrice: auction.reservePrice,
+      totalReservePrice: auction.totalReservePrice,
+    },
+    gates: {
+      documentAccess: true,
+      cpoApproved: false,
+      canSubmitPayment: false,
+      canSubmitCpo: false,
+      canSubmitCpoWithBids: false,
+      canEditBidDrafts: false,
+      bidsLocked: true,
+      canPlaceBid: false,
+      inBiddingWindow: getBiddingWindowStatus(auction) === 'open',
+      biddingWindowStatus: getBiddingWindowStatus(auction),
+      paymentPending: false,
+      cpoPending: false,
+      isAuctionOwner: true,
+      biddingBlockedReason: 'OWN_AUCTION',
+    },
+    flags: {
+      paymentApproved: false,
+      paymentRejected: false,
+      cpoApproved: false,
+      cpoRejected: false,
+      hasBid: false,
+      allBidsSubmitted: false,
+      pendingLotCount: 0,
+      isAuctionOwner: true,
+    },
+  };
+}
+
+/**
+ * Auctions owned by the authenticated user (asset owner monitoring).
+ * @param {string} userId
+ */
+export async function listOwnedAuctions(userId) {
+  const auctions = await Auction.findAll({
+    where: {
+      owner_id: userId,
+      deleted_at: null,
+      status: { [Op.in]: BROWSE_VISIBLE_STATUSES },
+    },
+    order: [['start_date', 'DESC']],
+  });
+
+  let items = await attachBidCounts(auctions);
+  items = await attachBrowseLotSummaries(items, userId);
+  items = await enrichAuctionsWithPrimaryImages(items);
+
+  return {
+    items: items.map((item) => ({
+      ...item,
+      isAuctionOwner: true,
+      documentAccess: true,
+      documents: normalizeDocumentFiles(
+        auctions.find((auction) => auction.id === item.id)?.document_files,
+      ),
+    })),
+    total: items.length,
+  };
+}
+
+/**
+ * Owner-only auction monitor: items, docs, reserve prices, bid counts (no amounts).
+ * @param {string} auctionId
+ * @param {string} userId
+ */
+export async function getAuctionOwnerOverview(auctionId, userId) {
+  if (!await isUserAuctionOwner(userId, auctionId)) {
+    throw new AppError('You are not the owner of this auction', 403, 'NOT_AUCTION_OWNER');
+  }
+
+  const auction = await getBrowseAuctionById(auctionId, userId);
+  const bidCountByLotId = await loadLotBidCountMap(auctionId);
+  const lots = attachLotBidCountsToGroups(auction.lots || [], bidCountByLotId);
+  const flatAssets = flattenNestedLotGroups(lots);
+
+  return {
+    auctionId,
+    isAuctionOwner: true,
+    auction: {
+      ...auction,
+      lots,
+      isAuctionOwner: true,
+      documentAccess: true,
+    },
+    summary: {
+      assetCount: flatAssets.length,
+      lotCount: lots.length,
+      totalBidCount: auction.bidCount ?? 0,
+      documentFee: auction.documentFee,
+      reservePrice: auction.reservePrice,
+      totalReservePrice: auction.totalReservePrice,
+    },
+    lots: flatAssets.map((asset) => ({
+      id: asset.id,
+      lotId: asset.lotId ?? null,
+      lotTitle: asset.lotTitle ?? asset.lotLabel ?? null,
+      assetId: asset.assetId,
+      assetTitle: asset.assetTitle,
+      assetType: asset.assetType,
+      assetLocation: asset.assetLocation,
+      reservePrice: asset.reservePrice,
+      bidCount: asset.bidCount ?? bidCountByLotId.get(asset.id) ?? 0,
+      imageUrls: asset.imageUrls ?? asset.assetImages ?? [],
+      tags: asset.tags ?? [],
+    })),
+    documents: auction.documents ?? [],
+  };
 }
 
 /**
@@ -1749,9 +1954,12 @@ function resolveUploadUrlToAbsolutePath(fileUrl) {
  * @param {string} userId
  */
 export async function resolveAuctionDocumentForStream(auctionId, docIndex, userId) {
-  const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, auctionId);
-  if (!hasPayment) {
-    throw new AppError('Document access requires approved payment', 403, 'DOCUMENT_ACCESS_DENIED');
+  const isOwner = await isUserAuctionOwner(userId, auctionId);
+  if (!isOwner) {
+    const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, auctionId);
+    if (!hasPayment) {
+      throw new AppError('Document access requires approved payment', 403, 'DOCUMENT_ACCESS_DENIED');
+    }
   }
 
   const auction = await findAuctionOrThrow(auctionId);
@@ -1780,9 +1988,11 @@ export const auctionService = Object.freeze({
   createAuction,
   listAuctions,
   listBrowseAuctions,
+  listOwnedAuctions,
   getAuctionById,
   getBrowseAuctionById,
   getAuctionParticipation,
+  getAuctionOwnerOverview,
   resolveAuctionDocumentForStream,
   updateAuction,
   publishAuction,

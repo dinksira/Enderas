@@ -15,7 +15,6 @@ function buildQuery(params = {}) {
 }
 
 const AUTH_ME = `${ENV.apiV1Prefix}/auth/me`;
-const ROLES_BASE = `${ENV.apiV1Prefix}/roles`;
 
 async function unwrapUser(responsePromise) {
   const response = await responsePromise;
@@ -23,19 +22,8 @@ async function unwrapUser(responsePromise) {
 }
 
 export async function listCreateRoles() {
-  try {
-    const response = await api.get(ROLES_BASE);
-    const items = response?.items ?? response?.roles ?? [];
-    const filtered = items.filter((role) => END_USER_ROLE_CODES.includes(role.code));
-    if (filtered.length > 0) {
-      return filtered;
-    }
-  } catch {
-    // roles list may be stubbed; resolve from existing users
-  }
-
   const listResponse = await api.get(`${USERS_BASE}${buildQuery({ limit: 100, tab: 'active' })}`);
-  const users = listResponse?.users ?? [];
+  const users = listResponse?.users ?? listResponse?.items ?? [];
   const roles = [];
 
   for (const code of END_USER_ROLE_CODES) {

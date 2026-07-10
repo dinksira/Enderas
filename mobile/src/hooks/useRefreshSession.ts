@@ -37,6 +37,7 @@ export function useRefreshSession(): UseRefreshSessionResult {
           isStaff: me.identity.isStaff,
           status: me.status,
           preferredLanguage: me.identity.preferredLanguage ?? null,
+          profilePicture: me.identity.profilePicture ?? null,
         },
       });
     } catch {

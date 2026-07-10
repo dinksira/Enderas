@@ -207,6 +207,7 @@ export function validateUpdateProfileBody(req, res, next) {
     lastName,
     organizationName,
     preferredLanguage,
+    profilePicture,
   } = req.body ?? {};
 
   const errors = [];
@@ -238,6 +239,12 @@ export function validateUpdateProfileBody(req, res, next) {
   if (preferredLanguage !== undefined && preferredLanguage !== null && preferredLanguage !== '') {
     if (!['en', 'am'].includes(preferredLanguage)) {
       errors.push('preferredLanguage must be en or am');
+    }
+  }
+
+  if (profilePicture !== undefined && profilePicture !== null && profilePicture !== '') {
+    if (typeof profilePicture !== 'string') {
+      errors.push('profilePicture must be a string URL');
     }
   }
 

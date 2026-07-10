@@ -4,6 +4,7 @@
  */
 export const BIDDER_ALLOWED_UPLOAD_FOLDER_PREFIXES = Object.freeze([
   'kyc',
+  'users/profile',
   'payments/receipts',
   'cpo/documents',
   'assets/ownership',

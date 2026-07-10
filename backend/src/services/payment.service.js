@@ -5,6 +5,7 @@ import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
+import { assertNotAuctionOwner } from '../utils/auction-owner.util.js';
 
 const paymentInclude = [
   {
@@ -187,6 +188,8 @@ export async function createPayment(payload, userId) {
   if (auction.status !== 'published') {
     throw new AppError('Auction is not open for payments', 400, 'AUCTION_NOT_PUBLISHED');
   }
+
+  await assertNotAuctionOwner(userId, auctionId);
 
   const existingApproved = await Payment.findOne({
     where: { user_id: userId, auction_id: auctionId, status: 'approved', deleted_at: null },

@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Image } from 'expo-image';
 
 import { LockedActionButton } from '@/components/auction/LockedActionButton';
 import { LotParticipationOverview } from '@/components/auction/LotParticipationOverview';
+import { OwnerAuctionOverview } from '@/components/auction/OwnerAuctionOverview';
 import { ParticipationStatusBanner } from '@/components/auction/ParticipationStatusBanner';
 import { KycRequiredModal } from '@/components/kyc/KycRequiredModal';
 import { ImageGallery } from '@/components/shared/ImageGallery';
@@ -16,6 +18,7 @@ import { collectAuctionGalleryImages } from '@/lib/auctionAssetUtils';
 import { canShowBuyDocButton } from '@/lib/auctionParticipationUtils';
 import { useAuctionCountdown } from '@/lib/auctionCountdown';
 import { formatEtbAmount, statusTone } from '@/lib/auctionUtils';
+import { resolveMediaUrl } from '@/lib/media-utils';
 import {
   buildLotParticipationRows,
   shouldShowLotParticipationOverview,
@@ -37,14 +40,18 @@ export default function AuctionDetailScreen() {
     useAuctionParticipation(auctionId);
   const { isAuthenticated, gateReason } = useAuctionActionGate();
   const [kycModalVisible, setKycModalVisible] = useState(false);
-  const { label: countdownLabel, accentLabel, urgency, expired } = useAuctionCountdown(
+  const { label: countdownLabel, urgency, expired } = useAuctionCountdown(
     auction?.endDate,
     t('bids.ended'),
   );
 
   const paymentStatus = participation?.payment?.status ?? 'none';
-  const showBuyDoc = canShowBuyDocButton(participation);
-  const showParticipationOverview = shouldShowLotParticipationOverview(participation);
+  const isAuctionOwner = Boolean(
+    auction?.isAuctionOwner || participation?.isAuctionOwner || participation?.gates?.isAuctionOwner,
+  );
+  const ownerLots = participation?.ownerOverview?.lots ?? [];
+  const showBuyDoc = !isAuctionOwner && canShowBuyDocButton(participation);
+  const showParticipationOverview = !isAuctionOwner && shouldShowLotParticipationOverview(participation);
   const participationRows = useMemo(
     () => buildLotParticipationRows(lots, participation),
     [lots, participation],
@@ -53,6 +60,16 @@ export default function AuctionDetailScreen() {
     () => collectAuctionGalleryImages(auction?.imageUrls ?? [], auctionAssets),
     [auction?.imageUrls, auctionAssets],
   );
+
+  useEffect(() => {
+    const urls = galleryImageUrls
+      .slice(0, 4)
+      .map((url) => resolveMediaUrl(url))
+      .filter(Boolean) as string[];
+    if (urls.length) {
+      void Image.prefetch(urls);
+    }
+  }, [galleryImageUrls]);
   const participationLocked = !isAuthenticated || gateReason === 'kyc';
   const viewDocLocked = !documentApproved || participationLocked;
   const bidLocked = !documentApproved || !kycVerified || participationLocked;
@@ -98,6 +115,16 @@ export default function AuctionDetailScreen() {
   };
 
   const renderParticipationBanner = () => {
+    if (isAuctionOwner) {
+      return (
+        <ParticipationStatusBanner
+          tone="live"
+          icon="eye-outline"
+          title={t('auction.owner.bannerTitle')}
+          message={t('auction.owner.bannerBody')}
+        />
+      );
+    }
     if (paymentStatus === 'pending') {
       return (
         <ParticipationStatusBanner
@@ -173,16 +200,6 @@ export default function AuctionDetailScreen() {
 
   const tone: UiTone = statusTone(auctionStatus as BrowseAuction['status']);
   const statusColors = toneToStatus(tone, colors);
-  const countdownTone =
-    urgency === 'critical'
-      ? colors.danger
-      : urgency === 'soon'
-        ? colors.warning
-        : urgency === 'warm'
-          ? { fg: colors.goldBright, soft: colors.glassFillActive, border: colors.goldBorderActive }
-          : urgency === 'expired'
-            ? null
-            : { fg: colors.goldChampagne, soft: colors.glassFillActive, border: colors.goldBorder };
   const categoryLabel = t(`dashboard.categories.${auction.category}`, {
     defaultValue: auction.category,
   });
@@ -195,6 +212,7 @@ export default function AuctionDetailScreen() {
       showBack
       onBack={() => router.back()}
       bottomPadding={40}
+      noFade
     >
       {renderParticipationBanner()}
 
@@ -205,101 +223,63 @@ export default function AuctionDetailScreen() {
           height={HERO_HEIGHT}
           category={auction.category}
           mode="manual"
-          showDots
+          showThumbnails={galleryImageUrls.length > 1}
           borderRadius={18}
         />
-        <View style={styles.heroBottom} pointerEvents="none">
-          <View
-            style={[
-              styles.statusChip,
-              {
-                backgroundColor: statusColors.soft,
-                borderColor: statusColors.border,
-              },
-            ]}
-          >
+        <View style={styles.heroOverlay} pointerEvents="none">
+          <View style={styles.statusChip}>
             <View style={[styles.statusDot, { backgroundColor: statusColors.fg }]} />
-            <Text style={[Typography.microCaps, { color: statusColors.fg }]}>{statusLabel}</Text>
+            <Text style={styles.statusLabel}>{statusLabel}</Text>
           </View>
         </View>
       </View>
 
-      <GlassCard padding={16} style={styles.infoCard}>
-        <View style={styles.infoGrid}>
-          <InfoCell label={t('dashboard.browse.category')} value={categoryLabel} colors={colors} />
-          <View
-            style={[
-              styles.infoCell,
-              styles.infoTile,
-              styles.countdownCell,
-              {
-                backgroundColor: colors.glassFill,
-                borderColor: countdownTone?.border ?? colors.goldBorder,
-              },
-            ]}
-          >
-            <Text style={[styles.infoLabel, { color: colors.textMuted }]}>
-              {expired ? t('dashboard.browse.ends') : 'Ends in'}
-            </Text>
-            <Text
-              style={[
-                styles.infoValue,
-                styles.countdownValue,
-                {
-                  color: expired ? colors.textMuted : urgency === 'critical' ? colors.danger.fg : colors.cream,
-                },
-              ]}
-            >
-              {countdownLabel}
-            </Text>
-            <Text
-              style={[
-                Typography.caption,
-                styles.countdownSupport,
-                { color: expired ? colors.textMuted : urgency === 'critical' ? colors.danger.fg : colors.textSecondary },
-              ]}
-            >
-              {accentLabel}
-            </Text>
-          </View>
-          <InfoCell
-            label={t('auction.participation.documentFee')}
-            value={formatEtbAmount(Number(auction.documentFee ?? 0))}
-            colors={colors}
-          />
-          <InfoCell
-            label={t('auction.participation.lots')}
-            value={String(auction?.lotCount ?? lots.length)}
-            colors={colors}
-            align="right"
-          />
-        </View>
-      </GlassCard>
+      <View style={[styles.infoStrip, { borderColor: colors.goldBorder, backgroundColor: colors.glassFill }]}>
+        <InfoCell label={t('dashboard.browse.category')} value={categoryLabel} colors={colors} />
+        <View style={[styles.infoDivider, { backgroundColor: colors.divider }]} />
+        <InfoCell
+          label={expired ? t('dashboard.browse.ends') : 'Ends in'}
+          value={countdownLabel}
+          colors={colors}
+          valueColor={expired ? colors.textMuted : urgency === 'critical' ? colors.danger.fg : colors.cream}
+          align="center"
+        />
+        <View style={[styles.infoDivider, { backgroundColor: colors.divider }]} />
+        <InfoCell
+          label={t('auction.participation.documentFee')}
+          value={formatEtbAmount(Number(auction.documentFee ?? 0))}
+          colors={colors}
+          align="right"
+        />
+      </View>
 
-      <GlassCard padding={16} style={styles.infoCard}>
+      <View style={styles.descriptionBlock}>
         <Text style={[styles.sectionTitle, { color: colors.goldChampagne }]}>
           {t('dashboard.browse.description')}
         </Text>
         <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
           {auctionDescription}
         </Text>
-      </GlassCard>
+      </View>
 
       {showParticipationOverview ? (
         <LotParticipationOverview rows={participationRows} onlyActiveLots compact />
       ) : null}
 
-      <GlassCard padding={16}>
-        <Text style={[styles.sectionTitle, { color: colors.goldChampagne, marginBottom: 12 }]}>
-          {t('auction.participation.actions')}
-        </Text>
-        <Text style={[styles.actionsIntro, { color: colors.textSecondary }]}>
-          {showParticipationOverview
-            ? 'Review your participation or jump back into bidding.'
-            : 'Unlock documents, inspect the lot pack, and place your bids when you are ready.'}
+      {isAuctionOwner && ownerLots.length > 0 ? (
+        <OwnerAuctionOverview
+          lots={ownerLots}
+          documentFee={participation?.ownerOverview?.documentFee ?? auction.documentFee}
+          totalBidCount={participation?.ownerOverview?.totalBidCount ?? auction.bidCount}
+        />
+      ) : null}
+
+      <View style={styles.actionsBlock}>
+        <Text style={[styles.sectionTitle, { color: colors.goldChampagne, marginBottom: 8 }]}>
+          {isAuctionOwner ? t('auction.owner.actionsTitle') : t('auction.participation.actions')}
         </Text>
         <View style={styles.actions}>
-          {showBuyDoc ? (
+          {!isAuctionOwner && showBuyDoc ? (
             <LockedActionButton
               label={t('auction.participation.buyDoc')}
               locked={false}
@@ -309,7 +289,7 @@ export default function AuctionDetailScreen() {
               icon="file-document-plus-outline"
               helperText="Unlock auction docs"
             />
-          ) : paymentStatus === 'pending' ? (
+          ) : !isAuctionOwner && paymentStatus === 'pending' ? (
             <LockedActionButton
               label={t('auction.participation.docUnderReview')}
               locked
@@ -324,33 +304,35 @@ export default function AuctionDetailScreen() {
 
           <LockedActionButton
             label={t('auction.participation.viewDoc')}
-            locked={viewDocLocked}
-            disabled={viewDocLocked}
-            lockedHint={viewDocHint}
+            locked={!isAuctionOwner && viewDocLocked}
+            disabled={!isAuctionOwner && viewDocLocked}
+            lockedHint={isAuctionOwner ? undefined : viewDocHint}
             onPress={() => {
               void handleViewDocument();
             }}
             variant="primary"
             icon="eye-outline"
-            helperText="Preview documents"
+            helperText={isAuctionOwner ? t('auction.owner.viewDocsHelper') : 'Preview documents'}
           />
 
-          <LockedActionButton
-            label={
-              showParticipationOverview
-                ? t('auction.participation.viewYourBids')
-                : t('auction.participation.placeBids')
-            }
-            locked={bidLocked}
-            disabled={bidLocked}
-            lockedHint={bidHint}
-            onPress={() => handleParticipationAction(`/auction/${id}/bid`)}
-            variant="primary"
-            icon="gavel"
-            helperText="Join the auction"
-          />
+          {!isAuctionOwner ? (
+            <LockedActionButton
+              label={
+                showParticipationOverview
+                  ? t('auction.participation.viewYourBids')
+                  : t('auction.participation.placeBids')
+              }
+              locked={bidLocked}
+              disabled={bidLocked}
+              lockedHint={bidHint}
+              onPress={() => handleParticipationAction(`/auction/${id}/bid`)}
+              variant="primary"
+              icon="gavel"
+              helperText="Join the auction"
+            />
+          ) : null}
         </View>
-      </GlassCard>
+      </View>
 
       <KycRequiredModal
         visible={kycModalVisible}
@@ -374,25 +356,18 @@ function InfoCell({
   label: string;
   value: string;
   colors: ReturnType<typeof useTheme>['colors'];
-  align?: 'left' | 'right';
+  align?: 'left' | 'center' | 'right';
   valueColor?: string;
 }) {
   return (
     <View
       style={[
         styles.infoCell,
-        styles.infoTile,
-        {
-          alignItems: align === 'right' ? 'flex-end' : 'flex-start',
-          backgroundColor: colors.glassFill,
-          borderColor: colors.goldBorder,
-        },
+        { alignItems: align === 'right' ? 'flex-end' : align === 'center' ? 'center' : 'flex-start' },
       ]}
     >
       <Text style={[styles.infoLabel, { color: colors.textMuted }]}>{label}</Text>
-      <Text style={[styles.infoValue, styles.countdownValue, { color: valueColor ?? colors.cream }]}>
-        {value}
-      </Text>
+      <Text style={[styles.infoValue, { color: valueColor ?? colors.cream }]}>{value}</Text>
     </View>
   );
 }
@@ -406,69 +381,68 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     position: 'relative',
   },
-  heroBottom: {
+  heroOverlay: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
+    top: 12,
+    left: 12,
+    zIndex: 2,
   },
   statusChip: {
-    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    borderColor: 'rgba(255,250,240,0.24)',
+  },
+  statusLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: '#FFFAF0',
   },
   statusDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
   },
-  infoCard: {
-    marginBottom: 14,
-  },
-  infoGrid: {
+  infoStrip: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+  },
+  infoDivider: {
+    width: 1,
+    height: 32,
+    marginHorizontal: 8,
   },
   infoCell: {
-    width: '47%',
-    gap: 4,
-  },
-  infoTile: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 12,
-    minHeight: 82,
-    justifyContent: 'center',
-  },
-  countdownCell: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
+    flex: 1,
+    gap: 3,
   },
   infoLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.1,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   infoValue: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
-    letterSpacing: 0.2,
-  },
-  countdownValue: {
     fontVariant: ['tabular-nums'],
-    textAlign: 'right',
+    letterSpacing: 0.1,
   },
-  countdownSupport: {
-    marginTop: 2,
-    textAlign: 'right',
+  descriptionBlock: {
+    marginBottom: 16,
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 11,
@@ -483,12 +457,10 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     letterSpacing: 0.2,
   },
-  actions: {
-    gap: 14,
+  actionsBlock: {
+    marginTop: 4,
   },
-  actionsIntro: {
-    fontSize: 13,
-    lineHeight: 20,
-    marginBottom: 14,
+  actions: {
+    gap: 12,
   },
 });

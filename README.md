@@ -1,6 +1,30 @@
 # enderass-auction-system
 The purpose of this system is to digitize and manage the core auction lifecycle for Enderass National PLC through a web application and mobile applications.
 
+## Project Status
+
+The platform is actively under development and consists of four deployable clients sharing a single Express/Sequelize backend:
+
+| Client | Stack | Status | Key capabilities |
+|--------|-------|--------|------------------|
+| **Backend** (`backend/`) | Node.js · Express · Sequelize/MySQL | ✅ Core complete | Auth & RBAC, auctions/lots/assets, bidding & bid drafts, evaluations, KYC, payments (AddisPay), CPO, staff, notifications, audit log, winners, dashboard, public landing, file uploads, i18n (en/am) |
+| **Bidder Web** (`frontend/`) | Vite · React | ✅ Active | Auth, dashboard, browse/participate auctions, asset requests, bid management, KYC, CPO, payments, notifications, public landing, EN/AM i18n |
+| **Admin Web** (`admin/`) | Vite · React | ✅ Active | Role workspaces, users & staff-roles, auctions, assets, evaluations, bids, KYC review, payments, CPO, winners, audit, analytics/reporting, settings, notifications |
+| **Mobile** (`mobile/`) | Expo SDK 56 · React Native · expo-router | ✅ Active | Auth + OTP, onboarding, dashboard, browse/auction detail, bidding, asset submission, KYC, bids, profile, EN/AM i18n, golden glassmorphism design system |
+
+### Implemented backend domains
+Auth & JWT, RBAC policy engine (+ Redis caching), users/staff/roles, auctions → lots → assets (hierarchical), evaluations, bids & bid drafts (auto-close job), KYC, payments (AddisPay integration), CPO & CPO payments, winners, notifications, audit logging, system settings, public landing, document/file storage (local + pluggable provider).
+
+### Database
+MySQL/MariaDB via Sequelize with 3 migrations (initial schema, baseline roles/settings, bid drafts) and a unified DB CLI for baseline + test seeding (auction catalog, operational staff, test users).
+
+### Recent milestones
+- Bidder flow & multi-asset-per-lot implemented across backend, web, and mobile.
+- Admin wired to the new backend auth; conflict-of-interest enforcement added.
+- Profile pictures and improved seed data.
+- UI polish and performance improvements on both web clients.
+
+> See `changelog.md` for the running change log.
 
 Project Technical Architecture & Environment Rules
 
@@ -119,7 +143,7 @@ Prerequisites: Node.js 20+, MySQL/MariaDB, Redis.
 cd backend
 cp .env.example .env   # set DB_*, JWT_ACCESS_SECRET, REDIS_URL, etc.
 npm install
-npm run db:setup:test  # migrate + seed full local test data
+npm run db:test           # migrate + seed full local test data
 npm run dev
 ```
 
@@ -127,20 +151,19 @@ API base URL defaults to `http://localhost:3000/api` (see `API_BASE_URL` in `.en
 
 ### Database migrations
 
-Migrations live in `backend/migrations/` and are applied with Sequelize CLI via the DB command wrapper:
+Migrations live in `backend/migrations/` and are applied with the Sequelize CLI via the unified DB command wrapper (`backend/scripts/db/cli.mjs`):
 
 | Migration | Purpose |
 |-----------|---------|
 | `001_initial_schema.cjs` | Full schema (all core tables) |
 | `002_seed_roles_and_settings.cjs` | Baseline roles, production super-admin, system settings |
-| `003_bid_drafts.cjs` | `bid_drafts` table and related schema updates |
 
 ```bash
-npm run db:migrate          # apply pending migrations
-npm run db:migrate:undo     # roll back the last migration
+npm run db -- migrate         # apply pending migrations
+npm run db -- reset           # drop all tables, migrate, then seed (destructive)
 ```
 
-The server does **not** auto-migrate on startup; run migrations explicitly before starting.
+The server does **not** auto-migrate on startup; run migrations explicitly before starting. (There is no `migrate:undo` shortcut script — use `npx sequelize-cli db:migrate:undo` if you need to roll back.)
 
 ### Database seeding (unified CLI)
 
@@ -151,16 +174,16 @@ All seeding is handled by `backend/scripts/db/cli.mjs`. Two modes:
 
 | Command | Description |
 |---------|-------------|
-| `npm run db:setup:test` | Migrate, then seed full test data (recommended for new dev DBs) |
-| `npm run db:setup:normal` | Migrate, then seed baseline only |
-| `npm run db:seed:test` | Seed test data on an already-migrated database |
-| `npm run db:seed:normal` | Seed baseline only |
-| `npm run db:reseed:test` | Purge test seed data, then re-seed test |
-| `npm run db:reseed:normal` | Purge test seed data, then re-apply baseline |
-| `npm run db:reset:test` | Undo all migrations, migrate, seed test (destructive) |
-| `npm run db:seed:auctions` | Seed only the auction catalog (requires test users) |
+| `npm run db:test` | Migrate, then seed full test data (recommended for new dev DBs) |
+| `npm run db:setup` | Migrate, then seed baseline only |
+| `npm run db:test:reseed` | Purge test seed data, then re-seed test |
+| `npm run db:setup:reseed` | Purge test seed data, then re-apply baseline |
 
 Generic form: `npm run db -- <command> [normal|test] [--only=users,staff,auctions]`
+
+* `npm run db -- setup test` — migrate + seed full test data
+* `npm run db -- seed test --only=auctions` — seed only the auction catalog (requires test users)
+* `npm run db -- reset test` — drop all tables, migrate, seed test (destructive)
 
 Test seed includes:
 
@@ -168,7 +191,7 @@ Test seed includes:
 * 6 test user accounts (admin, bidder, 4 operational staff)
 * 4 published multi-lot auctions, 12 assets, 12 evaluations
 
-#### Local test credentials (after `db:setup:test` or `db:reseed:test`)
+#### Local test credentials (after `npm run db:test` or `npm run db:test:reseed`)
 
 | Role | Mobile | Password |
 |------|--------|----------|
@@ -184,10 +207,11 @@ Production super-admin (from migration baseline): `+251900000000` — password h
 ### Backend scripts
 
 ```bash
-npm run dev                  # start with --watch
+npm run dev                  # start with --watch (node --env-file=.env server.js)
 npm run start                # production start
 npm run test                 # RBAC policy unit tests
 npm run test:auction-flow    # integration smoke test (requires seeded DB)
+npm run db -- <command>      # unified migrate/seed/reset CLI
 ```
 
 Integration test scripts live in `backend/scripts/` (e.g. `run-auction-flow-test.mjs`, `run-bidder-e2e.mjs`).
@@ -203,7 +227,6 @@ backend/
 ├── migrations/
 │   ├── 001_initial_schema.cjs
 │   ├── 002_seed_roles_and_settings.cjs
-│   ├── 003_bid_drafts.cjs
 │   └── data/role-permissions.cjs
 ├── scripts/
 │   ├── db/                    # unified migrate/seed CLI

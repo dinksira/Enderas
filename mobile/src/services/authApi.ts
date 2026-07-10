@@ -35,6 +35,7 @@ export interface AuthMeIdentity {
   lastName?: string | null;
   organizationName?: string | null;
   preferredLanguage?: string | null;
+  profilePicture?: string | null;
   isStaff: boolean;
 }
 
@@ -54,6 +55,7 @@ export interface UpdateProfilePayload {
   lastName?: string;
   organizationName?: string;
   preferredLanguage?: 'en' | 'am';
+  profilePicture?: string | null;
 }
 
 export interface PasswordResetRequestResponse {

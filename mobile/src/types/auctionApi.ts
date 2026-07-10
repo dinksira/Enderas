@@ -8,7 +8,8 @@ export type ParticipationStatus =
   | 'ready_to_bid'
   | 'bidding_waiting'
   | 'bidding_closed'
-  | 'bid_submitted';
+  | 'bid_submitted'
+  | 'owner_monitoring';
 
 export type ReviewStatus = 'pending' | 'approved' | 'rejected';
 
@@ -43,6 +44,36 @@ export interface AuctionDocumentApi {
   size?: number;
 }
 
+export interface OwnerLotOverviewApi {
+  id: string;
+  lotId?: string | null;
+  lotTitle?: string | null;
+  assetId?: string;
+  assetTitle?: string | null;
+  assetType?: string | null;
+  assetLocation?: string | null;
+  reservePrice: number;
+  bidCount: number;
+  imageUrls?: string[];
+  tags?: string[];
+}
+
+export interface AuctionOwnerOverviewApi {
+  auctionId: string;
+  isAuctionOwner: boolean;
+  summary: {
+    assetCount: number;
+    lotCount: number;
+    totalBidCount: number;
+    documentFee: number;
+    reservePrice: number;
+    totalReservePrice?: number | null;
+  };
+  lots: OwnerLotOverviewApi[];
+  documents: AuctionDocumentApi[];
+  auction?: BrowseAuctionApi;
+}
+
 export interface BrowseAuctionApi {
   id: string;
   title: string;
@@ -63,6 +94,8 @@ export interface BrowseAuctionApi {
   assetCount?: number;
   documents?: AuctionDocumentApi[];
   documentAccess?: boolean;
+  isAuctionOwner?: boolean;
+  ownerId?: string | null;
   myParticipation?: {
     participationStatus: ParticipationStatus;
     isRegisteredBidder?: boolean;
@@ -97,7 +130,16 @@ export interface AuctionParticipationApi {
   auctionId: string;
   participationStatus: ParticipationStatus;
   isRegisteredBidder: boolean;
+  isAuctionOwner?: boolean;
   isMultiLot: boolean;
+  ownerOverview?: {
+    lots: OwnerLotOverviewApi[];
+    totalBidCount: number;
+    documents: AuctionDocumentApi[];
+    documentFee: number;
+    reservePrice: number;
+    totalReservePrice?: number | null;
+  };
   requiredCpoAmountPreview?: number | null;
   payment: {
     id: string;
@@ -136,6 +178,8 @@ export interface AuctionParticipationApi {
     biddingWindowStatus?: string;
     paymentPending: boolean;
     cpoPending: boolean;
+    isAuctionOwner?: boolean;
+    biddingBlockedReason?: string | null;
   };
   flags: {
     paymentApproved: boolean;
@@ -145,6 +189,7 @@ export interface AuctionParticipationApi {
     hasBid: boolean;
     allBidsSubmitted: boolean;
     pendingLotCount: number;
+    isAuctionOwner?: boolean;
   };
 }
 

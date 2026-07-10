@@ -237,6 +237,20 @@
     }
   },
   "auction": {
+    "owner": {
+      "overviewTitle": "የጨረታ ክትትል",
+      "overviewSubtitle": "{{totalBids}} የታሸጉ ቅናሾች ተቀብለዋል · የሰነድ ክፍያ {{documentFee}}",
+      "reserve": "ዝቅተኛ ዋጋ",
+      "bidCount": "ቅናሾች",
+      "unnamedLot": "የጨረታ ንብረት",
+      "bannerTitle": "ይህ ጨረታ የእርስዎ ነው",
+      "bannerBody": "ንብረቶችን፣ ሰነዶችን፣ ዝቅተኛ ዋጋዎችን እና የቅናሽ ብዛትን ይከታተሉ። የቅናሽ መጠኖች የታሸጉ ናቸው።",
+      "actionsTitle": "የባለቤት መሳሪያዎች",
+      "actionsIntro": "የጨረታ ሰነዶችን ይመልከቱ እና በንብረቶችዎ ላይ የታሸጉ ቅናሾችን ይከታተሉ።",
+      "viewDocsHelper": "የጨረታ ሰነዶች",
+      "myAuctionsTitle": "የእኔ ቀጣይ ጨረታዎች",
+      "myAuctionsSubtitle": "ንብረቶችዎን የያዙ ጨረታዎችን ይከታተሉ።"
+    },
     "participation": {
       "actions": "ተሳትፎ",
       "buyDoc": "የጨረታ ሰነድ ይግዙ",
@@ -289,6 +303,10 @@
       "selectedLots": "የተመረጡ ዕቃዎች",
       "totalBidAmount": "ጠቅላላ የጨረታ መጠን",
       "cpoAmount": "CPO ({{percent}}% ከጨረታዎ)",
+      "cpoShort": "CPO {{percent}}%",
+      "locked": "ተቆልፏል",
+      "summaryLotsSelected": "{{count}} ከ {{total}} ዕቃዎች ተመርጠዋል",
+      "summaryNoLots": "ለመጫራት ዕቃዎችን ይምረጡ",
       "selectLotsHint": "ዕቃዎችን ይምረጡ እና ጨረታ ያስገቡ። ጨረታ ከዝቅተኛ ዋጋ በላይ መሆን አለበት።",
       "bidsLockedHint": "CPO ክፍያዎ በግምገማ ላይ ስላለ ጨረታዎ ተቆልፏል።",
       "reserve": "ዝቅተኛ ዋጋ",
@@ -574,7 +592,10 @@
     },
     "editProfileScreen": {
       "photoHint": "የመገለጫ ፎቶ",
-      "photoSub": "የመገለጫ ፎቶ ማስገባት በቅርቡ ይመጣል",
+      "photoSub": "የመገለጫ ፎቶዎን ለመቀየር ይንኩ",
+      "changePhoto": "ፎቶ ቀይር",
+      "removePhoto": "ፎቶ አስወግድ",
+      "uploadingPhoto": "ፎቶ በመጫን ላይ…",
       "personalInfo": "የግል መረጃ",
       "fullName": "ሙሉ ስም",
       "fullNamePlaceholder": "ሙሉ ስምዎን ያስገቡ",
@@ -591,7 +612,8 @@
         "invalidEmail": "ትክክለኛ የኢሜይል አድራሻ ያስገቡ።",
         "fullNameRequired": "ሙሉ ስም ያስፈልጋል።",
         "organizationRequired": "የድርጅት ስም ያስፈልጋል።",
-        "saveFailed": "መገለጫ ማስቀመጥ አልተቻለም። እንደገና ይሞክሩ።"
+        "saveFailed": "መገለጫ ማስቀመጥ አልተቻለም። እንደገና ይሞክሩ።",
+        "photoUploadFailed": "ፎቶ ማስገባት አልተቻለም። እንደገና ይሞክሩ።"
       }
     },
     "helpScreen": {

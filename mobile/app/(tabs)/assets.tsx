@@ -19,6 +19,7 @@ import { useTheme } from '@/lib/appStore';
 import { isKycVerified } from '@/lib/auth-utils';
 import { useAuthStore, useIsAuthenticated } from '@/lib/authStore';
 import { useMyAssets } from '@/hooks/useMyAssets';
+import { useOwnedAuctions } from '@/hooks/useOwnedAuctions';
 import { Typography, Spacing } from '@/theme';
 
 export default function AssetsScreen() {
@@ -45,6 +46,11 @@ function AuthenticatedAssetsScreen() {
   const { colors } = useTheme();
   const user = useAuthStore((s) => s.user);
   const { assets, loading, refreshing, error, refresh } = useMyAssets();
+  const {
+    auctions: ownedAuctions,
+    loading: ownedLoading,
+    refresh: refreshOwnedAuctions,
+  } = useOwnedAuctions();
   const [showKycModal, setShowKycModal] = useState(false);
 
   const handleAddAsset = () => {
@@ -68,6 +74,34 @@ function AuthenticatedAssetsScreen() {
         {t('assets.subtitle')}
       </Text>
       <GoldButton label={t('assets.addAsset')} onPress={handleAddAsset} />
+
+      {!ownedLoading && ownedAuctions.length > 0 ? (
+        <View style={[styles.ownedSection, { borderColor: colors.goldBorder, backgroundColor: colors.glassFill }]}>
+          <Text style={[styles.ownedTitle, { color: colors.goldChampagne }]}>
+            {t('auction.owner.myAuctionsTitle')}
+          </Text>
+          <Text style={[Typography.caption, { color: colors.textSecondary, marginBottom: 10 }]}>
+            {t('auction.owner.myAuctionsSubtitle')}
+          </Text>
+          {ownedAuctions.map((ownedAuction) => (
+            <Pressable
+              key={ownedAuction.id}
+              onPress={() => router.push(`/auction/${ownedAuction.id}` as any)}
+              style={[styles.ownedRow, { borderColor: colors.goldBorder }]}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '700' }]}>
+                  {ownedAuction.title}
+                </Text>
+                <Text style={[Typography.caption, { color: colors.textMuted }]}>
+                  {ownedAuction.bidCount ?? 0} {t('auction.owner.bidCount').toLowerCase()}
+                </Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={22} color={colors.goldBright} />
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 
@@ -85,7 +119,10 @@ function AuthenticatedAssetsScreen() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshing={refreshing}
-        onRefresh={refresh}
+        onRefresh={() => {
+          void refresh();
+          void refreshOwnedAuctions();
+        }}
         ListEmptyComponent={
           loading ? (
             <View style={styles.skeletonCol}>
@@ -141,6 +178,27 @@ const styles = StyleSheet.create({
   headerBlock: {
     gap: Spacing.sm2,
     marginBottom: Spacing.md,
+  },
+  ownedSection: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginTop: Spacing.sm2,
+  },
+  ownedTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  ownedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderTopWidth: 1,
+    paddingTop: 10,
+    marginTop: 10,
   },
   separator: {
     height: Spacing.sm2,

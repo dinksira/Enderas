@@ -18,6 +18,7 @@ import {
   USER_STATUSES,
   LOGIN_ALLOWED_STATUSES,
 } from '../../services/kyc.service.js';
+import { resolvePublicUploadUrl } from '../../utils/media-url.util.js';
 const IDENTITY_AGGREGATION_SQL = `
   SELECT
     u.id AS user_id,
@@ -28,6 +29,7 @@ const IDENTITY_AGGREGATION_SQL = `
     u.first_name,
     u.last_name,
     u.organization_name,
+    u.profile_picture,
     u.preferred_language,
     u.is_mobile_verified,
     u.is_email_verified,
@@ -97,6 +99,7 @@ function mapIdentityRow(row) {
       firstName: row.first_name,
       lastName: row.last_name,
       organizationName: row.organization_name,
+      profilePicture: resolvePublicUploadUrl(row.profile_picture) ?? null,
       preferredLanguage: row.preferred_language,
       isMobileVerified: Boolean(row.is_mobile_verified),
       isEmailVerified: Boolean(row.is_email_verified),
@@ -158,6 +161,7 @@ function buildSessionUserPayload(permissions) {
     department: permissions.department,
     isStaff: permissions.isStaff,
     displayName: permissions.displayName,
+    profilePicture: permissions.profilePicture ?? null,
     mobileNumber: permissions.mobileNumber,
     email: permissions.email,
     status: permissions.userStatus,
@@ -182,6 +186,7 @@ function buildIdentityPayloadFromPermissions(permissions) {
     mobileNumber: permissions.mobileNumber,
     email: permissions.email,
     displayName: permissions.displayName,
+    profilePicture: permissions.profilePicture ?? null,
     preferredLanguage: permissions.preferredLanguage,
     isMobileVerified: permissions.isMobileVerified,
     status: permissions.userStatus,

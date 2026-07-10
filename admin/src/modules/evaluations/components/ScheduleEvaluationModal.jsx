@@ -64,9 +64,9 @@ export function ScheduleEvaluationModal({
       .listStaff({ isActive: true, limit: 100 })
       .then((response) => {
         if (cancelled) return;
-        const staff = response?.staff ?? [];
+        const staff = response?.staff ?? response?.items ?? [];
         setEvaluators(
-          staff.filter((member) => member.role?.code === 'evaluation_officer'),
+          staff.filter((member) => member.roleCode === 'evaluation_officer'),
         );
       })
       .catch(() => {

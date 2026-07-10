@@ -38,6 +38,10 @@ export const Auction = sequelize.define(
       type: DataTypes.CHAR(36),
       allowNull: false,
     },
+    owner_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: true,
+    },
     title: {
       type: DataTypes.STRING(255),
       allowNull: false,

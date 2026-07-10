@@ -5,6 +5,7 @@ import { normalizeRolePermissions } from '../schemas/permission.schema.js';
 import { L1Cache } from '../utils/l1-cache.util.js';
 import { withRedis } from '../utils/redis-safe.util.js';
 import { UnauthorizedError, AppError, buildRoleCacheVersion } from '../utils/error.util.js';
+import { resolvePublicUploadUrl } from '../utils/media-url.util.js';
 
 const USER_PERMISSIONS_SQL = `
   SELECT
@@ -16,6 +17,7 @@ const USER_PERMISSIONS_SQL = `
     u.first_name,
     u.last_name,
     u.organization_name,
+    u.profile_picture,
     u.preferred_language,
     u.is_mobile_verified,
     u.is_email_verified,
@@ -131,6 +133,7 @@ function mapUserPermissionRecord(row) {
     firstName: row.first_name ?? null,
     lastName: row.last_name ?? null,
     organizationName: row.organization_name ?? null,
+    profilePicture: resolvePublicUploadUrl(row.profile_picture) ?? null,
     displayName: buildDisplayName(row),
     preferredLanguage: row.preferred_language,
     isMobileVerified: Boolean(row.is_mobile_verified),

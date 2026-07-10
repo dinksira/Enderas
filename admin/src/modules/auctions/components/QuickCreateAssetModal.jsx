@@ -13,6 +13,14 @@ const ASSET_TYPE_KEYS = [
   'other',
 ];
 
+function getUserLabel(user) {
+  return user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.mobileNumber || user.id;
+}
+
+function getUserMobile(user) {
+  return user.mobileNumber || user.mobile_number || '';
+}
+
 export function QuickCreateAssetModal({ open, onClose, onSuccess }) {
   const { t } = useTranslation();
 
@@ -48,7 +56,7 @@ export function QuickCreateAssetModal({ open, onClose, onSuccess }) {
       setSearchingUsers(true);
       try {
         const resp = await userService.listUsers({ search: userSearch, tab: 'active', limit: 10 });
-        setUserResults(resp?.users || []);
+        setUserResults(resp?.users ?? resp?.items ?? []);
       } catch (err) {
         // ignore
       } finally {
@@ -130,7 +138,7 @@ export function QuickCreateAssetModal({ open, onClose, onSuccess }) {
             <label className="input-field__label">{t('auction.create.assetOwner', 'Asset Owner')} *</label>
             {selectedUser ? (
               <div style={{ padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>{selectedUser.first_name} {selectedUser.last_name} ({selectedUser.mobile_number})</span>
+                <span>{getUserLabel(selectedUser)} ({getUserMobile(selectedUser)})</span>
                 <Button variant="secondary" onClick={() => setSelectedUser(null)} disabled={loading} style={{ padding: '4px 8px', fontSize: '12px' }}>
                   {t('common.change', 'Change')}
                 </Button>
@@ -155,7 +163,7 @@ export function QuickCreateAssetModal({ open, onClose, onSuccess }) {
                         style={{ padding: '10px 12px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }}
                         onClick={() => { setSelectedUser(u); setUserSearch(''); setUserResults([]); }}
                       >
-                        <strong>{u.first_name} {u.last_name}</strong> - {u.mobile_number}
+                        <strong>{getUserLabel(u)}</strong> - {getUserMobile(u)}
                       </div>
                     ))}
                   </div>

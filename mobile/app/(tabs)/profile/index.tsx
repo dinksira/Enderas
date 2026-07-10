@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 
 import { AuthRequired } from '@/components/auth';
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { useAuthStore, useIsAuthenticated } from '@/lib/authStore';
 import { useTheme } from '@/lib/appStore';
 import { getKycProfileStatus, type KycProfileStatus } from '@/lib/auth-utils';
@@ -123,16 +123,11 @@ function AuthenticatedProfile() {
       <GlassCard padding={Spacing.md2}>
         <View style={styles.profileHead}>
           <View style={styles.avatarWrap}>
-            <LinearGradient
-              colors={[colors.gold, colors.goldDeep]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.avatar}
-            >
-              <Text style={[Typography.statValue, { color: colors.textOnGold, fontSize: 26, fontWeight: '900' }]}>
-                {initials}
-              </Text>
-            </LinearGradient>
+            <ProfileAvatar
+              profilePicture={user?.profilePicture}
+              initials={initials}
+              size={72}
+            />
             {kyc ? (
               <View
                 style={[
@@ -266,13 +261,6 @@ const styles = StyleSheet.create({
   },
   avatarWrap: {
     position: 'relative',
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   avatarBadge: {
     position: 'absolute',
