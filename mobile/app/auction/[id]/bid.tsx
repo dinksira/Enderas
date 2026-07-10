@@ -5,9 +5,14 @@ import { useTranslation } from 'react-i18next';
 
 import { GoldButton } from '@/components/auth';
 import { AuctionAssetDetailModal } from '@/components/auction/AuctionAssetDetailModal';
+import { BidEntrySheet } from '@/components/auction/BidEntrySheet';
+import { BidFlowStepper, type BidFlowStep } from '@/components/auction/BidFlowStepper';
+import { BidGuideCard } from '@/components/auction/BidGuideCard';
 import { BidSummaryBar } from '@/components/auction/BidSummaryBar';
+import { CpoReadinessSheet } from '@/components/auction/CpoReadinessSheet';
 import { CpoUploadModal } from '@/components/auction/CpoUploadModal';
 import { LotBidCard } from '@/components/auction/LotBidCard';
+import { LotCategoryHeader } from '@/components/auction/LotCategoryHeader';
 import { LotParticipationOverview } from '@/components/auction/LotParticipationOverview';
 import { ParticipationStatusBanner } from '@/components/auction/ParticipationStatusBanner';
 import { KycRequiredModal } from '@/components/kyc/KycRequiredModal';
@@ -18,6 +23,7 @@ import { useAuctionParticipation } from '@/hooks/useAuctionParticipation';
 import { formatLotOrderLabel, mapAuctionAssetForDisplay } from '@/lib/auctionAssetUtils';
 import { validateLotBid, getLotBidFeedback } from '@/lib/auctionParticipationUtils';
 import { computeRequiredCpoFromBidAmounts } from '@/lib/auctionLotUtils';
+import { buildCpoReadinessItems, isCpoUploadReady } from '@/lib/cpoReadinessUtils';
 import {
   buildLotParticipationRows,
   shouldShowLotParticipationOverview,
@@ -33,7 +39,8 @@ import type { AuctionLot } from '@/types/auctionParticipation';
 const BID_SAVE_DEBOUNCE_MS = 600;
 
 type LotSection = {
-  title: string;
+  lotLabel: string;
+  lotTitle?: string | null;
   lotId: string;
   data: AuctionAssetApi[];
 };
@@ -58,10 +65,11 @@ export default function AuctionBidScreen() {
   } = useAuctionParticipation(auctionId);
   const { isAuthenticated } = useAuctionActionGate();
   const [cpoModalVisible, setCpoModalVisible] = useState(false);
+  const [cpoReadinessVisible, setCpoReadinessVisible] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const [submittingCpo, setSubmittingCpo] = useState(false);
   const [lotBids, setLotBids] = useState<Record<string, string>>({});
-  const [focusLotId, setFocusLotId] = useState<string | null>(null);
+  const [bidSheetAsset, setBidSheetAsset] = useState<AuctionLot | null>(null);
   const [detailAsset, setDetailAsset] = useState<AuctionLot | null>(null);
   const hydratedDraftIdsRef = useRef<Set<string>>(new Set());
   const saveTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -151,16 +159,6 @@ export default function AuctionBidScreen() {
     };
   }, [auction, auctionAssets, lotBids, participation, selectedLotIds]);
 
-  const bidErrors = useMemo(() => {
-    const errors: Record<string, string | null> = {};
-    for (const lot of auctionAssets) {
-      if (!selectedLotIds.includes(lot.id)) continue;
-      errors[lot.id] = validateLotBid(parseBidAmount(lotBids[lot.id] ?? ''), mapAuctionAssetForDisplay(lot));
-    }
-    return errors;
-  }, [lotBids, auctionAssets, selectedLotIds]);
-
-  const hasBidErrors = Object.values(bidErrors).some(Boolean);
   const allSelectedLotsSaved = selectedLotIds.every((lotId) => {
     const lot = auctionAssets.find((item) => item.id === lotId);
     if (!lot) return false;
@@ -168,18 +166,44 @@ export default function AuctionBidScreen() {
     if (validateLotBid(amount, mapAuctionAssetForDisplay(lot)) !== null) return false;
     return selectedDrafts.some((draft) => draft.auctionAssetId === lotId && draft.amount === amount);
   });
-  const canUploadCpo =
-    canEdit && !locked && selectedLotIds.length > 0 && !hasBidErrors && allSelectedLotsSaved && summary.cpoAmount > 0;
+
+  const flowStep = useMemo((): BidFlowStep => {
+    if (selectedLotIds.length === 0) return 'select';
+    if (!allSelectedLotsSaved) return 'bid';
+    return 'submit';
+  }, [allSelectedLotsSaved, selectedLotIds.length]);
+
+  const bidSheetOpen = bidSheetAsset != null;
+
+  const cpoReadinessItems = useMemo(
+    () =>
+      buildCpoReadinessItems({
+        t,
+        auctionAssets,
+        selectedLotIds,
+        lotBids,
+        allSelectedLotsSaved,
+        cpoAmount: summary.cpoAmount,
+      }),
+    [allSelectedLotsSaved, auctionAssets, lotBids, selectedLotIds, summary.cpoAmount, t],
+  );
 
   const sections: LotSection[] = useMemo(
     () =>
       lots.map((lot: AuctionLotApi, lotIndex: number) => ({
-        title: `${formatLotOrderLabel(lotIndex)}${lot.title ? ` · ${lot.title}` : ''}`,
+        lotLabel: formatLotOrderLabel(lotIndex),
+        lotTitle: lot.title,
         lotId: lot.id,
         data: lot.assets ?? [],
       })),
     [lots],
   );
+
+  const openBidSheet = useCallback((assetId: string) => {
+    const raw = auctionAssets.find((item) => item.id === assetId);
+    if (!raw) return;
+    setBidSheetAsset(mapAuctionAssetForDisplay(raw));
+  }, [auctionAssets]);
 
   const persistBid = useCallback(
     async (lotId: string, text: string) => {
@@ -211,30 +235,6 @@ export default function AuctionBidScreen() {
     [auctionAssets, canEdit, clearLotSelection, locked, selectedDrafts, upsertLotBid],
   );
 
-  const handleToggleLot = async (lotId: string) => {
-    if (!canEdit || locked) return;
-    if (lotId in lotBids) {
-      const existing = selectedDrafts.find((draft) => draft.auctionAssetId === lotId);
-      const pending = saveTimersRef.current.get(lotId);
-      if (pending) {
-        clearTimeout(pending);
-        saveTimersRef.current.delete(lotId);
-      }
-      setFocusLotId(null);
-      setLotBids((prev) => {
-        const next = { ...prev };
-        delete next[lotId];
-        return next;
-      });
-      if (existing) {
-        await clearLotSelection(lotId, existing.id);
-      }
-      return;
-    }
-    setLotBids((prev) => ({ ...prev, [lotId]: '' }));
-    setFocusLotId(lotId);
-  };
-
   const handleBidChange = useCallback(
     (lotId: string, text: string) => {
       setLotBids((prev) => ({ ...prev, [lotId]: text }));
@@ -250,6 +250,78 @@ export default function AuctionBidScreen() {
     },
     [persistBid],
   );
+
+  const handleToggleLot = async (lotId: string) => {
+    if (!canEdit || locked) return;
+    if (lotId in lotBids) {
+      const existing = selectedDrafts.find((draft) => draft.auctionAssetId === lotId);
+      const pending = saveTimersRef.current.get(lotId);
+      if (pending) {
+        clearTimeout(pending);
+        saveTimersRef.current.delete(lotId);
+      }
+      if (bidSheetAsset?.id === lotId) {
+        setBidSheetAsset(null);
+      }
+      setLotBids((prev) => {
+        const next = { ...prev };
+        delete next[lotId];
+        return next;
+      });
+      if (existing) {
+        await clearLotSelection(lotId, existing.id);
+      }
+      return;
+    }
+    setLotBids((prev) => ({ ...prev, [lotId]: '' }));
+    openBidSheet(lotId);
+  };
+
+  const handlePressCard = (lotId: string) => {
+    if (!canEdit || locked) return;
+    if (lotId in lotBids) {
+      openBidSheet(lotId);
+      return;
+    }
+    void handleToggleLot(lotId);
+  };
+
+  const findNextIncompleteBidId = useCallback(
+    (afterId: string) => {
+      const startIdx = selectedLotIds.indexOf(afterId);
+      const order =
+        startIdx >= 0
+          ? [...selectedLotIds.slice(startIdx + 1), ...selectedLotIds.slice(0, startIdx + 1)]
+          : selectedLotIds;
+
+      for (const lotId of order) {
+        if (lotId === afterId) continue;
+        const lot = auctionAssets.find((item) => item.id === lotId);
+        if (!lot) continue;
+        const feedback = getLotBidFeedback(lotBids[lotId] ?? '', mapAuctionAssetForDisplay(lot));
+        if (feedback.kind !== 'valid') return lotId;
+      }
+      return null;
+    },
+    [auctionAssets, lotBids, selectedLotIds],
+  );
+
+  const handleSaveBidSheet = () => {
+    if (!bidSheetAsset) return;
+    void persistBid(bidSheetAsset.id, lotBids[bidSheetAsset.id] ?? '');
+    setBidSheetAsset(null);
+  };
+
+  const handleSaveAndNextBidSheet = () => {
+    if (!bidSheetAsset) return;
+    void persistBid(bidSheetAsset.id, lotBids[bidSheetAsset.id] ?? '');
+    const nextId = findNextIncompleteBidId(bidSheetAsset.id);
+    if (nextId) {
+      openBidSheet(nextId);
+    } else {
+      setBidSheetAsset(null);
+    }
+  };
 
   const handleUploadCpo = async (payload: { receiptUri: string; receiptName: string; mimeType?: string }) => {
     if (!auction || submittingCpo) return;
@@ -281,126 +353,121 @@ export default function AuctionBidScreen() {
     }
   };
 
-  const handleOpenCpoModal = () => {
+  const handleUploadCpoPress = () => {
     setShowErrors(true);
-    if (!canUploadCpo) return;
+    setCpoReadinessVisible(true);
+  };
+
+  const handleCpoReadinessContinue = () => {
+    setCpoReadinessVisible(false);
     setCpoModalVisible(true);
   };
 
   const renderSectionHeader = useCallback(
     ({ section }: { section: LotSection }) => (
-      <Text style={[Typography.caption, styles.sectionHeader, { color: colors.goldChampagne }]}>
-        {section.title}
-      </Text>
+      <LotCategoryHeader
+        lotLabel={section.lotLabel}
+        lotTitle={section.lotTitle}
+        itemCount={section.data.length}
+      />
     ),
-    [colors.goldChampagne],
+    [],
   );
 
   const renderItem = useCallback(
     ({ item }: { item: AuctionAssetApi }) => {
       const displayLot = mapAuctionAssetForDisplay(item);
       const selected = item.id in lotBids;
+      const bidText = lotBids[item.id] ?? '';
+      const bidAmount = parseBidAmount(bidText);
+      const feedback = getLotBidFeedback(bidText, displayLot, { forceShow: showErrors });
+
       return (
         <LotBidCard
           lot={displayLot}
           selected={selected}
-          bidText={lotBids[item.id] ?? ''}
+          bidAmount={bidAmount}
+          bidComplete={feedback.kind === 'valid'}
+          bidHasError={showErrors && feedback.kind === 'error'}
           locked={locked || !canEdit}
-          autoFocus={focusLotId === item.id}
-          feedback={getLotBidFeedback(lotBids[item.id] ?? '', displayLot, {
-            forceShow: showErrors,
-          })}
           onToggle={() => void handleToggleLot(item.id)}
+          onPress={() => handlePressCard(item.id)}
           onOpenDetail={() => setDetailAsset(displayLot)}
-          onBidChange={(text) => handleBidChange(item.id, text)}
-          onAutoFocusHandled={() => {
-            setFocusLotId((current) => (current === item.id ? null : current));
-          }}
         />
       );
     },
-    [canEdit, focusLotId, handleBidChange, locked, lotBids, showErrors],
+    [canEdit, locked, lotBids, showErrors],
   );
+
+  const statusBanner = useMemo(() => {
+    if (cpoRejected) {
+      return (
+        <ParticipationStatusBanner
+          tone="lost"
+          icon="close-circle-outline"
+          title={t('auction.participation.cpoRejectedTitle')}
+          message={participation?.cpo?.rejectionReason ?? t('auction.participation.cpoRejectedBody')}
+        />
+      );
+    }
+    if (cpoPending) {
+      return (
+        <ParticipationStatusBanner
+          tone="pending"
+          icon="shield-sync-outline"
+          title={t('auction.participation.cpoPendingTitle')}
+          message={t('auction.participation.cpoPendingBody')}
+        />
+      );
+    }
+    if (cpoApproved) {
+      return (
+        <ParticipationStatusBanner
+          tone="won"
+          icon="check-decagram-outline"
+          title={t('auction.participation.cpoApprovedTitle')}
+          message={t('auction.participation.cpoApprovedBody')}
+        />
+      );
+    }
+    return null;
+  }, [cpoApproved, cpoPending, cpoRejected, participation?.cpo?.rejectionReason, t]);
 
   const listHeader = useMemo(
     () => (
       <View style={styles.listHeader}>
-        {cpoPending ? (
-          <ParticipationStatusBanner
-            tone="pending"
-            icon="shield-sync-outline"
-            title={t('auction.participation.cpoPendingTitle')}
-            message={t('auction.participation.cpoPendingBodyDetailed')}
-          />
-        ) : null}
-
-        {cpoApproved ? (
-          <ParticipationStatusBanner
-            tone="won"
-            icon="check-decagram-outline"
-            title={t('auction.participation.cpoApprovedTitle')}
-            message={t('auction.participation.cpoApprovedBodyDetailed')}
-          />
-        ) : null}
-
-        {cpoRejected ? (
-          <ParticipationStatusBanner
-            tone="lost"
-            icon="close-circle-outline"
-            title={t('auction.participation.cpoRejectedTitle')}
-            message={participation?.cpo?.rejectionReason ?? t('auction.participation.cpoRejectedBody')}
-          />
-        ) : null}
-
+        {statusBanner}
         {showParticipationOverview ? (
           <LotParticipationOverview rows={participationRows} />
-        ) : null}
-
-        {!showParticipationOverview && auctionAssets.length > 0 ? (
-          <Text style={[Typography.body, { color: colors.textSecondary, marginBottom: 4 }]}>
-            {t('auction.participation.selectLotsHint')}
-          </Text>
-        ) : null}
-
-        {canEdit && !locked ? (
-          <GoldButton
-            label={submittingCpo ? t('common.submitting') : t('auction.participation.uploadCpo')}
-            onPress={handleOpenCpoModal}
-            disabled={!canUploadCpo || submittingCpo}
-          />
-        ) : null}
-
-        {cpoRejected && canEdit ? (
-          <GoldButton
-            label={t('auction.participation.reuploadCpo')}
-            onPress={() => setCpoModalVisible(true)}
-            variant="outline"
-          />
-        ) : null}
+        ) : (
+          <>
+            <BidFlowStepper
+              activeStep={flowStep}
+              selectedCount={summary.selectedLots.length}
+              totalItems={auctionAssets.length}
+            />
+            <Text style={[Typography.caption, { color: colors.textMuted }]} numberOfLines={1}>
+              {auction?.title}
+            </Text>
+            <BidGuideCard activeStep={flowStep} />
+            <Text style={[Typography.caption, { color: colors.textMuted }]}>
+              {flowStep === 'select'
+                ? t('auction.participation.browseItemsHint')
+                : flowStep === 'bid'
+                  ? t('auction.participation.flowSteps.bid.listHint')
+                  : t('auction.participation.flowSteps.submit.listHint')}
+            </Text>
+          </>
+        )}
       </View>
     ),
-    [
-      auctionAssets.length,
-      canEdit,
-      canUploadCpo,
-      colors.textSecondary,
-      cpoApproved,
-      cpoPending,
-      cpoRejected,
-      handleOpenCpoModal,
-      locked,
-      participation?.cpo?.rejectionReason,
-      participationRows,
-      showParticipationOverview,
-      submittingCpo,
-      t,
-    ],
+    [auction?.title, colors.textMuted, flowStep, participationRows, showParticipationOverview, statusBanner, summary.selectedLots.length, auctionAssets.length, t],
   );
 
-  const stickyFooter = auction ? (
+  const bidFooter = auction && !bidSheetOpen ? (
     <BidSummaryBar
       selectedCount={summary.selectedLots.length}
-      totalLots={auctionAssets.length}
+      totalItems={auctionAssets.length}
       totalBidAmount={summary.totalBidAmount}
       cpoAmount={summary.cpoAmount}
       cpoPercent={auction.cpoPercentage ?? 0}
@@ -408,8 +475,19 @@ export default function AuctionBidScreen() {
       showParticipation={showParticipationOverview}
       participationActiveCount={participationRows.filter((row) => row.status !== 'not_bidding').length}
       participationBidTotal={participationBidTotal}
+      uploadingCpo={submittingCpo}
+      onUploadCpo={canEdit && !locked ? handleUploadCpoPress : undefined}
+      showReuploadCpo={cpoRejected && canEdit}
+      onReuploadCpo={cpoRejected && canEdit ? () => setCpoModalVisible(true) : undefined}
     />
   ) : null;
+
+  const sheetBidText = bidSheetAsset ? lotBids[bidSheetAsset.id] ?? '' : '';
+  const sheetFeedback = bidSheetAsset
+    ? getLotBidFeedback(sheetBidText, bidSheetAsset, { forceShow: true })
+    : { kind: 'hint' as const };
+  const sheetPosition = bidSheetAsset ? selectedLotIds.indexOf(bidSheetAsset.id) + 1 : undefined;
+  const nextIncompleteId = bidSheetAsset ? findNextIncompleteBidId(bidSheetAsset.id) : null;
 
   if (!isAuthenticated) {
     return (
@@ -498,84 +576,110 @@ export default function AuctionBidScreen() {
   }
 
   return (
-    <ScreenShell
-      title={t('auction.participation.placeBids')}
-      pageTitle={auction.title}
-      showBack
-      onBack={() => router.back()}
-      keyboardAware
-      keyboardToolbar
-      keyboardToolbarArrows={false}
-      keyboardBottomOffset={16}
-      stickyFooter={stickyFooter}
-      scrollable={false}
-      noFade
-    >
-      {showParticipationOverview || auctionAssets.length === 0 ? (
-        <View style={styles.staticContent}>
-          {listHeader}
-          {auctionAssets.length === 0 ? (
-            <GlassCard padding={Spacing.lg}>
-              <Text style={[Typography.body, { color: colors.textSecondary }]}>
-                {t('auction.participation.noLots')}
-              </Text>
-            </GlassCard>
-          ) : null}
-        </View>
-      ) : (
-        <SectionList
-          sections={sections}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          renderSectionHeader={renderSectionHeader}
-          ListHeaderComponent={listHeader}
-          stickySectionHeadersEnabled
-          style={styles.sectionList}
-          contentContainerStyle={{ paddingBottom: 160 }}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          automaticallyAdjustKeyboardInsets
-          initialNumToRender={6}
-          maxToRenderPerBatch={4}
-          windowSize={7}
-          removeClippedSubviews
+    <View style={styles.screenHost}>
+      <ScreenShell
+        title={t('auction.participation.placeBids')}
+        showBack
+        onBack={() => router.back()}
+        scrollable={false}
+        stickyFooter={bidFooter}
+        noFade
+      >
+        {showParticipationOverview || auctionAssets.length === 0 ? (
+          <View style={styles.staticContent}>
+            {listHeader}
+            {auctionAssets.length === 0 ? (
+              <GlassCard padding={Spacing.lg}>
+                <Text style={[Typography.body, { color: colors.textSecondary }]}>
+                  {t('auction.participation.noItems')}
+                </Text>
+              </GlassCard>
+            ) : null}
+          </View>
+        ) : (
+          <SectionList
+            sections={sections}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            renderSectionHeader={renderSectionHeader}
+            ListHeaderComponent={listHeader}
+            stickySectionHeadersEnabled={false}
+            style={styles.sectionList}
+            contentContainerStyle={styles.sectionListContent}
+            keyboardShouldPersistTaps="handled"
+            initialNumToRender={8}
+            maxToRenderPerBatch={6}
+            windowSize={8}
+          />
+        )}
+
+        <CpoReadinessSheet
+          visible={cpoReadinessVisible}
+          items={cpoReadinessItems}
+          cpoAmount={summary.cpoAmount}
+          onClose={() => setCpoReadinessVisible(false)}
+          onContinue={
+            isCpoUploadReady(cpoReadinessItems) ? handleCpoReadinessContinue : undefined
+          }
         />
-      )}
 
-      <CpoUploadModal
-        visible={cpoModalVisible}
-        cpoAmount={summary.cpoAmount}
-        submitting={submittingCpo}
-        onClose={() => setCpoModalVisible(false)}
-        onSubmit={handleUploadCpo}
-      />
+        <CpoUploadModal
+          visible={cpoModalVisible}
+          cpoAmount={summary.cpoAmount}
+          submitting={submittingCpo}
+          onClose={() => setCpoModalVisible(false)}
+          onSubmit={handleUploadCpo}
+        />
 
-      <AuctionAssetDetailModal
-        visible={detailAsset != null}
-        asset={detailAsset}
-        onClose={() => setDetailAsset(null)}
+        <AuctionAssetDetailModal
+          visible={detailAsset != null}
+          asset={detailAsset}
+          onClose={() => setDetailAsset(null)}
+        />
+      </ScreenShell>
+
+      <BidEntrySheet
+        visible={bidSheetAsset != null}
+        asset={bidSheetAsset}
+        bidText={sheetBidText}
+        feedbackKind={sheetFeedback.kind}
+        feedbackErrorKey={sheetFeedback.errorKey}
+        locked={locked || !canEdit}
+        position={sheetPosition}
+        total={selectedLotIds.length}
+        hasNext={nextIncompleteId != null}
+        onBidChange={(text) => bidSheetAsset && handleBidChange(bidSheetAsset.id, text)}
+        onSave={handleSaveBidSheet}
+        onSaveAndNext={handleSaveAndNextBidSheet}
+        onClose={() => setBidSheetAsset(null)}
+        onViewPhotos={() => {
+          if (bidSheetAsset) {
+            setDetailAsset(bidSheetAsset);
+            setBidSheetAsset(null);
+          }
+        }}
       />
-    </ScreenShell>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screenHost: {
+    flex: 1,
+  },
   listHeader: {
-    gap: 12,
-    marginBottom: 8,
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   staticContent: {
-    paddingBottom: 160,
-  },
-  sectionHeader: {
-    fontWeight: '700',
-    letterSpacing: 0.3,
-    marginBottom: 6,
-    marginTop: 4,
+    flex: 1,
   },
   sectionList: {
     flex: 1,
     marginHorizontal: -16,
     paddingHorizontal: 16,
+  },
+  sectionListContent: {
+    paddingBottom: Spacing.md,
   },
 });

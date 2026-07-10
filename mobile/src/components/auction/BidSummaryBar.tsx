@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { GoldButton } from '@/components/auth';
 import { formatEtbAmount } from '@/lib/auctionUtils';
 import { useTheme } from '@/lib/appStore';
 import { Typography, Spacing, Radii } from '@/theme';
 
 interface BidSummaryBarProps {
   selectedCount: number;
-  totalLots: number;
+  totalItems: number;
   totalBidAmount: number;
   cpoAmount: number;
   cpoPercent: number;
@@ -17,11 +18,15 @@ interface BidSummaryBarProps {
   showParticipation?: boolean;
   participationActiveCount?: number;
   participationBidTotal?: number;
+  uploadingCpo?: boolean;
+  onUploadCpo?: () => void;
+  showReuploadCpo?: boolean;
+  onReuploadCpo?: () => void;
 }
 
 export function BidSummaryBar({
   selectedCount,
-  totalLots,
+  totalItems,
   totalBidAmount,
   cpoAmount,
   cpoPercent,
@@ -29,24 +34,30 @@ export function BidSummaryBar({
   showParticipation = false,
   participationActiveCount = 0,
   participationBidTotal = 0,
+  uploadingCpo = false,
+  onUploadCpo,
+  showReuploadCpo = false,
+  onReuploadCpo,
 }: BidSummaryBarProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
-  const lotsLabel = showParticipation
-    ? t('auction.participation.lotOverviewSubtitle', {
-        active: participationActiveCount,
-        total: totalLots,
-      })
-    : selectedCount > 0
-      ? t('auction.participation.summaryLotsSelected', {
-          count: selectedCount,
-          total: totalLots,
-        })
-      : t('auction.participation.summaryNoLots');
-
   const bidTotal = showParticipation ? participationBidTotal : totalBidAmount;
+  const showUploadAction = !showParticipation && !locked && (onUploadCpo || onReuploadCpo);
+  const hasSelection = selectedCount > 0;
+
+  const statusLabel = showParticipation
+    ? t('auction.participation.itemOverviewSubtitle', {
+        active: participationActiveCount,
+        total: totalItems,
+      })
+    : !hasSelection
+      ? t('auction.participation.summaryNoItems')
+      : t('auction.participation.summaryItemsSelected', {
+          count: selectedCount,
+          total: totalItems,
+        });
 
   return (
     <View
@@ -55,48 +66,63 @@ export function BidSummaryBar({
         {
           backgroundColor: colors.baseElevated,
           borderTopColor: colors.goldBorder,
-          paddingBottom: Math.max(insets.bottom, 12),
+          paddingBottom: Math.max(insets.bottom, 10),
         },
       ]}
     >
       <View style={styles.topRow}>
-        <View style={styles.lotsInfo}>
-          <MaterialCommunityIcons name="format-list-checks" size={16} color={colors.goldChampagne} />
-          <Text style={[Typography.caption, { color: colors.textSecondary, flex: 1 }]} numberOfLines={1}>
-            {lotsLabel}
-          </Text>
-        </View>
+        <Text style={[Typography.caption, { color: colors.textSecondary, flex: 1 }]} numberOfLines={1}>
+          {statusLabel}
+        </Text>
         {locked ? (
-          <View style={[styles.lockBadge, { backgroundColor: colors.glassFill, borderColor: colors.goldBorder }]}>
-            <MaterialCommunityIcons name="lock-outline" size={12} color={colors.textMuted} />
-            <Text style={[Typography.microCaps, { color: colors.textMuted, fontSize: 9 }]}>
-              {t('auction.participation.locked')}
-            </Text>
-          </View>
+          <MaterialCommunityIcons name="lock-outline" size={14} color={colors.textMuted} />
         ) : null}
       </View>
 
-      <View style={styles.amountsRow}>
-        <View style={styles.amountBlock}>
-          <Text style={[Typography.microCaps, { color: colors.textMuted, fontSize: 9 }]}>
-            {t('auction.participation.totalBidAmount')}
-          </Text>
-          <Text style={[styles.amountValue, { color: colors.cream }]}>
-            {formatEtbAmount(bidTotal)}
-          </Text>
+      {(hasSelection || showParticipation) && bidTotal > 0 ? (
+        <View style={styles.totalsRow}>
+          <View style={styles.totalChip}>
+            <Text style={[Typography.microCaps, { color: colors.textMuted, fontSize: 9 }]}>
+              {t('auction.participation.totalBidAmount')}
+            </Text>
+            <Text style={[styles.amountValue, { color: colors.cream }]}>{formatEtbAmount(bidTotal)}</Text>
+          </View>
+          <View style={[styles.totalChip, styles.totalChipRight]}>
+            <Text style={[Typography.microCaps, { color: colors.textMuted, fontSize: 9 }]}>
+              {t('auction.participation.cpoShort', { percent: cpoPercent })}
+            </Text>
+            <Text style={[styles.amountValue, { color: colors.goldBright }]}>
+              {formatEtbAmount(cpoAmount)}
+            </Text>
+          </View>
         </View>
+      ) : null}
 
-        <View style={[styles.divider, { backgroundColor: colors.divider }]} />
-
-        <View style={styles.amountBlock}>
-          <Text style={[Typography.microCaps, { color: colors.textMuted, fontSize: 9 }]}>
-            {t('auction.participation.cpoShort', { percent: cpoPercent })}
-          </Text>
-          <Text style={[styles.amountValue, { color: colors.goldBright }]}>
-            {formatEtbAmount(cpoAmount)}
-          </Text>
+      {showUploadAction ? (
+        <View style={styles.actionSection}>
+          {showReuploadCpo && onReuploadCpo ? (
+            <GoldButton
+              label={t('auction.participation.reuploadCpo')}
+              onPress={onReuploadCpo}
+              variant="outline"
+              compact
+            />
+          ) : onUploadCpo ? (
+            <>
+              <GoldButton
+                label={uploadingCpo ? t('common.submitting') : t('auction.participation.uploadCpo')}
+                onPress={onUploadCpo}
+                disabled={uploadingCpo}
+                loading={uploadingCpo}
+                compact
+              />
+              <Text style={[Typography.caption, styles.uploadHint, { color: colors.textMuted }]}>
+                {t('auction.participation.uploadCpoHint')}
+              </Text>
+            </>
+          ) : null}
         </View>
-      </View>
+      ) : null}
     </View>
   );
 }
@@ -111,42 +137,31 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     gap: Spacing.sm,
   },
-  lotsInfo: {
-    flex: 1,
+  totalsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    gap: Spacing.sm,
   },
-  lockBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radii.full,
-    borderWidth: 1,
-  },
-  amountsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  amountBlock: {
+  totalChip: {
     flex: 1,
     gap: 2,
   },
+  totalChipRight: {
+    alignItems: 'flex-end',
+  },
   amountValue: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
-    letterSpacing: 0.2,
   },
-  divider: {
-    width: 1,
-    height: 32,
-    marginHorizontal: Spacing.sm,
+  actionSection: {
+    marginTop: 2,
+    gap: 4,
+  },
+  uploadHint: {
+    lineHeight: 16,
+    textAlign: 'center',
   },
 });
 

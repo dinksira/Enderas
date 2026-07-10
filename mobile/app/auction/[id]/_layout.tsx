@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 import { useTheme } from '@/lib/appStore';
 import { NAV_TRANSITION_MS } from '@/theme/motion';
@@ -7,6 +8,7 @@ export default function AuctionDetailLayout() {
   const { colors } = useTheme();
 
   return (
+    <BottomSheetModalProvider>
     <Stack
       screenOptions={{
         headerShown: false,
@@ -20,5 +22,6 @@ export default function AuctionDetailLayout() {
       <Stack.Screen name="document" />
       <Stack.Screen name="bid" />
     </Stack>
+    </BottomSheetModalProvider>
   );
 }

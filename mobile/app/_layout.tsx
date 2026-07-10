@@ -21,6 +21,7 @@ import {
   SpaceGrotesk_600SemiBold,
   SpaceGrotesk_700Bold,
 } from '@expo-google-fonts/space-grotesk';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { StatusBar } from 'expo-status-bar';
@@ -188,6 +189,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: resolvedColors.base }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <KeyboardProvider>
+        <BottomSheetModalProvider>
         <View style={{ flex: 1, backgroundColor: resolvedColors.base }}>
           <View style={{ flex: 1 }}>
             {navigatorMounted ? (
@@ -238,6 +240,7 @@ export default function RootLayout() {
             </View>
           ) : null}
         </View>
+        </BottomSheetModalProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );
