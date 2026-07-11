@@ -1,5 +1,6 @@
 import { Op } from 'sequelize';
 
+import { Auction } from '../../../src/models/auction.model.js';
 import { Role } from '../../../src/models/role.model.js';
 import { User } from '../../../src/models/user.model.js';
 import { Staff } from '../../../src/models/staff.model.js';
@@ -107,6 +108,11 @@ export async function purgeUsersByMobiles(mobileNumbers, transaction) {
     where: { user_id: { [Op.in]: userIds } },
     transaction,
   });
+
+  await Auction.update(
+    { created_by_staff_id: null },
+    { where: { created_by_staff_id: { [Op.in]: userIds } }, transaction },
+  );
 
   await Staff.destroy({
     where: { user_id: { [Op.in]: userIds } },
