@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../../components/Button.jsx';
-import { Input } from '../../../components/Input.jsx';
+import { Button, Input } from '../../../components/index.js';
 import { FileUpload } from '../../../components/FileUpload.jsx';
+import { LogoSpinner } from '@enderass/shared/ui';
 import { kycService } from '../services/kyc.service.js';
 import { useAuthStore } from '@enderass/shared/auth';
 import { ROUTES } from '../../../config/routes.js';
@@ -145,7 +145,7 @@ export function KYCVerificationView() {
     return (
       <div className={`kyc-page ${isAmharic ? 'kyc-page--am' : ''}`}>
         <div className="kyc-page__shell">
-          <p className="kyc-page__loading">{t('common.loading')}</p>
+          <LogoSpinner size={32} />
         </div>
       </div>
     );
@@ -249,7 +249,7 @@ export function KYCVerificationView() {
           )}
 
           <Button type="submit" variant="primary" disabled={loading} className="kyc-page__submit">
-            {loading ? t('kyc.submitting') : t('kyc.submit')}
+            {loading ? <><LogoSpinner size={16} /> {t('kyc.submitting')}</> : t('kyc.submit')}
           </Button>
         </form>
       </div>

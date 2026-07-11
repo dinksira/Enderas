@@ -9,3 +9,4 @@ export { Can } from './Can.jsx';
 export { DashboardToast } from './DashboardToast.jsx';
 export { LiveCountdown } from './LiveCountdown.jsx';
 export { GetAppSection } from './GetAppSection.jsx';
+export { LogoSpinner } from './LogoSpinner/LogoSpinner.jsx';

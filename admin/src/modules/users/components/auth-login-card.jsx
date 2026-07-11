@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Input } from '@enderass/shared/ui';
+import { Button, Input, LogoSpinner } from '@enderass/shared/ui';
 
 function AuthFieldEyeIcon({ open }) {
   if (open) {
@@ -72,7 +72,7 @@ export function AuthSubmitButton({ loading, label, loadingLabel = 'Please Wait..
         className="auth-login-card__button"
         disabled={loading || disabled}
       >
-        {loading ? loadingLabel : label}
+        {loading ? <><LogoSpinner size={16} /> {loadingLabel}</> : label}
       </Button>
     </div>
   );

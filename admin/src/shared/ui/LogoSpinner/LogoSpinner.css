@@ -1,0 +1,24 @@
+.logo-spinner {
+  display: inline-block;
+  line-height: 0;
+  color: currentColor;
+  vertical-align: middle;
+}
+
+.logo-spinner__gear {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: logo-spinner-spin 1.8s linear infinite;
+}
+
+@keyframes logo-spinner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-spinner__gear {
+    animation: none;
+  }
+}
