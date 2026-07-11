@@ -21,7 +21,6 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "usesCleartextTraffic": true,
       "package": "com.ramexdev.auction"
     },
     "web": {
@@ -49,6 +48,14 @@
           "android": {
             "image": "./assets/splash-icon.png",
             "imageWidth": 76
+          }
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
           }
         }
       ]

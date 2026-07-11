@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Image, StyleSheet, Text, View, type ImageStyle, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useTheme } from '@/lib/appStore';
@@ -19,10 +19,10 @@ export function ProfileAvatar({
 }: ProfileAvatarProps) {
   const { colors } = useTheme();
   const imageUri = profilePicture ? resolveMediaUrl(profilePicture) : null;
-  const avatarStyle = [
-    styles.avatar,
+  const avatarStyle: ImageStyle[] = [
+    styles.avatar as ImageStyle,
     { width: size, height: size, borderRadius: size / 2 },
-    style,
+    ...(style ? [style as ImageStyle] : []),
   ];
 
   if (imageUri) {

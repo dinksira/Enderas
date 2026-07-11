@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   avatarOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',

@@ -1,136 +1,158 @@
-import { memo, useEffect, useRef } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { memo, useMemo } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { ImageGallery } from '@/components/shared/ImageGallery';
 import { PressableScale } from '@/components/ui';
-import { formatEtbAmount } from '@/lib/auctionUtils';
+import { formatEtbAmount, getCategoryTheme } from '@/lib/auctionUtils';
+import { resolveMediaUrl } from '@/lib/media-utils';
 import { useTheme } from '@/lib/appStore';
 import { Typography, Spacing, Radii } from '@/theme';
 import type { AuctionLot } from '@/types/auctionParticipation';
-import type { LotBidFeedbackKind } from '@/lib/auctionParticipationUtils';
-
-interface LotBidFeedback {
-  kind: LotBidFeedbackKind;
-  errorKey?: string;
-}
 
 interface LotBidCardProps {
   lot: AuctionLot;
   selected: boolean;
-  bidText: string;
+  bidAmount: number;
+  bidComplete: boolean;
+  bidHasError: boolean;
   locked: boolean;
-  feedback?: LotBidFeedback;
-  autoFocus?: boolean;
-  onToggle: () => void;
-  onBidChange: (text: string) => void;
-  onOpenDetail: () => void;
-  onAutoFocusHandled?: () => void;
+  /** Render as a row inside a grouped lot card (no standalone card chrome). */
+  embedded?: boolean;
+  /** True for the first row in a group (no top divider). */
+  first?: boolean;
+  onToggle: (id: string) => void;
+  onOpenDetail: (id: string) => void;
+  onOpenBid: (id: string) => void;
 }
 
-const THUMB_SIZE = 80;
+const THUMB_SIZE = 64;
 
 function LotBidCardImpl({
   lot,
   selected,
-  bidText,
+  bidAmount,
+  bidComplete,
+  bidHasError,
   locked,
-  feedback = { kind: 'hint' },
-  autoFocus = false,
+  embedded = false,
+  first = false,
   onToggle,
-  onBidChange,
   onOpenDetail,
-  onAutoFocusHandled,
+  onOpenBid,
 }: LotBidCardProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const categoryLabel = t(`dashboard.categories.${lot.category}`, { defaultValue: lot.category });
-  const inputRef = useRef<TextInput>(null);
-
-  useEffect(() => {
-    if (!autoFocus || !selected || locked) return;
-    const timer = setTimeout(() => {
-      inputRef.current?.focus();
-      onAutoFocusHandled?.();
-    }, 120);
-    return () => clearTimeout(timer);
-  }, [autoFocus, locked, onAutoFocusHandled, selected]);
-
-  const handleBidTextChange = (text: string) => {
-    onBidChange(text.replace(/[^\d]/g, ''));
-  };
-
-  const focusInput = () => {
-    if (locked) return;
-    inputRef.current?.focus();
-  };
-
+  const theme = getCategoryTheme(lot.category);
   const reserveLabel = formatEtbAmount(lot.reservePrice);
-  const inputBorderColor =
-    feedback.kind === 'error'
-      ? colors.danger.border
-      : feedback.kind === 'valid'
-        ? colors.success.border
-        : colors.goldBorder;
+  const bidLabel = formatEtbAmount(bidAmount);
+  const photoCount = lot.imageUrls.length;
 
-  return (
-    <View
-      style={[
+  const thumbUri = useMemo(
+    () => resolveMediaUrl(lot.imageUrls[0]),
+    [lot.imageUrls],
+  );
+
+  const pillLabel = useMemo(() => {
+    if (bidHasError) return t('auction.participation.cardPillFixBid');
+    if (bidComplete) return t('auction.participation.cardPillEditBid', { amount: bidLabel });
+    return t('auction.participation.cardPillSetBid');
+  }, [bidComplete, bidHasError, bidLabel, t]);
+
+  const pillFg = bidHasError ? colors.danger.fg : bidComplete ? colors.success.fg : colors.goldChampagne;
+  const pillBg = bidHasError ? colors.danger.soft : bidComplete ? colors.success.soft : colors.glassFillActive;
+  const pillBorder = bidHasError ? colors.danger.border : bidComplete ? colors.success.border : colors.goldBorderActive;
+
+  const containerStyle = embedded
+    ? [
+        styles.row,
+        {
+          backgroundColor: selected ? colors.glassFillActive : colors.glassFill,
+          borderLeftColor: colors.goldBorder,
+          borderRightColor: colors.goldBorder,
+          borderTopColor: first ? 'transparent' : colors.divider,
+          borderTopWidth: first ? 0 : StyleSheet.hairlineWidth,
+        },
+      ]
+    : [
         styles.card,
         {
           backgroundColor: selected ? colors.glassFillActive : colors.glassFill,
           borderColor: selected ? colors.goldBorderActive : colors.goldBorder,
-          borderLeftColor: selected ? colors.goldBright : colors.goldBorder,
         },
-      ]}
-    >
+      ];
+
+  return (
+    <View style={containerStyle}>
       <View style={styles.topRow}>
-        <PressableScale
-          onPress={() => !locked && onOpenDetail()}
+        <Pressable
+          onPress={() => !locked && onOpenDetail(lot.id)}
           disabled={locked}
-          style={styles.bodyPressable}
+          style={styles.thumbWrap}
+          accessibilityRole="button"
+          accessibilityLabel={t('auction.participation.cardHintPhotos', { title: lot.title })}
+        >
+          <View style={[styles.thumb, { borderColor: colors.goldBorder }]}>
+            {thumbUri ? (
+              <Image
+                source={{ uri: thumbUri }}
+                style={StyleSheet.absoluteFill}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                transition={0}
+              />
+            ) : (
+              <LinearGradient colors={theme.colors} style={StyleSheet.absoluteFill} />
+            )}
+            {photoCount > 1 ? (
+              <View style={styles.thumbBadge}>
+                <MaterialCommunityIcons name="image-multiple" size={9} color="#FFFAF0" />
+                <Text style={styles.thumbBadgeText}>{photoCount}</Text>
+              </View>
+            ) : null}
+          </View>
+        </Pressable>
+
+        <Pressable
+          onPress={() => !locked && onOpenDetail(lot.id)}
+          disabled={locked}
+          style={styles.copy}
           accessibilityRole="button"
           accessibilityLabel={t('auction.participation.viewAssetDetails', { title: lot.title })}
         >
-          <ImageGallery
-            imageUrls={lot.imageUrls}
-            width={THUMB_SIZE}
-            height={THUMB_SIZE}
-            category={lot.category}
-            mode="auto"
-            showCounter={false}
-            borderRadius={Radii.sm}
-          />
-
-          <View style={styles.copy}>
-            <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '700' }]} numberOfLines={2}>
-              {lot.title}
+          <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '700' }]} numberOfLines={2}>
+            {lot.title}
+          </Text>
+          {lot.tags?.length ? (
+            <Text style={[Typography.caption, { color: colors.goldChampagne }]} numberOfLines={1}>
+              {lot.tags.join(' · ')}
             </Text>
-            {lot.tags?.length ? (
-              <Text style={[Typography.caption, { color: colors.goldChampagne }]} numberOfLines={1}>
-                {lot.tags.join(' · ')}
-              </Text>
-            ) : null}
-            <View style={styles.metaRow}>
-              <Text style={[Typography.caption, { color: colors.textMuted }]}>
-                {categoryLabel}
-              </Text>
-              <Text style={[Typography.caption, { color: colors.textSecondary, fontWeight: '600' }]}>
-                {t('auction.participation.reserve')}: {reserveLabel}
-              </Text>
-            </View>
+          ) : null}
+          <Text style={[Typography.caption, { color: colors.textMuted }]}>
+            {t('auction.participation.cardReserveLabel', { reserve: reserveLabel })}
+          </Text>
+          <View style={styles.detailHintRow}>
+            <MaterialCommunityIcons name="information-outline" size={12} color={colors.textMuted} />
+            <Text style={[Typography.caption, { color: colors.textMuted }]}>
+              {t('auction.participation.tapForDetails')}
+            </Text>
           </View>
-        </PressableScale>
+        </Pressable>
 
         <PressableScale
-          onPress={() => !locked && onToggle()}
+          onPress={() => !locked && onToggle(lot.id)}
           disabled={locked}
           hitSlop={10}
           style={styles.checkboxHit}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: selected }}
-          accessibilityLabel={t('auction.participation.selectLotForBid', { title: lot.title })}
+          accessibilityLabel={
+            selected
+              ? t('auction.participation.cardCheckboxRemove', { title: lot.title })
+              : t('auction.participation.cardCheckboxAdd', { title: lot.title })
+          }
         >
           <View
             style={[
@@ -141,58 +163,29 @@ function LotBidCardImpl({
               },
             ]}
           >
-            {selected ? (
-              <MaterialCommunityIcons name="check" size={14} color={colors.textOnGold} />
-            ) : null}
+            {selected ? <MaterialCommunityIcons name="check" size={16} color={colors.textOnGold} /> : null}
           </View>
         </PressableScale>
       </View>
 
       {selected ? (
-        <View style={styles.bidSection}>
-          <Pressable
-            onPress={focusInput}
-            disabled={locked}
-            style={({ pressed }) => [
-              styles.inputWrap,
-              {
-                borderColor: inputBorderColor,
-                backgroundColor: pressed ? colors.baseElevated : colors.base,
-                opacity: locked ? 0.65 : 1,
-              },
-            ]}
-          >
-            <Text style={[Typography.caption, { color: colors.textMuted, fontWeight: '600' }]}>ETB</Text>
-            <TextInput
-              ref={inputRef}
-              value={bidText}
-              onChangeText={handleBidTextChange}
-              keyboardType="number-pad"
-              editable={!locked}
-              showSoftInputOnFocus
-              autoCorrect={false}
-              autoCapitalize="none"
-              returnKeyType="done"
-              placeholder={t('auction.participation.bidPlaceholder', { reserve: reserveLabel })}
-              placeholderTextColor={colors.textMuted}
-              style={[styles.input, { color: colors.cream }]}
-            />
-            {feedback.kind === 'valid' ? (
-              <MaterialCommunityIcons name="check-circle" size={18} color={colors.success.fg} />
-            ) : feedback.kind === 'error' ? (
-              <MaterialCommunityIcons name="alert-circle-outline" size={18} color={colors.danger.fg} />
-            ) : null}
-          </Pressable>
-          {feedback.kind === 'error' && feedback.errorKey ? (
-            <Text style={[Typography.caption, { color: colors.danger.fg }]}>
-              {t(`auction.participation.bidErrors.${feedback.errorKey}`, { reserve: reserveLabel })}
-            </Text>
-          ) : feedback.kind === 'hint' ? (
-            <Text style={[Typography.caption, { color: colors.textMuted }]}>
-              {t('auction.participation.bidHint', { reserve: reserveLabel })}
-            </Text>
-          ) : null}
-        </View>
+        <Pressable
+          onPress={() => !locked && onOpenBid(lot.id)}
+          disabled={locked}
+          style={[styles.bidPill, { backgroundColor: pillBg, borderColor: pillBorder }]}
+          accessibilityRole="button"
+          accessibilityLabel={pillLabel}
+        >
+          <MaterialCommunityIcons
+            name={bidHasError ? 'alert-circle-outline' : bidComplete ? 'check-circle' : 'cash-edit'}
+            size={16}
+            color={pillFg}
+          />
+          <Text style={[Typography.caption, { color: pillFg, fontWeight: '700', flex: 1 }]} numberOfLines={2}>
+            {pillLabel}
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={18} color={pillFg} />
+        </Pressable>
       ) : null}
     </View>
   );
@@ -203,61 +196,81 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     borderRadius: Radii.lg,
     borderWidth: 1,
-    borderLeftWidth: 3,
-    padding: 12,
+    padding: Spacing.sm2,
+    gap: Spacing.sm,
+  },
+  row: {
+    paddingHorizontal: Spacing.sm2,
+    paddingVertical: Spacing.sm,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    gap: Spacing.sm,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: Spacing.sm,
   },
-  bodyPressable: {
-    flex: 1,
+  thumbWrap: {
+    flexShrink: 0,
+    width: THUMB_SIZE,
+  },
+  thumb: {
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
+    borderRadius: Radii.input,
+    overflow: 'hidden',
+    borderWidth: 1,
+  },
+  thumbBadge: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: Radii.full,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  thumbBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#FFFAF0',
   },
   copy: {
     flex: 1,
     gap: 3,
+    paddingTop: 1,
   },
-  metaRow: {
+  detailHintRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 2,
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 1,
   },
   checkboxHit: {
-    paddingTop: 2,
-    paddingLeft: 4,
+    paddingTop: 1,
   },
   checkbox: {
-    width: 26,
-    height: 26,
-    borderRadius: 7,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bidSection: {
-    marginTop: 10,
-    gap: 4,
-  },
-  inputWrap: {
+  bidPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderWidth: 1,
-    borderRadius: Radii.input,
     paddingHorizontal: 12,
-    minHeight: 48,
-  },
-  input: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '700',
     paddingVertical: 10,
-    padding: 0,
+    borderRadius: Radii.input,
+    borderWidth: 1,
   },
 });
 

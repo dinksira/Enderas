@@ -9,6 +9,7 @@ import {
 import { useTheme } from '@/lib/appStore';
 import { useKeyboardToolbarTheme } from '@/lib/keyboardToolbarTheme';
 import { Spacing, Typography } from '@/theme';
+import { Duration } from '@/theme/motion';
 import { AppHeader } from './AppHeader';
 
 interface ScreenShellProps {
@@ -98,7 +99,7 @@ export function ScreenShell({
       fade.setValue(0);
       const animation = Animated.timing(fade, {
         toValue: 1,
-        duration: 220,
+        duration: Duration.fast,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       });
@@ -107,12 +108,13 @@ export function ScreenShell({
     }, [fade, noFade]),
   );
 
-  // Subtle 6px slide-up paired with the fade for a softer entrance.
+  // Subtle 4px slide-up paired with the fade for a softer entrance
+  // (was 6px — modern apps lean toward subtler motion).
   const content = (
     <Animated.View
       style={{
         opacity: fade,
-        transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }],
+        transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
       }}
     >
       {pageTitle ? (

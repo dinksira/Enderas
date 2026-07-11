@@ -83,18 +83,25 @@ export default function LoginScreen() {
     setFieldErrors({});
 
     try {
-      const session = await login({ phoneNumber: trimmedPhone, password });
+      const session = (await login({ phoneNumber: trimmedPhone, password })) as {
+        accessToken: string;
+        identity?: Record<string, unknown>;
+        authz?: Record<string, unknown>;
+        user?: Record<string, unknown>;
+      };
+      const identity = (session.identity ?? {}) as Record<string, unknown>;
+      const authz = (session.authz ?? {}) as Record<string, unknown>;
       const sessionUser: AuthUser = {
-        id: String(session.identity?.userId || session.identity?.id || ''),
-        roleCode: session.authz?.roleCode ?? null,
-        isStaff: session.identity?.isStaff,
-        staffId: session.identity?.staffId ?? null,
-        employeeId: session.identity?.employeeId ?? null,
-        displayName: session.identity?.displayName,
-        mobileNumber: session.identity?.mobileNumber,
-        email: session.identity?.email,
-        status: session.identity?.status,
-        userType: session.identity?.userType,
+        id: String(identity.userId || identity.id || ''),
+        roleCode: (authz.roleCode as string | null) ?? null,
+        isStaff: Boolean(identity.isStaff),
+        staffId: (identity.staffId as string | null) ?? null,
+        employeeId: (identity.employeeId as string | null) ?? null,
+        displayName: (identity.displayName as string) ?? '',
+        mobileNumber: (identity.mobileNumber as string) ?? '',
+        email: (identity.email as string) ?? '',
+        status: (identity.status as string) ?? '',
+        userType: (identity.userType as string) ?? '',
       };
 
       if (!isMobileAllowedUser(sessionUser)) {
@@ -103,7 +110,7 @@ export default function LoginScreen() {
         return;
       }
 
-      if (session.identity?.isMobileVerified === false) {
+      if (identity.isMobileVerified === false) {
         setPendingOtpVerification(trimmedPhone);
         router.replace('/(auth)/verify-otp');
         return;

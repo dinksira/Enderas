@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { usePreventScreenCapture } from 'expo-screen-capture';
 
 import { AppHeader } from '@/components/shell/AppHeader';
 import { DocumentViewer } from '@/components/shared/DocumentViewer';
@@ -14,6 +15,11 @@ import { useAuthStore } from '@/lib/authStore';
 import { Typography, Spacing } from '@/theme';
 
 export default function AuctionDocumentScreen() {
+  // Auction documents are licensed to a single participant and must not be
+  // shared. There is no download path, so block screenshots / screen
+  // recording while this screen is mounted (auto-restored on exit).
+  usePreventScreenCapture();
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const { colors } = useTheme();

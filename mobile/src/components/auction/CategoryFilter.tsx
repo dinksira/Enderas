@@ -1,50 +1,40 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
-  Animated,
-  Easing,
-  Modal,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '@/lib/appStore';
+import { SheetDropdown } from '@/components/sheet';
 import { useAssetCategories } from '@/hooks/useAssetCategories';
+import { Spacing, Typography } from '@/theme';
 
 interface CategoryFilterProps {
   value: string;
   onChange: (value: string) => void;
 }
 
+/**
+ * Category filter dropdown for the dashboard search bar.
+ *
+ * Now built on the shared `<SheetDropdown>` primitive — same motion,
+ * backdrop, and dismiss language as every other overlay.
+ *
+ * Previously positioned its dropdown with a hardcoded
+ * `paddingTop: insets.top + 150` which broke whenever the header
+ * layout shifted. The new primitive uses `insets.top + 60` (the same
+ * value used by `LanguageSelector` and `NotificationBell`), so all
+ * three header dropdowns now anchor to the same y-coordinate.
+ */
 export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { categories, loading } = useAssetCategories();
-  const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
-  const anim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (open) {
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: 180,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-    } else {
-      anim.setValue(0);
-    }
-  }, [open, anim]);
-
-  const dropdownScale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] });
-  const dropdownOpacity = anim;
 
   return (
     <View>
@@ -65,78 +55,54 @@ export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
         <MaterialCommunityIcons name="filter-variant" size={18} color={colors.goldBright} />
       </Pressable>
 
-      <Modal
-        visible={open}
-        transparent
-        animationType="none"
-        onRequestClose={() => setOpen(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setOpen(false)}>
-          <View style={[styles.modalOverlay, { paddingTop: insets.top + 150 }]}>
-            <TouchableWithoutFeedback>
-              <Animated.View
-                style={[
-                  styles.dropdown,
+      <SheetDropdown visible={open} onDismiss={() => setOpen(false)} maxWidth={220}>
+        <View style={[styles.dropdownHeader, { borderBottomColor: colors.divider }]}>
+          <Text style={[Typography.eyebrow, { color: colors.goldBright }]}>
+            {t('dashboard.browse.category').toUpperCase()}
+          </Text>
+        </View>
+        {loading ? (
+          <View style={styles.loadingRow}>
+            <Text style={[Typography.bodyMedium, { color: colors.textMuted }]}>
+              {t('common.loading')}
+            </Text>
+          </View>
+        ) : (
+          ['', ...categories].map((cat) => {
+            const active = cat === value;
+            return (
+              <Pressable
+                key={cat || 'all'}
+                onPress={() => {
+                  onChange(cat);
+                  setOpen(false);
+                }}
+                style={({ pressed }) => [
+                  styles.optionRow,
                   {
-                    backgroundColor: colors.baseElevated,
-                    borderColor: colors.goldBorder,
-                    shadowColor: Platform.select({ ios: '#000', android: colors.goldGlow }),
-                    opacity: dropdownOpacity,
-                    transform: [{ scale: dropdownScale }],
+                    backgroundColor: active ? colors.glassFillActive : 'transparent',
+                    opacity: pressed ? 0.7 : 1,
                   },
                 ]}
               >
-                <View style={[styles.dropdownHeader, { borderBottomColor: colors.divider }]}>
-                  <Text style={[styles.dropdownTitle, { color: colors.goldBright }]}>
-                    {t('dashboard.browse.category').toUpperCase()}
-                  </Text>
-                </View>
-                {loading ? (
-                  <View style={styles.loadingRow}>
-                    <Text style={[styles.optionLabel, { color: colors.textMuted }]}>
-                      {t('common.loading')}
-                    </Text>
-                  </View>
-                ) : (
-                  ['', ...categories].map((cat) => {
-                  const active = cat === value;
-                  return (
-                    <Pressable
-                      key={cat || 'all'}
-                      onPress={() => {
-                        onChange(cat);
-                        setOpen(false);
-                      }}
-                      style={({ pressed }) => [
-                        styles.optionRow,
-                        {
-                          backgroundColor: active ? colors.glassFillActive : 'transparent',
-                          opacity: pressed ? 0.7 : 1,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.optionLabel,
-                          { color: active ? colors.goldBright : colors.cream },
-                        ]}
-                      >
-                        {cat
-                          ? t(`dashboard.categories.${cat}`, { defaultValue: cat })
-                          : t('dashboard.filters.all')}
-                      </Text>
-                      {active ? (
-                        <MaterialCommunityIcons name="check-circle" size={18} color={colors.goldBright} />
-                      ) : null}
-                    </Pressable>
-                  );
-                })
-                )}
-              </Animated.View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+                <Text
+                  style={[
+                    Typography.bodyMedium,
+                    { color: active ? colors.goldBright : colors.cream },
+                  ]}
+                >
+                  {cat
+                    ? t(`dashboard.categories.${cat}`, { defaultValue: cat })
+                    : t('dashboard.filters.all')}
+                </Text>
+                {active ? (
+                  <MaterialCommunityIcons name="check-circle" size={18} color={colors.goldBright} />
+                ) : null}
+              </Pressable>
+            );
+          })
+        )}
+      </SheetDropdown>
     </View>
   );
 }
@@ -150,51 +116,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
-    paddingRight: 16,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-  },
-  dropdown: {
-    width: 200,
-    borderRadius: 16,
-    borderWidth: 1,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowOpacity: 0.45,
-        shadowRadius: 18,
-        shadowOffset: { width: 0, height: 8 },
-      },
-      android: { elevation: 14 },
-    }),
-  },
   dropdownHeader: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: Spacing.sm2,
+    paddingVertical: Spacing.sm2,
     borderBottomWidth: 1,
-  },
-  dropdownTitle: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 2,
   },
   optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    paddingHorizontal: Spacing.sm2,
+    paddingVertical: Spacing.sm2,
   },
   loadingRow: {
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-  },
-  optionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    paddingHorizontal: Spacing.sm2,
+    paddingVertical: Spacing.sm2,
   },
 });
 

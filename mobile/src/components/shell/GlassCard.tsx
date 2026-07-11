@@ -2,6 +2,7 @@ import { type ReactNode, useCallback, useEffect, useRef } from 'react';
 import { Animated, Easing } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 
+import { Duration } from '@/theme/motion';
 import { GlassSurface, type GlassSurfaceProps } from './GlassSurface';
 
 type GlassCardProps = Omit<GlassSurfaceProps, 'children'> & {
@@ -12,6 +13,9 @@ type GlassCardProps = Omit<GlassSurfaceProps, 'children'> & {
 
 /**
  * Animated glass card — wraps `GlassSurface` with a short fade/slide-in.
+ *
+ * 2026 redesign: entrance is 200ms with a 6px slide-up (was 220ms / 10px)
+ * for a snappier, subtler entrance.
  */
 export function GlassCard({
   children,
@@ -32,7 +36,7 @@ export function GlassCard({
     if (noAnimation) return;
     Animated.timing(anim, {
       toValue: 1,
-      duration: 220,
+      duration: Duration.fast,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
@@ -51,7 +55,7 @@ export function GlassCard({
         if (value < 1) {
           Animated.timing(anim, {
             toValue: 1,
-            duration: 150,
+            duration: Duration.micro,
             easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
           }).start();
@@ -64,7 +68,7 @@ export function GlassCard({
     <Animated.View
       style={{
         opacity: anim,
-        transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+        transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }],
       }}
     >
       <GlassSurface

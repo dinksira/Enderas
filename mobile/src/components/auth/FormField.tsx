@@ -11,7 +11,7 @@ export type FormFieldKeyboardType = 'default' | 'email-address' | 'phone-pad' | 
 export interface FormFieldProps {
   label: string;
   value: string;
-  onChangeText: (text: string) => void;
+  onChangeText?: (text: string) => void;
   placeholder?: string;
   secureTextEntry?: boolean;
   error?: string;

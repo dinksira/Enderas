@@ -58,10 +58,10 @@ export function LotParticipationOverview({
     <GlassCard padding={compact ? 14 : 16} style={styles.card}>
       <View style={styles.header}>
         <Text style={[styles.sectionTitle, { color: colors.goldChampagne }]}>
-          {t('auction.participation.lotOverviewTitle')}
+          {t('auction.participation.itemOverviewTitle')}
         </Text>
         <Text style={[Typography.caption, { color: colors.textMuted }]}>
-          {t('auction.participation.lotOverviewSubtitle', {
+          {t('auction.participation.itemOverviewSubtitle', {
             active: activeCount,
             total: rows.length,
           })}

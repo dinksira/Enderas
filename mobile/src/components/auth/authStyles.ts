@@ -3,10 +3,14 @@ import { StyleSheet } from 'react-native';
 
 import { useTheme } from '@/lib/appStore';
 import type { ThemeColors } from '@/lib/theme';
+import { Radii, Typography } from '@/theme';
 
 function createAuthStyles(colors: ThemeColors, isDark: boolean) {
+  // Title shadow now uses the brand's goldGlow token (blue-tinted) so it
+  // stays in sync with the rest of the palette. Previously hardcoded a
+  // warm-gold RGB that no longer matched the post-rebrand blue tokens.
   const titleShadow = isDark
-    ? { textShadowColor: 'rgba(212, 160, 23, 0.45)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 22 }
+    ? { textShadowColor: colors.goldGlow, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 22 }
     : { textShadowColor: 'transparent', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 0 };
 
   return StyleSheet.create({
@@ -62,12 +66,10 @@ function createAuthStyles(colors: ThemeColors, isDark: boolean) {
       shadowOffset: { width: 0, height: 0 },
     },
     title: {
-      fontSize: 30,
-      fontWeight: '700',
+      ...Typography.display,
       color: colors.cream,
       textAlign: 'center',
       marginBottom: 10,
-      letterSpacing: 0.4,
       ...titleShadow,
     },
     subtitle: {
@@ -179,7 +181,7 @@ function createAuthStyles(colors: ThemeColors, isDark: boolean) {
       fontWeight: '600',
     },
     submitButton: {
-      borderRadius: 14,
+      borderRadius: Radii.lg,
       overflow: 'hidden',
       minHeight: 52,
       width: '100%',

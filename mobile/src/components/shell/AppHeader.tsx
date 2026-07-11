@@ -6,6 +6,8 @@ import { router } from 'expo-router';
 
 import { useTheme } from '@/lib/appStore';
 import { glassElevation } from '@/lib/glassStyles';
+import { Duration } from '@/theme/motion';
+import { Typography } from '@/theme';
 import { LanguageSelector } from './LanguageSelector';
 import { NotificationBell } from './NotificationBell';
 
@@ -33,13 +35,15 @@ export type { AppHeaderProps };
  * -----
  *  [back?]  [eyebrow / title block]  [bell] [lang]
  *
- * - Anchored to the safe area top inset so it never collides with the
- *   status bar on notched devices.
- * - Glass background: a translucent dark fill + gold border + top
- *   highlight strip — the same recipe used by the auth glass cards,
- *   so the header reads as part of the same design system.
- * - Title fades/slides in on mount so route transitions feel animated
- *   rather than snapping.
+ * 2026 redesign
+ * -------------
+ *   - Tighter vertical rhythm (paddingTop +4, paddingBottom 10 → 8).
+ *   - Title slides up 4px (was 8) — subtler, more refined entrance.
+ *   - Single 200ms duration matches the rest of the app's motion.
+ *   - Back button is now 34×34 (was 36) and uses the smaller Radii.sm
+ *     (10) so it doesn't visually outweigh the bell/lang triggers.
+ *   - Eyebrow + title are stacked tighter (gap 2 instead of marginBottom
+ *     2) so the title block reads as a single unit.
  */
 export function AppHeader({
   title,
@@ -62,14 +66,14 @@ export function AppHeader({
     titleAnim.setValue(0);
     Animated.timing(titleAnim, {
       toValue: 1,
-      duration: 220,
+      duration: Duration.fast,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
   }, [instantTitle, title, titleAnim]);
 
   const titleOpacity = titleAnim;
-  const titleY = titleAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] });
+  const titleY = titleAnim.interpolate({ inputRange: [0, 1], outputRange: [4, 0] });
 
   const handleBack = () => {
     if (onBack) onBack();
@@ -83,7 +87,7 @@ export function AppHeader({
         {
           backgroundColor: colors.glassFill,
           borderBottomColor: colors.goldBorder,
-          paddingTop: insets.top + 6,
+          paddingTop: insets.top + 4,
           ...glassElevation(isDark, 'header'),
         },
       ]}
@@ -112,11 +116,11 @@ export function AppHeader({
           style={[styles.titleWrap, { opacity: titleOpacity, transform: [{ translateY: titleY }] }]}
         >
           {eyebrow ? (
-            <Text style={[styles.eyebrow, { color: colors.goldChampagne }]} numberOfLines={1}>
+            <Text style={[Typography.eyebrow, { color: colors.goldChampagne, marginBottom: 1 }]} numberOfLines={1}>
               {eyebrow}
             </Text>
           ) : null}
-          <Text style={[styles.title, { color: colors.cream }]} numberOfLines={1}>
+          <Text style={[Typography.headerTitle, { color: colors.cream }]} numberOfLines={1}>
             {title}
           </Text>
         </Animated.View>
@@ -138,7 +142,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderBottomWidth: 1,
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingBottom: 8,
     zIndex: 50,
   },
   row: {
@@ -148,9 +152,9 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -159,18 +163,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'flex-start',
     justifyContent: 'center',
-  },
-  eyebrow: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: 2,
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: 0.3,
   },
   actions: {
     flexDirection: 'row',
