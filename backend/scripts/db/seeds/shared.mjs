@@ -109,10 +109,11 @@ export async function purgeUsersByMobiles(mobileNumbers, transaction) {
     transaction,
   });
 
-  await Auction.update(
-    { created_by_staff_id: null },
-    { where: { created_by_staff_id: { [Op.in]: userIds } }, transaction },
-  );
+  await Auction.destroy({
+    where: { created_by_staff_id: { [Op.in]: userIds } },
+    force: true,
+    transaction,
+  });
 
   await Staff.destroy({
     where: { user_id: { [Op.in]: userIds } },
