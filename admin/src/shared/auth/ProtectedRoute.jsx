@@ -2,6 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from './auth-store.js';
 import { canAccess } from '../utils/permissions.js';
 import { ROUTES } from '../config/routes.js';
+import { LogoSpinner } from '../ui/LogoSpinner/LogoSpinner.jsx';
 
 /**
  * @param {{
@@ -25,7 +26,7 @@ export function ProtectedRoute({
   if (status === 'idle' || status === 'hydrating') {
     return (
       <div className="protected-route protected-route--loading" role="status">
-        Loading session...
+        <LogoSpinner size={32} />
       </div>
     );
   }

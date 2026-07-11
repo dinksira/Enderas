@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Button } from '../ui/Button.jsx';
+import { Button, LogoSpinner } from '../ui/index.js';
 import { ModalCloseButton } from '../ui/ModalCloseButton.jsx';
 
 /**
@@ -50,7 +50,7 @@ export function ApproveConfirmModal({
           </Button>
           <Button variant="primary" onClick={onConfirm} disabled={loading}>
             <span className="auction-confirm-modal__btn-content">
-              {loading && <span className="auction-confirm-modal__spinner" aria-hidden="true" />}
+              {loading && <LogoSpinner size={14} />}
               {loading ? t('admin.confirming') : confirmLabel || t('admin.confirm')}
             </span>
           </Button>

@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useTracking } from '../hooks/use-tracking.js';
+import { LogoSpinner } from '@enderass/shared/ui';
 
 function formatCurrency(amount) {
   if (amount == null) return '\u2014';
@@ -84,7 +85,7 @@ function TrackingDashboardPage() {
   if (loading && !data) {
     return (
       <div className="tracking-loading">
-        <div className="tracking-loading__spinner" />
+        <LogoSpinner size={32} />
         <p>Loading tracking data...</p>
       </div>
     );

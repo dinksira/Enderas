@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { LogoSpinner } from '../ui/index.js';
 import { PaginationBar } from './PaginationBar.jsx';
 
 /**
@@ -143,7 +144,7 @@ export function AdminDataTable({
               {loading && (
                 <tr>
                   <td colSpan={colSpan} className="dashboard-table__empty">
-                    {t('admin.loading')}
+                    <LogoSpinner size={24} />
                   </td>
                 </tr>
               )}

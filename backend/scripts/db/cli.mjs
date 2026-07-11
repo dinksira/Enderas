@@ -1,3 +1,4 @@
+import path from 'path';
 import '../../src/config/load-env.js';
 
 import { sequelize } from '../../src/config/db.config.js';
@@ -125,7 +126,7 @@ export async function runCli(argv) {
 }
 
 const isDirectRun = import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith('scripts/db/cli.mjs');
+  process.argv[1] && path.normalize(process.argv[1]).endsWith(path.normalize('scripts/db/cli.mjs'));
 
 if (isDirectRun) {
   try {
