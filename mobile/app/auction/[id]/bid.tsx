@@ -32,7 +32,7 @@ import {
 import { useTheme } from '@/lib/appStore';
 import { cpoApi } from '@/services/cpoApi';
 import { fileUploadApi } from '@/services/fileUploadApi';
-import { Typography, Spacing } from '@/theme';
+import { Typography, Spacing, Radii } from '@/theme';
 import type { AuctionAssetApi, AuctionLotApi } from '@/types/auctionApi';
 import type { AuctionLot } from '@/types/auctionParticipation';
 
@@ -42,6 +42,9 @@ type LotSection = {
   lotLabel: string;
   lotTitle?: string | null;
   lotId: string;
+  itemCount: number;
+  selectedCount: number;
+  collapsed: boolean;
   data: AuctionAssetApi[];
 };
 
@@ -69,6 +72,7 @@ export default function AuctionBidScreen() {
   const [showErrors, setShowErrors] = useState(false);
   const [submittingCpo, setSubmittingCpo] = useState(false);
   const [lotBids, setLotBids] = useState<Record<string, string>>({});
+  const [collapsedLots, setCollapsedLots] = useState<Record<string, boolean>>({});
   const [bidSheetAsset, setBidSheetAsset] = useState<AuctionLot | null>(null);
   const [detailAsset, setDetailAsset] = useState<AuctionLot | null>(null);
   const hydratedDraftIdsRef = useRef<Set<string>>(new Set());
@@ -190,20 +194,66 @@ export default function AuctionBidScreen() {
 
   const sections: LotSection[] = useMemo(
     () =>
-      lots.map((lot: AuctionLotApi, lotIndex: number) => ({
-        lotLabel: formatLotOrderLabel(lotIndex),
-        lotTitle: lot.title,
-        lotId: lot.id,
-        data: lot.assets ?? [],
-      })),
-    [lots],
+      lots.map((lot: AuctionLotApi, lotIndex: number) => {
+        const assets = lot.assets ?? [];
+        const collapsed = Boolean(collapsedLots[lot.id]);
+        return {
+          lotLabel: formatLotOrderLabel(lotIndex),
+          lotTitle: lot.title,
+          lotId: lot.id,
+          itemCount: assets.length,
+          selectedCount: assets.filter((asset) => asset.id in lotBids).length,
+          collapsed,
+          data: collapsed ? [] : assets,
+        };
+      }),
+    [lots, collapsedLots, lotBids],
   );
+
+  const toggleLotCollapsed = useCallback((lotId: string) => {
+    setCollapsedLots((prev) => ({ ...prev, [lotId]: !prev[lotId] }));
+  }, []);
+
+  // Stable per-asset display models so LotBidCard's `lot` prop keeps a
+  // stable identity across bid keystrokes (memo can then skip re-render).
+  const displayLotMap = useMemo(() => {
+    const map = new Map<string, AuctionLot>();
+    for (const asset of auctionAssets) {
+      map.set(asset.id, mapAuctionAssetForDisplay(asset));
+    }
+    return map;
+  }, [auctionAssets]);
+
+  // Latest mutable state for stable callbacks (avoids recreating handlers —
+  // and thus re-rendering every card — on every bid keystroke).
+  const interactionStateRef = useRef({
+    lotBids,
+    selectedDrafts,
+    canEdit,
+    locked,
+    bidSheetAssetId: bidSheetAsset?.id ?? null,
+  });
+  interactionStateRef.current = {
+    lotBids,
+    selectedDrafts,
+    canEdit,
+    locked,
+    bidSheetAssetId: bidSheetAsset?.id ?? null,
+  };
 
   const openBidSheet = useCallback((assetId: string) => {
     const raw = auctionAssets.find((item) => item.id === assetId);
     if (!raw) return;
     setBidSheetAsset(mapAuctionAssetForDisplay(raw));
   }, [auctionAssets]);
+
+  const handleOpenDetail = useCallback(
+    (assetId: string) => {
+      const lot = displayLotMap.get(assetId);
+      if (lot) setDetailAsset(lot);
+    },
+    [displayLotMap],
+  );
 
   const persistBid = useCallback(
     async (lotId: string, text: string) => {
@@ -251,40 +301,36 @@ export default function AuctionBidScreen() {
     [persistBid],
   );
 
-  const handleToggleLot = async (lotId: string) => {
-    if (!canEdit || locked) return;
-    if (lotId in lotBids) {
-      const existing = selectedDrafts.find((draft) => draft.auctionAssetId === lotId);
-      const pending = saveTimersRef.current.get(lotId);
-      if (pending) {
-        clearTimeout(pending);
-        saveTimersRef.current.delete(lotId);
+  const handleToggleLot = useCallback(
+    async (lotId: string) => {
+      const { lotBids: bids, selectedDrafts: drafts, canEdit: editable, locked: isLocked, bidSheetAssetId } =
+        interactionStateRef.current;
+      if (!editable || isLocked) return;
+      if (lotId in bids) {
+        const existing = drafts.find((draft) => draft.auctionAssetId === lotId);
+        const pending = saveTimersRef.current.get(lotId);
+        if (pending) {
+          clearTimeout(pending);
+          saveTimersRef.current.delete(lotId);
+        }
+        if (bidSheetAssetId === lotId) {
+          setBidSheetAsset(null);
+        }
+        setLotBids((prev) => {
+          const next = { ...prev };
+          delete next[lotId];
+          return next;
+        });
+        if (existing) {
+          await clearLotSelection(lotId, existing.id);
+        }
+        return;
       }
-      if (bidSheetAsset?.id === lotId) {
-        setBidSheetAsset(null);
-      }
-      setLotBids((prev) => {
-        const next = { ...prev };
-        delete next[lotId];
-        return next;
-      });
-      if (existing) {
-        await clearLotSelection(lotId, existing.id);
-      }
-      return;
-    }
-    setLotBids((prev) => ({ ...prev, [lotId]: '' }));
-    openBidSheet(lotId);
-  };
-
-  const handlePressCard = (lotId: string) => {
-    if (!canEdit || locked) return;
-    if (lotId in lotBids) {
+      setLotBids((prev) => ({ ...prev, [lotId]: '' }));
       openBidSheet(lotId);
-      return;
-    }
-    void handleToggleLot(lotId);
-  };
+    },
+    [clearLotSelection, openBidSheet],
+  );
 
   const findNextIncompleteBidId = useCallback(
     (afterId: string) => {
@@ -368,15 +414,19 @@ export default function AuctionBidScreen() {
       <LotCategoryHeader
         lotLabel={section.lotLabel}
         lotTitle={section.lotTitle}
-        itemCount={section.data.length}
+        itemCount={section.itemCount}
+        selectedCount={section.selectedCount}
+        collapsed={section.collapsed}
+        onToggle={() => toggleLotCollapsed(section.lotId)}
       />
     ),
-    [],
+    [toggleLotCollapsed],
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: AuctionAssetApi }) => {
-      const displayLot = mapAuctionAssetForDisplay(item);
+    ({ item, index }: { item: AuctionAssetApi; index: number }) => {
+      const displayLot = displayLotMap.get(item.id);
+      if (!displayLot) return null;
       const selected = item.id in lotBids;
       const bidText = lotBids[item.id] ?? '';
       const bidAmount = parseBidAmount(bidText);
@@ -390,13 +440,23 @@ export default function AuctionBidScreen() {
           bidComplete={feedback.kind === 'valid'}
           bidHasError={showErrors && feedback.kind === 'error'}
           locked={locked || !canEdit}
-          onToggle={() => void handleToggleLot(item.id)}
-          onPress={() => handlePressCard(item.id)}
-          onOpenDetail={() => setDetailAsset(displayLot)}
+          embedded
+          first={index === 0}
+          onToggle={handleToggleLot}
+          onOpenDetail={handleOpenDetail}
+          onOpenBid={openBidSheet}
         />
       );
     },
-    [canEdit, locked, lotBids, showErrors],
+    [canEdit, displayLotMap, handleOpenDetail, handleToggleLot, locked, lotBids, openBidSheet, showErrors],
+  );
+
+  const renderSectionFooter = useCallback(
+    ({ section }: { section: LotSection }) =>
+      section.collapsed || section.itemCount === 0 ? null : (
+        <View style={[styles.groupFooter, { backgroundColor: colors.glassFill, borderColor: colors.goldBorder }]} />
+      ),
+    [colors.glassFill, colors.goldBorder],
   );
 
   const statusBanner = useMemo(() => {
@@ -441,27 +501,25 @@ export default function AuctionBidScreen() {
           <LotParticipationOverview rows={participationRows} />
         ) : (
           <>
+            {auction?.title ? (
+              <Text
+                style={[Typography.microCaps, { color: colors.goldChampagne, fontSize: 10 }]}
+                numberOfLines={1}
+              >
+                {auction.title}
+              </Text>
+            ) : null}
             <BidFlowStepper
               activeStep={flowStep}
               selectedCount={summary.selectedLots.length}
               totalItems={auctionAssets.length}
             />
-            <Text style={[Typography.caption, { color: colors.textMuted }]} numberOfLines={1}>
-              {auction?.title}
-            </Text>
             <BidGuideCard activeStep={flowStep} />
-            <Text style={[Typography.caption, { color: colors.textMuted }]}>
-              {flowStep === 'select'
-                ? t('auction.participation.browseItemsHint')
-                : flowStep === 'bid'
-                  ? t('auction.participation.flowSteps.bid.listHint')
-                  : t('auction.participation.flowSteps.submit.listHint')}
-            </Text>
           </>
         )}
       </View>
     ),
-    [auction?.title, colors.textMuted, flowStep, participationRows, showParticipationOverview, statusBanner, summary.selectedLots.length, auctionAssets.length, t],
+    [auction?.title, colors.goldChampagne, flowStep, participationRows, showParticipationOverview, statusBanner, summary.selectedLots.length, auctionAssets.length],
   );
 
   const bidFooter = auction && !bidSheetOpen ? (
@@ -602,6 +660,7 @@ export default function AuctionBidScreen() {
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             renderSectionHeader={renderSectionHeader}
+            renderSectionFooter={renderSectionFooter}
             ListHeaderComponent={listHeader}
             stickySectionHeadersEnabled={false}
             style={styles.sectionList}
@@ -681,5 +740,13 @@ const styles = StyleSheet.create({
   },
   sectionListContent: {
     paddingBottom: Spacing.md,
+  },
+  groupFooter: {
+    height: Spacing.sm,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderBottomLeftRadius: Radii.lg,
+    borderBottomRightRadius: Radii.lg,
   },
 });

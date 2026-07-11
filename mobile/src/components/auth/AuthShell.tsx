@@ -7,6 +7,7 @@ import {
 } from 'react-native-keyboard-controller';
 
 import { useKeyboardToolbarTheme } from '@/lib/keyboardToolbarTheme';
+import { Duration } from '@/theme/motion';
 import { BackgroundOrbs } from '@/components/shell/BackgroundOrbs';
 import { useAuthStyles } from './authStyles';
 
@@ -16,6 +17,11 @@ import { useAuthStyles } from './authStyles';
  * layers a `KeyboardAwareScrollView` that smoothly scrolls only the
  * focused input into view (not the whole form) and a gold-themed
  * `KeyboardToolbar` with prev/next/done buttons.
+ *
+ * 2026 redesign
+ * -------------
+ *   - Entrance is 200ms (was 250ms) — snappier.
+ *   - Slide-up is 16px (was 24) — subtler, more refined.
  */
 export function AuthShell({
   children,
@@ -31,14 +37,14 @@ export function AuthShell({
   useEffect(() => {
     Animated.timing(entrance, {
       toValue: 1,
-      duration: 250,
+      duration: Duration.fast,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
   }, [entrance]);
 
   const entranceOpacity = entrance;
-  const entranceY = entrance.interpolate({ inputRange: [0, 1], outputRange: [24, 0] });
+  const entranceY = entrance.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
 
   return (
     <View style={authStyles.safeArea}>

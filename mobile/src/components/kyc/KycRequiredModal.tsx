@@ -1,20 +1,11 @@
-import { useEffect, useRef } from 'react';
-import {
-  Animated,
-  Easing,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { GoldButton } from '@/components/auth';
+import { Dialog } from '@/components/sheet';
 import { useTheme } from '@/lib/appStore';
-import { GLASS_RADIUS, glassElevation } from '@/lib/glassStyles';
+import { Radii, Spacing, Typography } from '@/theme';
 
 interface KycRequiredModalProps {
   visible: boolean;
@@ -23,153 +14,72 @@ interface KycRequiredModalProps {
 }
 
 /**
- * Themed dialog shown when a user tries to submit assets without KYC approval.
- * Replaces the native Alert so the prompt matches the app's glass/gold styling.
+ * Themed dialog shown when a user tries to submit assets without KYC
+ * approval. Built on the shared `<Dialog>` primitive for consistent
+ * motion + backdrop with every other overlay.
  */
 export function KycRequiredModal({ visible, onClose, onVerify }: KycRequiredModalProps) {
   const { t } = useTranslation();
-  const { colors, isDark } = useTheme();
-  const anim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible) {
-      anim.setValue(0);
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [visible, anim]);
-
-  const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] });
-  const opacity = anim;
+  const { colors } = useTheme();
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={[styles.overlay, { backgroundColor: colors.scrim }]}>
-          <TouchableWithoutFeedback>
-            <Animated.View
-              style={[
-                styles.card,
-                {
-                  backgroundColor: colors.baseElevated,
-                  borderColor: colors.warning.border,
-                  opacity,
-                  transform: [{ scale }],
-                  ...glassElevation(isDark, 'floating'),
-                },
-              ]}
-            >
-              <View style={styles.iconWrap}>
-                <View
-                  style={[
-                    styles.iconBadge,
-                    {
-                      backgroundColor: colors.warning.soft,
-                      borderColor: colors.warning.border,
-                    },
-                  ]}
-                >
-                  <MaterialCommunityIcons name="shield-alert-outline" size={28} color={colors.warning.fg} />
-                </View>
-              </View>
-
-              <Text style={[styles.title, { color: colors.cream }]}>{t('assets.kycRequired.title')}</Text>
-              <Text style={[styles.message, { color: colors.textSecondary }]}>
-                {t('assets.kycRequired.message')}
-              </Text>
-
-              <View style={styles.actions}>
-                <View style={styles.actionButton}>
-                  <GoldButton label={t('common.cancel')} variant="outline" onPress={onClose} compact />
-                </View>
-                <View style={styles.actionButton}>
-                  <GoldButton label={t('profile.menu.kycVerification')} onPress={onVerify} compact />
-                </View>
-              </View>
-
-              <Pressable
-                onPress={onClose}
-                hitSlop={12}
-                style={({ pressed }) => [styles.closeButton, { opacity: pressed ? 0.7 : 1 }]}
-              >
-                <MaterialCommunityIcons name="close" size={18} color={colors.textMuted} />
-              </Pressable>
-            </Animated.View>
-          </TouchableWithoutFeedback>
+    <Dialog visible={visible} onDismiss={onClose} tone="warning">
+      <View style={styles.iconWrap}>
+        <View
+          style={[
+            styles.iconBadge,
+            {
+              backgroundColor: colors.warning.soft,
+              borderColor: colors.warning.border,
+            },
+          ]}
+        >
+          <MaterialCommunityIcons name="shield-alert-outline" size={30} color={colors.warning.fg} />
         </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+      </View>
+
+      <Text style={[Typography.h1, { color: colors.cream, textAlign: 'center' }]}>
+        {t('assets.kycRequired.title')}
+      </Text>
+      <Text style={[Typography.bodyMedium, { color: colors.textSecondary, textAlign: 'center', marginTop: Spacing.xs }]}>
+        {t('assets.kycRequired.message')}
+      </Text>
+
+      <View style={styles.actions}>
+        <View style={styles.actionButton}>
+          <GoldButton label={t('common.cancel')} variant="outline" onPress={onClose} compact />
+        </View>
+        <View style={styles.actionButton}>
+          <GoldButton label={t('profile.menu.kycVerification')} onPress={onVerify} compact />
+        </View>
+      </View>
+    </Dialog>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // backgroundColor is bound at runtime (theme-aware) — see JSX.
-    padding: 28,
-  },
-  card: {
-    width: '100%',
-    maxWidth: 340,
-    borderRadius: GLASS_RADIUS.floating,
-    borderWidth: 1.5,
-    paddingHorizontal: 22,
-    paddingTop: 28,
-    paddingBottom: 22,
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
   iconWrap: {
-    marginBottom: 14,
+    alignItems: 'center',
+    marginBottom: Spacing.md,
   },
   iconBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    // backgroundColor + borderColor are bound at runtime (theme-aware).
     borderWidth: 1,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 8,
-  },
-  message: {
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 22,
-    maxWidth: 280,
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    gap: 10,
+    gap: Spacing.xs2,
     width: '100%',
+    marginTop: Spacing.lg,
   },
   actionButton: {
     flex: 1,
     minWidth: 0,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
 

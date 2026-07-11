@@ -13,6 +13,7 @@ import {
 import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 
 import { getCategoryTheme } from '@/lib/auctionUtils';
 import { resolveMediaUrl } from '@/lib/media-utils';
@@ -40,6 +41,13 @@ export interface ImageGalleryProps {
   showCounter?: boolean;
   borderRadius?: number;
   style?: StyleProp<ViewStyle>;
+  /**
+   * When rendered inside a `@gorhom/bottom-sheet`, a raw horizontal
+   * `FlatList` does not receive swipe gestures (the sheet's pan handler
+   * captures them). Set this to swap in `BottomSheetFlatList`, which
+   * coordinates gestures with the sheet so swiping works.
+   */
+  insideBottomSheet?: boolean;
 }
 
 type GallerySlideProps = {
@@ -76,9 +84,11 @@ function ImageGalleryImpl({
   showCounter = true,
   borderRadius = Radii.input,
   style,
+  insideBottomSheet = false,
 }: ImageGalleryProps) {
   const { colors } = useTheme();
   const theme = getCategoryTheme(category);
+  const PagerList = (insideBottomSheet ? BottomSheetFlatList : FlatList) as typeof FlatList;
   const [activeIndex, setActiveIndex] = useState(0);
   const listRef = useRef<FlatList<string>>(null);
   const activeIndexRef = useRef(0);
@@ -188,7 +198,7 @@ function ImageGalleryImpl({
   return (
     <View style={[{ width }, style]}>
       <View style={[styles.galleryWrap, { width, height, borderRadius }]}>
-        <FlatList
+        <PagerList
           ref={listRef}
           data={resolvedUrls}
           keyExtractor={keyExtractor}
@@ -232,7 +242,7 @@ function ImageGalleryImpl({
       </View>
 
       {showThumbnails && resolvedUrls.length > 1 ? (
-        <FlatList
+        <PagerList
           data={resolvedUrls}
           keyExtractor={(item, index) => `thumb-${item}-${index}`}
           horizontal

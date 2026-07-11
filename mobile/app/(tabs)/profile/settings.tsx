@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, Modal, TouchableWithoutFeedback } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -9,14 +9,14 @@ import { useAuthStore } from '@/lib/authStore';
 import { useRefreshSession } from '@/hooks/useRefreshSession';
 import { forgotPassword } from '@/services/authApi';
 import { AuthSuccessModal } from '@/components/auth';
+import { Sheet } from '@/components/sheet';
 import { maskMobileNumber } from '@/utils/mobile-utils';
 
 import { type ThemePreference } from '@/theme';
-import { glassElevation } from '@/lib/glassStyles';
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from '@/lib/i18n';
 import { ScreenShell } from '@/components/shell/ScreenShell';
 import { GlassCard } from '@/components/shell/GlassCard';
-import { Typography, Spacing } from '@/theme';
+import { Typography, Spacing, Radii } from '@/theme';
 
 function Row({
   icon,
@@ -78,7 +78,7 @@ function Row({
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const { passwordChanged } = useLocalSearchParams<{ passwordChanged?: string }>();
   const themeMode = useAppStore((s) => s.themeMode);
   const setThemeMode = useAppStore((s) => s.setThemeMode);
@@ -283,56 +283,51 @@ export default function SettingsScreen() {
         </GlassCard>
       </View>
 
-      <Modal visible={showLangModal} transparent animationType="fade" onRequestClose={() => setShowLangModal(false)}>
-        <TouchableWithoutFeedback onPress={() => setShowLangModal(false)}>
-          <View style={[styles.modalOverlay, { backgroundColor: colors.scrim }]}>
-            <TouchableWithoutFeedback>
-              <View
-                style={[
-                  styles.langModal,
-                  {
-                    backgroundColor: colors.baseElevated,
-                    borderColor: colors.goldBorder,
-                    ...glassElevation(isDark, 'floating'),
-                  },
-                ]}
-              >
-                <Text style={[Typography.eyebrow, styles.langModalTitle, { color: colors.goldBright, letterSpacing: 2 }]}>
-                  {t('settings.language.label').toUpperCase()}
-                </Text>
-                {SUPPORTED_LANGUAGES.map((lang) => {
-                  const active = lang === language;
-                  return (
-                    <Pressable
-                      key={lang}
-                      onPress={() => {
-                        setLanguage(lang);
-                        setShowLangModal(false);
-                      }}
-                      style={({ pressed }) => [
-                        styles.langRow,
-                        {
-                          backgroundColor: active ? colors.glassFillActive : 'transparent',
-                          opacity: pressed ? 0.7 : 1,
-                        },
-                      ]}
-                    >
-                      <Text style={[Typography.bodyMedium, { color: active ? colors.goldBright : colors.cream, fontWeight: '600' }]}>
-                        {LANGUAGE_LABELS[lang]}
-                      </Text>
-                      {active ? (
-                        <MaterialCommunityIcons name="check-circle" size={18} color={colors.goldBright} />
-                      ) : (
-                        <MaterialCommunityIcons name="circle-outline" size={18} color={colors.textMuted} />
-                      )}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+      <Sheet
+        visible={showLangModal}
+        snapPoints={['50%']}
+        onDismiss={() => setShowLangModal(false)}
+        showCloseButton
+      >
+        <View style={styles.langSheetHeader}>
+          <MaterialCommunityIcons name="translate" size={20} color={colors.goldBright} />
+          <Text style={[Typography.h1, { color: colors.cream, flex: 1 }]}>
+            {t('settings.language.label')}
+          </Text>
+        </View>
+        <Text style={[Typography.caption, { color: colors.textSecondary, marginBottom: Spacing.md }]}>
+          {t('settings.language.description')}
+        </Text>
+        {SUPPORTED_LANGUAGES.map((lang) => {
+          const active = lang === language;
+          return (
+            <Pressable
+              key={lang}
+              onPress={() => {
+                setLanguage(lang);
+                setShowLangModal(false);
+              }}
+              style={({ pressed }) => [
+                styles.langRow,
+                {
+                  backgroundColor: active ? colors.glassFillActive : colors.glassFill,
+                  borderColor: active ? colors.goldBorderActive : colors.goldBorder,
+                  opacity: pressed ? 0.7 : 1,
+                },
+              ]}
+            >
+              <Text style={[Typography.bodyMedium, { color: active ? colors.goldBright : colors.cream, fontWeight: '600' }]}>
+                {LANGUAGE_LABELS[lang]}
+              </Text>
+              {active ? (
+                <MaterialCommunityIcons name="check-circle" size={18} color={colors.goldBright} />
+              ) : (
+                <MaterialCommunityIcons name="circle-outline" size={18} color={colors.textMuted} />
+              )}
+            </Pressable>
+          );
+        })}
+      </Sheet>
 
       {userMobile ? (
         <AuthSuccessModal
@@ -461,36 +456,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1.5,
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // Scrim color is bound at runtime to colors.scrim (theme-aware).
-    padding: Spacing.xl2,
-  },
-  langModal: {
-    width: '100%',
-    maxWidth: 320,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    overflow: 'hidden',
-  },
-  langModalTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 2,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
   langRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm2,
+    borderRadius: Radii.input,
+    borderWidth: 1,
+    marginBottom: Spacing.xs,
   },
-  langRowText: {
-    fontSize: 14,
-    fontWeight: '600',
+  langSheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+    paddingRight: Spacing.xxl,
   },
 });

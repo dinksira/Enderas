@@ -109,7 +109,7 @@ export function GoldenTabBar({ state, navigation }: GoldenTabBarProps) {
     // Tactile feedback: quick scale-down then back.
     Animated.sequence([
       Animated.timing(pressScales[i], { toValue: 0.88, duration: Duration.instant, easing: Easing.out(Easing.cubic), useNativeDriver: false }),
-      Animated.timing(pressScales[i], { toValue: 1, duration: Duration.micro, easing: Easing.out(Easing.cubic), useNativeDriver: false }),
+      Animated.spring(pressScales[i], { toValue: 1, friction: 6, tension: 200, useNativeDriver: false }),
     ]).start();
 
     const event = navigation.emit({

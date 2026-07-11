@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 
 import { GoldButton } from '@/components/auth';
+import { Sheet } from '@/components/sheet';
 import { formatEtbAmount } from '@/lib/auctionUtils';
 import { useTheme } from '@/lib/appStore';
-import { GLASS_RADIUS, glassElevation } from '@/lib/glassStyles';
-import { Typography, Spacing, Radii } from '@/theme';
+import { Radii, Spacing, Typography } from '@/theme';
 
 export type CpoReadinessItem = {
   id: string;
@@ -26,6 +26,13 @@ interface CpoReadinessSheetProps {
   onContinue?: () => void;
 }
 
+/**
+ * CPO readiness checklist sheet. Built on the shared `<Sheet>` primitive
+ * — was previously a hand-rolled RN `Modal` with its own translateY
+ * animation, `statusBarTranslucent`, and absolute-positioned press
+ * catcher. Now uses the same backdrop, handle, and gesture-dismiss
+ * language as `BidEntrySheet`.
+ */
 export function CpoReadinessSheet({
   visible,
   items,
@@ -34,160 +41,204 @@ export function CpoReadinessSheet({
   onContinue,
 }: CpoReadinessSheetProps) {
   const { t } = useTranslation();
-  const { colors, isDark } = useTheme();
-  const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const allReady = useMemo(() => items.every((item) => item.status === 'ok'), [items]);
-  const hasErrors = items.some((item) => item.status === 'error');
+  const readyCount = useMemo(() => items.filter((item) => item.status === 'ok').length, [items]);
+  const nextStep = useMemo(
+    () => items.find((item) => item.status === 'error') ?? items.find((item) => item.status === 'warning'),
+    [items],
+  );
+  const remainingSteps = items.filter((item) => item.status !== 'ok').length;
+  // When only one (or zero) step is left, don't show a full checklist — just
+  // tell the user what to do and let the sheet shrink to fit that content.
+  const compact = remainingSteps <= 1;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
-      <View style={[styles.overlay, { backgroundColor: colors.scrim }]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityRole="button" />
-
+    <Sheet
+      visible={visible}
+      snapPoints={compact ? undefined : ['82%']}
+      dynamicSizing={compact}
+      onDismiss={onClose}
+      contentPadding={Spacing.md}
+    >
+      <View style={styles.header}>
         <View
           style={[
-            styles.sheet,
+            styles.headerIcon,
             {
-              backgroundColor: colors.baseElevated,
-              borderColor: colors.goldBorder,
-              paddingBottom: Math.max(insets.bottom, Spacing.md),
-              ...glassElevation(isDark, 'floating'),
+              backgroundColor: allReady ? colors.success.soft : colors.glassFill,
+              borderColor: allReady ? colors.success.border : colors.goldBorder,
             },
           ]}
         >
-          <View style={styles.handleRow}>
-            <View style={[styles.handle, { backgroundColor: colors.divider }]} />
-          </View>
-
-          <View style={styles.header}>
-            <MaterialCommunityIcons
-              name={allReady ? 'check-decagram-outline' : 'information-outline'}
-              size={22}
-              color={allReady ? colors.success.fg : colors.goldChampagne}
-            />
-            <View style={styles.headerCopy}>
-              <Text style={[Typography.cardTitle, { color: colors.cream }]}>
-                {allReady
-                  ? t('auction.participation.cpoReadinessReadyTitle')
-                  : t('auction.participation.cpoReadinessTitle')}
-              </Text>
-              <Text style={[Typography.caption, { color: colors.textSecondary }]}>
-                {allReady
-                  ? t('auction.participation.cpoReadinessReadyBody', { amount: formatEtbAmount(cpoAmount) })
-                  : t('auction.participation.cpoReadinessBody')}
-              </Text>
-            </View>
-          </View>
-
-          <ScrollView style={styles.listScroll} contentContainerStyle={styles.listContent}>
-            {items.map((item) => {
-              const iconName =
-                item.status === 'ok'
-                  ? 'check-circle-outline'
-                  : item.status === 'warning'
-                    ? 'clock-outline'
-                    : 'alert-circle-outline';
-              const iconColor =
-                item.status === 'ok'
-                  ? colors.success.fg
-                  : item.status === 'warning'
-                    ? colors.goldChampagne
-                    : colors.danger.fg;
-              const rowBg =
-                item.status === 'ok'
-                  ? colors.success.soft
-                  : item.status === 'warning'
-                    ? colors.glassFill
-                    : colors.danger.soft;
-              const rowBorder =
-                item.status === 'ok'
-                  ? colors.success.border
-                  : item.status === 'warning'
-                    ? colors.goldBorder
-                    : colors.danger.border;
-
-              return (
-                <View
-                  key={item.id}
-                  style={[styles.row, { backgroundColor: rowBg, borderColor: rowBorder }]}
-                >
-                  <MaterialCommunityIcons name={iconName} size={18} color={iconColor} />
-                  <View style={styles.rowCopy}>
-                    <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '700' }]}>
-                      {item.title}
-                    </Text>
-                    <Text style={[Typography.caption, { color: colors.textSecondary, lineHeight: 17 }]}>
-                      {item.description}
-                    </Text>
-                    {item.detail ? (
-                      <Text style={[Typography.caption, { color: colors.textMuted, marginTop: 2 }]}>
-                        {item.detail}
-                      </Text>
-                    ) : null}
-                  </View>
-                </View>
-              );
-            })}
-          </ScrollView>
-
-          <View style={styles.actions}>
-            {allReady && onContinue ? (
-              <GoldButton
-                label={t('auction.participation.cpoReadinessContinue')}
-                onPress={onContinue}
-                compact
-              />
-            ) : (
-              <GoldButton
-                label={hasErrors ? t('auction.participation.cpoReadinessGoBack') : t('common.close')}
-                onPress={onClose}
-                variant={hasErrors ? 'primary' : 'outline'}
-                compact
-              />
-            )}
-          </View>
+          <MaterialCommunityIcons
+            name={allReady ? 'check-decagram-outline' : 'clipboard-list-outline'}
+            size={22}
+            color={allReady ? colors.success.fg : colors.goldChampagne}
+          />
+        </View>
+        <View style={styles.headerCopy}>
+          <Text style={[Typography.cardTitle, { color: colors.cream }]}>
+            {allReady
+              ? t('auction.participation.cpoReadinessReadyTitle')
+              : t('auction.participation.cpoReadinessTitle')}
+          </Text>
+          <Text style={[Typography.caption, { color: colors.textSecondary, lineHeight: 17 }]}>
+            {allReady
+              ? t('auction.participation.cpoReadinessReadyBody', { amount: formatEtbAmount(cpoAmount) })
+              : t('auction.participation.cpoReadinessProgress', {
+                  ready: readyCount,
+                  total: items.length,
+                })}
+          </Text>
         </View>
       </View>
-    </Modal>
+
+      {!allReady && nextStep ? (
+        <View style={[styles.nextStep, { backgroundColor: colors.glassFillActive, borderColor: colors.goldBorderActive }]}>
+          <View style={styles.nextStepHead}>
+            <MaterialCommunityIcons name="arrow-right-circle" size={16} color={colors.goldBright} />
+            <Text style={[Typography.microCaps, { color: colors.goldBright, fontSize: 10 }]}>
+              {t('auction.participation.cpoReadinessNextStep')}
+            </Text>
+            {remainingSteps > 1 ? (
+              <Text style={[Typography.caption, { color: colors.textMuted, fontSize: 11 }]}>
+                {t('auction.participation.cpoReadinessRemaining', { count: remainingSteps })}
+              </Text>
+            ) : null}
+          </View>
+          <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '700' }]}>
+            {nextStep.title}
+          </Text>
+          <Text style={[Typography.caption, { color: colors.textSecondary, lineHeight: 18 }]}>
+            {nextStep.description}
+          </Text>
+          {nextStep.detail ? (
+            <Text style={[Typography.caption, { color: colors.textMuted, lineHeight: 17, marginTop: 2 }]}>
+              {nextStep.detail}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+
+      {compact ? null : (
+        <>
+      <Text style={[Typography.microCaps, styles.listLabel, { color: colors.goldChampagne }]}>
+        {t('auction.participation.cpoReadinessChecklist')}
+      </Text>
+
+      <BottomSheetScrollView style={styles.listScroll} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator>
+        {items.map((item) => {
+          const iconName =
+            item.status === 'ok'
+              ? 'check-circle-outline'
+              : item.status === 'warning'
+                ? 'clock-outline'
+                : 'alert-circle-outline';
+          const iconColor =
+            item.status === 'ok'
+              ? colors.success.fg
+              : item.status === 'warning'
+                ? colors.goldChampagne
+                : colors.danger.fg;
+          const rowBg =
+            item.status === 'ok'
+              ? colors.success.soft
+              : item.status === 'warning'
+                ? colors.glassFill
+                : colors.danger.soft;
+          const rowBorder =
+            item.status === 'ok'
+              ? colors.success.border
+              : item.status === 'warning'
+                ? colors.goldBorder
+                : colors.danger.border;
+
+          return (
+            <View
+              key={item.id}
+              style={[styles.row, { backgroundColor: rowBg, borderColor: rowBorder }]}
+            >
+              <MaterialCommunityIcons name={iconName} size={18} color={iconColor} />
+              <View style={styles.rowCopy}>
+                <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '700' }]}>
+                  {item.title}
+                </Text>
+                <Text style={[Typography.caption, { color: colors.textSecondary, lineHeight: 17 }]}>
+                  {item.description}
+                </Text>
+                {item.detail ? (
+                  <Text style={[Typography.caption, { color: colors.textMuted, marginTop: 2 }]}>
+                    {item.detail}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          );
+        })}
+      </BottomSheetScrollView>
+        </>
+      )}
+
+      <View style={[styles.actions, compact ? styles.actionsCompact : null]}>
+        {allReady && onContinue ? (
+          <GoldButton
+            label={t('auction.participation.cpoReadinessContinue')}
+            onPress={onContinue}
+            compact
+          />
+        ) : (
+          <View style={[styles.helperRow, { backgroundColor: colors.glassFill, borderColor: colors.goldBorder }]}>
+            <MaterialCommunityIcons name="information-outline" size={16} color={colors.goldChampagne} />
+            <Text style={[Typography.caption, { color: colors.textSecondary, flex: 1, lineHeight: 17 }]}>
+              {t('auction.participation.uploadHelperDefault')}
+            </Text>
+          </View>
+        )}
+      </View>
+    </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    maxHeight: '80%',
-    borderTopLeftRadius: GLASS_RADIUS.floating,
-    borderTopRightRadius: GLASS_RADIUS.floating,
-    borderWidth: 1.5,
-    borderBottomWidth: 0,
-    paddingHorizontal: Spacing.md,
-  },
-  handleRow: {
-    alignItems: 'center',
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.xs,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.sm,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  headerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerCopy: {
     flex: 1,
     gap: 4,
   },
+  nextStep: {
+    borderRadius: Radii.lg,
+    borderWidth: 1,
+    padding: Spacing.sm2,
+    gap: 3,
+    marginBottom: Spacing.sm,
+  },
+  nextStepHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  listLabel: {
+    fontSize: 10,
+    marginBottom: Spacing.xs,
+  },
   listScroll: {
-    maxHeight: 320,
+    maxHeight: 260,
   },
   listContent: {
     gap: Spacing.xs,
@@ -206,9 +257,21 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   actions: {
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,250,240,0.1)',
+    borderTopColor: 'rgba(122, 180, 216, 0.12)',
+  },
+  actionsCompact: {
+    paddingTop: Spacing.sm,
+    borderTopWidth: 0,
+  },
+  helperRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.xs,
+    padding: Spacing.sm,
+    borderRadius: Radii.input,
+    borderWidth: 1,
   },
 });
 

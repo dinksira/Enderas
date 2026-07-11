@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 
 import { GlassCard } from '@/components/shell/GlassCard';
@@ -71,7 +72,7 @@ function buildPdfViewerHtml(pdfDataUrl: string, backgroundColor: string, textCol
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=6.0, user-scalable=yes"
     />
     <title>Document Viewer</title>
     <style>
@@ -85,6 +86,7 @@ function buildPdfViewerHtml(pdfDataUrl: string, backgroundColor: string, textCol
         background: ${backgroundColor};
         color: ${textColor};
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        -webkit-text-size-adjust: 100%;
       }
       #status {
         position: sticky;
@@ -95,17 +97,17 @@ function buildPdfViewerHtml(pdfDataUrl: string, backgroundColor: string, textCol
         font-size: 14px;
       }
       #pages {
-        padding: 12px;
+        padding: 8px 0 24px;
       }
       .page {
-        margin: 0 auto 16px;
-        width: fit-content;
-        max-width: 100%;
+        margin: 0 auto 12px;
+        width: 100%;
+        background: #ffffff;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
       }
       .page canvas {
         display: block;
-        max-width: 100%;
+        width: 100%;
         height: auto;
       }
     </style>
@@ -142,9 +144,20 @@ function buildPdfViewerHtml(pdfDataUrl: string, backgroundColor: string, textCol
           const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
           statusEl.textContent = 'Rendering pages...';
 
+          // Fit each page to the full available width and render at the
+          // device pixel ratio so text stays crisp when the user pinches
+          // to zoom in. Cap the backing-store scale so very large / hi-DPI
+          // pages don't blow past canvas memory limits.
+          const availableWidth = pagesEl.clientWidth || window.innerWidth;
+          const dpr = Math.min(window.devicePixelRatio || 1, 3);
+
           for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
             const page = await pdf.getPage(pageNumber);
-            const viewport = page.getViewport({ scale: 1.2 });
+            const baseViewport = page.getViewport({ scale: 1 });
+            const fitScale = availableWidth / baseViewport.width;
+            const renderScale = Math.min(fitScale * dpr, 6);
+            const viewport = page.getViewport({ scale: renderScale });
+
             const wrapper = document.createElement('div');
             wrapper.className = 'page';
             const canvas = document.createElement('canvas');
@@ -283,6 +296,21 @@ export function DocumentViewer({ documentUrl }: DocumentViewerProps) {
           </View>
         </View>
       ) : null}
+      {viewerReady ? (
+        <View style={styles.zoomHintWrap} pointerEvents="none">
+          <View
+            style={[
+              styles.zoomHint,
+              { backgroundColor: colors.baseElevated, borderColor: colors.goldBorder },
+            ]}
+          >
+            <MaterialCommunityIcons name="gesture-pinch" size={16} color={colors.goldBright} />
+            <Text style={[Typography.caption, { color: colors.cream, fontWeight: '600' }]}>
+              {t('auction.participation.pinchToZoomHint')}
+            </Text>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -318,5 +346,26 @@ const styles = StyleSheet.create({
   },
   loadingTitle: {
     fontWeight: '700',
+  },
+  zoomHintWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: Spacing.lg,
+    alignItems: 'center',
+  },
+  zoomHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 999,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
 });

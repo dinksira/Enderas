@@ -67,23 +67,30 @@ export default function VerifyOtpScreen() {
     setFormError(null);
 
     try {
-      const response = await verifyOtp({
+      const response = (await verifyOtp({
         mobileNumber: pendingOtpMobile,
         phoneNumber: pendingOtpMobile,
         otp,
-      });
+      })) as {
+        accessToken: string;
+        identity?: Record<string, unknown>;
+        authz?: Record<string, unknown>;
+        user?: Record<string, unknown>;
+      };
 
+      const identity = (response.identity ?? {}) as Record<string, unknown>;
+      const authz = (response.authz ?? {}) as Record<string, unknown>;
       const sessionUser: AuthUser = {
-        id: String(response.identity?.userId || response.identity?.id || ''),
-        roleCode: response.authz?.roleCode ?? null,
-        isStaff: response.identity?.isStaff,
-        staffId: response.identity?.staffId ?? null,
-        employeeId: response.identity?.employeeId ?? null,
-        displayName: response.identity?.displayName,
-        mobileNumber: response.identity?.mobileNumber,
-        email: response.identity?.email,
-        status: response.identity?.status,
-        userType: response.identity?.userType,
+        id: String(identity.userId || identity.id || ''),
+        roleCode: (authz.roleCode as string | null) ?? null,
+        isStaff: Boolean(identity.isStaff),
+        staffId: (identity.staffId as string | null) ?? null,
+        employeeId: (identity.employeeId as string | null) ?? null,
+        displayName: (identity.displayName as string) ?? '',
+        mobileNumber: (identity.mobileNumber as string) ?? '',
+        email: (identity.email as string) ?? '',
+        status: (identity.status as string) ?? '',
+        userType: (identity.userType as string) ?? '',
       };
 
       if (!isMobileAllowedUser(sessionUser)) {
