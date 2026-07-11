@@ -9,7 +9,7 @@ import { Evaluation } from '../models/evaluation.model.js';
 import { Bid } from '../models/bid.model.js';
 import { Payment } from '../models/payment.model.js';
 import { Cpo } from '../models/cpo.model.js';
-import { Staff, User } from '../models/index.js';
+import { Staff, User, AssetOwner } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import { LAUNCH_WORKFLOW_ROLES } from '../constants/staff-role.constants.js';
@@ -892,7 +892,7 @@ function sanitizeBrowseAuction(auction, { documentAccess = false } = {}) {
   return sanitized;
 }
 
-function buildParticipationSummary({ payment = null, cpo = null, bid = null, bids = [] } = {}) {
+function buildParticipationSummary({ payment = null, cpo = null, bid = null, bids = [], isAssetOwner = false } = {}) {
   const paymentApproved = payment?.status === 'approved';
   const paymentPending = payment?.status === 'pending';
   const paymentRejected = payment?.status === 'rejected';
@@ -903,7 +903,9 @@ function buildParticipationSummary({ payment = null, cpo = null, bid = null, bid
   const hasBid = bidList.length > 0;
 
   let participationStatus = 'not_started';
-  if (hasBid) {
+  if (isAssetOwner) {
+    participationStatus = 'own_asset';
+  } else if (hasBid) {
     participationStatus = 'bid_submitted';
   } else if (cpoApproved) {
     participationStatus = 'bidding_waiting';
@@ -924,7 +926,23 @@ function buildParticipationSummary({ payment = null, cpo = null, bid = null, bid
     isRegisteredBidder: paymentApproved,
     documentAccess: paymentApproved,
     hasBid,
+    isAssetOwner,
   };
+}
+
+async function isUserAssetOwnerOfAuction(userId, auctionId) {
+  const owner = await AssetOwner.findOne({ where: { user_id: userId } });
+  if (!owner) return false;
+  const count = await AuctionAsset.count({
+    where: { auction_id: auctionId },
+    include: [{
+      model: Asset,
+      as: 'asset',
+      where: { asset_owner_id: owner.id },
+      required: true,
+    }],
+  });
+  return count > 0;
 }
 
 function latestRecordByAuction(records) {
@@ -944,7 +962,7 @@ async function attachUserParticipationSummaries(items, userId) {
   }
 
   const auctionIds = items.map((item) => item.id);
-  const [payments, cpos, bids] = await Promise.all([
+  const [payments, cpos, bids, bidDrafts, userAssetOwner] = await Promise.all([
     Payment.findAll({
       where: { user_id: userId, auction_id: { [Op.in]: auctionIds }, deleted_at: null },
       order: [['created_at', 'DESC']],
@@ -956,18 +974,38 @@ async function attachUserParticipationSummaries(items, userId) {
     Bid.findAll({
       where: { user_id: userId, auction_id: { [Op.in]: auctionIds } },
     }),
+    BidDraft.findAll({
+      where: { user_id: userId, auction_id: { [Op.in]: auctionIds } },
+    }),
+    AssetOwner.findOne({ where: { user_id: userId } }),
   ]);
+
+  const ownedAuctionIds = new Set();
+  if (userAssetOwner) {
+    const ownedAuctionAssets = await AuctionAsset.findAll({
+      where: { auction_id: { [Op.in]: auctionIds } },
+      include: [{
+        model: Asset,
+        as: 'asset',
+        where: { asset_owner_id: userAssetOwner.id },
+        required: true,
+        attributes: [],
+      }],
+      attributes: ['auction_id'],
+    });
+    ownedAuctionAssets.forEach(aa => ownedAuctionIds.add(aa.auction_id));
+  }
 
   const paymentByAuction = latestRecordByAuction(payments);
   const cpoByAuction = latestRecordByAuction(cpos);
-  const bidsByAuction = new Map();
-  for (const bidRecord of bids) {
+  const mergedBidsByAuction = new Map();
+  for (const bidRecord of [...bids, ...bidDrafts]) {
     const auctionId = bidRecord.auction_id ?? bidRecord.auctionId;
     if (!auctionId) continue;
-    if (!bidsByAuction.has(auctionId)) {
-      bidsByAuction.set(auctionId, []);
+    if (!mergedBidsByAuction.has(auctionId)) {
+      mergedBidsByAuction.set(auctionId, []);
     }
-    bidsByAuction.get(auctionId).push(bidRecord);
+    mergedBidsByAuction.get(auctionId).push(bidRecord);
   }
 
   return items.map((item) => ({
@@ -975,7 +1013,8 @@ async function attachUserParticipationSummaries(items, userId) {
     myParticipation: buildParticipationSummary({
       payment: paymentByAuction.get(item.id),
       cpo: cpoByAuction.get(item.id),
-      bids: bidsByAuction.get(item.id) || [],
+      bids: mergedBidsByAuction.get(item.id) || [],
+      isAssetOwner: ownedAuctionIds.has(item.id),
     }),
   }));
 }
@@ -988,7 +1027,7 @@ export async function getAuctionParticipation(auctionId, userId) {
   const auction = await getBrowseAuctionById(auctionId, userId);
   const lots = auction.lots || [];
 
-  const [payment, cpo, bids, bidDraftRecords] = await Promise.all([
+  const [payment, cpo, bids, bidDraftRecords, isAssetOwner] = await Promise.all([
     Payment.findOne({
       where: { user_id: userId, auction_id: auctionId, deleted_at: null },
       order: [['created_at', 'DESC']],
@@ -1006,6 +1045,7 @@ export async function getAuctionParticipation(auctionId, userId) {
       },
       order: [['created_at', 'ASC']],
     }),
+    isUserAssetOwnerOfAuction(userId, auctionId),
   ]);
 
   const paymentApproved = payment?.status === 'approved';
@@ -1071,20 +1111,30 @@ export async function getAuctionParticipation(auctionId, userId) {
     participationStatus = 'bidding_waiting';
   }
 
-  const canPlaceBid = lotParticipation.some((lot) => lot.canPlaceBid)
+  let canPlaceBid = lotParticipation.some((lot) => lot.canPlaceBid)
     || Boolean(cpoApproved && !legacyBid && lots.length === 0 && auctionOpen && inWindow);
 
   const editableDrafts = bidDraftRecords.filter((draft) => draft.status === 'draft');
   const lockedDrafts = bidDraftRecords.filter((draft) => draft.status === 'locked');
   const hasEditableDrafts = editableDrafts.length > 0;
   const hasLockedDrafts = lockedDrafts.length > 0;
-  const canEditBidDrafts = Boolean(
+  let canEditBidDrafts = Boolean(
     paymentApproved && !cpoPending && !cpoApproved && auctionOpen && inWindow,
   );
-  const canSubmitCpoWithBids = Boolean(
+  let canSubmitCpoWithBids = Boolean(
     canEditBidDrafts && hasEditableDrafts,
   );
-  const bidsLocked = Boolean(cpoPending || cpoApproved || hasBid || hasLockedDrafts);
+  let bidsLocked = Boolean(cpoPending || cpoApproved || hasBid || hasLockedDrafts);
+  let canSubmitCpo = Boolean(auctionOpen && paymentApproved && !cpoApproved && !cpoPending);
+
+  if (isAssetOwner) {
+    canPlaceBid = false;
+    canEditBidDrafts = false;
+    canSubmitCpoWithBids = false;
+    canSubmitCpo = false;
+    bidsLocked = true;
+    lotParticipation.forEach((lot) => { lot.canPlaceBid = false; });
+  }
 
   const draftCpoPreview = editableDrafts.length > 0 || lockedDrafts.length > 0
     ? computeRequiredCpoFromBidAmounts(
@@ -1098,7 +1148,9 @@ export async function getAuctionParticipation(auctionId, userId) {
       )
     : null;
 
-  if (paymentApproved && !cpo && hasEditableDrafts) {
+  if (isAssetOwner) {
+    participationStatus = 'own_asset';
+  } else if (paymentApproved && !cpo && hasEditableDrafts) {
     participationStatus = 'ready_to_bid';
   } else if (cpoPending && (hasLockedDrafts || hasStoredJsonArray(cpo?.proposed_bids))) {
     participationStatus = 'cpo_pending';
@@ -1167,7 +1219,7 @@ export async function getAuctionParticipation(auctionId, userId) {
       cpoApproved,
       canSubmitPayment:
         auctionOpen && !paymentApproved && !paymentPending && (!payment || paymentRejected),
-      canSubmitCpo: auctionOpen && paymentApproved && !cpoApproved && !cpoPending,
+      canSubmitCpo,
       canSubmitCpoWithBids,
       canEditBidDrafts,
       bidsLocked,
@@ -1176,6 +1228,7 @@ export async function getAuctionParticipation(auctionId, userId) {
       biddingWindowStatus,
       paymentPending,
       cpoPending,
+      isAssetOwner,
     },
     flags: {
       paymentApproved,
@@ -1632,6 +1685,7 @@ export const auctionService = Object.freeze({
   deleteAuction,
   listEligibleAssetsForAuction,
   mapDisplayStatus,
+  isUserAssetOwnerOfAuction,
 });
 
 export default auctionService;

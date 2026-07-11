@@ -1,4 +1,4 @@
-import { ENV, api, publicApi } from '@enderass/shared/api';
+import { ENV, api } from '@enderass/shared/api';
 
 const AUCTIONS_BASE = `${ENV.apiV1Prefix}/auctions`;
 const FILES_BASE = `${ENV.apiV1Prefix}/files`;
@@ -17,7 +17,7 @@ export const auctionService = Object.freeze({
     if (params.status) query.set('status', params.status);
     if (params.search) query.set('search', params.search);
     const qs = query.toString();
-    return publicApi.get(qs ? `${AUCTIONS_BASE}/browse?${qs}` : `${AUCTIONS_BASE}/browse`);
+    return api.get(qs ? `${AUCTIONS_BASE}/browse?${qs}` : `${AUCTIONS_BASE}/browse`);
   },
 
   browseById: async (id) => {

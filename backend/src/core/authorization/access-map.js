@@ -23,6 +23,9 @@ export const MODULES = Object.freeze({
   REPORTS: 'reports',
   SETTINGS: 'settings',
   FILES: 'files',
+  ORGANIZATIONS: 'organizations',
+  ORG_PORTAL: 'org_portal',
+  SHARE_LINKS: 'share_links',
 });
 
 export const ACTIONS = Object.freeze({
@@ -172,6 +175,27 @@ export const API_ACCESS_MAP = Object.freeze({
   'GET /api/v1/settings': { module: MODULES.SETTINGS, action: ACTIONS.READ },
   'PUT /api/v1/settings': { module: MODULES.SETTINGS, action: ACTIONS.UPDATE },
 
+  // Organizations
+  'GET /api/v1/organizations': { module: MODULES.ORGANIZATIONS, action: ACTIONS.READ },
+  'GET /api/v1/organizations/:id/active-auctions': { module: MODULES.ORGANIZATIONS, action: ACTIONS.READ },
+  'GET /api/v1/organizations/:id/auction-links': { module: MODULES.ORGANIZATIONS, action: ACTIONS.READ },
+  'GET /api/v1/organizations/:id/available-auctions': { module: MODULES.ORGANIZATIONS, action: ACTIONS.READ },
+  'POST /api/v1/organizations/:id/auction-links': { module: MODULES.ORGANIZATIONS, action: ACTIONS.UPDATE },
+  'DELETE /api/v1/organizations/:id/auction-links/:auctionId': { module: MODULES.ORGANIZATIONS, action: ACTIONS.UPDATE },
+  'GET /api/v1/organizations/:id': { module: MODULES.ORGANIZATIONS, action: ACTIONS.READ },
+  'POST /api/v1/organizations': { module: MODULES.ORGANIZATIONS, action: ACTIONS.CREATE },
+  'PUT /api/v1/organizations/:id': { module: MODULES.ORGANIZATIONS, action: ACTIONS.UPDATE },
+  'DELETE /api/v1/organizations/:id': { module: MODULES.ORGANIZATIONS, action: ACTIONS.DELETE },
+
+  // Organization portal (authenticated, org user only)
+  'GET /api/v1/organizations/portal': { module: MODULES.ORG_PORTAL, action: ACTIONS.READ },
+  'GET /api/v1/organizations/portal/assets': { module: MODULES.ORG_PORTAL, action: ACTIONS.READ },
+
+  // Share links
+  'POST /api/v1/auctions/:auctionId/share-links': { module: MODULES.SHARE_LINKS, action: ACTIONS.CREATE },
+  'GET /api/v1/auctions/:auctionId/share-links': { module: MODULES.SHARE_LINKS, action: ACTIONS.READ },
+  'DELETE /api/v1/share-links/:id': { module: MODULES.SHARE_LINKS, action: ACTIONS.DELETE },
+
   // Auth session (authenticated, no module gate)
   'GET /api/v1/auth/me': { module: null, action: null },
 });
@@ -187,6 +211,7 @@ export const PAGE_ACCESS_REGISTRY = Object.freeze([
   { id: 'staff', label: 'Staff', path: '/app/staff', module: MODULES.STAFF, action: ACTIONS.READ, group: 'admin' },
   { id: 'roles', label: 'Roles', path: '/app/roles', module: MODULES.ROLES, action: ACTIONS.READ, group: 'admin' },
   { id: 'settings', label: 'Settings', path: '/app/settings', module: MODULES.SETTINGS, action: ACTIONS.READ, group: 'admin' },
+  { id: 'organizations', label: 'Organizations', path: '/app/organizations', module: MODULES.ORGANIZATIONS, action: ACTIONS.READ, group: 'admin' },
 
   { id: 'kyc', label: 'KYC', path: '/app/kyc', module: MODULES.KYC, action: ACTIONS.READ, group: 'operations' },
   { id: 'assets', label: 'Asset Requests', path: '/app/assets', module: MODULES.ASSETS, action: ACTIONS.READ, group: 'operations' },
@@ -224,6 +249,7 @@ export const DATA_SCOPE_RULES = Object.freeze({
   [MODULES.USERS]: 'staff_module',
   [MODULES.STAFF]: 'staff_module',
   [MODULES.ROLES]: 'staff_module',
+  [MODULES.ORGANIZATIONS]: 'staff_module',
 });
 
 /**

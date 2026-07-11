@@ -57,6 +57,19 @@ export const env = Object.freeze({
   clientUrl: optionalEnv('CLIENT_URL', 'http://localhost:5173'),
   apiBaseUrl: optionalEnv('API_BASE_URL', 'http://localhost:3000/api'),
 
+  app: Object.freeze({
+    frontendUrl: optionalEnv('FRONTEND_URL', 'http://localhost:5173'),
+  }),
+
+  email: Object.freeze({
+    fromAddress: optionalEnv('EMAIL_FROM_ADDRESS', 'noreply@enderas.et'),
+    fromName: optionalEnv('EMAIL_FROM_NAME', 'Enderas Auction System'),
+    smtpHost: optionalEnv('SMTP_HOST', ''),
+    smtpPort: Number(optionalEnv('SMTP_PORT', '587')),
+    smtpUser: optionalEnv('SMTP_USER', ''),
+    smtpPass: optionalEnv('SMTP_PASS', ''),
+  }),
+
   storage: Object.freeze({
     provider: optionalEnv('STORAGE_PROVIDER', 'local'),
     uploadDir: optionalEnv('STORAGE_UPLOAD_DIR', 'uploads'),

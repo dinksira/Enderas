@@ -12,6 +12,7 @@ import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { cpoService } from './cpo.service.js';
 import { paymentService } from './payment.service.js';
 import { notificationService } from './notification.service.js';
+import { auctionService } from './auction.service.js';
 
 const bidInclude = [
   {
@@ -169,6 +170,11 @@ export async function placeBid({ auctionId, auctionAssetId, amount }, userId) {
   const now = new Date();
   if (now < new Date(auction.start_date) || now > new Date(auction.end_date)) {
     throw new AppError('Auction is not within the bidding window', 400, 'AUCTION_CLOSED');
+  }
+
+  const isOwner = await auctionService.isUserAssetOwnerOfAuction(userId, auctionId);
+  if (isOwner) {
+    throw new AppError('You cannot bid on your own asset auction', 403, 'SELF_BID_FORBIDDEN');
   }
 
   const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, auctionId);
@@ -358,6 +364,11 @@ export async function submitBidWithCpo({ auctionId, bids, cpoDocumentUrl, transa
   }
   if (now > new Date(auction.end_date)) {
     throw new AppError('Auction has already ended', 400, 'AUCTION_ENDED');
+  }
+
+  const isOwner = await auctionService.isUserAssetOwnerOfAuction(userId, auctionId);
+  if (isOwner) {
+    throw new AppError('You cannot bid on your own asset auction', 403, 'SELF_BID_FORBIDDEN');
   }
 
   const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, auctionId);

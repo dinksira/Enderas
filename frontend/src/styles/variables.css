@@ -314,3 +314,21 @@
   --dashboard-status-closed-text: #1c1c1c;
   --dashboard-sidebar-divider: rgba(255, 255, 255, 0.08);
 }
+
+.dark {
+  --dashboard-sidebar-bg: #0a0f1e;
+  --dashboard-canvas-bg: #0f1117;
+  --dashboard-surface-bg: #181b22;
+  --dashboard-accent: #e8edf5;
+  --dashboard-accent-hover: #d0d8e6;
+  --dashboard-text-primary: #e8edf5;
+  --dashboard-text-muted: #6b7b8e;
+  --dashboard-text-subtle: #9ca3af;
+  --dashboard-text-inverse: #0a0f1e;
+  --dashboard-border: #2a2d35;
+  --dashboard-gold: #e4b853;
+  --dashboard-search-bg: rgba(255, 255, 255, 0.06);
+  --dashboard-status-closed-bg: #2a2d35;
+  --dashboard-status-closed-text: #d1d5db;
+  --dashboard-sidebar-divider: rgba(255, 255, 255, 0.06);
+}

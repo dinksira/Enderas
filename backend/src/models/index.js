@@ -18,6 +18,8 @@ import { Bid } from './bid.model.js';
 import { BidDraft } from './bidDraft.model.js';
 import { Lot } from './lot.model.js';
 import { Winner } from './winner.model.js';
+import { OrganizationAuction } from './organizationAuction.model.js';
+import { AuctionShareLink } from './auctionShareLink.model.js';
 
 User.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
 Role.hasMany(User, { foreignKey: 'role_id', as: 'users' });
@@ -126,6 +128,22 @@ Staff.hasMany(Winner, { foreignKey: 'selected_by_staff_id', as: 'selectedWinners
 Winner.belongsTo(AuctionAsset, { foreignKey: 'auction_asset_id', as: 'auctionAsset' });
 AuctionAsset.hasMany(Winner, { foreignKey: 'auction_asset_id', as: 'winners' });
 
+// Organization <-> Auction direct linkage
+OrganizationAuction.belongsTo(User, { foreignKey: 'organization_user_id', as: 'organization' });
+User.hasMany(OrganizationAuction, { foreignKey: 'organization_user_id', as: 'organizationAuctionLinks' });
+
+OrganizationAuction.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
+Auction.hasMany(OrganizationAuction, { foreignKey: 'auction_id', as: 'organizationAuctionLinks' });
+
+OrganizationAuction.belongsTo(Staff, { foreignKey: 'linked_by_staff_id', as: 'linkedByStaff' });
+Staff.hasMany(OrganizationAuction, { foreignKey: 'linked_by_staff_id', as: 'organizationAuctionLinks' });
+
+// Auction share links
+AuctionShareLink.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
+Auction.hasMany(AuctionShareLink, { foreignKey: 'auction_id', as: 'shareLinks' });
+AuctionShareLink.belongsTo(Staff, { foreignKey: 'created_by_staff_id', as: 'creator' });
+Staff.hasMany(AuctionShareLink, { foreignKey: 'created_by_staff_id', as: 'createdShareLinks' });
+
 export {
   User,
   Role,
@@ -147,6 +165,8 @@ export {
   BidDraft,
   Lot,
   Winner,
+  OrganizationAuction,
+  AuctionShareLink,
 };
 
 export default {
@@ -170,4 +190,6 @@ export default {
   BidDraft,
   Lot,
   Winner,
+  OrganizationAuction,
+  AuctionShareLink,
 };

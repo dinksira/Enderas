@@ -13,6 +13,7 @@ import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
 import { paymentService } from './payment.service.js';
 import { bidDraftService } from './bid-draft.service.js';
+import { auctionService } from './auction.service.js';
 
 const cpoInclude = [
   {
@@ -219,6 +220,11 @@ export async function createCpo(
   }
   if (auction.status !== 'published') {
     throw new AppError('Auction is not open for CPO requests', 400, 'AUCTION_NOT_PUBLISHED');
+  }
+
+  const isOwner = await auctionService.isUserAssetOwnerOfAuction(userId, resolvedAuctionId);
+  if (isOwner) {
+    throw new AppError('You cannot submit CPO for your own asset auction', 403, 'SELF_BID_FORBIDDEN');
   }
 
   const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, resolvedAuctionId);

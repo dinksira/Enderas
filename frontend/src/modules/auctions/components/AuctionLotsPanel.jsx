@@ -157,7 +157,7 @@ function AssetCard({ asset, reserve, tags, draft, bidDraftAmount, index, cpoPerc
 }
 
 function LotSection({ lot, index, cpoPercentage, draftsByAsset, t, selectable, selectedLotIds, onToggleLot, onOpenDetails, draftBidAmounts, onBidAmountChange }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const assets = lot.assets || [];
   const label = lot.title || lot.lotTitle || lot.lotLabel || t('bidder.browse.lots.lotFallback', { index: index + 1 });
 

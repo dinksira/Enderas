@@ -236,7 +236,7 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
           aria-labelledby="bidder-auction-drawer-title"
           onClick={(event) => event.stopPropagation()}
         >
-          <div style={{ width: '400px', backgroundColor: '#f9fafb', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+          <div className="bidder-detail__side">
             {hasGallery && (
               <div className="bidder-detail__hero" style={{ flexShrink: 0 }}>
                 {!loading && !error && auction ? (
@@ -252,7 +252,7 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
                 )}
               </div>
             )}
-            <div className="bidder-detail__below" style={{ padding: '24px' }}>
+            <div className="bidder-detail__below">
               <p className="bidder-detail__eyebrow">{t('bidder.browse.detailEyebrow')}</p>
               <h2 id="bidder-auction-drawer-title" className="bidder-detail__title" style={{ marginTop: 8, marginBottom: 16 }}>
                 {auction?.title || t('bidder.browse.detailTitle')}
@@ -340,7 +340,7 @@ export function BidderAuctionDetailDrawer({ auctionId, open, onClose }) {
             </div>
           </div>
 
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative' }}>
+          <div className="bidder-detail__main">
             <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
               <button
                 type="button"

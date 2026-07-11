@@ -96,7 +96,9 @@
       "auction_filters": "Auction filters",
       "status_filters": "Status filters",
       "expand_sidebar": "Expand sidebar",
-      "collapse_sidebar": "Collapse sidebar"
+      "collapse_sidebar": "Collapse sidebar",
+      "switch_to_dark": "Switch to dark mode",
+      "switch_to_light": "Switch to light mode"
     },
     "metrics": {
       "loading": "Loading metrics...",
@@ -1172,6 +1174,11 @@
           "label": "Bid submitted",
           "title": "Your bid is in",
           "body": "You have already submitted your sealed bid for this auction."
+        },
+        "own_asset": {
+          "label": "Your auction",
+          "title": "You own assets in this auction",
+          "body": "As an asset owner, you cannot bid on your own auction."
         }
       },
       "paymentModal": {

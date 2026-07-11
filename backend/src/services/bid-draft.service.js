@@ -10,6 +10,7 @@ import { computeRequiredCpoFromBidAmounts, computeMinimumBidFromReserve } from '
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { paymentService } from './payment.service.js';
 import { Cpo } from '../models/cpo.model.js';
+import { auctionService } from './auction.service.js';
 
 function serializeBidDraft(draft) {
   const plain = draft.get ? draft.get({ plain: true }) : draft;
@@ -88,6 +89,11 @@ async function getLatestCpo(userId, auctionId) {
 }
 
 async function assertCanEditBidDrafts(userId, auctionId) {
+  const isOwner = await auctionService.isUserAssetOwnerOfAuction(userId, auctionId);
+  if (isOwner) {
+    throw new AppError('You cannot bid on your own asset auction', 403, 'SELF_BID_FORBIDDEN');
+  }
+
   const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, auctionId);
   if (!hasPayment) {
     throw new AppError(

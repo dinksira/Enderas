@@ -28,4 +28,6 @@ export { assetService } from './asset-service.js';
 export { notificationService } from './notification-service.js';
 export { dashboardService } from './dashboard-service.js';
 export { publicLandingService } from './public-landing-service.js';
+export { organizationService } from './organization-service.js';
+export { shareLinkAdminService } from '../../modules/share-links/services/share-link-admin-service.js';
 export { userService, listCreateRoles } from './user-service.js';
