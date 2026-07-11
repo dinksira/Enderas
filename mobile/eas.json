@@ -16,7 +16,11 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://auctionbackend.lazabusinessgroup.net/api",
+        "EXPO_PUBLIC_API_V1_PREFIX": "/v1"
+      }
     }
   },
   "submit": {

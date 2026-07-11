@@ -31,6 +31,10 @@ export interface FormFieldProps {
   autoComplete?: 'off' | 'email' | 'password' | 'password-new' | 'tel' | 'name' | 'organization';
   blurOnSubmit?: boolean;
   editable?: boolean;
+  /** Non-editable text rendered before the input (e.g. a country code like +251). */
+  prefix?: string;
+  /** Maximum number of characters the user may type. */
+  maxLength?: number;
 }
 
 export const FormField = forwardRef<TextInput, FormFieldProps>(function FormField(
@@ -50,6 +54,8 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(function FormFiel
     autoComplete,
     blurOnSubmit,
     editable = true,
+    prefix,
+    maxLength,
   },
   ref,
 ) {
@@ -69,6 +75,7 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(function FormFiel
           !!error && authStyles.fieldInputWrapperError,
         ]}
       >
+        {prefix ? <Text style={authStyles.fieldPrefix}>{prefix}</Text> : null}
         <TextInput
           ref={ref}
           style={authStyles.fieldInput}
@@ -88,6 +95,7 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(function FormFiel
           autoComplete={autoComplete}
           blurOnSubmit={blurOnSubmit}
           editable={editable}
+          maxLength={maxLength}
         />
         {onToggleSecure && (
           <TouchableOpacity style={authStyles.passwordToggle} onPress={onToggleSecure} activeOpacity={0.7}>

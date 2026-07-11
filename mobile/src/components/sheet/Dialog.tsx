@@ -27,7 +27,7 @@ import {
   useRef,
   type ReactNode,
 } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -101,7 +101,12 @@ export function Dialog({
     <BottomSheetModal
       ref={ref}
       snapPoints={[`100%`]}
-      enableDynamicSizing
+      // Must stay OFF. This "dialog" is a full-height transparent sheet whose
+      // card is centered by the `flex: 1` host below. Dynamic sizing would
+      // size the sheet to its content instead — and since the host is
+      // `flex: 1` (no intrinsic height), that collapses the sheet to ~0px and
+      // it presents invisibly (the "no KYC feedback" bug).
+      enableDynamicSizing={false}
       enablePanDownToClose
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
@@ -124,6 +129,19 @@ export function Dialog({
         ]}
         pointerEvents="box-none"
       >
+        {/* Tap-outside-to-dismiss. At the 100% snap the sheet content fully
+            covers gorhom's backdrop, so backdrop presses never register —
+            this transparent layer behind the card restores that behavior.
+            Dismiss via the ref (not `handleDismiss`) so gorhom runs its close
+            animation and fires `onChange(-1)`; calling `handleDismiss` here
+            would flip `isVisibleRef` early and the effect would skip the
+            actual `dismiss()`. */}
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={() => ref.current?.dismiss()}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+        />
         <View
           style={[
             styles.card,

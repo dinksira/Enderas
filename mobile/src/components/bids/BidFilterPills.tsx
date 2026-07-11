@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/lib/appStore';
 import type { BidTabFilter } from '@/types/bid';
 
-const TAB_FILTERS: BidTabFilter[] = ['', 'active', 'winning', 'outbid', 'won', 'lost'];
+const TAB_FILTERS: BidTabFilter[] = ['', 'submitted', 'invalid'];
 
 interface BidFilterPillsProps {
   value: BidTabFilter;

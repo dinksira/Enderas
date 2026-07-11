@@ -2,47 +2,47 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { GoldButton } from '@/components/auth';
+import { GoldButton } from './GoldButton';
 import { Dialog } from '@/components/sheet';
 import { useTheme } from '@/lib/appStore';
-import { Radii, Spacing, Typography } from '@/theme';
+import { Spacing, Typography } from '@/theme';
 
-interface KycRequiredModalProps {
+interface LoginRequiredModalProps {
   visible: boolean;
   onClose: () => void;
-  onVerify: () => void;
+  onLogin: () => void;
+  /** Optional context-specific message (defaults to the generic auth copy). */
+  message?: string;
 }
 
 /**
- * Themed dialog shown when a user tries to submit assets without KYC
- * approval. Built on the shared `<Dialog>` primitive for consistent
- * motion + backdrop with every other overlay.
+ * Dialog shown when an unauthenticated user taps a gated action (e.g.
+ * buying an auction document). Mirrors `KycRequiredModal` so the app
+ * gives the same "here's why, here's how" feedback for both auth and
+ * KYC gates instead of silently redirecting to the login screen.
  */
-export function KycRequiredModal({ visible, onClose, onVerify }: KycRequiredModalProps) {
+export function LoginRequiredModal({ visible, onClose, onLogin, message }: LoginRequiredModalProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
 
   return (
-    <Dialog visible={visible} onDismiss={onClose} tone="warning">
+    <Dialog visible={visible} onDismiss={onClose} tone="default">
       <View style={styles.iconWrap}>
         <View
           style={[
             styles.iconBadge,
-            {
-              backgroundColor: colors.warning.soft,
-              borderColor: colors.warning.border,
-            },
+            { backgroundColor: colors.glassFill, borderColor: colors.goldBorder },
           ]}
         >
-          <MaterialCommunityIcons name="shield-alert-outline" size={30} color={colors.warning.fg} />
+          <MaterialCommunityIcons name="login-variant" size={30} color={colors.goldBright} />
         </View>
       </View>
 
       <Text style={[Typography.h1, { color: colors.cream, textAlign: 'center' }]}>
-        {t('assets.kycRequired.title')}
+        {t('auth.loginRequiredTitle')}
       </Text>
       <Text style={[Typography.bodyMedium, { color: colors.textSecondary, textAlign: 'center', marginTop: Spacing.xs }]}>
-        {t('assets.kycRequired.message')}
+        {message ?? t('auth.loginRequiredMessage')}
       </Text>
 
       <View style={styles.actions}>
@@ -50,7 +50,7 @@ export function KycRequiredModal({ visible, onClose, onVerify }: KycRequiredModa
           <GoldButton label={t('common.cancel')} variant="outline" onPress={onClose} compact />
         </View>
         <View style={styles.primaryButton}>
-          <GoldButton label={t('profile.menu.kycVerification')} onPress={onVerify} compact />
+          <GoldButton label={t('auth.login')} onPress={onLogin} compact />
         </View>
       </View>
     </Dialog>
@@ -81,11 +81,10 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  // Wider than Cancel — the verification label carries more text.
   primaryButton: {
-    flex: 1.6,
+    flex: 1.4,
     minWidth: 0,
   },
 });
 
-export default KycRequiredModal;
+export default LoginRequiredModal;

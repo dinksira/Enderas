@@ -1,6 +1,7 @@
 import {
   loginWithCredentials,
   completeLogin,
+  refreshSession as refreshAuthSession,
   register as registerUser,
   verifyOTP as verifyUserOTP,
   resendOTP as resendUserOTP,
@@ -23,7 +24,24 @@ export async function login(req, res, next) {
       throw new InvalidCredentialsError();
     }
 
-    const userId = await loginWithCredentials(mobileNumber, password);
+    const { userId, requiresVerification, mobileNumber: verifiedMobile } =
+      await loginWithCredentials(mobileNumber, password);
+
+    // Correct credentials on an unverified account: re-issue the OTP and route
+    // the client to the verification screen instead of failing the sign-in.
+    if (requiresVerification) {
+      const targetMobile = verifiedMobile ?? mobileNumber;
+      const otpInfo = await resendUserOTP(targetMobile);
+
+      return sendSuccess(res, {
+        requiresOTPVerification: true,
+        mobileNumber: targetMobile,
+        otpExpiresIn: otpInfo.otpExpiresIn,
+        otpExpiresAt: otpInfo.otpExpiresAt,
+        ...(otpInfo.devOtp ? { devOtp: otpInfo.devOtp } : {}),
+        message: 'Please verify your phone number to finish signing in.',
+      });
+    }
 
     const session = await completeLogin(userId, {
       ipAddress: req.ip,
@@ -60,6 +78,27 @@ export async function login(req, res, next) {
       code: 'INTERNAL_SERVER_ERROR',
       message: res.__('generic.server_error'),
     });
+  }
+}
+
+export async function refreshSession(req, res, next) {
+  try {
+    const session = await refreshAuthSession(req.body.refreshToken, {
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+
+    return sendSuccess(res, {
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      refreshTokenExpiresAt: session.refreshTokenExpiresAt,
+      session: session.session,
+      identity: session.identity,
+      authz: session.authz,
+      user: session.user,
+    });
+  } catch (error) {
+    return next(error);
   }
 }
 
@@ -234,6 +273,7 @@ export async function updateMe(req, res, next) {
 
 export const authController = Object.freeze({
   login,
+  refreshSession,
   register,
   verifyOTP,
   resendOTP,

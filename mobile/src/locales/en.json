@@ -49,6 +49,8 @@
     "login": "Log In",
     "register": "Register",
     "logout": "Log Out",
+    "loginRequiredTitle": "Sign In Required",
+    "loginRequiredMessage": "Log in to your account to continue.",
     "loginSubtitle": "Welcome Back",
     "loginBody": "Sign in to continue bidding and managing your assets.",
     "registerSubtitle": "Create Account",
@@ -116,13 +118,19 @@
     "otpDescription": "Enter the 6-digit code sent to {{mobileNumber}}",
     "forgotDescription": "Enter your registered mobile number to receive a reset code",
     "resetDescription": "Enter the code sent to {{mobileNumber}} and choose a new password",
-    "mobilePlaceholder": "+251...",
+    "mobilePlaceholder": "912 345 678",
     "invalidOtp": "Invalid OTP",
     "continueAsGuest": "Continue without signing in",
+    "confirmPhoneTitle": "Confirm your number",
+    "confirmPhoneBody": "Is {{mobileNumber}} your phone number?",
+    "confirmPhoneConfirm": "Yes, it's correct",
+    "confirmPhoneEdit": "Edit",
+    "wrongNumberBack": "Wrong number? Go back and edit",
     "errors": {
       "invalidCredentials": "Invalid credentials. Please check your phone number and password.",
-      "invalidPhone": "Enter a valid phone number (e.g. 0912345678 or +251912345678).",
+      "invalidPhone": "Enter a valid phone number (e.g. 0912345678, 712345678, or 0111234567).",
       "phoneRequired": "Phone number is required.",
+      "emailInvalid": "Enter a valid email address.",
       "passwordRequired": "Password is required.",
       "passwordMinLength": "Password must be at least 6 characters.",
       "passwordMismatch": "Passwords do not match.",
@@ -132,6 +140,10 @@
       "otpIncomplete": "Enter the complete 6-digit verification code.",
       "loginFailed": "Unable to sign in. Please try again.",
       "registerFailed": "Unable to register. Please try again.",
+      "alreadyRegistered": "This number is already registered. Please log in instead.",
+      "duplicateEmail": "This email is already registered.",
+      "duplicateNationalId": "This National ID number is already registered.",
+      "duplicateTin": "This TIN number is already registered.",
       "resetRequestFailed": "Unable to send reset code. Please try again.",
       "resetFailed": "Unable to reset password. Please try again."
     }
@@ -159,7 +171,14 @@
     "retry": "Retry",
     "empty": "Nothing here yet",
     "back": "Back",
-    "continue": "Continue"
+    "continue": "Continue",
+    "errorBoundary": {
+      "title": "Something went wrong",
+      "body": "The app ran into an unexpected problem. You can try again or return to the dashboard.",
+      "retry": "Try Again",
+      "home": "Go to Dashboard"
+    },
+    "sessionExpired": "Your session expired. Please log in again."
   },
   "tabs": {
     "dashboard": "Dashboard",
@@ -375,7 +394,7 @@
       "lotStatus": {
         "bidSubmitted": "You bid on this item",
         "underReview": "Proposed bid under review",
-        "awaitingLiveBid": "Selected — bid when window opens",
+        "awaitingLiveBid": "Selected — bid registered",
         "notBidding": "Not bidding on this item",
         "notBiddingHint": "You did not include this item in your CPO package."
       },
@@ -489,17 +508,11 @@
     "subtitle": "Track your auction bids and see where you stand.",
     "tabs": {
       "all": "All",
-      "active": "Active",
-      "winning": "Winning",
-      "outbid": "Outbid",
-      "won": "Won",
-      "lost": "Lost"
+      "submitted": "Submitted",
+      "invalid": "Invalid"
     },
-    "currentBid": "Current Bid",
     "yourBid": "Your Bid",
-    "timeLeft": "Time Left",
     "ended": "Ended",
-    "increaseBid": "Increase Bid",
     "viewAuction": "View Auction",
     "untitledAuction": "Untitled Auction",
     "empty": "No bids in this category yet",
@@ -508,15 +521,11 @@
     "results": "{{count}} bids",
     "status": {
       "submitted": "Submitted",
-      "winning": "Winning",
-      "lost": "Lost",
       "invalid": "Invalid"
     },
     "summary": {
       "totalBids": "Total Bids",
-      "activeBids": "Active",
-      "winningBids": "Winning",
-      "wonBids": "Won"
+      "totalValue": "Total Value"
     }
   },
   "assets": {

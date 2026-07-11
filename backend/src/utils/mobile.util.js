@@ -1,14 +1,15 @@
 import { AppError } from './error.util.js';
 
-/** Canonical storage format: +2519XXXXXXXX */
-export const ETHIOPIAN_MOBILE_STORAGE_PATTERN = /^\+2519\d{8}$/;
+/** Canonical storage format: +251 followed by 8-9 national digits (mobile or landline). */
+export const ETHIOPIAN_MOBILE_STORAGE_PATTERN = /^\+251\d{8,9}$/;
 
 function extractDigits(value) {
   return String(value || '').replace(/\D/g, '');
 }
 
 /**
- * Normalizes Ethiopian mobile numbers to +2519XXXXXXXX when recognizable.
+ * Normalizes Ethiopian phone numbers (mobile or landline) to +251XXXXXXXX.
+ * Accepts +251..., 251..., 09/07..., 9/7..., 011... (landline) and similar.
  * Falls back to trimmed input for legacy/unknown formats (lookup helpers only).
  * @param {string} value
  */
@@ -23,23 +24,20 @@ export function normalizeMobileNumber(value) {
   const digits = extractDigits(trimmed);
   if (!digits) return trimmed;
 
-  if (/^2519\d{8}$/.test(digits)) {
+  // Already includes the country code without the leading + (e.g. 251912345678).
+  if (/^251\d{8,9}$/.test(digits)) {
     return `+${digits}`;
   }
 
-  if (/^09\d{8}$/.test(digits)) {
-    return `+251${digits.slice(1)}`;
+  // Drop a single leading national trunk prefix (0) when present.
+  const national = digits.startsWith('0') ? digits.slice(1) : digits;
+
+  if (/^[79]\d{8}$/.test(national)) {
+    return `+251${national}`;
   }
 
-  if (/^9\d{8}$/.test(digits)) {
-    return `+251${digits}`;
-  }
-
-  if (digits.length === 10 && digits.startsWith('0')) {
-    const local = digits.slice(1);
-    if (/^9\d{8}$/.test(local)) {
-      return `+251${local}`;
-    }
+  if (/^[1-6]\d{7,8}$/.test(national)) {
+    return `+251${national}`;
   }
 
   return trimmed;
@@ -53,7 +51,7 @@ export function isValidEthiopianMobile(value) {
 }
 
 /**
- * Normalizes and validates a mobile number for persistence.
+ * Normalizes and validates a phone number for persistence.
  * @param {string} value
  * @param {string} [fieldLabel]
  */
@@ -62,7 +60,7 @@ export function resolveMobileForStorage(value, fieldLabel = 'Mobile number') {
 
   if (!ETHIOPIAN_MOBILE_STORAGE_PATTERN.test(normalized)) {
     throw new AppError(
-      `${fieldLabel} must be a valid Ethiopian mobile number (e.g. 0912345678 or +251912345678)`,
+      `${fieldLabel} must be a valid Ethiopian phone number (e.g. 0912345678 or 0111234567)`,
       400,
       'INVALID_MOBILE_NUMBER',
     );
@@ -72,8 +70,8 @@ export function resolveMobileForStorage(value, fieldLabel = 'Mobile number') {
 }
 
 /**
- * Builds all plausible stored-format variants for a submitted mobile number.
- * Keeps legacy 09... values searchable while new records use +251...
+ * Builds all plausible stored-format variants for a submitted phone number.
+ * Keeps legacy 0... values searchable while new records use +251...
  * @param {string} value
  * @returns {string[]}
  */
@@ -87,7 +85,7 @@ export function getMobileLookupCandidates(value) {
     candidates.add(international.slice(1));
   }
 
-  if (trimmed.startsWith('0') && trimmed.length === 10) {
+  if (trimmed.startsWith('0') && (trimmed.length === 10 || trimmed.length === 11)) {
     candidates.add(trimmed);
   }
 

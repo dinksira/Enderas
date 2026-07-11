@@ -18,6 +18,7 @@ import { AppHeader } from '@/components/shell/AppHeader';
 import { Skeleton } from '@/components/ui';
 import { useMyBids } from '@/hooks/useMyBids';
 import { useTheme } from '@/lib/appStore';
+import { formatEtbAmount } from '@/lib/auctionUtils';
 import { filterBidsByTab, summarizeBids } from '@/lib/bidUtils';
 import { useIsAuthenticated } from '@/lib/authStore';
 import { Typography, Spacing } from '@/theme';
@@ -64,22 +65,9 @@ function AuthenticatedBidsScreen() {
           icon="gavel"
         />
         <StatCard
-          label={t('bids.summary.activeBids')}
-          value={String(summary.active)}
-          icon="clock-outline"
-        />
-      </View>
-      <View style={styles.statsRow}>
-        <StatCard
-          label={t('bids.summary.winningBids')}
-          value={String(summary.winning)}
-          icon="trophy-outline"
-          trend="up"
-        />
-        <StatCard
-          label={t('bids.summary.wonBids')}
-          value={String(summary.won)}
-          icon="check-decagram"
+          label={t('bids.summary.totalValue')}
+          value={formatEtbAmount(summary.totalValue)}
+          icon="cash-multiple"
         />
       </View>
 

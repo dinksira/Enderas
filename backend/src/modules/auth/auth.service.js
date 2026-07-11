@@ -250,7 +250,6 @@ export async function loginWithCredentials(mobileNumber, plainTextPassword) {
     where: {
       mobile_number: { [Op.in]: lookupCandidates },
       deleted_at: null,
-      is_mobile_verified: true,
       status: { [Op.notIn]: [USER_STATUSES.SUSPENDED, USER_STATUSES.DEACTIVATED] },
     },
     attributes: [
@@ -259,6 +258,7 @@ export async function loginWithCredentials(mobileNumber, plainTextPassword) {
       'status',
       'failed_login_attempts',
       'mobile_number',
+      'is_mobile_verified',
     ],
   });
 
@@ -276,12 +276,23 @@ export async function loginWithCredentials(mobileNumber, plainTextPassword) {
     throw new InvalidCredentialsError();
   }
 
+  // Credentials are correct but the account never finished OTP verification
+  // (e.g. the app was closed mid-registration). Rather than reporting invalid
+  // credentials, signal the controller to resume verification.
+  if (!user.is_mobile_verified) {
+    return {
+      userId: user.id,
+      mobileNumber: user.mobile_number,
+      requiresVerification: true,
+    };
+  }
+
   await user.update({
     last_login_at: new Date(),
     failed_login_attempts: 0,
   });
 
-  return user.id;
+  return { userId: user.id, requiresVerification: false };
 }
 
 async function issueRefreshToken(userId, sessionContext = {}) {
@@ -356,6 +367,59 @@ export async function completeLogin(userId, sessionContext = {}) {
     user: buildSessionUserPayload(permissions),
     permissions,
   };
+}
+
+/**
+ * Exchange a persisted opaque refresh token for a new access/refresh pair.
+ * Tokens rotate on every use so a stolen older token cannot be replayed.
+ *
+ * @param {string} opaqueToken
+ * @param {{ ipAddress?: string, userAgent?: string }} [sessionContext]
+ */
+export async function refreshSession(opaqueToken, sessionContext = {}) {
+  if (!opaqueToken || typeof opaqueToken !== 'string') {
+    throw new UnauthorizedError('Refresh token is required', 'REFRESH_TOKEN_REQUIRED');
+  }
+
+  const tokenHash = hashToken(opaqueToken);
+  const existingToken = await RefreshToken.findOne({
+    where: { token_hash: tokenHash },
+  });
+
+  if (!existingToken) {
+    throw new UnauthorizedError('Invalid refresh token', 'REFRESH_TOKEN_INVALID');
+  }
+
+  if (existingToken.revoked_at) {
+    await RefreshToken.update(
+      { revoked_at: new Date() },
+      {
+        where: {
+          family_id: existingToken.family_id,
+          revoked_at: null,
+        },
+      },
+    );
+    throw new UnauthorizedError('Refresh token has been revoked', 'REFRESH_TOKEN_REVOKED');
+  }
+
+  if (new Date(existingToken.expires_at).getTime() <= Date.now()) {
+    await existingToken.update({ revoked_at: new Date() });
+    throw new UnauthorizedError('Refresh token has expired', 'REFRESH_TOKEN_EXPIRED');
+  }
+
+  await existingToken.update({ revoked_at: new Date() });
+
+  const session = await completeLogin(existingToken.user_id, {
+    ...sessionContext,
+    familyId: existingToken.family_id,
+  });
+
+  await existingToken.update({
+    replaced_by: session.session?.refreshTokenId ?? null,
+  });
+
+  return session;
 }
 
 const DEFAULT_OTP_TTL_SECONDS = 300;
@@ -516,14 +580,17 @@ async function findPasswordResetEligibleUser(mobileNumber) {
   const normalizedMobile = normalizeMobileNumber(mobileNumber);
   const lookupCandidates = getMobileLookupCandidates(normalizedMobile);
 
+  // Pending (never verified) accounts are eligible too: a user who abandoned
+  // registration before OTP and later forgot their password would otherwise be
+  // locked out of every recovery path. The reset OTP is delivered to the phone,
+  // so completing it also proves ownership (see resetPasswordWithOtp).
   return User.unscoped().findOne({
     where: {
       mobile_number: { [Op.in]: lookupCandidates },
-      is_mobile_verified: true,
       deleted_at: null,
       status: { [Op.notIn]: [USER_STATUSES.SUSPENDED, USER_STATUSES.DEACTIVATED] },
     },
-    attributes: ['id', 'mobile_number', 'status'],
+    attributes: ['id', 'mobile_number', 'status', 'is_mobile_verified'],
   });
 }
 
@@ -534,7 +601,10 @@ async function revokeUserRefreshTokens(userId) {
   );
 }
 
-async function checkDuplicateRegistrationIdentifiers({ nationalIdNumber, tinNumber }) {
+async function checkDuplicateRegistrationIdentifiers(
+  { nationalIdNumber, tinNumber, excludeUserId } = {},
+  transaction = null,
+) {
   const orConditions = [];
 
   if (nationalIdNumber) {
@@ -549,12 +619,19 @@ async function checkDuplicateRegistrationIdentifiers({ nationalIdNumber, tinNumb
     return;
   }
 
+  const where = {
+    [Op.or]: orConditions,
+    deleted_at: null,
+  };
+
+  if (excludeUserId) {
+    where.id = { [Op.ne]: excludeUserId };
+  }
+
   const duplicateUser = await User.unscoped().findOne({
-    where: {
-      [Op.or]: orConditions,
-      deleted_at: null,
-    },
+    where,
     attributes: ['id', 'national_id_number', 'tin_number'],
+    ...(transaction ? { transaction } : {}),
   });
 
   if (!duplicateUser) {
@@ -599,20 +676,7 @@ export async function register(userData) {
   }
 
   const normalizedMobile = resolveMobileForStorage(mobileNumber);
-
   const lookupCandidates = getMobileLookupCandidates(normalizedMobile);
-  const existingUser = await User.findOne({
-    where: {
-      mobile_number: { [Op.in]: lookupCandidates },
-      deleted_at: null,
-    },
-  });
-
-  if (existingUser) {
-    throw new AppError('Mobile number already registered', 400, 'DUPLICATE_MOBILE');
-  }
-
-  await checkDuplicateRegistrationIdentifiers({ nationalIdNumber, tinNumber });
 
   const bidderRole = await Role.findOne({
     where: { code: 'bidder', is_active: true },
@@ -623,23 +687,67 @@ export async function register(userData) {
   }
 
   const hashedPassword = await hashPassword(password);
-  const user = await User.create({
-    id: generateUuid(),
-    role_id: bidderRole.id,
-    user_type: userType,
-    mobile_number: normalizedMobile,
-    email: email || null,
-    password: hashedPassword,
-    first_name: firstName || null,
-    last_name: lastName || null,
-    organization_name: organizationName || null,
-    national_id_number: userType === 'individual' ? nationalIdNumber : null,
-    tin_number: userType === 'organization' ? tinNumber : null,
-    preferred_language: 'en',
-    is_mobile_verified: false,
-    is_email_verified: false,
-    status: USER_STATUSES.PENDING,
-    failed_login_attempts: 0,
+
+  // A pending (never verified) account for this number means an earlier
+  // registration was abandoned before OTP verification. Ownership of the
+  // number is only proven by verifying the OTP, so it is safe to resume that
+  // record with the latest details instead of leaving the user locked out
+  // (can't re-register -> "already exists", can't log in -> "not verified").
+  const { user, resumed } = await sequelize.transaction(async (transaction) => {
+    const existingUser = await User.unscoped().findOne({
+      where: {
+        mobile_number: { [Op.in]: lookupCandidates },
+        deleted_at: null,
+      },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (existingUser && existingUser.is_mobile_verified) {
+      throw new AppError(
+        'This mobile number is already registered. Please log in instead.',
+        409,
+        'DUPLICATE_MOBILE',
+      );
+    }
+
+    await checkDuplicateRegistrationIdentifiers(
+      { nationalIdNumber, tinNumber, excludeUserId: existingUser?.id },
+      transaction,
+    );
+
+    const sharedFields = {
+      role_id: bidderRole.id,
+      user_type: userType,
+      mobile_number: normalizedMobile,
+      email: email || null,
+      password: hashedPassword,
+      first_name: firstName || null,
+      last_name: lastName || null,
+      organization_name: organizationName || null,
+      national_id_number: userType === 'individual' ? nationalIdNumber : null,
+      tin_number: userType === 'organization' ? tinNumber : null,
+      is_mobile_verified: false,
+      status: USER_STATUSES.PENDING,
+      failed_login_attempts: 0,
+    };
+
+    if (existingUser) {
+      await existingUser.update(sharedFields, { transaction });
+      return { user: existingUser, resumed: true };
+    }
+
+    const createdUser = await User.create(
+      {
+        id: generateUuid(),
+        ...sharedFields,
+        is_email_verified: false,
+        preferred_language: 'en',
+      },
+      { transaction },
+    );
+
+    return { user: createdUser, resumed: false };
   });
 
   const otp = generateOTP();
@@ -659,16 +767,21 @@ export async function register(userData) {
 
   await auditService.writeAuditLog({
     userId: user.id,
-    action: AUDIT_ACTIONS.CREATE,
+    action: resumed ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
     entityType: 'User',
     entityId: user.id,
-    metadata: { userType, action: 'register', otpExpiresIn: otpExpiry.otpExpiresIn },
+    metadata: {
+      userType,
+      action: resumed ? 'register_resumed' : 'register',
+      otpExpiresIn: otpExpiry.otpExpiresIn,
+    },
   });
 
   return {
     userId: user.id,
     mobileNumber: user.mobile_number,
     requiresOTPVerification: true,
+    resumed,
     otpExpiresIn: otpExpiry.otpExpiresIn,
     otpExpiresAt: otpExpiry.otpExpiresAt,
     ...(!env.isProduction ? { devOtp: otp } : {}),
@@ -814,7 +927,7 @@ export async function requestPasswordReset(mobileNumber) {
   if (!env.isProduction) {
     console.warn(
       `[auth.service] Password reset: no eligible account for ${normalizedMobile}. ` +
-      'Account must exist, be mobile-verified, and have status active/kyc_pending/kyc_under_review/kyc_rejected.',
+      'Account must exist and not be suspended/deactivated (pending/unverified accounts are eligible).',
     );
   }
 
@@ -852,6 +965,13 @@ export async function resetPasswordWithOtp(mobileNumber, otp, newPassword) {
     password: hashedPassword,
     failed_login_attempts: 0,
   };
+
+  // Successfully entering an OTP sent to this number proves ownership, so an
+  // abandoned pending registration is verified here and promoted out of the
+  // pending state — the user can now log in normally.
+  if (!user.is_mobile_verified) {
+    passwordUpdates.is_mobile_verified = true;
+  }
 
   if (!user.status || user.status === USER_STATUSES.PENDING) {
     passwordUpdates.status = USER_STATUSES.KYC_PENDING;
@@ -909,16 +1029,44 @@ export async function verifyPasswordResetOtpCode(mobileNumber, otp) {
   return { valid: true };
 }
 
+/**
+ * Hard-deletes pending registrations that never completed OTP verification and
+ * are older than the configured TTL. Uses force:true because soft-deleted rows
+ * still occupy unique mobile/email/national-id/tin indexes and would block the
+ * real phone owner from registering.
+ *
+ * @param {number} ttlHours
+ * @returns {Promise<{ deleted: number }>}
+ */
+export async function purgeExpiredPendingRegistrations(ttlHours = 12) {
+  const ttl = Number(ttlHours);
+  const effectiveTtl = Number.isFinite(ttl) && ttl > 0 ? ttl : 12;
+  const cutoff = new Date(Date.now() - effectiveTtl * 60 * 60 * 1000);
+
+  const deleted = await User.unscoped().destroy({
+    force: true,
+    where: {
+      is_mobile_verified: false,
+      status: USER_STATUSES.PENDING,
+      created_at: { [Op.lt]: cutoff },
+    },
+  });
+
+  return { deleted };
+}
+
 export const authService = Object.freeze({
   aggregateIdentity,
   loginWithCredentials,
   completeLogin,
+  refreshSession,
   register,
   verifyOTP,
   resendOTP,
   requestPasswordReset,
   verifyPasswordResetOtpCode,
   resetPasswordWithOtp,
+  purgeExpiredPendingRegistrations,
 });
 
 export default authService;

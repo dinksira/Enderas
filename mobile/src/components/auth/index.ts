@@ -5,5 +5,8 @@ export type { FormFieldProps, FormFieldKeyboardType } from './FormField';
 export { UserTypeCard } from './UserTypeCard';
 export { AuthShell } from './AuthShell';
 export { OtpInput } from './OtpInput';
+export { Dialog } from '@/components/sheet/Dialog';
 export { AuthRequired } from './AuthRequired';
 export { AuthSuccessModal } from './AuthSuccessModal';
+export { ConfirmPhoneModal } from './ConfirmPhoneModal';
+export { LoginRequiredModal } from './LoginRequiredModal';

@@ -23,9 +23,17 @@ const bidInclude = [
   {
     model: Auction,
     as: 'auction',
-    attributes: ['id', 'title', 'status', 'reserve_price', 'start_date', 'end_date', 'currency'],
+    attributes: ['id', 'title', 'status', 'reserve_price', 'start_date', 'end_date', 'currency', 'image_urls'],
   },
 ];
+
+function resolveAuctionCoverImage(imageUrls) {
+  if (!Array.isArray(imageUrls)) {
+    return null;
+  }
+  const first = imageUrls.find((url) => typeof url === 'string' && url.length > 0);
+  return first ?? null;
+}
 
 function buildUserDisplayName(user) {
   if (!user) return null;
@@ -42,6 +50,7 @@ function serializeBidListRow(bid) {
     auctionId: plain.auction_id,
     auctionAssetId: plain.auction_asset_id ?? null,
     auctionTitle: plain.auction?.title ?? null,
+    auctionImageUrl: resolveAuctionCoverImage(plain.auction?.image_urls),
     userId: plain.user_id,
     bidderName: buildUserDisplayName(plain.user),
     amount: Number(plain.amount),
@@ -118,7 +127,7 @@ export async function listBids(options = {}, scope = {}) {
     where,
     include: [
       userInclude,
-      { model: Auction, as: 'auction', attributes: ['id', 'title', 'status'] },
+      { model: Auction, as: 'auction', attributes: ['id', 'title', 'status', 'image_urls'] },
     ],
     order: [['submitted_at', 'DESC']],
     limit,
