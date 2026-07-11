@@ -1,17 +1,19 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../config/routes.js';
-import { resolvePageMeta } from '../config/navigation.config.js';
+import { PAGE_REGISTRY, resolvePageMeta } from '../config/navigation.config.js';
 import { useAuth } from '../hooks/use-auth.js';
 import { usePermission } from '@enderass/shared/auth';
 import { PageSearchProvider, usePageSearch } from '../contexts/PageSearchContext.jsx';
 import { notificationService } from '@enderass/shared/services';
+import { NotificationDropdown } from '../modules/notifications/components/NotificationDropdown.jsx';
 import blueLogo from '../assets/blue_logo.svg';
 import { Button, ModalCloseButton } from '@enderass/shared/ui';
 import { KYCStatusBanner } from '../components/KYCStatusBanner.jsx';
 
 const PREFERRED_LANGUAGE_KEY = 'preferredLanguage';
+const THEME_KEY = 'dashboardTheme';
 const NOTIFICATION_POLL_MS = 60_000;
 
 const ICON_MAP = {
@@ -53,6 +55,13 @@ const ICON_MAP = {
       <rect x="13" y="4" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
       <rect x="4" y="13" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
       <rect x="13" y="13" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  ),
+  'org-portal': (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 21V9l8-6 8 6v12" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 21v-6h6v6" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 12h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   ),
 };
@@ -132,6 +141,8 @@ function DashboardShellHeader({
   activeLanguage,
   unreadCount,
   onNotificationsClick,
+  darkMode,
+  onThemeToggle,
 }) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -212,6 +223,23 @@ function DashboardShellHeader({
         </div>
         <button
           type="button"
+          className="dashboard-shell__theme-btn"
+          aria-label={darkMode ? t('dashboard.a11y.switch_to_light') : t('dashboard.a11y.switch_to_dark')}
+          onClick={onThemeToggle}
+        >
+          {darkMode ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 0111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
+        <button
+          type="button"
           className="dashboard-shell__notify-btn"
           aria-label={t('dashboard.a11y.notifications')}
           onClick={onNotificationsClick}
@@ -243,6 +271,15 @@ export function DashboardShell() {
   const { navigation, canRead, isAuthenticated } = usePermission();
   const [unreadCount, setUnreadCount] = useState(0);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const stored = localStorage.getItem(THEME_KEY);
+      return stored === 'dark';
+    } catch {
+      return false;
+    }
+  });
 
   const activeLanguage = resolveLanguage(i18n.language);
   const isAmharic = activeLanguage === 'am';
@@ -267,6 +304,14 @@ export function DashboardShell() {
       // Ignore storage access errors.
     }
   }, [user, i18n]);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     if (!isAuthenticated || !canRead('notifications')) {
@@ -308,6 +353,18 @@ export function DashboardShell() {
     }
   }
 
+  function handleThemeToggle() {
+    setDarkMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(THEME_KEY, next ? 'dark' : 'light');
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }
+
   function handleLogoutRequest() {
     setLogoutModalOpen(true);
   }
@@ -323,8 +380,34 @@ export function DashboardShell() {
   }
 
   function handleNotificationsClick() {
-    navigate(ROUTES.APP_NOTIFICATIONS);
+    setNotifDropdownOpen((prev) => !prev);
   }
+
+  function closeNotifDropdown() {
+    setNotifDropdownOpen(false);
+  }
+
+  async function refreshUnreadCount() {
+    try {
+      const count = await notificationService.getUnreadCount();
+      setUnreadCount(Number(count) || 0);
+    } catch {
+      setUnreadCount(0);
+    }
+  }
+
+  const isOrganization = user?.userType === 'organization';
+
+  const displayNav = useMemo(() => {
+    if (!isOrganization) return navigation;
+    const orgEntry = PAGE_REGISTRY.find((p) => p.id === 'org-portal');
+    if (!orgEntry) return navigation;
+    const idx = navigation.findIndex((n) => n.id === 'my-assets');
+    if (idx >= 0) {
+      return [...navigation.slice(0, idx + 1), orgEntry, ...navigation.slice(idx + 1)];
+    }
+    return [...navigation, orgEntry];
+  }, [navigation, isOrganization]);
 
   function getNavLabelKey(item) {
     return `dashboard.nav.${item.id.replace(/-/g, '')}`;
@@ -340,7 +423,7 @@ export function DashboardShell() {
     >
       <nav className="dashboard-shell__float-dock" aria-label={t('dashboard.a11y.main_navigation')}>
         <div className="dashboard-shell__float-nav-list">
-          {navigation
+          {displayNav
             .filter((item) => item.id !== 'my-payments' && item.id !== 'my-cpo')
             .map((item) => {
             const navLabel = t(getNavLabelKey(item), item.label);
@@ -389,22 +472,29 @@ export function DashboardShell() {
         </div>
       </nav>
 
-      <div className="dashboard-shell__main dashboard-shell__main--full">
-        <PageSearchProvider>
-          <DashboardShellHeader
-            isAmharic={isAmharic}
-            onLanguageChange={handleLanguageChange}
-            activeLanguage={activeLanguage}
-            unreadCount={unreadCount}
-            onNotificationsClick={handleNotificationsClick}
-          />
+      <PageSearchProvider>
+        <DashboardShellHeader
+          isAmharic={isAmharic}
+          onLanguageChange={handleLanguageChange}
+          activeLanguage={activeLanguage}
+          unreadCount={unreadCount}
+          onNotificationsClick={handleNotificationsClick}
+          darkMode={darkMode}
+          onThemeToggle={handleThemeToggle}
+        />
 
+        <div className="dashboard-shell__main dashboard-shell__main--full">
           <div className="dashboard-shell__content">
             <KYCStatusBanner />
+            <NotificationDropdown
+              open={notifDropdownOpen}
+              onClose={closeNotifDropdown}
+              onUnreadCountChange={refreshUnreadCount}
+            />
             <Outlet />
           </div>
-        </PageSearchProvider>
-      </div>
+        </div>
+      </PageSearchProvider>
 
       <LogoutConfirmModal
         open={logoutModalOpen}

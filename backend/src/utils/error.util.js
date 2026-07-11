@@ -30,6 +30,13 @@ export class InvalidCredentialsError extends AppError {
   }
 }
 
+export class NotFoundError extends AppError {
+  constructor(message = 'Resource not found', code = 'NOT_FOUND') {
+    super(message, 404, code);
+    this.name = 'NotFoundError';
+  }
+}
+
 export function buildPermissionChecksum(canonical) {
   const payload = JSON.stringify({
     roleId: canonical.roleId,
@@ -83,6 +90,7 @@ export default {
   UnauthorizedError,
   ForbiddenError,
   InvalidCredentialsError,
+  NotFoundError,
   buildPermissionChecksum,
   roleVersionFromTimestamp,
   buildRoleCacheVersion,

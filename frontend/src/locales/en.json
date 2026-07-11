@@ -72,7 +72,8 @@
       "myassets": "My Asset Requests",
       "submitasset": "Asset Request",
       "asset_request": "Asset Request",
-      "notifications": "Notifications"
+       "notifications": "Notifications",
+       "orgportal": "Organization Portal"
     },
     "profile": {
       "super_admin": "System Administrator",
@@ -90,7 +91,9 @@
       "auction_filters": "Auction filters",
       "status_filters": "Status filters",
       "expand_sidebar": "Expand sidebar",
-      "collapse_sidebar": "Collapse sidebar"
+      "collapse_sidebar": "Collapse sidebar",
+      "switch_to_dark": "Switch to dark mode",
+      "switch_to_light": "Switch to light mode"
     },
     "metrics": {
       "loading": "Loading metrics...",
@@ -1051,6 +1054,11 @@
           "label": "Bid submitted",
           "title": "Your bid is in",
           "body": "Your bid has been finalized for this auction."
+        },
+        "own_asset": {
+          "label": "Your auction",
+          "title": "You own assets in this auction",
+          "body": "As an asset owner, you cannot bid on your own auction. Contact support if you have questions."
         }
       },
       "paymentModal": {
@@ -2237,6 +2245,35 @@
     "management": {
       "pageTitle": "Documents",
       "subtitle": "Manage auction documents and files."
+    }
+  },
+  "organizationPortal": {
+    "pageTitle": "Organization Portal",
+    "subtitle": "Track your assets, auctions, and performance at a glance.",
+    "searchPlaceholder": "Search assets...",
+    "fallback": "My Organization",
+    "orgName": "Organization",
+    "tinNumber": "TIN Number",
+    "contact": "Contact",
+    "status": "Status",
+    "assetType": "Type",
+    "reservePrice": "Reserve Price",
+    "auctionStatus": "Auction Status",
+    "auctionPeriod": "Auction Period",
+    "assetDetail": "Asset detail",
+    "assetsEmpty": "No assets found. Submit your first asset request to get started.",
+    "linkedAuctionsTitle": "Premium Linked Auctions",
+    "linkedAuctionsEmpty": "No auctions have been linked to your organization yet.",
+    "linkedAt": "Linked",
+    "auctionDateRange": "{{start}} - {{end}}",
+    "stats": {
+      "totalAssets": "Total Assets",
+      "inAuction": "In Auction",
+      "sold": "Sold",
+      "pending": "Pending Review",
+      "activeAuctions": "Active Auctions",
+      "linkedAuctions": "Linked Auctions",
+      "activeLinkedAuctions": "Active Linked Auctions"
     }
   }
 }

@@ -125,7 +125,6 @@ export function AuctionParticipationPanel({
     || documentAccess,
   );
   const isRegistered = Boolean(participation?.isRegisteredBidder || paymentApproved);
-  const showDocuments = paymentApproved;
   const bidLockedHintKey = stepState.bid === 'locked' ? getBidStepHintKey(participation, auction) : null;
   const showBidSection = shouldShowBidSection(participation, auction?.status);
 
@@ -307,12 +306,6 @@ export function AuctionParticipationPanel({
           })}
         </p>
       )}
-
-      <AuctionDocumentsBlock
-        auctionId={auction?.id}
-        documents={documents}
-        unlocked={showDocuments}
-      />
     </section>
   );
 }

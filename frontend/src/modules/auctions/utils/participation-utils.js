@@ -11,6 +11,7 @@ export const PARTICIPATION_STATUS_VARIANTS = Object.freeze({
   bidding_waiting: 'under-review',
   bidding_closed: 'default',
   bid_submitted: 'active',
+  own_asset: 'default',
 });
 
 export function isAuctionOpenForParticipation(auction) {
@@ -20,6 +21,10 @@ export function isAuctionOpenForParticipation(auction) {
 }
 
 export function resolveParticipationStatus(participation) {
+  if (participation?.isAssetOwner) {
+    return 'own_asset';
+  }
+
   if (participation?.participationStatus) {
     return participation.participationStatus;
   }

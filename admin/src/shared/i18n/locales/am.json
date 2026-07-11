@@ -78,7 +78,8 @@
       "myassets": "የኔ የንብረት ጥያቄዎች",
       "submitasset": "የንብረት ጥያቄ",
       "asset_request": "የንብረት ጥያቄ",
-      "notifications": "ማሳወቂያዎች"
+      "notifications": "ማሳወቂያዎች",
+      "organizations": "ድርጅቶች"
     },
     "profile": {
       "super_admin": "የስርዓት አስተዳዳሪ",
@@ -2377,6 +2378,124 @@
     "management": {
       "pageTitle": "ሰነዶች",
       "subtitle": "የጨረታ ሰነዶችን እና ፋይሎችን ያስተዳድሩ።"
+    }
+  },
+  "organizations": {
+    "management": {
+      "pageTitle": "ድርጅቶች",
+      "subtitle": "የተመዘገቡ ድርጅቶችን ያስተዳድሩ",
+      "searchPlaceholder": "በስም፣ በTIN ወይም በስልክ ይፈልጉ...",
+      "createOrg": "ድርጅት ይፍጠሩ",
+      "empty": "ምንም ድርጅቶች አልተገኙም",
+      "loadFailed": "ድርጅቶችን መጫን አልተሳካም",
+      "tabs": {
+        "all": "ሁሉም",
+        "active": "ንቁ",
+        "kyc_pending": "KYC በመጠባበቅ ላይ",
+        "suspended": "ታግዷል"
+      },
+      "table": {
+        "headers": {
+          "organization_name": "የድርጅት ስም",
+          "tin_number": "TIN",
+          "mobile_number": "ስልክ",
+          "email": "ኢሜል",
+          "status": "ሁኔታ",
+          "created_at": "የተፈጠረበት",
+          "actions": "ድርጊቶች"
+        },
+        "footer": "ከ{{from}}-{{to}} ከ{{total}} እየታየ ነው"
+      },
+      "status": {
+        "active": "ንቁ",
+        "kyc_pending": "KYC በመጠባበቅ ላይ",
+        "kyc_under_review": "በግምገማ ላይ",
+        "kyc_rejected": "KYC ውድቅ ተደርጓል",
+        "pending": "በመጠባበቅ ላይ",
+        "suspended": "ታግዷል",
+        "deactivated": "ሰርዟል"
+      },
+      "createModal": {
+        "title": "አዲስ ድርጅት ይመዝገቡ",
+        "subtitle": "እንደ ድርጅት በጨረታዎች ለመሳተፍ የተቋም መለያ ይፍጠሩ።",
+        "badge": "የተቋም ምዝገባ",
+        "sectionOrgInfo": "የድርጅት ዝርዝሮች",
+        "sectionContactInfo": "የእውቂያ ሰው",
+        "sectionSecurity": "የመለያ ደህንነት",
+        "orgName": "የድርጅት ስም",
+        "tinNumber": "የTIN ቁጥር",
+        "mobileNumber": "ስልክ ቁጥር",
+        "mobilePrefix": "+251",
+        "email": "ኢሜል አድራሻ",
+        "firstName": "ስም",
+        "lastName": "የአባት ስም",
+        "password": "የይለፍ ቃል",
+        "confirmPassword": "የይለፍ ቃል ያረጋግጡ",
+        "cancel": "ይቅር",
+        "submit": "ድርጅት ይፍጠሩ",
+        "success": "ድርጅቱ በተሳካ ሁኔታ ተፈጠረ",
+        "failed": "ድርጅቱን መፍጠር አልተሳካም",
+        "passwordHint": "ጠንካራ የይለፍ ቃል ለመፍጠር ቢያንስ 6 ቁምፊዎችን ከፊደሎች፣ ቁጥሮች እና ምልክቶች ጋር ይጠቀሙ።",
+        "passwordStrength": {
+          "none": "",
+          "weak": "ደካማ — ተጨማሪ ቁምፊዎችን ያክሉ",
+          "fair": "መካከለኛ — ቁጥሮች እና ምልክቶችን ያክሉ",
+          "good": "ጥሩ — ወደ መጨረሻ እየተቃረቡ ነው",
+          "strong": "ጠንካራ የይለፍ ቃል"
+        },
+        "validation": {
+          "orgNameRequired": "የድርጅት ስም ያስፈልጋል",
+          "mobileRequired": "ስልክ ቁጥር ያስፈልጋል",
+          "mobileInvalid": "ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ (ለምሳሌ 0912345678)",
+          "passwordRequired": "የይለፍ ቃል ያስፈልጋል",
+          "passwordMinLength": "የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት",
+          "passwordMismatch": "የይለፍ ቃላት አይዛመዱም",
+          "confirmPasswordRequired": "እባክዎ የይለፍ ቃልዎን ያረጋግጡ",
+          "invalidEmail": "ትክክለኛ የኢሜል አድራሻ ያስገቡ"
+        }
+      },
+      "drawer": {
+        "title": "የድርጅት ዝርዝሮች",
+        "loadFailed": "የድርጅቱን ዝርዝሮች መጫን አልተሳካም",
+        "loadingAuctions": "ጨረታዎችን በመጫን ላይ...",
+        "noActiveAuctions": "በአሁኑ ጊዜ ምንም ንቁ ጨረታ ላይ የሚገኝ ንብረት የለም።",
+        "profileSection": "መገለጫ",
+        "orgName": "የድርጅት ስም",
+        "tinNumber": "የTIN ቁጥር",
+        "mobile": "ስልክ ቁጥር",
+        "email": "ኢሜል",
+        "contactName": "የእውቂያ ሰው",
+        "role": "ሚና",
+        "password": "የይለፍ ቃል",
+        "createdAt": "የተመዘገበበት",
+        "lastLogin": "የመጨረሻ መግቢያ",
+        "portalSection": "የመግቢያ አገናኝ",
+        "portalHint": "ድርጅቱ ወደ ፕሪሚየም ጨረታ መከታተያ መግቢያቸው እንዲገቡ ይህን አገናኝ ያጋሩ፦",
+        "copyLink": "የመግቢያ አገናኝ ይቅዱ",
+        "copied": "ተቀድቷል!",
+        "linkedAuctionsSection": "የተያያዙ ጨረታዎች",
+        "noLinkedAuctions": "እስካሁን ምንም ጨረታ አልተያያዘም።",
+        "linkAuctionBtn": "ከጨረታ ጋር ያገናኙ",
+        "unlink": "ግንኙነት ያስወግዱ",
+        "unlinkAuction": "ይህን ጨረታ ያላቅቁ",
+        "selectAuctionHint": "ለማገናኘት ጨረታ ይምረጡ፦",
+        "noAvailableAuctions": "ለማገናኘት የሚችሉ ጨረታዎች የሉም።",
+        "selectPlaceholder": "-- ይምረጡ --",
+        "confirmLink": "አገናኝ",
+        "cancelLink": "ይቅር",
+        "edit": "አስተካክል",
+        "save": "ለውጦችን አስቀምጥ",
+        "cancel": "ይቅር",
+        "changePassword": "አዲስ የይለፍ ቃል ያዘጋጁ",
+        "newPassword": "አዲስ የይለፍ ቃል",
+        "language": "ቋንቋ",
+        "firstName": "ስም",
+        "lastName": "የአባት ስም",
+        "activeAuctionsSection": "ንቁ ጨረታዎች (በንብረት)",
+        "assetCount_one": "{{count}} ንብረት",
+        "assetCount_other": "{{count}} ንብረቶች",
+        "refresh": "አድስ"
+      }
     }
   }
 }

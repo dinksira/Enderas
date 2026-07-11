@@ -159,12 +159,13 @@ const ROLE_SEEDS = Object.freeze([
     description: {
       summary: 'Creates and manages auctions; ownership review and publishing are handled by other roles.',
       permissions: {
-        modules: ['auctions', 'assets', 'documents', 'bids', 'winners', 'cpo', 'dashboard', 'notifications', 'files'],
+        modules: ['auctions', 'assets', 'documents', 'bids', 'winners', 'cpo', 'organizations', 'dashboard', 'notifications', 'files'],
         actions: ['create', 'read', 'update', 'delete', 'close'],
         moduleActions: {
           assets: ['read'],
           auctions: ['create', 'read', 'update', 'delete', 'close'],
           cpo: ['read', 'approve', 'reject'],
+          organizations: ['read'],
           files: ['create'],
         },
         routes: [
@@ -183,12 +184,14 @@ const ROLE_SEEDS = Object.freeze([
           'GET /api/v1/cpo',
           'POST /api/v1/cpo/:id/approve',
           'POST /api/v1/cpo/:id/reject',
+          'GET /api/v1/organizations',
+          'GET /api/v1/organizations/:id',
           'GET /api/v1/dashboard',
           ...NOTIFICATION_ROUTES,
           ...FILE_UPLOAD_ROUTES,
         ],
       },
-      permissionVersion: 6,
+      permissionVersion: 7,
     },
   },
   {
@@ -199,8 +202,11 @@ const ROLE_SEEDS = Object.freeze([
     description: {
       summary: 'Handles user support, KYC review, and customer-facing operations.',
       permissions: {
-        modules: ['users', 'kyc', 'assets', 'cpo', 'dashboard', 'evaluations', 'notifications'],
+        modules: ['users', 'kyc', 'assets', 'cpo', 'organizations', 'dashboard', 'evaluations', 'notifications'],
         actions: ['read', 'approve', 'reject', 'update'],
+        moduleActions: {
+          organizations: ['read'],
+        },
         routes: [
           'GET /api/v1/users',
           'GET /api/v1/users/:id',
@@ -221,11 +227,13 @@ const ROLE_SEEDS = Object.freeze([
           'GET /api/v1/cpo',
           'POST /api/v1/cpo/:id/approve',
           'POST /api/v1/cpo/:id/reject',
+          'GET /api/v1/organizations',
+          'GET /api/v1/organizations/:id',
           'GET /api/v1/dashboard',
           ...NOTIFICATION_ROUTES,
         ],
       },
-      permissionVersion: 3,
+      permissionVersion: 4,
     },
   },
 ]);
