@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 
-import { Auction } from '../../../src/models/auction.model.js';
+import { sequelize } from '../../../src/config/db.config.js';
 import { Role } from '../../../src/models/role.model.js';
 import { User } from '../../../src/models/user.model.js';
 import { Staff } from '../../../src/models/staff.model.js';
@@ -104,19 +104,7 @@ export async function purgeUsersByMobiles(mobileNumbers, transaction) {
     return [];
   }
 
-  const staffRecords = await Staff.unscoped().findAll({
-    where: { user_id: { [Op.in]: userIds } },
-    attributes: ['id'],
-    transaction,
-  });
-
-  const staffIds = staffRecords.map((s) => s.id);
-
-  await Auction.destroy({
-    where: { created_by_staff_id: { [Op.in]: staffIds } },
-    force: true,
-    transaction,
-  });
+  await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction });
 
   await RefreshToken.destroy({
     where: { user_id: { [Op.in]: userIds } },
@@ -134,6 +122,8 @@ export async function purgeUsersByMobiles(mobileNumbers, transaction) {
     force: true,
     transaction,
   });
+
+  await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', { transaction });
 
   return userIds;
 }
