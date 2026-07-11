@@ -1,33 +1,15 @@
 import type { BidRecord, BidStatus, BidTabFilter } from '@/types/bid';
 
-export function bidStatusTone(
-  status: BidStatus,
-): 'live' | 'ending' | 'won' | 'lost' | 'pending' {
-  switch (status) {
-    case 'winning':
-      return 'won';
-    case 'lost':
-    case 'invalid':
-      return 'lost';
-    case 'submitted':
-      return 'live';
-    default:
-      return 'pending';
-  }
+export function bidStatusTone(status: BidStatus): 'live' | 'lost' {
+  return status === 'invalid' ? 'lost' : 'live';
 }
 
 export function filterBidsByTab(bids: BidRecord[], tab: BidTabFilter): BidRecord[] {
   switch (tab) {
-    case 'active':
-      return bids.filter((bid) => bid.status === 'submitted' || bid.status === 'winning');
-    case 'winning':
-      return bids.filter((bid) => bid.status === 'winning');
-    case 'outbid':
+    case 'submitted':
       return bids.filter((bid) => bid.status === 'submitted');
-    case 'won':
-      return bids.filter((bid) => bid.status === 'winning');
-    case 'lost':
-      return bids.filter((bid) => bid.status === 'lost' || bid.status === 'invalid');
+    case 'invalid':
+      return bids.filter((bid) => bid.status === 'invalid');
     default:
       return bids;
   }
@@ -36,9 +18,9 @@ export function filterBidsByTab(bids: BidRecord[], tab: BidTabFilter): BidRecord
 export function summarizeBids(bids: BidRecord[]) {
   return {
     total: bids.length,
-    active: bids.filter((bid) => bid.status === 'submitted' || bid.status === 'winning').length,
-    winning: bids.filter((bid) => bid.status === 'winning').length,
-    won: bids.filter((bid) => bid.status === 'winning').length,
+    active: bids.filter((bid) => bid.status === 'submitted').length,
+    invalid: bids.filter((bid) => bid.status === 'invalid').length,
+    totalValue: bids.reduce((sum, bid) => sum + (Number.isFinite(bid.amount) ? bid.amount : 0), 0),
   };
 }
 

@@ -2,7 +2,7 @@ import { File, Paths, UploadType } from 'expo-file-system';
 
 import { ENV } from '@/lib/env';
 import { useAuthStore } from '@/lib/authStore';
-import { ApiError } from '@/services/api';
+import { ApiError, refreshStoredSession } from '@/services/api';
 
 export interface UploadedFile {
   fileName: string;
@@ -108,6 +108,27 @@ function parseUploadError(status: number, body: string): ApiError {
   }
 }
 
+async function performUpload(
+  uploadSource: File,
+  url: string,
+  mimeType: string,
+  folder: string,
+  token: string | null,
+) {
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return uploadSource.upload(url, {
+    uploadType: UploadType.MULTIPART,
+    fieldName: 'file',
+    mimeType,
+    parameters: { folder },
+    headers,
+  });
+}
+
 export async function uploadFile(file: PickedFile, folder = 'kyc'): Promise<UploadedFile> {
   const mimeType = normalizeMimeType(file.mimeType, file.name);
   const token = useAuthStore.getState().accessToken;
@@ -115,28 +136,32 @@ export async function uploadFile(file: PickedFile, folder = 'kyc'): Promise<Uplo
 
   const uploadSource = await resolveUploadFile(file);
 
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
   let result;
 
   try {
-    result = await uploadSource.upload(url, {
-      uploadType: UploadType.MULTIPART,
-      fieldName: 'file',
-      mimeType,
-      parameters: { folder },
-      headers,
-    });
+    result = await performUpload(uploadSource, url, mimeType, folder, token);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'File upload failed. Please try again.';
     throw new ApiError(message, 'NETWORK_ERROR');
   }
 
   if (result.status === 401) {
-    useAuthStore.getState().clearSession();
+    const nextToken = await refreshStoredSession();
+    if (nextToken) {
+      try {
+        result = await performUpload(uploadSource, url, mimeType, folder, nextToken);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'File upload failed. Please try again.';
+        throw new ApiError(message, 'NETWORK_ERROR');
+      }
+    } else {
+      useAuthStore.getState().expireSession();
+      throw new ApiError('Session expired. Please log in again.', 'ACCESS_TOKEN_INVALID', 401);
+    }
+  }
+
+  if (result.status === 401) {
+    useAuthStore.getState().expireSession();
     throw new ApiError('Session expired. Please log in again.', 'ACCESS_TOKEN_INVALID', 401);
   }
 

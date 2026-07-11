@@ -135,7 +135,24 @@ export function NotificationBell() {
         ) : error ? (
           <View style={styles.empty}>
             <MaterialCommunityIcons name="alert-circle-outline" size={32} color={colors.danger.fg} />
-            <Text style={[Typography.body, { color: colors.danger.fg }]}>{error}</Text>
+            <Text style={[Typography.body, styles.centerText, { color: colors.danger.fg }]}>{error}</Text>
+            <Pressable
+              onPress={refresh}
+              style={({ pressed }) => [
+                styles.retryButton,
+                {
+                  borderColor: colors.goldBorder,
+                  backgroundColor: colors.glassFill,
+                  opacity: pressed ? 0.75 : 1,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.retry')}
+            >
+              <Text style={[Typography.caption, { color: colors.goldChampagne, fontWeight: '800' }]}>
+                {t('common.retry')}
+              </Text>
+            </Pressable>
           </View>
         ) : notifications.length === 0 ? (
           <View style={styles.empty}>
@@ -230,7 +247,17 @@ const styles = StyleSheet.create({
   empty: {
     alignItems: 'center',
     paddingVertical: Spacing.xxl,
+    paddingHorizontal: Spacing.md,
     gap: Spacing.sm,
+  },
+  centerText: {
+    textAlign: 'center',
+  },
+  retryButton: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
   },
 });
 

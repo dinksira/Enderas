@@ -49,6 +49,8 @@
     "login": "ግባ",
     "register": "ተመዝገብ",
     "logout": "ውጣ",
+    "loginRequiredTitle": "መግባት ያስፈልጋል",
+    "loginRequiredMessage": "ለመቀጠል ወደ መለያዎ ይግቡ።",
     "loginSubtitle": "እንኳን በደህና መጡ",
     "loginBody": "ለመቀጠል መግቢያ ይፈጹ።",
     "registerSubtitle": "መለያ ይፍጠሩ",
@@ -116,13 +118,19 @@
     "otpDescription": "ወደ {{mobileNumber}} የተላከውን 6-አሃዝ ኮድ ያስገቡ",
     "forgotDescription": "የተመዘገበብዎትን ስልክ ቁጥር ያስገቡ የዳግም ማስታወሻ ኮድ ለመቀበል",
     "resetDescription": "ወደ {{mobileNumber}} የተላከውን ኮድ ያስገቡ እና አዲስ የይለፍ ቃል ይምረጡ",
-    "mobilePlaceholder": "+251...",
+    "mobilePlaceholder": "912 345 678",
     "invalidOtp": "ትክክል ያልሆነ OTP",
     "continueAsGuest": "ያለመግቢያ ቀጥል",
+    "confirmPhoneTitle": "ስልክዎን ያረጋግጡ",
+    "confirmPhoneBody": "{{mobileNumber}} የእርስዎ ስልክ ቁጥር ነው?",
+    "confirmPhoneConfirm": "አዎ፣ ልክ ነው",
+    "confirmPhoneEdit": "አርም",
+    "wrongNumberBack": "ስህተት አደረጋል? ወደ ኋላ ተመለስ እና አርም",
     "errors": {
       "invalidCredentials": "ትክክል ያልሆነ መለያ። ስልክ ቁጥርዎን እና የይለፍ ቃልዎን ያረጋግጡ።",
-      "invalidPhone": "ትክክለኛ ስልክ ቁጥር ያስገቡ (ለምሳሌ 0912345678 ወይም +251912345678)።",
+      "invalidPhone": "ትክክለኛ ስልክ ቁጥር ያስገቡ (ለምሳሌ 0912345678፣ 712345678 ወይም 0111234567)።",
       "phoneRequired": "ስልክ ቁጥር ያስፈልጋል።",
+      "emailInvalid": "ትክክለኛ የኢሜይል አድራሻ ያስገቡ።",
       "passwordRequired": "የይለፍ ቃል ያስፈልጋል።",
       "passwordMinLength": "የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት።",
       "passwordMismatch": "የይለፍ ቃሎች አይዛመዱም።",
@@ -132,6 +140,10 @@
       "otpIncomplete": "ሙሉውን 6-አሃዝ ኮድ ያስገቡ።",
       "loginFailed": "መግባት አልተቻለም። እንደገና ይሞክሩ።",
       "registerFailed": "መመዝገብ አልተቻለም። እንደገና ይሞክሩ።",
+      "alreadyRegistered": "ይህ ቁጥር አስቀድሞ ተመዝግቧል። እባክዎ ይግቡ።",
+      "duplicateEmail": "ይህ ኢሜይል አስቀድሞ ተመዝግቧል።",
+      "duplicateNationalId": "ይህ የመታወቂያ ቁጥር አስቀድሞ ተመዝግቧል።",
+      "duplicateTin": "ይህ የTIN ቁጥር አስቀድሞ ተመዝግቧል።",
       "resetRequestFailed": "የማስታወሻ ኮድ መላክ አልተቻለም። እንደገና ይሞክሩ።",
       "resetFailed": "የይለፍ ቃል መቀየር አልተቻለም። እንደገና ይሞክሩ።"
     }
@@ -159,7 +171,14 @@
     "retry": "እንደገና ሞክር",
     "empty": "እዚህ ምንም የለም",
     "back": "ተመለስ",
-    "continue": "ቀጥል"
+    "continue": "ቀጥል",
+    "errorBoundary": {
+      "title": "የሆነ ችግር ተፈጥሯል",
+      "body": "መተግበሪያው ያልተጠበቀ ችግር አጋጥሞታል። እንደገና መሞከር ወይም ወደ ዳሽቦርድ መመለስ ይችላሉ።",
+      "retry": "እንደገና ሞክር",
+      "home": "ወደ ዳሽቦርድ ሂድ"
+    },
+    "sessionExpired": "የክፍለ ጊዜዎ ጊዜው አልፎበታል። እባክዎ እንደገና ይግቡ።"
   },
   "tabs": {
     "dashboard": "ዳሽቦርድ",
@@ -375,7 +394,7 @@
       "lotStatus": {
         "bidSubmitted": "በዚህ ዕቃ ላይ ጫርተዋል",
         "underReview": "የተጠቀሰ ጨረታ በግምገማ ላይ",
-        "awaitingLiveBid": "ተመርጧል — ጊዜ ሲከፈት ይጫሩ",
+        "awaitingLiveBid": "ተመርጧል — ጨረታ ተመዝግቧል",
         "notBidding": "በዚህ ዕቃ ላይ አይጫሩም",
         "notBiddingHint": "ይህን ዕቃ በ CPO ጥቅልዎ ውስጥ አልጨመሱም።"
       },
@@ -489,17 +508,11 @@
     "subtitle": "የጨረታ ጥያቄዎችዎን ይከታተሉ እና ሁኔታዎን ይመልከቱ።",
     "tabs": {
       "all": "ሁሉም",
-      "active": "ንቁ",
-      "winning": "እየወሰንኩ",
-      "outbid": "ወጥቶብኛ",
-      "won": "ያሸነፍኩ",
-      "lost": "ያሸነፍኩ"
+      "submitted": "የገቡ",
+      "invalid": "ልክ ያልሆኑ"
     },
-    "currentBid": "ወቅታዊ ጨረታ",
     "yourBid": "የእኔ ጨረታ",
-    "timeLeft": "ቀርቶት",
     "ended": "ተጠናቋል",
-    "increaseBid": "ጨረታ ጨምር",
     "viewAuction": "ጨረታ እይ",
     "untitledAuction": "ርዕስ የሌለው ጨረታ",
     "empty": "በዚህ ምድብ ምንም ጨረታ የለም",
@@ -508,15 +521,11 @@
     "results": "{{count}} ጨረታዎች",
     "status": {
       "submitted": "ተላልፏል",
-      "winning": "እየወሰንኩ",
-      "lost": "ተሸንፏል",
       "invalid": "ልክ ያልሆነ"
     },
     "summary": {
       "totalBids": "ጠቅላላ ጨረታዎች",
-      "activeBids": "ንቁ",
-      "winningBids": "እየወሰንኩ",
-      "wonBids": "ያሸነፍኩ"
+      "totalValue": "ጠቅላላ ዋጋ"
     }
   },
   "assets": {

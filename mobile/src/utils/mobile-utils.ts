@@ -1,12 +1,13 @@
-/** Canonical storage format: +2519XXXXXXXX */
-export const ETHIOPIAN_MOBILE_STORAGE_PATTERN = /^\+2519\d{8}$/;
+/** Canonical storage format: +251 followed by 8-9 national digits (mobile or landline). */
+export const ETHIOPIAN_MOBILE_STORAGE_PATTERN = /^\+251\d{8,9}$/;
 
 function extractDigits(value: string): string {
   return String(value || '').replace(/\D/g, '');
 }
 
 /**
- * Normalizes Ethiopian mobile numbers to +2519XXXXXXXX when recognizable.
+ * Normalizes Ethiopian phone numbers (mobile or landline) to +251XXXXXXXX.
+ * Accepts +251..., 251..., 09/07..., 9/7..., 011... (landline) and similar.
  */
 export function normalizeMobileNumber(value: string): string {
   const trimmed = String(value || '').trim();
@@ -19,23 +20,20 @@ export function normalizeMobileNumber(value: string): string {
   const digits = extractDigits(trimmed);
   if (!digits) return trimmed;
 
-  if (/^2519\d{8}$/.test(digits)) {
+  // Already includes country code without the leading + (e.g. 251912345678).
+  if (/^251\d{8,9}$/.test(digits)) {
     return `+${digits}`;
   }
 
-  if (/^09\d{8}$/.test(digits)) {
-    return `+251${digits.slice(1)}`;
+  // Drop a single leading national trunk prefix (0) when present.
+  const national = digits.startsWith('0') ? digits.slice(1) : digits;
+
+  if (/^[79]\d{8}$/.test(national)) {
+    return `+251${national}`;
   }
 
-  if (/^9\d{8}$/.test(digits)) {
-    return `+251${digits}`;
-  }
-
-  if (digits.length === 10 && digits.startsWith('0')) {
-    const local = digits.slice(1);
-    if (/^9\d{8}$/.test(local)) {
-      return `+251${local}`;
-    }
+  if (/^[1-6]\d{7,8}$/.test(national)) {
+    return `+251${national}`;
   }
 
   return trimmed;
@@ -43,6 +41,25 @@ export function normalizeMobileNumber(value: string): string {
 
 export function isValidEthiopianMobile(value: string): boolean {
   return ETHIOPIAN_MOBILE_STORAGE_PATTERN.test(normalizeMobileNumber(value));
+}
+
+/**
+ * Validates a locally typed national number (without +251) for the auth forms.
+ * Accepts mobile (09/9/07/7 + 8 digits) and landline (0 + area code + subscriber).
+ */
+export function isValidLocalPhone(value: string): boolean {
+  const digits = extractDigits(value);
+
+  if (/^0?[79]\d{8}$/.test(digits)) return true;
+  if (/^0[1-6]\d{7,8}$/.test(digits)) return true;
+
+  return false;
+}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function isValidEmail(value: string): boolean {
+  return EMAIL_PATTERN.test(String(value || '').trim());
 }
 
 export function formatMobileNumber(value: string): string {

@@ -11,6 +11,10 @@ import {
   startAuctionAutoCloseJob,
   stopAuctionAutoCloseJob,
 } from './src/jobs/auction-auto-close.job.js';
+import {
+  startPendingUserCleanupJob,
+  stopPendingUserCleanupJob,
+} from './src/jobs/pending-user-cleanup.job.js';
 
 async function startServer() {
   try {
@@ -18,6 +22,7 @@ async function startServer() {
     console.log('[db] connection established');
 
     startAuctionAutoCloseJob();
+    startPendingUserCleanupJob();
 
     app.listen(env.port, () => {
       console.log(`[server] listening on port ${env.port}`);
@@ -30,6 +35,7 @@ async function startServer() {
 
 function shutdown() {
   stopAuctionAutoCloseJob();
+  stopPendingUserCleanupJob();
   process.exit(0);
 }
 

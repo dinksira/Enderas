@@ -4,6 +4,7 @@ import { formatMobileNumber, isValidEthiopianMobile } from '@/utils/mobile-utils
 
 const AUTH_ENDPOINTS = Object.freeze({
   LOGIN: '/auth/login',
+  REFRESH: '/auth/refresh',
   REGISTER: '/auth/register',
   VERIFY_OTP: '/auth/verify-otp',
   RESEND_OTP: '/auth/resend-otp',
@@ -65,7 +66,26 @@ export interface PasswordResetRequestResponse {
   devOtp?: string;
 }
 
-export async function login(credentials: { phoneNumber: string; password: string }) {
+export interface AuthSessionResponse {
+  accessToken: string;
+  refreshToken?: string | null;
+  refreshTokenExpiresAt?: string | null;
+  session?: Record<string, unknown>;
+  identity?: Record<string, unknown>;
+  authz?: Record<string, unknown>;
+  user?: Record<string, unknown>;
+}
+
+export interface LoginResponse extends Partial<AuthSessionResponse> {
+  requiresOTPVerification?: boolean;
+  mobileNumber?: string;
+  otpExpiresIn?: number;
+  otpExpiresAt?: string;
+  devOtp?: string;
+  message?: string;
+}
+
+export async function login(credentials: { phoneNumber: string; password: string }): Promise<LoginResponse> {
   const phoneNumber = normalizeAuthMobile(credentials.phoneNumber);
 
   return api.post(AUTH_ENDPOINTS.LOGIN, {
@@ -74,6 +94,10 @@ export async function login(credentials: { phoneNumber: string; password: string
     mobile_number: phoneNumber,
     password: credentials.password,
   });
+}
+
+export async function refreshSession(refreshToken: string): Promise<AuthSessionResponse> {
+  return api.post<AuthSessionResponse>(AUTH_ENDPOINTS.REFRESH, { refreshToken });
 }
 
 export async function register(payload: {
@@ -108,7 +132,7 @@ export async function verifyOtp(payload: {
   phoneNumber?: string;
   mobileNumber?: string;
   otp: string;
-}) {
+}): Promise<AuthSessionResponse> {
   const mobileNumber = normalizeAuthMobile(payload.mobileNumber ?? payload.phoneNumber ?? '');
 
   return api.post(AUTH_ENDPOINTS.VERIFY_OTP, {
@@ -179,6 +203,7 @@ export async function updateMyProfile(payload: UpdateProfilePayload): Promise<Au
 
 export const authApi = Object.freeze({
   login,
+  refreshSession,
   register,
   verifyOtp,
   resendOtp,

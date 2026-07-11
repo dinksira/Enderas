@@ -143,7 +143,13 @@ export default function DashboardScreen() {
 
   const renderItem = useCallback(
     ({ item, index }: { item: BrowseAuction; index: number }) => (
-      <ListItemEntrance index={index} style={styles.gridCell}>
+      <ListItemEntrance
+        index={index}
+        // Cap each cell at 1/numColumns of the row so a lone card (e.g. a
+        // single filtered result, or the odd last item in a row) stays
+        // grid-sized and left-aligned instead of stretching full width.
+        style={[styles.gridCell, numColumns > 1 && { maxWidth: `${100 / numColumns}%` }]}
+      >
         <BrowseAuctionCard
           auction={item}
           onPress={handleCardPress(item.id)}
@@ -151,7 +157,7 @@ export default function DashboardScreen() {
         />
       </ListItemEntrance>
     ),
-    [handleCardPress],
+    [handleCardPress, numColumns],
   );
 
   const ListEmptyComponent = loading ? (

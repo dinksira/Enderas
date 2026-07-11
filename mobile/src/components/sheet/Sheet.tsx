@@ -42,7 +42,7 @@ import {
   useRef,
   type ReactNode,
 } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -256,6 +256,7 @@ export function SheetDropdown({
 }: SheetDropdownProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const animatedVisible = useSharedValue(0);
 
   useEffect(() => {
@@ -275,31 +276,54 @@ export function SheetDropdown({
 
   const top = topInset ?? insets.top + 60;
 
+  // An absolutely-positioned view anchored only by `right` collapses to
+  // its intrinsic content width in RN, which made these dropdowns render
+  // as thin slivers. Give the panel a concrete width: fill from the right
+  // inset to a matching left margin, capped at `maxWidth`.
+  const panelWidth = Math.min(maxWidth, screenWidth - rightInset * 2);
+  // Keep the panel from running off the bottom of the screen; its content
+  // (e.g. the notification list) scrolls within this bound.
+  const panelMaxHeight = screenHeight - top - Math.max(insets.bottom, 16) - 16;
+
   if (!visible) return null;
 
+  // Rendered inside a full-screen `Modal` so the panel overlays the entire
+  // app (above scroll content / auction cards) and positions relative to the
+  // real screen — not the tiny trigger wrapper it lives in. Without this the
+  // `absoluteFill` would fill only the trigger's box, pushing the panel off
+  // the left edge and letting later content stack on top of it.
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      <Pressable
-        style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }]}
-        onPress={onDismiss}
-        accessibilityRole="button"
-      />
-      <Animated.View
-        style={[
-          styles.dropdown,
-          {
-            backgroundColor: colors.baseElevated,
-            borderColor: colors.goldBorder,
-            top,
-            right: rightInset,
-            maxWidth,
-          },
-          panelStyle,
-        ]}
-      >
-        {children}
-      </Animated.View>
-    </View>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      onRequestClose={onDismiss}
+    >
+      <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+        <Pressable
+          style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }]}
+          onPress={onDismiss}
+          accessibilityRole="button"
+        />
+        <Animated.View
+          style={[
+            styles.dropdown,
+            {
+              backgroundColor: colors.baseElevated,
+              borderColor: colors.goldBorder,
+              top,
+              right: rightInset,
+              width: panelWidth,
+              maxHeight: panelMaxHeight,
+            },
+            panelStyle,
+          ]}
+        >
+          {children}
+        </Animated.View>
+      </View>
+    </Modal>
   );
 }
 

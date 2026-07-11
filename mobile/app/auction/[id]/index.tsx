@@ -9,6 +9,7 @@ import { LotParticipationOverview } from '@/components/auction/LotParticipationO
 import { OwnerAuctionOverview } from '@/components/auction/OwnerAuctionOverview';
 import { ParticipationStatusBanner } from '@/components/auction/ParticipationStatusBanner';
 import { KycRequiredModal } from '@/components/kyc/KycRequiredModal';
+import { LoginRequiredModal } from '@/components/auth';
 import { ImageGallery } from '@/components/shared/ImageGallery';
 import { ScreenShell } from '@/components/shell/ScreenShell';
 import { GlassCard } from '@/components/shell/GlassCard';
@@ -40,6 +41,8 @@ export default function AuctionDetailScreen() {
     useAuctionParticipation(auctionId);
   const { isAuthenticated, gateReason } = useAuctionActionGate();
   const [kycModalVisible, setKycModalVisible] = useState(false);
+  // Path to resume after the user logs in via the login-required dialog.
+  const [loginReturnPath, setLoginReturnPath] = useState<string | null>(null);
   const { label: countdownLabel, urgency, expired } = useAuctionCountdown(
     auction?.endDate,
     t('bids.ended'),
@@ -92,7 +95,7 @@ export default function AuctionDetailScreen() {
 
   const handleParticipationAction = (path: string) => {
     if (!isAuthenticated) {
-      router.push(`/(auth)/login?returnTo=${encodeURIComponent(path)}` as any);
+      setLoginReturnPath(path);
       return;
     }
     if (!kycVerified) {
@@ -104,7 +107,7 @@ export default function AuctionDetailScreen() {
 
   const handleViewDocument = () => {
     if (!isAuthenticated) {
-      router.push(`/(auth)/login?returnTo=${encodeURIComponent(`/auction/${id}/document`)}` as any);
+      setLoginReturnPath(`/auction/${id}/document`);
       return;
     }
     if (!kycVerified) {
@@ -340,6 +343,17 @@ export default function AuctionDetailScreen() {
         onVerify={() => {
           setKycModalVisible(false);
           router.push('/kyc' as any);
+        }}
+      />
+
+      <LoginRequiredModal
+        visible={loginReturnPath !== null}
+        message={t('auction.participation.loginRequired')}
+        onClose={() => setLoginReturnPath(null)}
+        onLogin={() => {
+          const path = loginReturnPath;
+          setLoginReturnPath(null);
+          router.push(`/(auth)/login?returnTo=${encodeURIComponent(path ?? `/auction/${id}`)}` as any);
         }}
       />
     </ScreenShell>

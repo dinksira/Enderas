@@ -8,7 +8,7 @@ import { login } from '@/services/authApi';
 import { ApiError } from '@/services/api';
 import { isMobileAllowedUser } from '@/lib/auth-utils';
 import { useAuthStore, type AuthUser } from '@/lib/authStore';
-import { isValidEthiopianMobile } from '@/utils/mobile-utils';
+import { isValidLocalPhone, normalizeMobileNumber } from '@/utils/mobile-utils';
 
 import { useAuthStyles } from '@/components/auth/authStyles';
 
@@ -36,7 +36,7 @@ function resolveLoginError(err: unknown, t: (key: string) => string): string {
 export default function LoginScreen() {
   const authStyles = useAuthStyles();
   const { t } = useTranslation();
-  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
+  const { returnTo, reason } = useLocalSearchParams<{ returnTo?: string; reason?: string }>();
   const setSession = useAuthStore((s) => s.setSession);
   const clearSession = useAuthStore((s) => s.clearSession);
   const setPendingOtpVerification = useAuthStore((s) => s.setPendingOtpVerification);
@@ -45,7 +45,9 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(
+    reason === 'session_expired' ? t('common.sessionExpired') : null,
+  );
   const [fieldErrors, setFieldErrors] = useState<{ phoneNumber?: string; password?: string }>({});
 
   const passwordRef = useRef<TextInput>(null);
@@ -64,7 +66,7 @@ export default function LoginScreen() {
 
     if (!trimmedPhone) {
       nextErrors.phoneNumber = t('auth.errors.phoneRequired');
-    } else if (!isValidEthiopianMobile(trimmedPhone)) {
+    } else if (!isValidLocalPhone(trimmedPhone)) {
       nextErrors.phoneNumber = t('auth.errors.invalidPhone');
     }
 
@@ -78,17 +80,32 @@ export default function LoginScreen() {
       return;
     }
 
+    const normalizedPhone = normalizeMobileNumber(trimmedPhone);
+
     setLoading(true);
     setFormError(null);
     setFieldErrors({});
 
     try {
-      const session = (await login({ phoneNumber: trimmedPhone, password })) as {
-        accessToken: string;
+      const session = (await login({ phoneNumber: normalizedPhone, password })) as {
+        accessToken?: string;
+        refreshToken?: string | null;
+        refreshTokenExpiresAt?: string | null;
+        requiresOTPVerification?: boolean;
+        mobileNumber?: string;
         identity?: Record<string, unknown>;
         authz?: Record<string, unknown>;
         user?: Record<string, unknown>;
       };
+
+      // Account exists but was never verified (registration abandoned before
+      // OTP). The backend has re-sent a code — continue to the OTP screen.
+      if (session.requiresOTPVerification) {
+        setPendingOtpVerification(session.mobileNumber ?? normalizedPhone);
+        router.replace('/(auth)/verify-otp');
+        return;
+      }
+
       const identity = (session.identity ?? {}) as Record<string, unknown>;
       const authz = (session.authz ?? {}) as Record<string, unknown>;
       const sessionUser: AuthUser = {
@@ -110,14 +127,15 @@ export default function LoginScreen() {
         return;
       }
 
-      if (identity.isMobileVerified === false) {
-        setPendingOtpVerification(trimmedPhone);
-        router.replace('/(auth)/verify-otp');
+      if (!session.accessToken) {
+        setFormError(t('auth.errors.loginFailed'));
         return;
       }
 
       setSession({
         accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        refreshTokenExpiresAt: session.refreshTokenExpiresAt,
         identity: session.identity,
         authz: session.authz,
         user: session.user,
@@ -154,10 +172,12 @@ export default function LoginScreen() {
           label={t('auth.mobileNumber')}
           value={phoneNumber}
           onChangeText={(value) => {
-            setPhoneNumber(value);
+            setPhoneNumber(value.replace(/\D/g, '').slice(0, 10));
             setFieldErrors((current) => ({ ...current, phoneNumber: undefined }));
           }}
           placeholder={t('auth.mobilePlaceholder')}
+          prefix="+251"
+          maxLength={10}
           autoCapitalize="none"
           keyboardType="phone-pad"
           textContentType="telephoneNumber"

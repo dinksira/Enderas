@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, SectionList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -13,7 +13,7 @@ import { CpoReadinessSheet } from '@/components/auction/CpoReadinessSheet';
 import { CpoUploadModal } from '@/components/auction/CpoUploadModal';
 import { LotBidCard } from '@/components/auction/LotBidCard';
 import { LotCategoryHeader } from '@/components/auction/LotCategoryHeader';
-import { LotParticipationOverview } from '@/components/auction/LotParticipationOverview';
+import { LotParticipationCard } from '@/components/auction/LotParticipationCard';
 import { ParticipationStatusBanner } from '@/components/auction/ParticipationStatusBanner';
 import { KycRequiredModal } from '@/components/kyc/KycRequiredModal';
 import { ScreenShell } from '@/components/shell/ScreenShell';
@@ -26,9 +26,11 @@ import { computeRequiredCpoFromBidAmounts } from '@/lib/auctionLotUtils';
 import { buildCpoReadinessItems, isCpoUploadReady } from '@/lib/cpoReadinessUtils';
 import {
   buildLotParticipationRows,
+  countActiveLotParticipation,
   shouldShowLotParticipationOverview,
   sumSubmittedBidAmounts,
 } from '@/lib/lotParticipationUtils';
+import type { LotParticipationRow } from '@/lib/lotParticipationUtils';
 import { useTheme } from '@/lib/appStore';
 import { cpoApi } from '@/services/cpoApi';
 import { fileUploadApi } from '@/services/fileUploadApi';
@@ -90,6 +92,17 @@ export default function AuctionBidScreen() {
   const participationRows = useMemo(
     () => buildLotParticipationRows(lots, participation),
     [lots, participation],
+  );
+  const participationRowMap = useMemo(() => {
+    const map = new Map<string, LotParticipationRow>();
+    for (const row of participationRows) {
+      map.set(row.lotId, row);
+    }
+    return map;
+  }, [participationRows]);
+  const participationActiveCount = useMemo(
+    () => countActiveLotParticipation(participationRows),
+    [participationRows],
   );
   const participationBidTotal = useMemo(
     () => sumSubmittedBidAmounts(participationRows),
@@ -197,17 +210,23 @@ export default function AuctionBidScreen() {
       lots.map((lot: AuctionLotApi, lotIndex: number) => {
         const assets = lot.assets ?? [];
         const collapsed = Boolean(collapsedLots[lot.id]);
+        const selectedCount = showParticipationOverview
+          ? assets.filter((asset) => {
+              const row = participationRowMap.get(asset.id);
+              return row != null && row.status !== 'not_bidding';
+            }).length
+          : assets.filter((asset) => asset.id in lotBids).length;
         return {
           lotLabel: formatLotOrderLabel(lotIndex),
           lotTitle: lot.title,
           lotId: lot.id,
           itemCount: assets.length,
-          selectedCount: assets.filter((asset) => asset.id in lotBids).length,
+          selectedCount,
           collapsed,
           data: collapsed ? [] : assets,
         };
       }),
-    [lots, collapsedLots, lotBids],
+    [lots, collapsedLots, lotBids, showParticipationOverview, participationRowMap],
   );
 
   const toggleLotCollapsed = useCallback((lotId: string) => {
@@ -451,6 +470,26 @@ export default function AuctionBidScreen() {
     [canEdit, displayLotMap, handleOpenDetail, handleToggleLot, locked, lotBids, openBidSheet, showErrors],
   );
 
+  const renderParticipationItem = useCallback(
+    ({ item, index }: { item: AuctionAssetApi; index: number }) => {
+      const displayLot = displayLotMap.get(item.id);
+      const row = participationRowMap.get(item.id);
+      if (!displayLot || !row) return null;
+
+      return (
+        <LotParticipationCard
+          lot={displayLot}
+          status={row.status}
+          bidAmount={row.bidAmount}
+          embedded
+          first={index === 0}
+          onOpenDetail={handleOpenDetail}
+        />
+      );
+    },
+    [displayLotMap, participationRowMap, handleOpenDetail],
+  );
+
   const renderSectionFooter = useCallback(
     ({ section }: { section: LotSection }) =>
       section.collapsed || section.itemCount === 0 ? null : (
@@ -498,7 +537,17 @@ export default function AuctionBidScreen() {
       <View style={styles.listHeader}>
         {statusBanner}
         {showParticipationOverview ? (
-          <LotParticipationOverview rows={participationRows} />
+          <View style={styles.overviewHeading}>
+            <Text style={[Typography.microCaps, { color: colors.goldChampagne, fontSize: 11 }]}>
+              {t('auction.participation.itemOverviewTitle')}
+            </Text>
+            <Text style={[Typography.caption, { color: colors.textMuted }]}>
+              {t('auction.participation.itemOverviewSubtitle', {
+                active: participationActiveCount,
+                total: participationRows.length,
+              })}
+            </Text>
+          </View>
         ) : (
           <>
             {auction?.title ? (
@@ -519,7 +568,7 @@ export default function AuctionBidScreen() {
         )}
       </View>
     ),
-    [auction?.title, colors.goldChampagne, flowStep, participationRows, showParticipationOverview, statusBanner, summary.selectedLots.length, auctionAssets.length],
+    [auction, colors.goldChampagne, colors.textMuted, flowStep, t, participationRows.length, participationActiveCount, showParticipationOverview, statusBanner, summary.selectedLots.length, auctionAssets.length],
   );
 
   const bidFooter = auction && !bidSheetOpen ? (
@@ -643,22 +692,25 @@ export default function AuctionBidScreen() {
         stickyFooter={bidFooter}
         noFade
       >
-        {showParticipationOverview || auctionAssets.length === 0 ? (
-          <View style={styles.staticContent}>
+        {auctionAssets.length === 0 ? (
+          <ScrollView
+            style={styles.staticContent}
+            contentContainerStyle={styles.staticScrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
             {listHeader}
-            {auctionAssets.length === 0 ? (
-              <GlassCard padding={Spacing.lg}>
-                <Text style={[Typography.body, { color: colors.textSecondary }]}>
-                  {t('auction.participation.noItems')}
-                </Text>
-              </GlassCard>
-            ) : null}
-          </View>
+            <GlassCard padding={Spacing.lg}>
+              <Text style={[Typography.body, { color: colors.textSecondary }]}>
+                {t('auction.participation.noItems')}
+              </Text>
+            </GlassCard>
+          </ScrollView>
         ) : (
           <SectionList
             sections={sections}
             keyExtractor={(item) => item.id}
-            renderItem={renderItem}
+            renderItem={showParticipationOverview ? renderParticipationItem : renderItem}
             renderSectionHeader={renderSectionHeader}
             renderSectionFooter={renderSectionFooter}
             ListHeaderComponent={listHeader}
@@ -695,6 +747,7 @@ export default function AuctionBidScreen() {
           asset={detailAsset}
           onClose={() => setDetailAsset(null)}
         />
+
       </ScreenShell>
 
       <BidEntrySheet
@@ -730,8 +783,15 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginBottom: Spacing.xs,
   },
+  overviewHeading: {
+    gap: 3,
+    marginTop: Spacing.xs,
+  },
   staticContent: {
     flex: 1,
+  },
+  staticScrollContent: {
+    paddingBottom: Spacing.lg,
   },
   sectionList: {
     flex: 1,
