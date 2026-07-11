@@ -10,6 +10,7 @@ import { ModulePageView } from '../modules/dashboard/views/ModulePageView.jsx';
 import { UserManagementView } from '../modules/users/views/UserManagementView.jsx';
 import { UserProfileView } from '../modules/users/views/user-profile-view.jsx';
 import { StaffManagementView } from '../modules/staff/views/StaffManagementView.jsx';
+import { OrganizationManagementView } from '../modules/organizations/views/OrganizationManagementView.jsx';
 import { SettingsView } from '../modules/setting/views/SettingsView.jsx';
 import { AuditTrailView } from '../modules/audit/views/AuditTrailView.jsx';
 import { StaffRolesView } from '../modules/staff-roles/views/staff-roles-view.jsx';
@@ -17,6 +18,7 @@ import { AccessDeniedView } from '../views/AccessDeniedView.jsx';
 import { DashboardEntry } from '../modules/role-workspaces/DashboardEntry.jsx';
 import { AssetRequestsView } from '../modules/assets/views/AssetRequestsView.jsx';
 import { SuperAdminDashboardView } from '../modules/role-workspaces/super-admin/SuperAdminDashboardView.jsx';
+import { ShareLinkManagementView } from '../modules/share-links/views/ShareLinkManagementView.jsx';
 import { BidManagementView } from '../modules/bid-management/views/BidManagementView.jsx';
 import { EvaluationManagementView } from '../modules/evaluations/views/EvaluationManagementView.jsx';
 import { PaymentManagementView } from '../modules/payments/views/PaymentManagementView.jsx';
@@ -24,16 +26,11 @@ import { CpoManagementView } from '../modules/cpo-management/views/CpoManagement
 import { WinnerManagementView } from '../modules/winners/views/WinnerManagementView.jsx';
 import { NotificationCenterView } from '../modules/notifications/views/NotificationCenterView.jsx';
 import { ReportsAnalyticsView } from '../modules/analytics-report/views/ReportsAnalyticsView.jsx';
-import { BrowseAuctionsView } from '../../../frontend/src/modules/auctions/views/BrowseAuctionsView.jsx';
 import { CreateAuctionView } from '../modules/auctions/views/CreateAuctionView.jsx';
 
 
 function AdminBrowseAuctionsRoute() {
-  const isStaff = useAuthStore((state) => state.user?.isStaff);
-  if (isStaff) {
-    return <Navigate to="/app/access-denied" replace />;
-  }
-  return <BrowseAuctionsView />;
+  return <Navigate to="/login" replace />;
 }
 
 function CreateAuctionRoute() {
@@ -83,6 +80,7 @@ export function AppRoutes() {
         <Route path="roles" element={guard(MODULES.ROLES, ACTIONS.READ, <StaffRolesView />)} />
         <Route path="audit" element={guard(MODULES.ROLES, ACTIONS.READ, <AuditTrailView />)} />
         <Route path="settings" element={guard(MODULES.SETTINGS, ACTIONS.READ, <SettingsView />)} />
+        <Route path="organizations" element={guard(MODULES.ORGANIZATIONS, ACTIONS.READ, <OrganizationManagementView />)} />
         <Route
           path="kyc"
           element={
@@ -96,6 +94,7 @@ export function AppRoutes() {
         <Route path="assets" element={guard(MODULES.ASSETS, ACTIONS.READ, <AssetRequestsView />)} />
         <Route path="evaluations" element={guard(MODULES.EVALUATIONS, ACTIONS.READ, <EvaluationManagementView />)} />
         <Route path="auctions" element={guard(MODULES.AUCTIONS, ACTIONS.READ, <SuperAdminDashboardView />)} />
+        <Route path="share-links" element={guard(MODULES.AUCTIONS, ACTIONS.READ, <ShareLinkManagementView />)} />
         <Route path="browse-auctions" element={<AdminBrowseAuctionsRoute />} />
         <Route path="my-bids" element={<Navigate to="/app/access-denied" replace />} />
         <Route path="my-payments" element={<Navigate to="/app/access-denied" replace />} />
