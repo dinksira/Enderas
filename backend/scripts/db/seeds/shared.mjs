@@ -104,14 +104,22 @@ export async function purgeUsersByMobiles(mobileNumbers, transaction) {
     return [];
   }
 
-  await RefreshToken.destroy({
+  const staffRecords = await Staff.unscoped().findAll({
     where: { user_id: { [Op.in]: userIds } },
+    attributes: ['id'],
     transaction,
   });
 
+  const staffIds = staffRecords.map((s) => s.id);
+
   await Auction.destroy({
-    where: { created_by_staff_id: { [Op.in]: userIds } },
+    where: { created_by_staff_id: { [Op.in]: staffIds } },
     force: true,
+    transaction,
+  });
+
+  await RefreshToken.destroy({
+    where: { user_id: { [Op.in]: userIds } },
     transaction,
   });
 
