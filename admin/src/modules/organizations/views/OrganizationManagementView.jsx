@@ -7,7 +7,7 @@ import { MODULES, ACTIONS } from '../../../config/navigation.config.js';
 import { useAuthStore } from '@enderass/shared/auth';
 import { organizationService } from '@enderass/shared/services';
 import { OrganizationCreateModal } from '../components/OrganizationCreateModal.jsx';
-import { OrganizationDetailDrawer } from '../components/OrganizationDetailDrawer.jsx';
+import { OrganizationDetailModal } from '../components/OrganizationDetailModal.jsx';
 import { useOrganizations } from '../hooks/use-organizations.js';
 import {
   ORG_TAB_KEYS,
@@ -50,22 +50,22 @@ export function OrganizationManagementView() {
   const [createOpen, setCreateOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerRefreshTrigger, setDrawerRefreshTrigger] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalRefreshTrigger, setModalRefreshTrigger] = useState(0);
   const [toast, setToast] = useState({ open: false, message: '', variant: 'success' });
 
-  const openDrawer = (orgId) => {
+  const openModal = (orgId) => {
     setSelectedOrgId(orgId);
-    setDrawerOpen(true);
+    setModalOpen(true);
   };
 
-  const closeDrawer = () => {
-    setDrawerOpen(false);
+  const closeModal = () => {
+    setModalOpen(false);
     setSelectedOrgId(null);
   };
 
-  const refreshDrawerAndTable = async () => {
-    setDrawerRefreshTrigger((current) => current + 1);
+  const refreshModalAndTable = async () => {
+    setModalRefreshTrigger((current) => current + 1);
     await refetch();
   };
 
@@ -149,8 +149,8 @@ export function OrganizationManagementView() {
             className="dashboard-table__row kyc-management-page__row"
             tabIndex={0}
             role="button"
-            onClick={() => openDrawer(org.id)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDrawer(org.id); } }}
+            onClick={() => openModal(org.id)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(org.id); } }}
           >
             <td className="dashboard-table__cell dashboard-table__cell--strong">
               {formatDisplayValue(getOrgDisplayName(org), emptyLabel)}
@@ -177,12 +177,12 @@ export function OrganizationManagementView() {
         ))}
       </AdminDataTable>
 
-      <OrganizationDetailDrawer
+      <OrganizationDetailModal
         orgId={selectedOrgId}
-        open={drawerOpen}
+        open={modalOpen}
         actionLoading={actionLoading}
-        refreshTrigger={drawerRefreshTrigger}
-        onClose={closeDrawer}
+        refreshTrigger={modalRefreshTrigger}
+        onClose={closeModal}
         onRefreshTable={refetch}
       />
 
