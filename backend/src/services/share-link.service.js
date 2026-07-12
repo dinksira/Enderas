@@ -110,10 +110,25 @@ async function authenticateShareLink(token, password) {
     throw new ForbiddenError('Share link view limit reached');
   }
 
-  if (link.password_hash) {
-    if (!password) throw new UnauthorizedError('Password required');
-    const valid = await bcrypt.compare(password, link.password_hash);
-    if (!valid) throw new UnauthorizedError('Invalid password');
+  if (!password) throw new UnauthorizedError('Password required');
+
+  const linkPasswordValid = link.password_hash && await bcrypt.compare(password, link.password_hash).catch(() => false);
+
+  let orgPasswordValid = false;
+  if (!linkPasswordValid && link.organization_name) {
+    const orgUser = await User.scope('withCredentials').findOne({
+      where: {
+        organization_name: link.organization_name,
+        user_type: 'organization',
+      },
+    });
+    if (orgUser) {
+      orgPasswordValid = await bcrypt.compare(password, orgUser.password).catch(() => false);
+    }
+  }
+
+  if (!linkPasswordValid && !orgPasswordValid) {
+    throw new UnauthorizedError('Invalid password');
   }
 
   await link.increment('view_count');
