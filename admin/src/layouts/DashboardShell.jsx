@@ -17,164 +17,196 @@ const NOTIFICATION_POLL_MS = 15_000;
 const ICON_MAP = {
   dashboard: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 7h16M6 7v12h12V7M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.8"/>
+      <rect x="13" y="3" width="8" height="4" rx="1" stroke="currentColor" strokeWidth="1.8"/>
+      <rect x="13" y="10" width="8" height="11" rx="1" stroke="currentColor" strokeWidth="1.8"/>
+      <rect x="3" y="14" width="8" height="7" rx="1" stroke="currentColor" strokeWidth="1.8"/>
     </svg>
   ),
   auctions: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 7h16M6 7v12h12V7M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M6 21l12-12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M10 21l12-12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M8 19l-4-4 10-10 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M16 11l-4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   'asset-request': (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19h14V9l-7-5-7 5v10z" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M9 7h6M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   assets: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19h14V9l-7-5-7 5v10z" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M9 7h6M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M16 19l2 2 3-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   ),
   'my-assets': (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19h14V9l-7-5-7 5v10z" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M9 7h6M9 11h6M12 15h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   'submit-asset': (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19h14V9l-7-5-7 5v10z" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 2v12M7 9l5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M4 16v4h16v-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   users: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M4 19c0-3 2.5-5 5-5s5 2 5 5" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="17" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M15 19c.3-2 1.8-3.5 4-3.5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="9" cy="7" r="3" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M3 21c0-4 3-6 6-6s6 2 6 6" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M15 9c2 0 4 1.5 4 4" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M19 21c0-2-1-4-4-4" stroke="currentColor" strokeWidth="1.8"/>
     </svg>
   ),
   staff: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 3l7 4v10l-7 4-7-4V7l7-4z" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="7" y="2" width="10" height="20" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M10 16h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <circle cx="12" cy="9" r="2" stroke="currentColor" strokeWidth="1.8"/>
     </svg>
   ),
   roles: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 3l7 4v10l-7 4-7-4V7l7-4z" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M12 2v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   payments: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="6" width="18" height="12" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M2 9h20" stroke="currentColor" strokeWidth="1.8"/>
     </svg>
   ),
   cpo: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 2l9 4v6c0 5-4 9-9 11-5-2-9-6-9-11V6l9-4z" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   ),
   'bid-management': (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 18l8-8 4 4 4-6 4 4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M8 12h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M12 8v8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.8"/>
     </svg>
   ),
   bids: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 18l8-8 4 4 4-6 4 4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M8 12h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M12 8v8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M17 7l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   'my-bids': (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 18l8-8 4 4 4-6 4 4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M4 18l8-8 4 4 4-6 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/>
     </svg>
   ),
   'my-payments': (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="6" width="18" height="12" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M2 9h20" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M16 5l-8 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   'my-cpo': (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 2l9 4v6c0 5-4 9-9 11-5-2-9-6-9-11V6l9-4z" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M10 13l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M8 9h1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   'browse-auctions': (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 7h16M6 7v12h12V7M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M20 20l-3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M8 11h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   evaluations: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M8 7l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="17" cy="18" r="3" stroke="currentColor" strokeWidth="1.8"/>
     </svg>
   ),
   documents: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M14 2v6h6M9 15h6M9 11h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   winners: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 18l8-8 4 4 4-6 4 4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M6 9H4a2 2 0 01-2-2V5a2 2 0 012-2h2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M18 9h2a2 2 0 002-2V5a2 2 0 00-2-2h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M12 13v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M9 20h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <rect x="7" y="6" width="10" height="7" rx="1" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M5 6h14" stroke="currentColor" strokeWidth="1.8"/>
     </svg>
   ),
   'analytics-report': (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19V9M12 19V5M19 19v-7" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M4 19V5h16v14H4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M8 12l3-3 2 2 3-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   ),
   reports: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19V9M12 19V5M19 19v-7" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M4 19V5h16v14H4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M8 14l3-3 2 2 3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="17" cy="7" r="1" fill="currentColor"/>
     </svg>
   ),
   organizations: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="16" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8 9h8M8 13h6M8 17h4" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M8 9h8M8 13h6M8 17h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M12 4V2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   kyc: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 1l9 5v12l-9 5-9-5V6l9-5z" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 2l9 4v6c0 5.5-4 9.5-9 11-5-1.5-9-5.5-9-11V6l9-4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   ),
   setting: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <path
-        d="M12 3v2M12 19v2M3 12h2M19 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M12 1v2M12 21v2M1 12h2M21 12h2M4 4l1.5 1.5M18.5 18.5L20 20M4 20l1.5-1.5M18.5 5.5L20 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   settings: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <path
-        d="M12 3v2M12 19v2M3 12h2M19 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M12 1v2M12 21v2M1 12h2M21 12h2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M4 4l2 2M18 18l2 2M4 20l2-2M18 6l2-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   notifications: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 4a5 5 0 00-5 5v3l-2 2h14l-2-2V9a5 5 0 00-5-5z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-      <path d="M10 20h4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
   profile: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M19 3l2 2-4 4h-2l-2-2 4-4h2z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
     </svg>
   ),
 };
@@ -443,10 +475,10 @@ export function DashboardShell() {
               className={({ isActive }) =>
                 `dashboard-shell__nav-link${isActive ? ' dashboard-shell__nav-link--active' : ''}`
               }
-              title={t(getNavLabelKey(item), item.label)}
             >
               <NavIcon name={item.id} />
               {!isSidebarCollapsed && <span>{t(getNavLabelKey(item), item.label)}</span>}
+              <span className="dashboard-shell__nav-tooltip">{t(getNavLabelKey(item), item.label)}</span>
             </NavLink>
           ))}
         </nav>
