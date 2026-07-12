@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTracking } from '../hooks/use-tracking.js';
-import logoUrl from '../../../assets/images/frontend_logo.svg';
+import logoUrl from '../../../assets/images/blue_logo.svg';
 
 function TrackingAuthPage() {
   const { token } = useParams();
