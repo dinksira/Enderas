@@ -9,7 +9,7 @@ import { Auction } from '../models/auction.model.js';
 import { Asset } from '../models/asset.model.js';
 import { Bid } from '../models/bid.model.js';
 import { Winner } from '../models/winner.model.js';
-import { User } from '../models/user.model.js';
+import { User } from '../models/index.js';
 import { sendShareLinkEmail } from '../integrations/email.integration.js';
 import { Op } from 'sequelize';
 
