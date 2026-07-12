@@ -179,7 +179,7 @@ async function getAuctionTrackingData(linkId, auctionId) {
   const winner = await Winner.findOne({
     where: { auction_id: auctionId },
     include: [
-      { model: User, as: 'user', attributes: ['displayName'] },
+      { model: User, as: 'user', attributes: ['display_name'] },
     ],
     order: [['created_at', 'DESC']],
   });
