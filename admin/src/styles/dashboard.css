@@ -1,3 +1,11 @@
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
 .dashboard-shell {
   display: flex;
   width: 100vw;
@@ -39,13 +47,13 @@
 
 .dashboard-shell__toggle-btn {
   position: absolute;
-  top: 20px;
-  right: -12px;
-  width: 24px;
-  height: 24px;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--core-radius-circle);
   background: var(--dashboard-sidebar-bg);
-  border: 2px solid var(--dashboard-gold);
+  border: 1.5px solid var(--dashboard-gold);
   color: var(--dashboard-gold);
   display: flex;
   align-items: center;
@@ -54,17 +62,22 @@
   padding: 0;
   z-index: 10;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 12px rgba(212, 168, 67, 0.2);
+  box-shadow: 0 0 12px rgba(212, 168, 67, 0.15);
 }
 
 .dashboard-shell__toggle-btn:hover {
   background: var(--dashboard-gold);
   color: var(--dashboard-sidebar-bg);
-  box-shadow: 0 0 20px rgba(212, 168, 67, 0.4);
+  box-shadow: 0 0 20px rgba(212, 168, 67, 0.35);
   transform: scale(1.1);
 }
 
-.dashboard-shell--collapsed .dashboard-shell__toggle-btn svg {
+.dashboard-shell__toggle-icon {
+  font-size: 18px !important;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-shell--collapsed .dashboard-shell__toggle-icon {
   transform: rotate(180deg);
 }
 
