@@ -2,9 +2,9 @@ import { useParams } from 'react-router-dom';
 import { useTracking } from '../hooks/use-tracking.js';
 import { LogoSpinner } from '@enderass/shared/ui';
 
-function formatCurrency(amount) {
+function formatCurrency(amount, currency) {
   if (amount == null) return '\u2014';
-  return `${Number(amount).toLocaleString()} ETB`;
+  return `${Number(amount).toLocaleString()} ${currency || 'ETB'}`;
 }
 
 function formatDate(dateStr) {
@@ -16,27 +16,30 @@ function formatDate(dateStr) {
 }
 
 function StatusBadge({ status }) {
-  const classes = {
-    draft: 'tracking-badge--draft',
-    pending_approval: 'tracking-badge--pending',
-    published: 'tracking-badge--active',
-    suspended: 'tracking-badge--suspended',
-    closed: 'tracking-badge--closed',
-    cancelled: 'tracking-badge--closed',
+  const config = {
+    draft:           { cls: 'ts-badge--draft', label: 'Draft' },
+    pending_approval:{ cls: 'ts-badge--pending', label: 'Pending Approval' },
+    published:       { cls: 'ts-badge--active', label: 'Active' },
+    suspended:       { cls: 'ts-badge--suspended', label: 'Suspended' },
+    closed:          { cls: 'ts-badge--closed', label: 'Closed' },
+    cancelled:       { cls: 'ts-badge--cancelled', label: 'Cancelled' },
   };
+  const c = config[status] || { cls: '', label: status };
+  return <span className={`ts-badge ${c.cls}`}>{c.label}</span>;
+}
 
-  const labels = {
-    draft: 'Draft',
-    pending_approval: 'Pending Approval',
-    published: 'Active',
-    suspended: 'Suspended',
-    closed: 'Closed',
-    cancelled: 'Cancelled',
-  };
-
+function Countdown({ endDate }) {
+  if (!endDate) return null;
+  const now = Date.now();
+  const end = new Date(endDate).getTime();
+  const diff = end - now;
+  if (diff <= 0) return <span className="ts-countdown ts-countdown--ended">Ended</span>;
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
   return (
-    <span className={`tracking-badge ${classes[status] || ''}`}>
-      {labels[status] || status}
+    <span className="ts-countdown">
+      {d > 0 && <>{d}d </>}{h}h {m}m remaining
     </span>
   );
 }
@@ -52,28 +55,32 @@ function Timeline({ auction }) {
   const statusOrder = ['draft', 'pending_approval', 'published', 'suspended', 'closed', 'cancelled'];
   const currentIdx = statusOrder.indexOf(auction.status);
 
-  function isStepActive(stepIdx) {
-    if (auction.status === 'cancelled') return stepIdx === 0;
-    if (auction.status === 'suspended') return stepIdx <= 2;
-    return stepIdx <= currentIdx;
+  function isActive(idx) {
+    if (auction.status === 'cancelled') return idx === 0;
+    if (auction.status === 'suspended') return idx <= 2;
+    return idx <= currentIdx;
   }
 
   return (
-    <div className="tracking-timeline">
-      {steps.map((step, i) => (
-        <div
-          key={step.key}
-          className={`tracking-timeline__step ${isStepActive(i) ? 'tracking-timeline__step--active' : ''} ${i < steps.length - 1 ? 'tracking-timeline__step--connector' : ''}`}
-        >
-          <div className="tracking-timeline__dot" />
-          <div className="tracking-timeline__content">
-            <span className="tracking-timeline__label">{step.label}</span>
-            {step.date && (
-              <span className="tracking-timeline__date">{formatDate(step.date)}</span>
-            )}
+    <div className="ts-timeline">
+      {steps.map((s, i) => (
+        <div key={s.key} className={`ts-timeline__step ${isActive(i) ? 'ts-timeline__step--active' : ''} ${i < steps.length - 1 ? 'ts-timeline__step--conn' : ''}`}>
+          <div className="ts-timeline__dot" />
+          <div className="ts-timeline__content">
+            <span className="ts-timeline__label">{s.label}</span>
+            {s.date && <span className="ts-timeline__date">{formatDate(s.date)}</span>}
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function MetricCard({ label, value, highlight, monospace }) {
+  return (
+    <div className={`ts-metric ${highlight ? 'ts-metric--hl' : ''}`}>
+      <span className="ts-metric__label">{label}</span>
+      <span className={`ts-metric__value ${monospace ? 'ts-metric__value--mono' : ''}`}>{value ?? '\u2014'}</span>
     </div>
   );
 }
@@ -84,7 +91,7 @@ function TrackingDashboardPage() {
 
   if (loading && !data) {
     return (
-      <div className="tracking-loading">
+      <div className="ts-loading">
         <LogoSpinner size={32} />
         <p>Loading tracking data...</p>
       </div>
@@ -93,12 +100,11 @@ function TrackingDashboardPage() {
 
   if (error) {
     return (
-      <div className="tracking-error">
+      <div className="ts-error">
+        <div className="ts-error__icon">!</div>
         <h2>Unable to load tracking data</h2>
         <p>{error}</p>
-        <button className="tracking-error__btn" onClick={logout}>
-          Return to login
-        </button>
+        <button className="ts-error__btn" onClick={logout}>Return to login</button>
       </div>
     );
   }
@@ -106,117 +112,142 @@ function TrackingDashboardPage() {
   if (!data) return null;
 
   const { auction, asset, tracking } = data;
-  const imageUrl = asset?.imageUrls?.[0] || null;
+  const imageUrl = asset?.imageUrls?.[0] || auction?.imageUrls?.[0] || null;
 
   return (
-    <div className="tracking-dashboard">
-      <div className="tracking-dashboard__header">
-        <div className="tracking-dashboard__title-row">
-          <h1 className="tracking-dashboard__title">{auction.title}</h1>
+    <div className="ts-dash">
+      {/* Header */}
+      <div className="ts-dash__header">
+        <div className="ts-dash__title-row">
+          <h1 className="ts-dash__title">{auction.title}</h1>
           <StatusBadge status={auction.status} />
         </div>
-        <p className="tracking-dashboard__subtitle">
-          Auction ID: {auction.id?.slice(0, 8).toUpperCase() || '\u2014'}
-          {auction.category && ` \u00B7 ${auction.category.replace(/_/g, ' ')}`}
-        </p>
+        <div className="ts-dash__meta">
+          <span className="ts-dash__meta-item">ID: {(auction.id || '').slice(0, 8).toUpperCase()}</span>
+          {auction.category && <span className="ts-dash__meta-sep">|</span>}
+          {auction.category && <span className="ts-dash__meta-item">{auction.category.replace(/_/g, ' ')}</span>}
+          {auction.mode && <span className="ts-dash__meta-sep">|</span>}
+          {auction.mode && <span className="ts-dash__meta-item">{auction.mode === 'multi' ? 'Multi-Lot Auction' : 'Single Auction'}</span>}
+        </div>
       </div>
 
-      <div className="tracking-dashboard__grid">
-        <div className="tracking-dashboard__main-card">
+      {/* Description + Conditions */}
+      {(auction.description || auction.auctionConditions) && (
+        <div className="ts-card ts-card--body">
+          {auction.description && <p className="ts-desc">{auction.description}</p>}
+          {auction.auctionConditions && (
+            <div className="ts-conditions">
+              <span className="ts-conditions__label">Auction Conditions</span>
+              <p className="ts-conditions__text">{auction.auctionConditions}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Main grid */}
+      <div className="ts-dash__grid">
+        {/* Left column */}
+        <div className="ts-dash__col">
+
+          {/* Asset card */}
           {asset && (
-            <div className="tracking-asset">
+            <div className="ts-card ts-card--asset">
               {imageUrl && (
-                <div className="tracking-asset__image-wrap">
-                  <img
-                    src={imageUrl}
-                    alt={asset.title}
-                    className="tracking-asset__image"
-                  />
+                <div className="ts-asset__img-wrap">
+                  <img src={imageUrl} alt={asset.title} className="ts-asset__img" />
                 </div>
               )}
-              <div className="tracking-asset__info">
-                <h2 className="tracking-asset__title">{asset.title}</h2>
-                <p className="tracking-asset__type">{asset.assetType?.replace(/_/g, ' ')}</p>
-                {asset.description && (
-                  <p className="tracking-asset__desc">{asset.description}</p>
-                )}
+              <div className="ts-asset__info">
+                <h2 className="ts-asset__title">{asset.title}</h2>
+                <span className="ts-asset__type">{asset.assetType?.replace(/_/g, ' ') || 'Asset'}</span>
+                {asset.description && <p className="ts-asset__desc">{asset.description}</p>}
               </div>
             </div>
           )}
 
-          <div className="tracking-metrics">
-            <div className="tracking-metric tracking-metric--highlight">
-              <span className="tracking-metric__label">Current Highest Bid</span>
-              <span className="tracking-metric__value">
-                {formatCurrency(tracking.currentHighestBid)}
-              </span>
-            </div>
-            <div className="tracking-metric">
-              <span className="tracking-metric__label">Total Bids Placed</span>
-              <span className="tracking-metric__value">{tracking.totalBids}</span>
-            </div>
-            <div className="tracking-metric">
-              <span className="tracking-metric__label">Auction Mode</span>
-              <span className="tracking-metric__value">
-                {auction.mode === 'multi' ? 'Multi-Lot' : 'Single'}
-              </span>
-            </div>
+          {/* Metrics */}
+          <div className="ts-metrics-grid">
+            <MetricCard
+              label="Current Highest Bid"
+              value={formatCurrency(tracking.currentHighestBid, auction.currency)}
+              highlight
+              monospace
+            />
+            <MetricCard label="Total Bids" value={tracking.totalBids} monospace />
+            <MetricCard label="Participants" value={tracking.participantCount} monospace />
+            <MetricCard
+              label="Reserve Price"
+              value={formatCurrency(auction.reservePrice, auction.currency)}
+              monospace
+            />
+            {auction.totalReservePrice != null && (
+              <MetricCard
+                label="Total Reserve"
+                value={formatCurrency(auction.totalReservePrice, auction.currency)}
+                monospace
+              />
+            )}
+            <MetricCard
+              label="Document Price"
+              value={formatCurrency(auction.documentPrice, auction.currency)}
+              monospace
+            />
+            <MetricCard label="CPO %" value={auction.cpoPercentage != null ? `${auction.cpoPercentage}%` : '\u2014'} />
             {asset?.desiredReservePrice != null && (
-              <div className="tracking-metric">
-                <span className="tracking-metric__label">Reserve Price</span>
-                <span className="tracking-metric__value">
-                  {formatCurrency(asset.desiredReservePrice)}
-                </span>
-              </div>
+              <MetricCard
+                label="Asset Reserve"
+                value={formatCurrency(asset.desiredReservePrice, auction.currency)}
+                monospace
+              />
             )}
           </div>
         </div>
 
-        <div className="tracking-dashboard__side-card">
-          <h3 className="tracking-section-title">Auction Timeline</h3>
-          <Timeline auction={auction} />
+        {/* Right column — Timeline */}
+        <div className="ts-dash__col ts-dash__col--side">
+          <div className="ts-card ts-card--timeline">
+            <h3 className="ts-card__title">Timeline</h3>
+            <Countdown endDate={auction.endDate} />
+            <Timeline auction={auction} />
+          </div>
         </div>
       </div>
 
+      {/* Winner card */}
       {tracking.winner && (
-        <div className="tracking-winner-card">
-          <h3 className="tracking-section-title">Winner Information</h3>
-          <div className="tracking-winner-card__content">
-            <div className="tracking-winner-card__org">
-              {tracking.winner.organizationName || 'N/A'}
-            </div>
-            <div className="tracking-winner-card__amount">
-              Final Amount: {formatCurrency(tracking.winner.amount)}
-            </div>
-            <div className="tracking-winner-card__date">
-              Announced: {formatDate(tracking.winner.announcedAt)}
-            </div>
+        <div className="ts-card ts-card--winner">
+          <h3 className="ts-card__title">Winner</h3>
+          <div className="ts-winner">
+            <div className="ts-winner__org">{tracking.winner.organizationName || 'N/A'}</div>
+            <div className="ts-winner__amount">{formatCurrency(tracking.winner.amount, auction.currency)}</div>
+            <div className="ts-winner__date">Announced {formatDate(tracking.winner.announcedAt)}</div>
           </div>
         </div>
       )}
 
-      <div className="tracking-dashboard__dates">
-        <div className="tracking-date-item">
-          <span className="tracking-date-item__label">Published</span>
-          <span className="tracking-date-item__value">{formatDate(auction.publishedAt || auction.startDate)}</span>
+      {/* Dates bar */}
+      <div className="ts-dates">
+        <div className="ts-date-item">
+          <span className="ts-date-item__label">Published</span>
+          <span className="ts-date-item__value">{formatDate(auction.publishedAt || auction.startDate)}</span>
         </div>
-        <div className="tracking-date-item">
-          <span className="tracking-date-item__label">Bidding Start</span>
-          <span className="tracking-date-item__value">{formatDate(auction.startDate)}</span>
+        <div className="ts-date-item">
+          <span className="ts-date-item__label">Bidding Start</span>
+          <span className="ts-date-item__value">{formatDate(auction.startDate)}</span>
         </div>
-        <div className="tracking-date-item">
-          <span className="tracking-date-item__label">Bidding End</span>
-          <span className="tracking-date-item__value">{formatDate(auction.endDate)}</span>
+        <div className="ts-date-item">
+          <span className="ts-date-item__label">Bidding End</span>
+          <span className="ts-date-item__value">{formatDate(auction.endDate)}</span>
         </div>
         {auction.closedAt && (
-          <div className="tracking-date-item">
-            <span className="tracking-date-item__label">Closed</span>
-            <span className="tracking-date-item__value">{formatDate(auction.closedAt)}</span>
+          <div className="ts-date-item">
+            <span className="ts-date-item__label">Closed</span>
+            <span className="ts-date-item__value">{formatDate(auction.closedAt)}</span>
           </div>
         )}
       </div>
 
-      <div className="tracking-dashboard__disclaimer">
+      <div className="ts-disclaimer">
         This is an automated tracking page for informational purposes only.
         No bidding or purchasing actions can be performed through this page.
         For inquiries, please contact the auction house directly.

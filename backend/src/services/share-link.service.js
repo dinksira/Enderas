@@ -11,7 +11,7 @@ import { Bid } from '../models/bid.model.js';
 import { Winner } from '../models/winner.model.js';
 import { User } from '../models/index.js';
 import { sendShareLinkEmail } from '../integrations/email.integration.js';
-import { Op } from 'sequelize';
+import { Op, fn, col, literal } from 'sequelize';
 
 const TRACK_JWT_EXPIRES_IN = '24h';
 
@@ -176,6 +176,15 @@ async function getAuctionTrackingData(linkId, auctionId) {
     where: { auction_id: auctionId, status: 'submitted' },
   });
 
+  const participantResult = await Bid.findOne({
+    where: { auction_id: auctionId, status: 'submitted' },
+    attributes: [
+      [fn('COUNT', literal('DISTINCT user_id')), 'count'],
+    ],
+    raw: true,
+  });
+  const participantCount = participantResult?.count || 0;
+
   const winner = await Winner.findOne({
     where: { auction_id: auctionId },
     include: [
@@ -188,25 +197,34 @@ async function getAuctionTrackingData(linkId, auctionId) {
     auction: {
       id: auction.id,
       title: auction.title,
+      description: auction.description,
       status: auction.status,
-      mode: auction.mode,
+      mode: auction.auction_mode,
       category: auction.category,
-      startDate: auction.startDate,
-      endDate: auction.endDate,
-      publishedAt: auction.publishedAt,
-      closedAt: auction.closedAt,
+      reservePrice: auction.reserve_price ? Number(auction.reserve_price) : null,
+      totalReservePrice: auction.total_reserve_price ? Number(auction.total_reserve_price) : null,
+      documentPrice: auction.document_price ? Number(auction.document_price) : null,
+      cpoPercentage: auction.cpo_percentage ? Number(auction.cpo_percentage) : null,
+      currency: auction.currency,
+      imageUrls: auction.image_urls,
+      auctionConditions: auction.auction_conditions,
+      startDate: auction.start_date,
+      endDate: auction.end_date,
+      publishedAt: auction.published_at,
+      closedAt: auction.closed_at,
     },
     asset: auction.asset ? {
       id: auction.asset.id,
       title: auction.asset.title,
       description: auction.asset.description,
-      assetType: auction.asset.assetType,
-      imageUrls: auction.asset.imageUrls,
-      desiredReservePrice: auction.asset.desiredReservePrice,
+      assetType: auction.asset.asset_type,
+      imageUrls: auction.asset.image_urls,
+      desiredReservePrice: auction.asset.desired_reserve_price,
     } : null,
     tracking: {
       currentHighestBid: highestBid ? Number(highestBid.amount) : null,
       totalBids: bidCount,
+      participantCount,
       winner: winner ? {
         amount: winner.amount ? Number(winner.amount) : null,
         organizationName: winner.user?.organization_name || null,
