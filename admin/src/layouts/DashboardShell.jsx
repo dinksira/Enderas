@@ -422,9 +422,7 @@ export function DashboardShell() {
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           aria-label={isSidebarCollapsed ? t('dashboard.a11y.expand_sidebar') : t('dashboard.a11y.collapse_sidebar')}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <span className="material-symbols-outlined dashboard-shell__toggle-icon" aria-hidden="true">float_landscape_2</span>
         </button>
 
         <div className="dashboard-shell__brand">
