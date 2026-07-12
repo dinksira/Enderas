@@ -1196,6 +1196,35 @@
   color: #1e293b;
 }
 
+/* ─── Icon Buttons ─── */
+
+.org-modal__icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.org-modal__icon-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.org-modal__icon-btn:active {
+  transform: translateY(0);
+}
+
 .org-modal__body {
   flex: 1;
   overflow-y: auto;

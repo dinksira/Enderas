@@ -505,13 +505,18 @@ export function OrganizationDetailModal({
                 ) : (
                   <>
                     {canUpdate && (
-                      <Button variant="secondary" onClick={startEditing} style={{ marginRight: '8px' }}>
-                        {t('organizations.management.drawer.edit')}
-                      </Button>
+                      <button type="button" className="org-modal__icon-btn" onClick={startEditing} title={t('organizations.management.drawer.edit')}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M11.5 1.5L14.5 4.5L5 14H2V11L11.5 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
                     )}
-                    <Button variant="secondary" onClick={handleRefresh}>
-                      {t('organizations.management.drawer.refresh')}
-                    </Button>
+                    <button type="button" className="org-modal__icon-btn" onClick={handleRefresh} title={t('organizations.management.drawer.refresh')}>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M2 8C2 4.686 4.686 2 8 2C10.5 2 12.628 3.55 13.5 5.5M14 8C14 11.314 11.314 14 8 14C5.5 14 3.372 12.45 2.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M10 5.5H13.5V2M6 10.5H2.5V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
                   </>
                 )}
               </>
