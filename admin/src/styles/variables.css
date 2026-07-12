@@ -25,6 +25,9 @@
   /* Radius */
   --core-radius-sharp: 0px;
   --core-radius-progress: 2px;
+  --core-radius-sm: 6px;
+  --core-radius-md: 10px;
+  --core-radius-lg: 14px;
   --core-radius-circle: 50%;
 
   /* Typography families */
@@ -226,6 +229,9 @@
   --component-table-cell-padding-y: var(--core-space-3);
   --component-table-cell-padding-x: var(--core-space-4);
   --component-table-border: var(--semantic-color-border-default);
+  --component-table-radius: var(--core-radius-md);
+  --component-table-header-radius: var(--core-radius-md) var(--core-radius-md) 0 0;
+  --component-table-footer-radius: 0 0 var(--core-radius-md) var(--core-radius-md);
 
   /* Navigation */
   --component-navbar-height: var(--core-layout-navbar-height);
