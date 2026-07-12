@@ -5,7 +5,7 @@ const POLL_INTERVAL_MS = 30000;
 
 export function useTracking(token) {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [authenticated, setAuthenticated] = useState(() => trackingService.isAuthenticated(token));
   const intervalRef = useRef(null);
