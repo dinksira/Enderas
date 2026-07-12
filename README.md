@@ -90,7 +90,6 @@ flowchart TB
 | **Frontend** | React + Vite | Public-facing web application |
 | **Admin** | React + Vite | Internal management dashboard |
 | **Mobile** | React Native + Expo | Cross-platform mobile app |
-| **Deployment** | Render + Vercel + EAS | Backend, web, and mobile hosting |
 
 ---
 
@@ -158,7 +157,18 @@ npx expo start
 
 ## 🗄️ Database
 
-### Migrations
+All database operations are handled through the unified CLI. Migrations live in `backend/migrations/` and seeding is managed by `backend/scripts/db/cli.mjs`.
+
+```bash
+npm run db:setup:test        # migrate + seed full test data (recommended for new DBs)
+npm run db:setup:normal      # migrate + seed baseline only
+npm run db:seed:test         # seed test data on an already-migrated DB
+npm run db:reseed:test       # purge test data, then re-seed
+npm run db:reset:test        # undo all migrations, migrate, re-seed (destructive)
+npm run db:seed:auctions     # seed only the auction catalog
+```
+
+Generic form: `npm run db -- <command> [normal|test] [--only=users,staff,auctions]`
 
 | Migration | Purpose |
 |---|---|
@@ -166,80 +176,48 @@ npx expo start
 | `002_seed_roles_and_settings.cjs` | Baseline roles, super-admin, system settings |
 | `003_bid_drafts.cjs` | Bid drafts table & schema updates |
 
-### Seed Commands
-
-| Command | Description |
-|---|---|
-| `npm run db:setup:test` | Migrate + seed full test data |
-| `npm run db:setup:normal` | Migrate + seed baseline only |
-| `npm run db:seed:test` | Seed test data on existing DB |
-| `npm run db:reseed:test` | Purge + re-seed test data |
-| `npm run db:reset:test` | Full reset (destructive) |
-| `npm run db:seed:auctions` | Seed only auction catalog |
-
----
-
-## 🔐 Test Credentials
-
-> [!WARNING]
-> These accounts are seeded only by `db:setup:test` and are intended for **local development and QA**. Never seed test data or reuse these credentials in a production environment.
-
-After running `db:setup:test`:
-
-| Role | Mobile | Password |
-|---|---|---|
-| Dev Super Admin | `0912345678` | `pass1` |
-| Bidder | `0987654321` | `pass2` |
-| Auction Manager | `0922222222` | `pass1` |
-| Evaluation Officer | `0933333333` | `pass1` |
-| Finance Officer | `0944444444` | `pass1` |
-| Customer Service | `0955555555` | `pass1` |
-
-Production super-admin: `+251900000000`
-
 ---
 
 ## 📁 Project Structure
 
-<details>
-<summary><strong>Click to expand backend structure</strong></summary>
-
 ```
-backend/
-├── app.js                     # Express app setup
-├── server.js                  # Server entry point
-├── .env / .env.example        # Environment configuration
-├── migrations/                # Sequelize migrations
-│   ├── 001_initial_schema.cjs
-│   ├── 002_seed_roles_and_settings.cjs
-│   ├── 003_bid_drafts.cjs
-│   └── data/role-permissions.cjs
-├── scripts/
-│   └── db/                    # Unified migrate/seed CLI
-│       ├── cli.mjs
-│       ├── data/              # Stable seed IDs & catalog
-│       ├── lib/                # Migration & purge helpers
-│       └── seeds/              # Baseline, users, auctions
-├── src/
-│   ├── config/                # DB, env, Redis, i18n
-│   ├── constants/
-│   ├── controllers/
-│   ├── core/authorization/    # RBAC engine & middleware
-│   ├── jobs/                  # Auction auto-close
-│   ├── locales/               # en, am
-│   ├── middleware/            # Auth, staff, KYC
-│   ├── models/
-│   ├── modules/auth/          # Auth routes, service, validation
-│   ├── routes/                # API versioning
-│   ├── schemas/
-│   ├── services/
-│   └── utils/
-└── tests/
-    ├── rbac.policy.test.js
-    └── mobile.util.test.js
+enderass/
+├── backend/                  # Node.js + Express REST API
+│   ├── app.js                # Express app setup
+│   ├── server.js             # Server entry point
+│   ├── .env / .env.example   # Environment configuration
+│   ├── .sequelizerc          # Sequelize CLI config
+│   ├── migrations/           # Database migrations
+│   ├── scripts/
+│   │   └── db/               # Unified migrate/seed CLI
+│   │       ├── cli.mjs
+│   │       ├── data/         # Stable seed IDs & catalog
+│   │       ├── lib/          # Migration & purge helpers
+│   │       └── seeds/        # Baseline, users, auctions
+│   ├── src/
+│   │   ├── config/           # DB, env, Redis, i18n
+│   │   ├── constants/
+│   │   ├── controllers/
+│   │   ├── core/authorization/  # RBAC engine & middleware
+│   │   ├── integrations/
+│   │   ├── jobs/             # Auction auto-close
+│   │   ├── locales/          # en, am
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── modules/auth/     # Auth routes, service, validation
+│   │   ├── routes/           # API versioning
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   └── validations/
+│   ├── tests/
+│   │   ├── rbac.policy.test.js
+│   │   └── mobile.util.test.js
+│   └── uploads/              # Local file storage
+├── frontend/                 # React + Vite public web app
+├── admin/                    # React + Vite admin dashboard
+└── mobile/                   # React Native + Expo mobile app
 ```
-
-</details>
 
 ---
 
