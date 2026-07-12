@@ -90,7 +90,6 @@ flowchart TB
 | **Frontend** | React + Vite | Public-facing web application |
 | **Admin** | React + Vite | Internal management dashboard |
 | **Mobile** | React Native + Expo | Cross-platform mobile app |
-| **Deployment** | Render + Vercel + EAS | Backend, web, and mobile hosting |
 
 ---
 
@@ -158,60 +157,22 @@ npx expo start
 
 ## 🗄️ Database
 
-Migrations live in `backend/migrations/` and are applied with the Sequelize CLI via the unified DB command wrapper (`backend/scripts/db/cli.mjs`):
+All database operations are handled through the unified CLI. Migrations live in `backend/migrations/` and seeding is managed by `backend/scripts/db/cli.mjs`.
+
+```bash
+npm run db:test            # migrate + seed full test data (recommended for new DBs)
+npm run db:setup           # migrate + seed baseline only
+npm run db:test:reseed     # purge test data, then re-seed
+npm run db:setup:reseed    # purge test data, then re-apply baseline
+npm run db -- <command>    # unified migrate/seed/reset CLI
+```
+
+Generic form: `npm run db -- <command> [normal|test] [--only=users,staff,auctions]`
 
 | Migration | Purpose |
 |---|---|
 | `001_initial_schema.cjs` | Full schema (all core tables) |
 | `002_seed_roles_and_settings.cjs` | Baseline roles, production super-admin, system settings |
-
-```bash
-npm run db -- migrate         # apply pending migrations
-npm run db -- reset           # drop all tables, migrate, then seed (destructive)
-```
-
-The server does **not** auto-migrate on startup; run migrations explicitly before starting. (There is no `migrate:undo` shortcut script — use `npx sequelize-cli db:migrate:undo` if you need to roll back.)
-
-### Database seeding (unified CLI)
-
-All seeding is handled by `backend/scripts/db/cli.mjs`. Two modes:
-
-* **normal** — baseline only (roles, system settings, production super-admin `+251900000000`)
-* **test** — baseline + dev test users, operational staff, and auction catalog (default for local dev)
-
-| Command | Description |
-|---|---|
-| `npm run db:test` | Migrate, then seed full test data (recommended for new dev DBs) |
-| `npm run db:setup` | Migrate, then seed baseline only |
-| `npm run db:test:reseed` | Purge test seed data, then re-seed test |
-| `npm run db:setup:reseed` | Purge test seed data, then re-apply baseline |
-| `npm run db -- setup test` | migrate + seed full test data |
-| `npm run db -- seed test --only=auctions` | seed only the auction catalog (requires test users) |
-| `npm run db -- reset test` | drop all tables, migrate, seed test (destructive) |
-
-Test seed includes:
-
-* 7 RBAC roles and 7 system settings
-* 6 test user accounts (admin, bidder, 4 operational staff)
-* 4 published multi-lot auctions, 12 assets, 12 evaluations
-
-## 🔐 Test Credentials
-
-> [!WARNING]
-> These accounts are seeded only by `db:test` and are intended for **local development and QA**. Never seed test data or reuse these credentials in a production environment.
-
-#### Local test credentials (after `npm run db:test` or `npm run db:test:reseed`)
-
-| Role | Mobile | Password |
-|---|---|---|
-| Dev Super Admin | `0912345678` | `pass1` |
-| Bidder | `0987654321` | `pass2` |
-| Auction Manager | `0922222222` | `pass1` |
-| Evaluation Officer | `0933333333` | `pass1` |
-| Finance Officer | `0944444444` | `pass1` |
-| Customer Service | `0955555555` | `pass1` |
-
-Production super-admin: `+251900000000`
 
 ---
 
@@ -229,44 +190,44 @@ Integration test scripts live in `backend/scripts/` (e.g. `run-auction-flow-test
 
 ## 📁 Project Structure
 
-<details>
-<summary><strong>Click to expand backend structure</strong></summary>
-
 ```
-backend/
-├── app.js                     # Express app setup
-├── server.js                  # Server entry point
-├── .env / .env.example        # Environment configuration
-├── migrations/                # Sequelize migrations
-│   ├── 001_initial_schema.cjs
-│   ├── 002_seed_roles_and_settings.cjs
-│   └── data/role-permissions.cjs
-├── scripts/
-│   └── db/                    # Unified migrate/seed CLI
-│       ├── cli.mjs
-│       ├── data/              # Stable seed IDs & catalog
-│       ├── lib/                # Migration & purge helpers
-│       └── seeds/              # Baseline, users, auctions
-├── src/
-│   ├── config/                # DB, env, Redis, i18n
-│   ├── constants/
-│   ├── controllers/
-│   ├── core/authorization/    # RBAC engine & middleware
-│   ├── jobs/                  # Auction auto-close
-│   ├── locales/               # en, am
-│   ├── middleware/            # Auth, staff, KYC
-│   ├── models/
-│   ├── modules/auth/          # Auth routes, service, validation
-│   ├── routes/                # API versioning
-│   ├── schemas/
-│   ├── services/
-│   └── utils/
-└── tests/
-    ├── rbac.policy.test.js
-    └── mobile.util.test.js
+enderass/
+├── backend/                  # Node.js + Express REST API
+│   ├── app.js                # Express app setup
+│   ├── server.js             # Server entry point
+│   ├── .env / .env.example   # Environment configuration
+│   ├── .sequelizerc          # Sequelize CLI config
+│   ├── migrations/           # Database migrations
+│   ├── scripts/
+│   │   └── db/               # Unified migrate/seed CLI
+│   │       ├── cli.mjs
+│   │       ├── data/         # Stable seed IDs & catalog
+│   │       ├── lib/          # Migration & purge helpers
+│   │       └── seeds/        # Baseline, users, auctions
+│   ├── src/
+│   │   ├── config/           # DB, env, Redis, i18n
+│   │   ├── constants/
+│   │   ├── controllers/
+│   │   ├── core/authorization/  # RBAC engine & middleware
+│   │   ├── integrations/
+│   │   ├── jobs/             # Auction auto-close
+│   │   ├── locales/          # en, am
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── modules/auth/     # Auth routes, service, validation
+│   │   ├── routes/           # API versioning
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   └── validations/
+│   ├── tests/
+│   │   ├── rbac.policy.test.js
+│   │   └── mobile.util.test.js
+│   └── uploads/              # Local file storage
+├── frontend/                 # React + Vite public web app
+├── admin/                    # React + Vite admin dashboard
+└── mobile/                   # React Native + Expo mobile app
 ```
-
-</details>
 
 ---
 
