@@ -1108,6 +1108,7 @@
   gap: 8px;
   flex-shrink: 0;
   flex-wrap: wrap;
+  padding-right: 28px;
 }
 
 /* ─── Fancy Buttons inside Modal ─── */
