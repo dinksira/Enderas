@@ -21,6 +21,7 @@ export const MODULES = Object.freeze({
   ROLES: 'roles',
   REPORTS: 'reports',
   SETTINGS: 'settings',
+  ORGANIZATIONS: 'organizations',
 });
 
 export const ACTIONS = Object.freeze({
@@ -210,6 +211,18 @@ export const PAGE_REGISTRY = Object.freeze([
     subtitleKey: 'settings.subtitle',
     searchPlaceholderKey: 'admin.searchPlaceholder',
     searchEnabled: false,
+  },
+  {
+    id: 'organizations',
+    label: 'Organizations',
+    path: '/app/organizations',
+    module: MODULES.ORGANIZATIONS,
+    action: ACTIONS.READ,
+    group: 'admin',
+    titleKey: 'organizations.management.pageTitle',
+    subtitleKey: 'organizations.management.subtitle',
+    searchPlaceholderKey: 'organizations.management.searchPlaceholder',
+    searchEnabled: true,
   },
   {
     id: 'profile',

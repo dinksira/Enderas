@@ -18,6 +18,10 @@ import { BrowseAuctionsView } from '../modules/auctions/views/BrowseAuctionsView
 import { BidsRouteEntry } from '../modules/auctions/views/BidsRouteEntry.jsx';
 import { MyBidsView } from '../modules/bid-management/views/MyBidsView.jsx';
 import { NotificationCenterView } from '../modules/notifications/views/NotificationCenterView.jsx';
+import { OrganizationPortalView } from '../modules/organization-portal/views/OrganizationPortalView.jsx';
+import TrackingLayout from '../layouts/TrackingLayout.jsx';
+import TrackingAuthPage from '../modules/tracking/views/TrackingAuthPage.jsx';
+import TrackingDashboardPage from '../modules/tracking/views/TrackingDashboardPage.jsx';
 function guard(module, action = ACTIONS.READ, element) {
   return (
     <ProtectedRoute module={module} action={action}>
@@ -106,6 +110,7 @@ export function AppRoutes() {
         <Route path="my-cpo" element={<Navigate to={ROUTES.APP_NOTIFICATIONS} replace />} />
         <Route path="reports" element={<Navigate to="/app/access-denied" replace />} />
         <Route path="notifications" element={guard(MODULES.NOTIFICATIONS, ACTIONS.READ, <NotificationCenterView />)} />
+        <Route path="org-portal" element={<OrganizationPortalView />} />
         <Route path="profile" element={guard(MODULES.USERS, ACTIONS.READ, <UserProfileView />)} />
       </Route>
 
@@ -122,6 +127,12 @@ export function AppRoutes() {
       <Route path="/marketplace" element={<Navigate to={ROUTES.APP_BROWSE_AUCTIONS} replace />} />
       <Route path="/bidder-dashboard" element={<Navigate to={ROUTES.APP_MY_BIDS} replace />} />
       <Route path="/operational-panel" element={<Navigate to={ROUTES.APP_REPORTS} replace />} />
+
+      {/* Public auction tracking pages */}
+      <Route path="/track" element={<TrackingLayout />}>
+        <Route path=":token" element={<TrackingAuthPage />} />
+        <Route path=":token/dashboard" element={<TrackingDashboardPage />} />
+      </Route>
     </Routes>
   );
 }

@@ -5,6 +5,34 @@ import { getDocumentKind } from '@enderass/shared/utils';
 import { toLoadableMediaUrl } from '../../public/utils/landing-utils.js';
 import { resolveAuctionDocumentHref } from '../utils/auction-document-utils.js';
 
+function FileTypeIcon({ kind }) {
+  if (kind === 'pdf') {
+    return (
+      <svg width="28" height="32" viewBox="0 0 28 32" fill="none">
+        <rect x="0.5" y="0.5" width="27" height="31" rx="3.5" fill="#FEF2F2" stroke="#FECACA" />
+        <path d="M6 9h16M6 14h16M6 19h10" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
+        <rect x="17" y="17" width="8" height="11" rx="2" fill="#EF4444" />
+        <path d="M19 20.5h4M19 23.5h4M19 26.5h2" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (kind === 'image') {
+    return (
+      <svg width="28" height="32" viewBox="0 0 28 32" fill="none">
+        <rect x="0.5" y="0.5" width="27" height="31" rx="3.5" fill="#EFF6FF" stroke="#BFDBFE" />
+        <circle cx="9.5" cy="11" r="2.5" fill="#3B82F6" />
+        <path d="M27 18l-7-5-5 5-4-3-5 6" stroke="#3B82F6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="28" height="32" viewBox="0 0 28 32" fill="none">
+      <rect x="0.5" y="0.5" width="27" height="31" rx="3.5" fill="#FAFAFA" stroke="#E5E5E5" />
+      <path d="M6 9h16M6 14h16M6 19h12" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function resolveDocumentEntry(doc, docIndex, auctionId, unlocked, t) {
   const rawUrl = typeof doc === 'string' ? doc : doc?.url || doc?.fileUrl || '';
   const name = typeof doc === 'string'
@@ -91,26 +119,30 @@ export function AuctionDocumentsBlock({
         {items.length === 0 ? (
           <p className="auction-documents__empty">{t('bidder.participation.documentsEmpty')}</p>
         ) : (
-          <ul className="auction-documents__list">
+          <div className="auction-documents__card-grid">
             {items.map((doc) => (
-              <li key={`${doc.url}-${doc.docIndex}`} className="auction-documents__item">
-                <button
-                  type="button"
-                  className="auction-documents__link"
-                  onClick={() => setViewerDoc(doc)}
-                  aria-label={t('bidder.participation.viewDocumentNamed', { name: doc.name })}
-                >
-                  <span className="auction-documents__link-icon" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" />
+              <button
+                key={`${doc.url}-${doc.docIndex}`}
+                type="button"
+                className="auction-documents__card"
+                onClick={() => setViewerDoc(doc)}
+                aria-label={t('bidder.participation.viewDocumentNamed', { name: doc.name })}
+              >
+                <div className="auction-documents__card-icon">
+                  <FileTypeIcon kind={doc.kind} />
+                </div>
+                <div className="auction-documents__card-body">
+                  <span className="auction-documents__card-name">{doc.name}</span>
+                  <span className="auction-documents__card-action">
+                    {t('bidder.participation.viewDocument')}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="auction-documents__card-arrow">
+                      <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </span>
-                  <span className="auction-documents__link-text">{doc.name}</span>
-                  <span className="auction-documents__link-action">{t('bidder.participation.viewDocument')}</span>
-                </button>
-              </li>
+                </div>
+              </button>
             ))}
-          </ul>
+          </div>
         )}
       </section>
 

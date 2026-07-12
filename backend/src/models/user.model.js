@@ -95,18 +95,25 @@ export const User = sequelize.define(
       allowNull: false,
       defaultValue: 0,
     },
+    display_password: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
   },
   {
     tableName: 'users',
     paranoid: true,
     defaultScope: {
       attributes: {
-        exclude: ['password', 'national_id_number', 'tin_number'],
+        exclude: ['password', 'display_password', 'national_id_number', 'tin_number'],
       },
     },
     scopes: {
       withCredentials: {
-        attributes: { include: ['password'] },
+        attributes: { include: ['password', 'display_password'] },
+      },
+      withDisplayPassword: {
+        attributes: { include: ['display_password'] },
       },
     },
   },

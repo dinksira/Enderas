@@ -21,6 +21,7 @@ export const MODULES = Object.freeze({
   ROLES: 'roles',
   REPORTS: 'reports',
   SETTINGS: 'settings',
+  ORG_PORTAL: 'org_portal',
 });
 
 export const ACTIONS = Object.freeze({
@@ -270,6 +271,18 @@ export const PAGE_REGISTRY = Object.freeze([
     subtitleKey: 'assets.my.subtitle',
     searchPlaceholderKey: 'assets.my.searchPlaceholder',
     searchEnabled: true,
+  },
+  {
+    id: 'org-portal',
+    label: 'Organization Portal',
+    path: '/app/org-portal',
+    module: MODULES.ORG_PORTAL,
+    action: ACTIONS.READ,
+    group: 'org',
+    titleKey: 'organizationPortal.pageTitle',
+    subtitleKey: 'organizationPortal.subtitle',
+    searchPlaceholderKey: 'organizationPortal.searchPlaceholder',
+    searchEnabled: false,
   },
 ]);
 

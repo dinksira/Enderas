@@ -96,7 +96,9 @@
       "auction_filters": "የጨረታ ማጣሪያዎች",
       "status_filters": "የሁኔታ ማጣሪያዎች",
       "expand_sidebar": "ጎን አሞሌ ዘርጋ",
-      "collapse_sidebar": "ጎን አሞሌ ሰብስብ"
+      "collapse_sidebar": "ጎን አሞሌ ሰብስብ",
+      "switch_to_dark": "ወደ ጨለማ ሁነታ ቀይር",
+      "switch_to_light": "ወደ ብርሃን ሁነታ ቀይር"
     },
     "metrics": {
       "loading": "መለኪያዎች በመጫን ላይ...",
@@ -1173,6 +1175,11 @@
           "label": "ጨረታ ተልኳል",
           "title": "ጨረታዎ ተቀብሏል",
           "body": "ለዚህ ጨረታ የታሸገ ጨረታዎን አስቀድመው አስገብተዋል።"
+        },
+        "own_asset": {
+          "label": "የእርስዎ ጨረታ",
+          "title": "በዚህ ጨረታ ውስጥ ንብረት አለዎት",
+          "body": "እንደ ንብረት ባለቤት በራስዎ ጨረታ ላይ ጨረታ ማስገባት አይችሉም።"
         }
       },
       "paymentModal": {

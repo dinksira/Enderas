@@ -15,6 +15,8 @@ import { auctionController } from '../controllers/auction.controller.js';
 import { assetController } from '../controllers/asset.controller.js';
 import { userController } from '../controllers/user.controller.js';
 import { staffController } from '../controllers/staff.controller.js';
+import { organizationController } from '../controllers/organization.controller.js';
+import { organizationAuctionController } from '../controllers/organization-auction.controller.js';
 import { settingsController } from '../controllers/settings.controller.js';
 import { auditController } from '../controllers/audit.controller.js';
 import { roleController } from '../controllers/role.controller.js';
@@ -28,6 +30,7 @@ import { notificationController } from '../controllers/notification.controller.j
 import { dashboardController } from '../controllers/dashboard.controller.js';
 import { authController } from '../modules/auth/auth.controller.js';
 import { validateUpdateProfileBody } from '../modules/auth/auth.validation.js';
+import { shareLinkController } from '../controllers/share-link.controller.js';
 import { requireKYCVerified } from '../middleware/kyc.middleware.js';
 import { requireStaff } from '../middleware/staff.middleware.js';
 import fileUploadRoutes from './fileUpload.routes.js';
@@ -449,6 +452,26 @@ v1Router.post(
   auctionController.closeAuction,
 );
 
+// Share links
+v1Router.post(
+  '/auctions/:auctionId/share-links',
+  authenticate,
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.UPDATE }),
+  shareLinkController.createShareLink,
+);
+v1Router.get(
+  '/auctions/:auctionId/share-links',
+  authenticate,
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.READ }),
+  shareLinkController.listShareLinks,
+);
+v1Router.delete(
+  '/share-links/:id',
+  authenticate,
+  authorize({ module: MODULES.AUCTIONS, action: ACTIONS.UPDATE }),
+  shareLinkController.revokeShareLink,
+);
+
 // Documents
 mountResource(v1Router, '/documents', MODULES.DOCUMENTS, 'documents', { requireKycOnCreate: true });
 
@@ -780,6 +803,123 @@ v1Router.delete(
   authorize({ module: MODULES.STAFF, action: ACTIONS.DELETE }),
   requireStaff,
   staffController.deleteStaff,
+);
+
+// Organizations
+v1Router.get(
+  '/organizations',
+  authenticate,
+  attachDataScope(MODULES.ORGANIZATIONS),
+  authorize({ module: MODULES.ORGANIZATIONS, action: ACTIONS.READ }),
+  requireStaff,
+  organizationController.listOrganizations,
+);
+v1Router.get(
+  '/organizations/stats',
+  authenticate,
+  attachDataScope(MODULES.ORGANIZATIONS),
+  authorize({ module: MODULES.ORGANIZATIONS, action: ACTIONS.READ }),
+  requireStaff,
+  organizationController.getOrgStats,
+);
+v1Router.get(
+  '/organizations/portal',
+  authenticate,
+  (req, res, next) => {
+    const userType = req.auth?.identity?.userType || req.user?.user_type;
+    if (userType !== 'organization') {
+      return res.status(403).json({ error: 'Only organizations can access the portal' });
+    }
+    return next();
+  },
+  organizationController.getPortal,
+);
+v1Router.get(
+  '/organizations/portal/assets',
+  authenticate,
+  (req, res, next) => {
+    const userType = req.auth?.identity?.userType || req.user?.user_type;
+    if (userType !== 'organization') {
+      return res.status(403).json({ error: 'Only organizations can access the portal' });
+    }
+    return next();
+  },
+  organizationController.getPortalAssets,
+);
+v1Router.get(
+  '/organizations/:id/active-auctions',
+  authenticate,
+  attachDataScope(MODULES.ORGANIZATIONS),
+  authorize({ module: MODULES.ORGANIZATIONS, action: ACTIONS.READ }),
+  requireStaff,
+  organizationController.getOrganizationActiveAuctions,
+);
+
+// Organization <-> Auction linking
+v1Router.get(
+  '/organizations/:id/auction-links',
+  authenticate,
+  attachDataScope(MODULES.ORGANIZATIONS),
+  authorize({ module: MODULES.ORGANIZATIONS, action: ACTIONS.READ }),
+  requireStaff,
+  organizationAuctionController.listLinkedAuctions,
+);
+v1Router.get(
+  '/organizations/:id/available-auctions',
+  authenticate,
+  attachDataScope(MODULES.ORGANIZATIONS),
+  authorize({ module: MODULES.ORGANIZATIONS, action: ACTIONS.READ }),
+  requireStaff,
+  organizationAuctionController.getAvailableAuctions,
+);
+v1Router.post(
+  '/organizations/:id/auction-links',
+  authenticate,
+  attachDataScope(MODULES.ORGANIZATIONS),
+  authorize({ module: MODULES.ORGANIZATIONS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  organizationAuctionController.linkAuction,
+);
+v1Router.delete(
+  '/organizations/:id/auction-links/:auctionId',
+  authenticate,
+  attachDataScope(MODULES.ORGANIZATIONS),
+  authorize({ module: MODULES.ORGANIZATIONS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  organizationAuctionController.unlinkAuction,
+);
+
+v1Router.get(
+  '/organizations/:id',
+  authenticate,
+  attachDataScope(MODULES.ORGANIZATIONS),
+  authorize({ module: MODULES.ORGANIZATIONS, action: ACTIONS.READ }),
+  requireStaff,
+  organizationController.getOrganizationById,
+);
+v1Router.post(
+  '/organizations',
+  authenticate,
+  attachDataScope(MODULES.ORGANIZATIONS),
+  authorize({ module: MODULES.ORGANIZATIONS, action: ACTIONS.CREATE }),
+  requireStaff,
+  organizationController.createOrganization,
+);
+v1Router.put(
+  '/organizations/:id',
+  authenticate,
+  attachDataScope(MODULES.ORGANIZATIONS),
+  authorize({ module: MODULES.ORGANIZATIONS, action: ACTIONS.UPDATE }),
+  requireStaff,
+  organizationController.updateOrganization,
+);
+v1Router.delete(
+  '/organizations/:id',
+  authenticate,
+  attachDataScope(MODULES.ORGANIZATIONS),
+  authorize({ module: MODULES.ORGANIZATIONS, action: ACTIONS.DELETE }),
+  requireStaff,
+  organizationController.deleteOrganization,
 );
 
 const roles = createResourceHandlers('roles', MODULES.ROLES);

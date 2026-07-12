@@ -25,6 +25,9 @@
   /* Radius */
   --core-radius-sharp: 0px;
   --core-radius-progress: 2px;
+  --core-radius-sm: 6px;
+  --core-radius-md: 10px;
+  --core-radius-lg: 14px;
   --core-radius-circle: 50%;
 
   /* Typography families */
@@ -226,6 +229,9 @@
   --component-table-cell-padding-y: var(--core-space-3);
   --component-table-cell-padding-x: var(--core-space-4);
   --component-table-border: var(--semantic-color-border-default);
+  --component-table-radius: var(--core-radius-md);
+  --component-table-header-radius: var(--core-radius-md) var(--core-radius-md) 0 0;
+  --component-table-footer-radius: 0 0 var(--core-radius-md) var(--core-radius-md);
 
   /* Navigation */
   --component-navbar-height: var(--core-layout-navbar-height);
@@ -294,17 +300,23 @@
   /* Dashboard shell */
   --dashboard-sidebar-bg: #0a0f1e;
   --dashboard-sidebar-width: 260px;
+  --dashboard-sidebar-radius: 0 24px 24px 0;
   --dashboard-header-height: 72px;
   --dashboard-canvas-bg: #fbfbfb;
   --dashboard-surface-bg: #ffffff;
-  --dashboard-accent: #0a0f1e;
-  --dashboard-accent-hover: #060a14;
+  --dashboard-accent: #06436a;
+  --dashboard-accent-hover: #04304c;
   --dashboard-text-primary: var(--core-color-neutral-900);
   --dashboard-text-muted: #8b9cb3;
   --dashboard-text-subtle: #6c757d;
   --dashboard-text-inverse: #ffffff;
   --dashboard-border: var(--core-color-neutral-200);
-  --dashboard-gold: #d4a843;
+  --dashboard-sidebar-active-bg: rgba(6, 67, 106, 0.2);
+  --dashboard-sidebar-active-border: #4a9bd9;
+  --dashboard-sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+  --dashboard-sidebar-icon-color: #6b7d9a;
+  --dashboard-sidebar-icon-active: #4a9bd9;
+  --dashboard-sidebar-tooltip-bg: #0a0f1e;
   --dashboard-search-bg: rgba(0, 0, 0, 0.05);
   --dashboard-search-radius: 999px;
   --dashboard-status-active-bg: #28a745;

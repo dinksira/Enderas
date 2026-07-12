@@ -72,7 +72,8 @@
       "myassets": "የኔ የንብረት ጥያቄዎች",
       "submitasset": "የንብረት ጥያቄ",
       "asset_request": "የንብረት ጥያቄ",
-      "notifications": "ማሳወቂያዎች"
+       "notifications": "ማሳወቂያዎች",
+       "orgportal": "የድርጅት መግቢያ"
     },
     "profile": {
       "super_admin": "የስርዓት አስተዳዳሪ",
@@ -90,7 +91,9 @@
       "auction_filters": "የጨረታ ማጣሪያዎች",
       "status_filters": "የሁኔታ ማጣሪያዎች",
       "expand_sidebar": "ጎን አሞሌ ዘርጋ",
-      "collapse_sidebar": "ጎን አሞሌ ሰብስብ"
+      "collapse_sidebar": "ጎን አሞሌ ሰብስብ",
+      "switch_to_dark": "ወደ ጨለማ ሁነታ ቀይር",
+      "switch_to_light": "ወደ ብርሃን ሁነታ ቀይር"
     },
     "metrics": {
       "loading": "መለኪያዎች በመጫን ላይ...",
@@ -1048,6 +1051,11 @@
           "label": "ጨረታ ተልኳል",
           "title": "ጨረታዎ ተቀብሏል",
           "body": "ጨረታዎ ለዚህ ጨረታ ተጠናቋል።"
+        },
+        "own_asset": {
+          "label": "የእርስዎ ጨረታ",
+          "title": "በዚህ ጨረታ ውስጥ ንብረት አለዎት",
+          "body": "እንደ ንብረት ባለቤት በራስዎ ጨረታ ላይ ጨረታ ማስገባት አይችሉም። ጥያቄ ካለዎት ድጋፍን ያነጋግሩ።"
         }
       },
       "paymentModal": {
@@ -2234,6 +2242,35 @@
     "management": {
       "pageTitle": "ሰነዶች",
       "subtitle": "የጨረታ ሰነዶችን እና ፋይሎችን ያስተዳድሩ።"
+    }
+  },
+  "organizationPortal": {
+    "pageTitle": "የድርጅት መግቢያ",
+    "subtitle": "ንብረቶችዎን፣ ጨረታዎችዎን እና አፈጻጸምዎን በቀላሉ ይከታተሉ።",
+    "searchPlaceholder": "ንብረቶችን ይፈልጉ...",
+    "fallback": "የኔ ድርጅት",
+    "orgName": "ድርጅት",
+    "tinNumber": "የTIN ቁጥር",
+    "contact": "የእውቂያ መረጃ",
+    "status": "ሁኔታ",
+    "assetType": "አይነት",
+    "reservePrice": "የመጠባበቂያ ዋጋ",
+    "auctionStatus": "የጨረታ ሁኔታ",
+    "auctionPeriod": "የጨረታ ጊዜ",
+    "assetDetail": "የንብረት ዝርዝር",
+    "assetsEmpty": "ምንም ንብረቶች አልተገኙም። ለመጀመር የመጀመሪያውን የንብረት ጥያቄዎን ያስገቡ።",
+    "linkedAuctionsTitle": "ፕሪሚየም የተያያዙ ጨረታዎች",
+    "linkedAuctionsEmpty": "እስካሁን ምንም ጨረታ ከድርጅትዎ ጋር አልተያያዘም።",
+    "linkedAt": "የተያያዘበት",
+    "auctionDateRange": "{{start}} - {{end}}",
+    "stats": {
+      "totalAssets": "ጠቅላላ ንብረቶች",
+      "inAuction": "በጨረታ ላይ",
+      "sold": "የተሸጡ",
+      "pending": "በግምገማ ላይ",
+      "activeAuctions": "ንቁ ጨረታዎች",
+      "linkedAuctions": "የተያያዙ ጨረታዎች",
+      "activeLinkedAuctions": "ንቁ የተያያዙ ጨረታዎች"
     }
   }
 }

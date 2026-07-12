@@ -183,6 +183,11 @@ export async function placeBid({ auctionId, auctionAssetId, amount }, userId) {
     throw new AppError('Auction is not within the bidding window', 400, 'AUCTION_CLOSED');
   }
 
+  const isOwner = await auctionService.isUserAssetOwnerOfAuction(userId, auctionId);
+  if (isOwner) {
+    throw new AppError('You cannot bid on your own asset auction', 403, 'SELF_BID_FORBIDDEN');
+  }
+
   const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, auctionId);
   if (!hasPayment) {
     throw new AppError(
@@ -372,6 +377,11 @@ export async function submitBidWithCpo({ auctionId, bids, cpoDocumentUrl, transa
   }
   if (now > new Date(auction.end_date)) {
     throw new AppError('Auction has already ended', 400, 'AUCTION_ENDED');
+  }
+
+  const isOwner = await auctionService.isUserAssetOwnerOfAuction(userId, auctionId);
+  if (isOwner) {
+    throw new AppError('You cannot bid on your own asset auction', 403, 'SELF_BID_FORBIDDEN');
   }
 
   const hasPayment = await paymentService.hasApprovedDocumentPayment(userId, auctionId);

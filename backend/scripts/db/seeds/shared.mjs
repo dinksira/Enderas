@@ -1,5 +1,6 @@
 import { Op } from 'sequelize';
 
+import { sequelize } from '../../../src/config/db.config.js';
 import { Role } from '../../../src/models/role.model.js';
 import { User } from '../../../src/models/user.model.js';
 import { Staff } from '../../../src/models/staff.model.js';
@@ -103,6 +104,8 @@ export async function purgeUsersByMobiles(mobileNumbers, transaction) {
     return [];
   }
 
+  await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction });
+
   await RefreshToken.destroy({
     where: { user_id: { [Op.in]: userIds } },
     transaction,
@@ -119,6 +122,8 @@ export async function purgeUsersByMobiles(mobileNumbers, transaction) {
     force: true,
     transaction,
   });
+
+  await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', { transaction });
 
   return userIds;
 }

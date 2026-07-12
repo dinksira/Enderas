@@ -78,7 +78,8 @@
       "myassets": "My Asset Requests",
       "submitasset": "Asset Request",
       "asset_request": "Asset Request",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "organizations": "Organizations"
     },
     "profile": {
       "super_admin": "System Administrator",
@@ -2376,6 +2377,124 @@
     "management": {
       "pageTitle": "Documents",
       "subtitle": "Manage auction documents and files."
+    }
+  },
+  "organizations": {
+    "management": {
+      "pageTitle": "Organizations",
+      "subtitle": "Manage registered organizations",
+      "searchPlaceholder": "Search by name, TIN, or mobile...",
+      "createOrg": "Create Organization",
+      "empty": "No organizations found",
+      "loadFailed": "Failed to load organizations",
+      "tabs": {
+        "all": "All",
+        "active": "Active",
+        "kyc_pending": "KYC Pending",
+        "suspended": "Suspended"
+      },
+      "table": {
+        "headers": {
+          "organization_name": "Organization Name",
+          "tin_number": "TIN",
+          "mobile_number": "Mobile",
+          "email": "Email",
+          "status": "Status",
+          "created_at": "Created",
+          "actions": "Actions"
+        },
+        "footer": "Showing {{from}}-{{to}} of {{total}}"
+      },
+      "status": {
+        "active": "Active",
+        "kyc_pending": "KYC Pending",
+        "kyc_under_review": "Under Review",
+        "kyc_rejected": "KYC Rejected",
+        "pending": "Pending",
+        "suspended": "Suspended",
+        "deactivated": "Deactivated"
+      },
+      "createModal": {
+        "title": "Register New Organization",
+        "subtitle": "Create an institutional account to participate in auctions as an organization.",
+        "badge": "Institutional Registration",
+        "sectionOrgInfo": "Organization Details",
+        "sectionContactInfo": "Contact Person",
+        "sectionSecurity": "Account Security",
+        "orgName": "Organization Name",
+        "tinNumber": "TIN Number",
+        "mobileNumber": "Mobile Number",
+        "mobilePrefix": "+251",
+        "email": "Email Address",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "cancel": "Cancel",
+        "submit": "Create Organization",
+        "success": "Organization created successfully",
+        "failed": "Failed to create organization",
+        "passwordHint": "Use at least 6 characters with a mix of letters, numbers and symbols for a strong password.",
+        "passwordStrength": {
+          "none": "",
+          "weak": "Weak — consider adding more characters",
+          "fair": "Fair — add numbers and symbols to strengthen",
+          "good": "Good — almost there",
+          "strong": "Strong password"
+        },
+        "validation": {
+          "orgNameRequired": "Organization name is required",
+          "mobileRequired": "Mobile number is required",
+          "mobileInvalid": "Enter a valid Ethiopian mobile number (e.g. 0912345678)",
+          "passwordRequired": "Password is required",
+          "passwordMinLength": "Password must be at least 6 characters",
+          "passwordMismatch": "Passwords do not match",
+          "confirmPasswordRequired": "Please confirm your password",
+          "invalidEmail": "Enter a valid email address"
+        }
+      },
+      "drawer": {
+        "title": "Organization Details",
+        "loadFailed": "Failed to load organization details",
+        "loadingAuctions": "Loading auctions...",
+        "noActiveAuctions": "No assets are currently in an active auction.",
+        "profileSection": "Profile",
+        "orgName": "Organization Name",
+        "tinNumber": "TIN Number",
+        "mobile": "Mobile Number",
+        "email": "Email",
+        "contactName": "Contact Person",
+        "role": "Role",
+        "password": "Password",
+        "createdAt": "Registered",
+        "lastLogin": "Last Login",
+        "portalSection": "Portal Access",
+        "portalHint": "Share this link with the organization to access their premium auction tracking portal:",
+        "copyLink": "Copy Portal Link",
+        "copied": "Copied!",
+        "linkedAuctionsSection": "Linked Auctions",
+        "noLinkedAuctions": "No auctions have been linked yet.",
+        "linkAuctionBtn": "Link to Auction",
+        "unlink": "Unlink",
+        "unlinkAuction": "Unlink this auction",
+        "selectAuctionHint": "Select an auction to link:",
+        "noAvailableAuctions": "No available auctions to link.",
+        "selectPlaceholder": "-- Select --",
+        "confirmLink": "Link",
+        "cancelLink": "Cancel",
+        "edit": "Edit",
+        "save": "Save Changes",
+        "cancel": "Cancel",
+        "changePassword": "Set new password",
+        "newPassword": "New Password",
+        "language": "Language",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "activeAuctionsSection": "Active Auctions (via Assets)",
+        "assetCount_one": "{{count}} asset",
+        "assetCount_other": "{{count}} assets",
+        "refresh": "Refresh"
+      }
     }
   }
 }

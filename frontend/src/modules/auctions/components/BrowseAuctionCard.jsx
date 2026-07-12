@@ -14,18 +14,15 @@ function getCardParticipationLabel(status, t) {
     return t('bidder.browse.participation.not_registered');
   }
 
+  if (status === 'own_asset') {
+    return t('bidder.participation.status.own_asset.label', { defaultValue: 'Your auction' });
+  }
+
   return t(`bidder.participation.status.${status}.label`, {
     defaultValue: status,
   });
 }
 
-/**
- * @param {{
- *   auction: object,
- *   onOpen: (id: string) => void,
- *   disabled?: boolean,
- * }} props
- */
 export function BrowseAuctionCard({ auction, onOpen, disabled = false }) {
   const { t } = useTranslation();
   const displayStatus = normalizeAuctionStatus(auction.status);
@@ -37,6 +34,7 @@ export function BrowseAuctionCard({ auction, onOpen, disabled = false }) {
   const isMultiLot = isMultiLotAuction(auction);
   const lotCount = Number(auction.lotCount) || (auction.lots?.length ?? 0);
   const totalReserve = auction.totalReservePrice ?? auction.reservePrice;
+  const hasBids = typeof auction.bidCount === 'number';
 
   function handleOpen() {
     if (!disabled && onOpen) {
@@ -65,59 +63,63 @@ export function BrowseAuctionCard({ auction, onOpen, disabled = false }) {
         auction={auction}
         className="browse-auction-card__media"
         imageClassName="browse-auction-card__image"
-        tag={(
-          <span className="browse-auction-card__category">
-            {t(`public.categories.${categoryKey}`, { defaultValue: categoryKey })}
-          </span>
-        )}
+        tag={
+          <>
+            <span className="browse-auction-card__category">
+              {t(`public.categories.${categoryKey}`, { defaultValue: categoryKey })}
+            </span>
+            {hasBids && (
+              <span className="browse-auction-card__bids">
+                {t('public.auctions.bidCount', { count: auction.bidCount })}
+              </span>
+            )}
+          </>
+        }
       />
 
       <div className="browse-auction-card__body">
-        <div className="browse-auction-card__header">
-          {typeof auction.bidCount === 'number' && (
-            <span className="browse-auction-card__bids">
-              {t('public.auctions.bidCount', { count: auction.bidCount })}
-            </span>
+        <div className="browse-auction-card__content">
+          <h3 className="browse-auction-card__title">{auction.title}</h3>
+
+          {(isMultiLot || lotCount > 1) && (
+            <p className="browse-auction-card__lots-meta">
+              {t('bidder.browse.lots.lotCountValue', { count: lotCount || auction.lots?.length || 2 })}
+              {totalReserve > 0 && (
+                <>
+                  {' \u00B7 '}
+                  {formatEtbAmount(totalReserve)}
+                </>
+              )}
+            </p>
           )}
         </div>
 
-        <h3 className="browse-auction-card__title">{auction.title}</h3>
-
-        {(isMultiLot || lotCount > 1) && (
-          <p className="browse-auction-card__lots-meta">
-            {t('bidder.browse.lots.lotCountValue', { count: lotCount || auction.lots?.length || 2 })}
-            {totalReserve > 0 && (
-              <>
-                {' · '}
-                {t('bidder.browse.lots.totalReserve')}: {formatEtbAmount(totalReserve)}
-              </>
-            )}
-          </p>
-        )}
-
-        <div className="browse-auction-card__metrics browse-auction-card__metrics--single">
-          <div className="browse-auction-card__metric">
-            <span className="browse-auction-card__metric-label">
-              {t('dashboard.table.headers.ending_date')}
-            </span>
-            <span className="browse-auction-card__metric-value">{endingLabel}</span>
+        <div className="browse-auction-card__timing">
+          <div className="browse-auction-card__timing-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <span className="browse-auction-card__timing-value">{endingLabel}</span>
           </div>
+          {isActive && auction.endDate && (
+            <div className="browse-auction-card__timing-row browse-auction-card__timing-row--countdown">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <LiveCountdown
+                endDate={auction.endDate}
+                className="browse-auction-card__countdown-value"
+              />
+            </div>
+          )}
         </div>
 
-        {isActive && auction.endDate && (
-          <div className="browse-auction-card__countdown">
-            <LiveCountdown
-              endDate={auction.endDate}
-              className="browse-auction-card__countdown-value"
-            />
-          </div>
-        )}
-
         <div className="browse-auction-card__footer">
-          <div className="browse-auction-card__participation">
-            <span className="browse-auction-card__participation-label">
-              {t('bidder.browse.myStatus')}
-            </span>
+          <div className="browse-auction-card__participant">
             <StatusPill
               label={getCardParticipationLabel(myStatus, t)}
               variant={myStatusVariant}
@@ -142,9 +144,9 @@ export function BrowseAuctionCardSkeleton() {
     <div className="browse-auction-card browse-auction-card--skeleton" aria-hidden="true">
       <div className="browse-auction-card__media browse-auction-card__media--skeleton" />
       <div className="browse-auction-card__body">
-        <div className="browse-auction-card__skeleton-line browse-auction-card__skeleton-line--short" />
         <div className="browse-auction-card__skeleton-line browse-auction-card__skeleton-line--title" />
-        <div className="browse-auction-card__skeleton-line" />
+        <div className="browse-auction-card__skeleton-line browse-auction-card__skeleton-line--short" />
+        <div className="browse-auction-card__skeleton-line browse-auction-card__skeleton-line--timing" />
         <div className="browse-auction-card__skeleton-line browse-auction-card__skeleton-line--cta" />
       </div>
     </div>
