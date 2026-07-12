@@ -10,7 +10,7 @@
   font-weight: var(--core-font-weight-bold);
   letter-spacing: var(--core-letter-spacing-label);
   text-transform: uppercase;
-  border-radius: var(--semantic-radius-default);
+  border-radius: var(--core-radius-sm);
   white-space: nowrap;
 }
 
@@ -71,7 +71,7 @@
   font-weight: var(--core-font-weight-semibold);
   text-transform: uppercase;
   cursor: pointer;
-  border-radius: var(--semantic-radius-default);
+  border-radius: var(--core-radius-sm);
 }
 
 .admin-pagination__btn:disabled {
@@ -145,7 +145,7 @@
   color: var(--semantic-color-status-danger);
   font-family: var(--semantic-font-body);
   font-size: var(--core-font-size-body-sm);
-  border-radius: var(--semantic-radius-default);
+  border-radius: var(--core-radius-sm);
 }
 
 .admin-data-table__retry {
@@ -158,7 +158,7 @@
   font-weight: var(--core-font-weight-semibold);
   text-transform: uppercase;
   cursor: pointer;
-  border-radius: var(--semantic-radius-default);
+  border-radius: var(--core-radius-sm);
 }
 
 .admin-data-table__toolbar {
@@ -184,7 +184,7 @@
   font-family: var(--semantic-font-ui);
   font-size: var(--core-font-size-body-sm);
   color: var(--dashboard-text-primary);
-  border-radius: var(--semantic-radius-default);
+  border-radius: var(--core-radius-sm);
 }
 
 .admin-data-table__search:focus {
@@ -232,7 +232,7 @@
   border-left: 1px solid var(--dashboard-border);
   display: flex;
   flex-direction: column;
-  border-radius: var(--semantic-radius-default);
+  border-radius: var(--core-radius-lg) 0 0 var(--core-radius-lg);
   box-shadow: var(--core-shadow-overlay);
   transform: translateX(100%);
   transition: transform 0.3s ease;
@@ -293,7 +293,7 @@
   letter-spacing: 0.5px;
   text-transform: uppercase;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--core-radius-sm);
 }
 
 .admin-drawer__edit-btn:hover {
@@ -383,7 +383,7 @@
   );
   background-size: 200% 100%;
   animation: admin-drawer-shimmer 1.2s infinite;
-  border-radius: var(--semantic-radius-default);
+  border-radius: var(--core-radius-sm);
 }
 
 .admin-drawer-skeleton__line--title {
@@ -409,7 +409,7 @@
 .admin-drawer-skeleton__cell {
   height: 48px;
   background: var(--semantic-color-background-secondary);
-  border-radius: var(--semantic-radius-default);
+  border-radius: var(--core-radius-sm);
 }
 
 @keyframes admin-drawer-shimmer {
