@@ -114,12 +114,16 @@ async function authenticateShareLink(token, password) {
 
   let orgUser = null;
   if (link.organization_name) {
-    orgUser = await User.unscoped().findOne({
-      where: {
-        organization_name: link.organization_name,
-        user_type: 'organization',
-      },
-    });
+    try {
+      orgUser = await User.unscoped().findOne({
+        where: {
+          organization_name: link.organization_name,
+          user_type: 'organization',
+        },
+      });
+    } catch {
+      orgUser = null;
+    }
   }
 
   const hasAnyPassword = linkHasPassword || orgUser;
