@@ -47,7 +47,6 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
   const [shareLinks, setShareLinks] = useState({});
   const [generatingFor, setGeneratingFor] = useState(null);
   const [copied, setCopied] = useState('');
-  const [shareLinkPasswords, setShareLinkPasswords] = useState({});
 
   const fetchLinked = useCallback(async () => {
     if (!orgId) return;
@@ -107,15 +106,13 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
 
   const handleGenerateShareLink = async (auctionId) => {
     setGeneratingFor(auctionId);
-    const customPassword = shareLinkPasswords[auctionId] || undefined;
     try {
       const result = await shareLinkAdminService.create(auctionId, {
         organizationName: orgName || 'External Viewer',
-        password: customPassword,
       });
       setShareLinks((prev) => ({
         ...prev,
-        [auctionId]: { url: result.url, password: result.password || null },
+        [auctionId]: { url: result.url },
       }));
       setCopied('');
     } catch {
@@ -188,39 +185,19 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
                   {linkData ? (
                     <div className="org-modal__share-done">
                       <code className="org-modal__share-url">{linkData.url}</code>
-                      {linkData.password && (
-                        <div className="org-modal__share-pw-row">
-                          <span className="org-modal__share-pw-label">PW:</span>
-                          <code className="org-modal__share-pw">{linkData.password}</code>
-                          <button className="btn btn--xs" onClick={() => handleCopy(linkData.password)}>
-                            {copied === linkData.password ? 'Copied!' : 'Copy'}
-                          </button>
-                        </div>
-                      )}
                       <button className="btn btn--xs" onClick={() => handleCopy(linkData.url)}>
                         {copied === linkData.url ? 'Copied!' : 'Copy Link'}
                       </button>
                     </div>
                   ) : (
-                    <div className="org-modal__share-form">
-                      <input
-                        type="text"
-                        className="org-modal__share-input"
-                        placeholder="Optional password..."
-                        value={shareLinkPasswords[auction.id] || ''}
-                        onChange={(e) =>
-                          setShareLinkPasswords((prev) => ({ ...prev, [auction.id]: e.target.value }))
-                        }
-                      />
-                      <button
-                        type="button"
-                        className="btn btn--sm"
-                        onClick={() => handleGenerateShareLink(auction.id)}
-                        disabled={generatingFor === auction.id}
-                      >
-                        {generatingFor === auction.id ? '...' : 'Generate Link'}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      className="btn btn--sm"
+                      onClick={() => handleGenerateShareLink(auction.id)}
+                      disabled={generatingFor === auction.id}
+                    >
+                      {generatingFor === auction.id ? '...' : 'Generate Link'}
+                    </button>
                   )}
                 </div>
               </div>
