@@ -7,7 +7,6 @@ function TrackingAuthPage() {
   const navigate = useNavigate();
   const { authenticated, authenticate, error, loading } = useTracking(token);
   const [password, setPassword] = useState('');
-  const [submitted, setSubmitted] = useState(false);
 
   if (authenticated) {
     navigate(`/track/${token}/dashboard`, { replace: true });
@@ -16,7 +15,6 @@ function TrackingAuthPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setSubmitted(true);
     try {
       await authenticate(password || undefined);
       navigate(`/track/${token}/dashboard`, { replace: true });
@@ -25,20 +23,29 @@ function TrackingAuthPage() {
     }
   }
 
-  const isError = error || submitted;
-
   return (
     <div className="tracking-auth">
       <div className="tracking-auth__card">
-        <div className="tracking-auth__icon">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
-            <path d="M12 8v4l3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        <div className="tracking-auth__eyebrow">
+          <span>Private lot access</span>
+          <span className="tracking-auth__eyebrow-dot" />
+          <span>Secure link</span>
+        </div>
+
+        <div className="tracking-auth__clock">
+          <svg width="56" height="56" viewBox="0 0 56 56" role="img" aria-label="Clock">
+            <circle cx="28" cy="28" r="23" fill="none" stroke="#B08D4F" strokeWidth="1.4" />
+            <line x1="28" y1="28" x2="28" y2="17" stroke="#6E2430" strokeWidth="2" strokeLinecap="round" />
+            <g className="tracking-auth__clock-hand">
+              <line x1="28" y1="28" x2="28" y2="10" stroke="#B08D4F" strokeWidth="1" strokeLinecap="round" />
+            </g>
+            <circle cx="28" cy="28" r="2" fill="#6E2430" />
           </svg>
         </div>
-        <h1 className="tracking-auth__title">Auction Tracking Access</h1>
+
+        <h1 className="tracking-auth__title">Auction tracking access</h1>
         <p className="tracking-auth__desc">
-          This link requires authentication. Enter the password provided by the sender to continue.
+          This link is password protected. Enter the code from your invitation to continue.
         </p>
 
         {error && (
@@ -47,16 +54,21 @@ function TrackingAuthPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="tracking-auth__form">
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="track-password" className="tracking-auth__label">Password</label>
           <div className="tracking-auth__field">
-            <label htmlFor="track-password" className="tracking-auth__label">Password</label>
+            <svg className="tracking-auth__field-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <rect x="3" y="7" width="10" height="7" rx="1.2" stroke="#6B5D4B" strokeWidth="1.3" />
+              <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="#6B5D4B" strokeWidth="1.3" />
+            </svg>
             <input
               id="track-password"
               type="password"
               className="tracking-auth__input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter access password"
+              placeholder="Enter password"
+              autoComplete="off"
               autoFocus
             />
           </div>
@@ -65,7 +77,7 @@ function TrackingAuthPage() {
             className="tracking-auth__submit"
             disabled={loading}
           >
-            {loading ? 'Verifying...' : 'Access Tracking Dashboard'}
+            {loading ? 'Verifying...' : 'Unlock access'}
           </button>
         </form>
       </div>

@@ -1,54 +1,92 @@
-/* ============================================================
-   Tracking Shell — minimal full-viewport layout
-   ============================================================ */
+:root {
+  --ink: #14110D;
+  --ink-soft: #1E1912;
+  --ivory: #F7F1E4;
+  --ivory-deep: #EEE3CC;
+  --oxblood: #6E2430;
+  --oxblood-dark: #551C25;
+  --brass: #B08D4F;
+  --brass-soft: rgba(176, 141, 79, 0.28);
+  --text-ivory: #2B241C;
+  --text-ivory-secondary: #6B5D4B;
+  --text-ink: #EDE6D6;
+  --text-ink-muted: #8C8272;
+}
+
+* {
+  box-sizing: border-box;
+}
 
 .tracking-shell {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 28%, #221B12 0%, var(--ink) 62%);
+  font-family: 'Inter', sans-serif;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: #f5f6f8;
-  color: #1c1c1c;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .tracking-shell__header {
   display: flex;
   align-items: center;
-  padding: 16px 32px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  gap: 12px;
+  padding: 22px 36px;
+  border-bottom: 1px solid var(--brass-soft);
   flex-shrink: 0;
 }
 
 .tracking-shell__brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
-  color: #0a0f1e;
 }
 
-.tracking-shell__brand-text {
+.tracking-shell__brand-mark {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.tracking-shell__brand-word {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tracking-shell__brand-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
   font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.04em;
+  color: var(--text-ink);
+  line-height: 1;
+}
+
+.tracking-shell__brand-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--text-ink-muted);
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 .tracking-shell__main {
   flex: 1;
-  padding: 32px;
-  max-width: 1100px;
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
 }
 
 .tracking-shell__footer {
   text-align: center;
-  padding: 20px 32px;
-  font-size: 13px;
-  color: #9ca3af;
-  border-top: 1px solid #e5e7eb;
+  padding: 22px 24px 30px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-ink-muted);
   flex-shrink: 0;
 }
 
@@ -57,99 +95,154 @@
    ============================================================ */
 
 .tracking-auth {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 160px);
 }
 
 .tracking-auth__card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 40px;
-  max-width: 420px;
   width: 100%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  text-align: center;
+  max-width: 408px;
+  background: var(--ivory);
+  border: 1px solid var(--brass-soft);
+  border-top: 4px solid var(--oxblood);
+  border-radius: 6px;
+  padding: 44px 38px 38px;
 }
 
-.tracking-auth__icon {
-  color: #0a0f1e;
-  margin-bottom: 16px;
+.tracking-auth__eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--brass);
+  text-transform: uppercase;
+  margin-bottom: 26px;
+}
+
+.tracking-auth__eyebrow-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--oxblood);
+}
+
+.tracking-auth__clock {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+@keyframes tick {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tracking-auth__clock-hand {
+  transform-origin: 28px 28px;
+  animation: tick 60s steps(60) infinite;
 }
 
 .tracking-auth__title {
-  margin: 0 0 8px;
-  font-size: 22px;
-  font-weight: 700;
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 26px;
+  text-align: center;
+  color: var(--text-ivory);
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
 }
 
 .tracking-auth__desc {
-  margin: 0 0 24px;
-  font-size: 14px;
-  color: #6c757d;
-  line-height: 1.5;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--text-ivory-secondary);
+  text-align: center;
+  max-width: 300px;
+  margin: 0 auto 30px;
 }
 
 .tracking-auth__error {
   background: #fef2f2;
   color: #dc2626;
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 13px;
   margin-bottom: 16px;
-}
-
-.tracking-auth__form {
-  text-align: left;
-}
-
-.tracking-auth__field {
-  margin-bottom: 20px;
+  text-align: center;
+  border: 1px solid #fecaca;
 }
 
 .tracking-auth__label {
   display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-ivory-secondary);
+  margin-bottom: 8px;
+}
+
+.tracking-auth__field {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.tracking-auth__field-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .tracking-auth__input {
   width: 100%;
-  height: 44px;
-  padding: 0 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
+  height: 46px;
+  padding: 0 16px 0 42px;
+  background: var(--ivory-deep);
+  border: 1px solid var(--brass-soft);
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
   font-size: 15px;
-  color: #1c1c1c;
-  background: #fff;
+  color: var(--text-ivory);
   outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .tracking-auth__input:focus {
-  border-color: #0a0f1e;
-  box-shadow: 0 0 0 3px rgba(10, 15, 30, 0.1);
+  border-color: var(--brass);
+  box-shadow: 0 0 0 3px rgba(176, 141, 79, 0.18);
+}
+
+.tracking-auth__input::placeholder {
+  color: var(--text-ivory-secondary);
+  opacity: 0.6;
 }
 
 .tracking-auth__submit {
   width: 100%;
-  height: 44px;
+  height: 48px;
+  background: var(--oxblood);
   border: none;
-  border-radius: 10px;
-  background: #0a0f1e;
-  color: #fff;
-  font-size: 15px;
+  border-radius: 4px;
+  color: var(--ivory);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
   font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.15s;
 }
 
 .tracking-auth__submit:hover {
-  background: #1f2937;
+  background: var(--oxblood-dark);
 }
 
 .tracking-auth__submit:disabled {
@@ -186,8 +279,6 @@
   color: #6c757d;
 }
 
-/* Status badge */
-
 .tracking-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -223,8 +314,6 @@
   color: #6b7280;
 }
 
-/* Grid layout */
-
 .tracking-dashboard__grid {
   display: grid;
   grid-template-columns: 1fr 320px;
@@ -248,8 +337,6 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-
-/* Asset section */
 
 .tracking-asset {
   display: flex;
@@ -299,8 +386,6 @@
   line-height: 1.5;
 }
 
-/* Metrics */
-
 .tracking-metrics {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -339,8 +424,6 @@
   font-size: 26px;
   color: #92400e;
 }
-
-/* Timeline */
 
 .tracking-timeline {
   display: flex;
@@ -406,8 +489,6 @@
   margin-top: 2px;
 }
 
-/* Winner card */
-
 .tracking-winner-card {
   background: #ffffff;
   border-radius: 16px;
@@ -440,8 +521,6 @@
   color: #6c757d;
 }
 
-/* Dates row */
-
 .tracking-dashboard__dates {
   display: flex;
   gap: 24px;
@@ -468,8 +547,6 @@
   color: #4b5563;
 }
 
-/* Disclaimer */
-
 .tracking-dashboard__disclaimer {
   text-align: center;
   font-size: 12px;
@@ -477,8 +554,6 @@
   padding: 16px;
   border-top: 1px solid #e5e7eb;
 }
-
-/* Loading / Error states */
 
 .tracking-loading {
   display: flex;
@@ -500,7 +575,9 @@
 }
 
 @keyframes track-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .tracking-error {
@@ -534,11 +611,13 @@
   background: #1f2937;
 }
 
-/* Responsive */
-
 @media (max-width: 768px) {
   .tracking-shell__main {
-    padding: 16px;
+    padding: 24px 16px;
+  }
+
+  .tracking-auth__card {
+    padding: 32px 24px 28px;
   }
 
   .tracking-dashboard__grid {
