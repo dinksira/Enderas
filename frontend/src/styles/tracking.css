@@ -37,38 +37,13 @@
 .tracking-shell__brand {
   display: flex;
   align-items: center;
-  gap: 12px;
   text-decoration: none;
 }
 
-.tracking-shell__brand-mark {
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-}
-
-.tracking-shell__brand-word {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.tracking-shell__brand-name {
-  font-family: 'Fraunces', serif;
-  font-weight: 600;
-  font-size: 16px;
-  letter-spacing: 0.04em;
-  color: var(--text-ink);
-  line-height: 1;
-}
-
-.tracking-shell__brand-sub {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
-  letter-spacing: 0.16em;
-  color: var(--text-ink-muted);
-  text-transform: uppercase;
-  line-height: 1;
+.tracking-shell__logo {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
 .tracking-shell__main {
