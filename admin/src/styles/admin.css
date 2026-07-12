@@ -1226,6 +1226,85 @@
   transform: translateY(0);
 }
 
+/* ─── Password Display ─── */
+
+.org-modal__pw {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.org-modal__pw-text {
+  font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  color: #1e293b;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+  letter-spacing: 0.06em;
+  user-select: all;
+}
+
+.org-modal__pw-text:hover {
+  background: #f1f5f9;
+}
+
+.org-modal__pw-toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.org-modal__pw-toggle:hover {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.org-modal__pw-copied {
+  font-size: 10px;
+  font-weight: 600;
+  color: #22c55e;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.org-modal__pw-copied[data-show] {
+  opacity: 1;
+}
+
+/* ─── Password Edit Input ─── */
+
+.org-modal__pw-edit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.org-modal__edit-input--pw {
+  width: 100%;
+  padding-right: 36px;
+  font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace;
+  letter-spacing: 0.08em;
+}
+
+.org-modal__pw-edit .org-modal__pw-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .org-modal__body {
   flex: 1;
   overflow-y: auto;
