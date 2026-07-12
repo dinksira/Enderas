@@ -114,7 +114,7 @@ async function authenticateShareLink(token, password) {
 
   let orgUser = null;
   if (link.organization_name) {
-    orgUser = await User.scope('withCredentials').findOne({
+    orgUser = await User.unscoped().findOne({
       where: {
         organization_name: link.organization_name,
         user_type: 'organization',
