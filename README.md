@@ -1,174 +1,204 @@
-# enderass-auction-system
-The purpose of this system is to digitize and manage the core auction lifecycle for Enderass National PLC through a web application and mobile applications.
+<p align="center">
+  <img src="frontend/src/assets/cover.svg" alt="Enderas Auction System" width="100%" />
+</p>
 
+<h1 align="center">Enderas Auction System</h1>
 
-Project Technical Architecture & Environment Rules
+<p align="center">
+  <strong>A full-stack auction management platform for Enderas National PLC</strong>
+</p>
 
-Backend Stack
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express.js" />
+  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" />
+  <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React Native" />
+</p>
 
-* Node.js
-* Express.js
-* Pure JavaScript (No TypeScript)
+<p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
+  <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=for-the-badge" alt="Version" />
+  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=for-the-badge" alt="Platform" />
+</p>
 
-Frontend Stack
+---
 
-* Vite
-* Modern frontend architecture
-* Clean component structure
-* Scalable folder organization
+## About
 
-Database
+The **Enderas Auction System** is an enterprise-grade platform built to digitize and manage the complete auction lifecycle for **Enderas National PLC** — an Ethiopian government enterprise. It handles everything from user registration and KYC verification to asset evaluation, bidding, payment processing, winner selection, and reporting across web, admin, and mobile applications.
 
-* MySQL
-* Sequelize ORM
-* No Prisma
+---
 
-Environment Variable Rules
+## Architecture
 
-* No hardcoded values anywhere in the project
-* Every configurable value must come from the `.env` file
-* All secrets, credentials, URLs, ports, tokens, database configurations, and external service keys must be environment-based
-* Database connection must dynamically use environment variables
-* Database name must NEVER be hardcoded
-* The system must support changing database credentials and database names directly from `.env` without modifying source code
-* All environments (development, staging, production) must be configurable independently
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         CLIENTS                                 │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐   │
+│  │ Frontend │  │  Admin   │  │  Mobile  │  │    Backend   │   │
+│  │  (Vite)  │  │  (Vite)  │  │ (Expo)   │  │  (Node.js)   │   │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────┬───────┘   │
+│       │              │              │               │            │
+│       └──────────────┴──────────────┴───────┬───────┘            │
+│                                             │                    │
+│                                    ┌────────▼────────┐          │
+│                                    │   REST API v1   │          │
+│                                    └────────┬────────┘          │
+│                                             │                    │
+│                         ┌───────────────────┼───────────────┐   │
+│                         │                   │               │   │
+│                   ┌─────▼─────┐      ┌──────▼──────┐  ┌───▼───┐
+│                   │   MySQL   │      │    Redis    │  │ File  │
+│                   │  (Aiven)  │      │  (Upstash)  │  │Storage│
+│                   └───────────┘      └─────────────┘  └───────┘
+└─────────────────────────────────────────────────────────────────┘
+```
 
-Required Environment Variables (backend — see `backend/.env.example`)
+---
 
-* `NODE_ENV`, `PORT`
-* `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-* `REDIS_URL`, `RBAC_INVALIDATE_CHANNEL`, `RBAC_ROLE_CACHE_TTL_SECONDS`, `RBAC_USER_CACHE_TTL_SECONDS`
-* `JWT_ACCESS_SECRET`, `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`
-* `CLIENT_URL`, `API_BASE_URL`
-* `AUCTION_AUTO_CLOSE_ENABLED`, `AUCTION_AUTO_CLOSE_INTERVAL_MS`
-* `STORAGE_PROVIDER`, `STORAGE_UPLOAD_DIR`, `STORAGE_MAX_FILE_SIZE`, `STORAGE_ALLOWED_TYPES`
-Backend Architecture Rules
+## Tech Stack
 
-* Use clean and scalable architecture
-* Use modular folder structure
-* Separate:
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Backend** | Node.js + Express.js | REST API server |
+| **Database** | MySQL (Aiven) | Primary data store |
+| **ORM** | Sequelize | Database abstraction & migrations |
+| **Cache** | Redis (Upstash) | RBAC caching & session management |
+| **Auth** | JWT + OTP | Authentication & authorization |
+| **Frontend** | React + Vite | Public-facing web application |
+| **Admin** | React + Vite | Internal management dashboard |
+| **Mobile** | React Native + Expo | Cross-platform mobile app |
+| **Deployment** | Render + Vercel + EAS | Backend, web, and mobile hosting |
 
-  * models
-  * controllers
-  * services
-  * middleware
-  * routes
-  * validations (e.g. `src/modules/auth/auth.validation.js`)
-  * utilities
-  * configuration
-* Auth lives under `src/modules/auth/`; RBAC policy engine under `src/core/authorization/`
-* API routes are versioned under `src/routes/v1.routes.js`
-* Keep controllers thin
-* Business logic must be inside services
-* Use centralized error handling
-* Use async/await consistently
-* Use reusable response utilities
-* Use reusable validation patterns
-* Use proper authentication and authorization middleware
+---
 
-Database Rules
+## Features
 
-* Use Sequelize associations properly
-* Schema changes go through Sequelize migrations (`backend/migrations/`)
-* Baseline and test data are seeded via the unified DB CLI (`backend/scripts/db/`)
-* Include timestamps in all tables
-* Use soft delete where necessary
-* Use UUIDs where appropriate
-* Maintain clean relational structure
+### Authentication & Security
+- Mobile OTP registration & login
+- JWT access/refresh token flow
+- Role-Based Access Control (RBAC) with 7 distinct roles
+- bcrypt password hashing
+- Request validation & SQL injection prevention
 
-Security Rules
+### Auction Lifecycle
+- Asset submission with ownership verification
+- Multi-stage evaluation pipeline (schedule, inspect, valuate, approve)
+- Auction creation with multi-asset lot support
+- Closed bid submission with deadline enforcement
+- Auto-close auctions via background job
+- Winner selection with tie-breaking by timestamp
 
-* Hash passwords securely
-* Protect sensitive routes with JWT authentication
-* Validate all incoming requests
-* Prevent SQL injection and common vulnerabilities
-* Never expose sensitive environment variables to frontend
+### Financial
+- Addis Pay gateway integration
+- Manual receipt upload & finance officer review
+- CPO (Competitive Procurement Order) management
+- Document access gated behind payment approval
 
-Code Quality Rules
+### Operations
+- KYC verification workflow (document upload → staff review → approve/reject)
+- In-app, SMS, and email notification tri-channel
+- Audit logging on all user actions
+- Staff management with role assignment
+- Reporting with PDF and Excel export
 
-* Write production-ready code
-* Use consistent naming conventions
-* Keep files modular and reusable
-* Avoid duplicated logic
-* Follow RESTful API principles
-* Write maintainable and scalable code
+### Platform
+- Bilingual support (English & Amharic)
+- Responsive web design
+- Cross-platform mobile (Android 10+ / iOS 15+)
+- Environment-based configuration (zero hardcoded values)
 
-Frontend Rules
+---
 
-* Use reusable components
-* Use modular page structure
-* Keep API calls centralized
-* Use environment variables for API URLs
-* No hardcoded backend URLs
-* Build responsive layouts
-* Keep clean state management structure
+## RBAC Roles
 
-General Development Rules
+| Role | Permissions |
+|------|-------------|
+| **Super Administrator** | Full system access, evaluation approval, auction publication |
+| **Auction Manager** | Create auctions, manage bids & winners |
+| **Evaluation Officer** | Schedule inspections, complete valuations |
+| **Finance Officer** | Approve/reject payments |
+| **Customer Service Officer** | KYC review, asset ownership review, CPO management |
+| **Bidder** | Browse auctions, make payments, submit bids |
+| **Asset Owner** | Submit assets, track approval status |
 
-* Build scalable enterprise-ready architecture
-* Prioritize maintainability and readability
-* Optimize for future feature expansion
-* Keep the project clean for team collaboration
-* Ensure deployment flexibility across different servers and database names
+---
 
-## Backend quick start
+## Quick Start
 
-Prerequisites: Node.js 20+, MySQL/MariaDB, Redis.
+### Prerequisites
+
+- Node.js 20+
+- MySQL / MariaDB
+- Redis
+
+### Backend
 
 ```bash
 cd backend
-cp .env.example .env   # set DB_*, JWT_ACCESS_SECRET, REDIS_URL, etc.
+cp .env.example .env    # configure DB_*, JWT_ACCESS_SECRET, REDIS_URL
 npm install
-npm run db:setup:test  # migrate + seed full local test data
+npm run db:setup:test   # migrate + seed full test data
 npm run dev
 ```
 
-API base URL defaults to `http://localhost:3000/api` (see `API_BASE_URL` in `.env`).
+API runs at `http://localhost:3000/api` by default.
 
-### Database migrations
+### Frontend
 
-Migrations live in `backend/migrations/` and are applied with Sequelize CLI via the DB command wrapper:
+```bash
+cd frontend
+cp .env.example .env    # set VITE_API_BASE_URL
+npm install
+npm run dev
+```
+
+### Admin
+
+```bash
+cd admin
+cp .env.example .env
+npm install
+npm run dev
+```
+
+### Mobile
+
+```bash
+cd mobile
+npm install
+npx expo start
+```
+
+---
+
+## Database
+
+### Migrations
 
 | Migration | Purpose |
 |-----------|---------|
-| `001_initial_schema.cjs` | Full schema (all core tables) |
-| `002_seed_roles_and_settings.cjs` | Baseline roles, production super-admin, system settings |
-| `003_bid_drafts.cjs` | `bid_drafts` table and related schema updates |
+| `001_initial_schema.cjs` | Full schema — all core tables |
+| `002_seed_roles_and_settings.cjs` | Baseline roles, super-admin, system settings |
+| `003_bid_drafts.cjs` | Bid drafts table & schema updates |
 
-```bash
-npm run db:migrate          # apply pending migrations
-npm run db:migrate:undo     # roll back the last migration
-```
-
-The server does **not** auto-migrate on startup; run migrations explicitly before starting.
-
-### Database seeding (unified CLI)
-
-All seeding is handled by `backend/scripts/db/cli.mjs`. Two modes:
-
-* **normal** — baseline only (roles, system settings, production super-admin `+251900000000`)
-* **test** — baseline + dev test users, operational staff, and auction catalog (default for local dev)
+### Seed Commands
 
 | Command | Description |
 |---------|-------------|
-| `npm run db:setup:test` | Migrate, then seed full test data (recommended for new dev DBs) |
-| `npm run db:setup:normal` | Migrate, then seed baseline only |
-| `npm run db:seed:test` | Seed test data on an already-migrated database |
-| `npm run db:seed:normal` | Seed baseline only |
-| `npm run db:reseed:test` | Purge test seed data, then re-seed test |
-| `npm run db:reseed:normal` | Purge test seed data, then re-apply baseline |
-| `npm run db:reset:test` | Undo all migrations, migrate, seed test (destructive) |
-| `npm run db:seed:auctions` | Seed only the auction catalog (requires test users) |
+| `npm run db:setup:test` | Migrate + seed full test data |
+| `npm run db:setup:normal` | Migrate + seed baseline only |
+| `npm run db:seed:test` | Seed test data on existing DB |
+| `npm run db:reseed:test` | Purge + re-seed test data |
+| `npm run db:reset:test` | Full reset (destructive) |
+| `npm run db:seed:auctions` | Seed only auction catalog |
 
-Generic form: `npm run db -- <command> [normal|test] [--only=users,staff,auctions]`
+---
 
-Test seed includes:
+## Test Credentials
 
-* 7 RBAC roles and 7 system settings
-* 6 test user accounts (admin, bidder, 4 operational staff)
-* 4 published multi-lot auctions, 12 assets, 12 evaluations
-
-#### Local test credentials (after `db:setup:test` or `db:reseed:test`)
+After running `db:setup:test`:
 
 | Role | Mobile | Password |
 |------|--------|----------|
@@ -179,56 +209,85 @@ Test seed includes:
 | Finance Officer | `0944444444` | `pass1` |
 | Customer Service | `0955555555` | `pass1` |
 
-Production super-admin (from migration baseline): `+251900000000` — password hash is set in `migrations/data/role-permissions.cjs`.
+Production super-admin: `+251900000000`
 
-### Backend scripts
+---
 
-```bash
-npm run dev                  # start with --watch
-npm run start                # production start
-npm run test                 # RBAC policy unit tests
-npm run test:auction-flow    # integration smoke test (requires seeded DB)
-```
-
-Integration test scripts live in `backend/scripts/` (e.g. `run-auction-flow-test.mjs`, `run-bidder-e2e.mjs`).
-
-### Backend layout
+## Backend Structure
 
 ```
 backend/
-├── app.js
-├── server.js
-├── .env / .env.example
-├── .sequelizerc
-├── migrations/
+├── app.js                     # Express app setup
+├── server.js                  # Server entry point
+├── .env / .env.example        # Environment configuration
+├── migrations/                # Sequelize migrations
 │   ├── 001_initial_schema.cjs
 │   ├── 002_seed_roles_and_settings.cjs
 │   ├── 003_bid_drafts.cjs
 │   └── data/role-permissions.cjs
 ├── scripts/
-│   ├── db/                    # unified migrate/seed CLI
-│   │   ├── cli.mjs
-│   │   ├── data/              # stable seed IDs and catalog data
-│   │   ├── lib/               # migrate, purge helpers
-│   │   └── seeds/             # baseline, users, staff, auctions
-│   └── run-*.mjs              # integration / smoke tests
+│   └── db/                    # Unified migrate/seed CLI
+│       ├── cli.mjs
+│       ├── data/              # Stable seed IDs & catalog
+│       ├── lib/               # Migration & purge helpers
+│       └── seeds/             # Baseline, users, auctions
 ├── src/
-│   ├── config/                # db, env, redis, i18n, sequelize-cli
+│   ├── config/                # DB, env, Redis, i18n
 │   ├── constants/
 │   ├── controllers/
-│   ├── core/authorization/    # RBAC policy engine, middleware, cache
-│   ├── jobs/                  # auction-auto-close
+│   ├── core/authorization/    # RBAC engine & middleware
+│   ├── jobs/                  # Auction auto-close
 │   ├── locales/               # en, am
-│   ├── middleware/            # auth, staff, kyc, permissions
-│   ├── middlewares/           # upload handlers
+│   ├── middleware/            # Auth, staff, KYC
 │   ├── models/
-│   ├── modules/auth/          # auth routes, service, validation
-│   ├── routes/                # index, v1, file upload
+│   ├── modules/auth/          # Auth routes, service, validation
+│   ├── routes/                # API versioning
 │   ├── schemas/
 │   ├── services/
 │   └── utils/
-├── tests/
-│   ├── rbac.policy.test.js
-│   └── mobile.util.test.js
-└── uploads/                   # local file storage (gitignored content)
+└── tests/
+    ├── rbac.policy.test.js
+    └── mobile.util.test.js
 ```
+
+---
+
+## Environment Variables
+
+All configuration lives in `.env`. Nothing is hardcoded.
+
+| Variable | Description |
+|----------|-------------|
+| `NODE_ENV` | Environment mode |
+| `PORT` | Server port |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | MySQL connection |
+| `REDIS_URL` | Redis connection string |
+| `JWT_ACCESS_SECRET`, `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN` | Auth tokens |
+| `CLIENT_URL`, `API_BASE_URL` | Frontend & API URLs |
+| `AUCTION_AUTO_CLOSE_ENABLED`, `AUCTION_AUTO_CLOSE_INTERVAL_MS` | Auto-close job |
+| `STORAGE_PROVIDER`, `STORAGE_UPLOAD_DIR`, `STORAGE_MAX_FILE_SIZE` | File storage |
+
+See `backend/.env.example` for the full list.
+
+---
+
+## Scripts
+
+```bash
+npm run dev               # Start with --watch
+npm run start             # Production start
+npm run test              # RBAC policy unit tests
+npm run test:auction-flow # Integration smoke test
+```
+
+---
+
+## License
+
+This project is proprietary software of **Enderas National PLC**. All rights reserved.
+
+---
+
+<p align="center">
+  Built with precision for the Ethiopian auction ecosystem
+</p>
