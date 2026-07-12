@@ -1110,6 +1110,92 @@
   flex-wrap: wrap;
 }
 
+/* ─── Fancy Buttons inside Modal ─── */
+
+.org-modal .btn {
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.org-modal .btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.org-modal .btn--primary {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2a5298 100%);
+  border: none;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.25);
+}
+
+.org-modal .btn--primary:not(:disabled):hover {
+  background: linear-gradient(135deg, #162d4a 0%, #1e3a5f 100%);
+  box-shadow: 0 4px 14px rgba(30, 58, 95, 0.35);
+  transform: translateY(-1px);
+}
+
+.org-modal .btn--primary:not(:disabled):active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(30, 58, 95, 0.2);
+}
+
+.org-modal .btn--secondary {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  color: #475569;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.org-modal .btn--secondary:not(:disabled):hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.org-modal .btn--secondary:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.org-modal .btn--sm {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.org-modal .btn--xs {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 11px;
+  border-radius: 5px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.org-modal .btn--xs:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
 .org-modal__body {
   flex: 1;
   overflow-y: auto;
@@ -1251,18 +1337,22 @@
 }
 
 .org-modal__unlink {
-  background: none;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  padding: 3px 10px;
+  background: #fff;
+  border: 1.5px solid #fecaca;
+  border-radius: 6px;
+  padding: 4px 12px;
   font-size: 11px;
-  color: #ef4444;
+  font-weight: 600;
+  color: #dc2626;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 0.02em;
 }
 
 .org-modal__unlink:hover {
   background: #fef2f2;
+  border-color: #fca5a5;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.1);
 }
 
 .org-modal__unlink:disabled {
@@ -1287,10 +1377,12 @@
 .org-modal__share-url {
   font-size: 12px;
   word-break: break-all;
-  color: #374151;
-  background: #f3f4f6;
-  padding: 6px 10px;
-  border-radius: 4px;
+  color: #1e293b;
+  background: #f1f5f9;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace;
+  border: 1px solid #e2e8f0;
 }
 
 /* ─── Selector ─── */
@@ -1305,23 +1397,38 @@
 
 .org-modal__select {
   width: 100%;
-  height: 38px;
-  padding: 0 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
   font-size: 13px;
+  font-weight: 500;
   background: #fff;
   margin-bottom: 10px;
   outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  color: #1e293b;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
 }
 
 .org-modal__select:focus {
-  border-color: #6E2430;
+  border-color: #2a5298;
+  box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
 }
 
 .org-modal__selector-actions {
   display: flex;
   gap: 8px;
+  margin-top: 4px;
+}
+
+.org-modal__selector-actions .btn {
+  flex: 1;
 }
 
 /* ─── Active Auctions ─── */
@@ -1419,19 +1526,25 @@
 }
 
 .org-modal__edit-input {
-  height: 36px;
-  padding: 0 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
   font-size: 13px;
+  font-weight: 500;
   outline: none;
   background: #fff;
   transition: border-color 0.15s, box-shadow 0.15s;
+  color: #1e293b;
 }
 
 .org-modal__edit-input:focus {
-  border-color: #6E2430;
-  box-shadow: 0 0 0 2px rgba(110, 36, 48, 0.1);
+  border-color: #2a5298;
+  box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+}
+
+.org-modal__edit-input:hover {
+  border-color: #cbd5e1;
 }
 
 .org-modal__edit-error {
