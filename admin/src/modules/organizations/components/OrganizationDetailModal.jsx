@@ -17,6 +17,90 @@ function MetaRow({ label, value, highlight }) {
   );
 }
 
+function PasswordEditInput({ value, onChange }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="org-modal__pw-edit">
+      <input
+        type={visible ? 'text' : 'password'}
+        className="org-modal__edit-input org-modal__edit-input--pw"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <button
+        type="button"
+        className="org-modal__pw-toggle"
+        onClick={() => setVisible((v) => !v)}
+        tabIndex={-1}
+      >
+        {visible ? (
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3C4.5 3 2 6 2 8s2.5 5 6 5 6-3 6-5-2.5-5-6-5z" stroke="currentColor" strokeWidth="1.3"/>
+            <circle cx="8" cy="8" r="2" fill="currentColor"/>
+            <path d="M3 3l10 10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+        ) : (
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3C4.5 3 2 6 2 8s2.5 5 6 5 6-3 6-5-2.5-5-6-5z" stroke="currentColor" strokeWidth="1.3"/>
+            <circle cx="8" cy="8" r="2" fill="currentColor"/>
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+}
+
+function PasswordDisplay({ password }) {
+  const [visible, setVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!password) return;
+    try {
+      await navigator.clipboard.writeText(password);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = password;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  if (!password) return <span className="org-modal__meta-value">\u2014</span>;
+
+  return (
+    <div className="org-modal__pw">
+      <span className="org-modal__pw-text" onClick={handleCopy} title="Click to copy">
+        {visible ? password : '\u2022'.repeat(Math.min(password.length, 20))}
+      </span>
+      <span className="org-modal__pw-copied" data-show={copied || undefined}>Copied!</span>
+      <button
+        type="button"
+        className="org-modal__pw-toggle"
+        onClick={() => setVisible((v) => !v)}
+        title={visible ? 'Hide password' : 'Show password'}
+      >
+        {visible ? (
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3C4.5 3 2 6 2 8s2.5 5 6 5 6-3 6-5-2.5-5-6-5z" stroke="currentColor" strokeWidth="1.3"/>
+            <circle cx="8" cy="8" r="2" fill="currentColor"/>
+            <path d="M3 3l10 10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3C4.5 3 2 6 2 8s2.5 5 6 5 6-3 6-5-2.5-5-6-5z" stroke="currentColor" strokeWidth="1.3"/>
+            <circle cx="8" cy="8" r="2" fill="currentColor"/>
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+}
+
 function SectionCard({ title, children }) {
   return (
     <div className="org-modal__section">
@@ -407,7 +491,7 @@ export function OrganizationDetailModal({
     { key: 'firstName', labelKey: 'firstName', type: 'text' },
     { key: 'lastName', labelKey: 'lastName', type: 'text' },
     { key: 'preferredLanguage', labelKey: 'language', type: 'select', options: ['en', 'am'] },
-    { key: 'displayPassword', labelKey: 'password', type: 'text' },
+    { key: 'displayPassword', labelKey: 'password', type: 'password' },
   ];
 
   const startEditing = () => {
@@ -559,6 +643,11 @@ export function OrganizationDetailModal({
                               <option key={opt} value={opt}>{opt === 'en' ? 'English' : '\u12A0\u121B\u122D\u129B'}</option>
                             ))}
                           </select>
+                        ) : field.type === 'password' ? (
+                          <PasswordEditInput
+                            value={editForm[field.key] || ''}
+                            onChange={(v) => handleFieldChange(field.key, v)}
+                          />
                         ) : (
                           <input
                             type={field.type}
@@ -580,7 +669,10 @@ export function OrganizationDetailModal({
                     <MetaRow label={t('organizations.management.drawer.firstName')} value={org.firstName} />
                     <MetaRow label={t('organizations.management.drawer.lastName')} value={org.lastName} />
                     <MetaRow label={t('organizations.management.drawer.role')} value={org.roleCode || org.roleName} />
-                    <MetaRow label={t('organizations.management.drawer.password')} value={formatDisplayValue(org.displayPassword, t('common.empty'))} />
+                    <div className="org-modal__meta-row">
+                      <span className="org-modal__meta-label">{t('organizations.management.drawer.password')}</span>
+                      <PasswordDisplay password={org.displayPassword} />
+                    </div>
                     <MetaRow label={t('organizations.management.drawer.createdAt')} value={formatDate(org.createdAt, locale, t('common.empty'))} />
                     <MetaRow label={t('organizations.management.drawer.lastLogin')} value={formatDate(org.lastLoginAt, locale, t('common.empty'))} />
                   </div>
