@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTracking } from '../hooks/use-tracking.js';
+import logoUrl from '../../../assets/images/frontend_logo.svg';
 
 function TrackingAuthPage() {
   const { token } = useParams();
@@ -32,15 +33,8 @@ function TrackingAuthPage() {
           <span>Secure link</span>
         </div>
 
-        <div className="tracking-auth__clock">
-          <svg width="56" height="56" viewBox="0 0 56 56" role="img" aria-label="Clock">
-            <circle cx="28" cy="28" r="23" fill="none" stroke="#B08D4F" strokeWidth="1.4" />
-            <line x1="28" y1="28" x2="28" y2="17" stroke="#6E2430" strokeWidth="2" strokeLinecap="round" />
-            <g className="tracking-auth__clock-hand">
-              <line x1="28" y1="28" x2="28" y2="10" stroke="#B08D4F" strokeWidth="1" strokeLinecap="round" />
-            </g>
-            <circle cx="28" cy="28" r="2" fill="#6E2430" />
-          </svg>
+        <div className="tracking-auth__logo-wrap">
+          <img src={logoUrl} alt="Enderas" className="tracking-auth__logo" />
         </div>
 
         <h1 className="tracking-auth__title">Auction tracking access</h1>

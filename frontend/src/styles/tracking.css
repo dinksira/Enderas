@@ -37,6 +37,7 @@
 .tracking-shell__brand {
   display: flex;
   align-items: center;
+  gap: 14px;
   text-decoration: none;
 }
 
@@ -44,6 +45,17 @@
   height: 32px;
   width: auto;
   display: block;
+}
+
+.tracking-shell__brand-text {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  color: var(--text-ink);
+  padding-left: 14px;
+  border-left: 1px solid var(--brass-soft);
+  line-height: 1;
 }
 
 .tracking-shell__main {
@@ -106,21 +118,16 @@
   background: var(--oxblood);
 }
 
-.tracking-auth__clock {
+.tracking-auth__logo-wrap {
   display: flex;
   justify-content: center;
   margin-bottom: 22px;
 }
 
-@keyframes tick {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.tracking-auth__clock-hand {
-  transform-origin: 28px 28px;
-  animation: tick 60s steps(60) infinite;
+.tracking-auth__logo {
+  height: 52px;
+  width: auto;
+  display: block;
 }
 
 .tracking-auth__title {
