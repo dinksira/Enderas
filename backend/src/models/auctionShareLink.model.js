@@ -61,6 +61,7 @@ export const AuctionShareLink = sequelize.define(
     tableName: 'auction_share_links',
     timestamps: true,
     underscored: true,
+    paranoid: false,
   },
 );
 
