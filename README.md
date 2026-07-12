@@ -21,7 +21,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/License-Proprietary-critical?style=for-the-badge" alt="License" />
   <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=for-the-badge" alt="Version" />
-  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=for-the-badge" alt="Platform" />
+  <img src="https://img.shields.io/badge/Platform-Web%20%7C%20Mobile-lightgrey?style=for-the-badge" alt="Platform" />
   <img src="https://img.shields.io/badge/Built%20for-Enderas%20National%20PLC-078930?style=for-the-badge" alt="Built for Enderas National PLC" />
 </p>
 
@@ -171,20 +171,7 @@ Generic form: `npm run db -- <command> [normal|test] [--only=users,staff,auction
 
 | Migration | Purpose |
 |---|---|
-| `001_initial_schema.cjs` | Full schema (all core tables) |
-| `002_seed_roles_and_settings.cjs` | Baseline roles, production super-admin, system settings |
-
----
-
-```bash
-npm run dev                  # start with --watch (node --env-file=.env server.js)
-npm run start                # production start
-npm run test                 # RBAC policy unit tests
-npm run test:auction-flow    # integration smoke test (requires seeded DB)
-npm run db -- <command>      # unified migrate/seed/reset CLI
-```
-
-Integration test scripts live in `backend/scripts/` (e.g. `run-auction-flow-test.mjs`, `run-bidder-e2e.mjs`).
+| `001_initial_schema.cjs` | Complete unified schema — all 23 tables, indexes, constraints, and seed data |
 
 ---
 
