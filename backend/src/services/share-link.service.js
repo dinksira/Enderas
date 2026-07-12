@@ -160,7 +160,7 @@ async function getAuctionTrackingData(linkId, auctionId) {
       {
         model: Asset,
         as: 'asset',
-        attributes: ['id', 'title', 'description', 'assetType', 'imageUrls', 'desiredReservePrice'],
+        attributes: ['id', 'title', 'description', 'asset_type', 'image_urls', 'desired_reserve_price'],
       },
     ],
   });
