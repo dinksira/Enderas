@@ -248,8 +248,8 @@
   transform: translateY(-50%) translateX(4px);
 }
 
-.dashboard-shell--collapsed .dashboard-shell__nav-link span {
-  display: none;
+.dashboard-shell--collapsed .dashboard-shell__nav-link .dashboard-shell__nav-tooltip {
+  display: block;
 }
 
 .dashboard-shell__nav-icon {
