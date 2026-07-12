@@ -478,7 +478,7 @@ export function DashboardShell() {
             >
               <NavIcon name={item.id} />
               {!isSidebarCollapsed && <span>{t(getNavLabelKey(item), item.label)}</span>}
-              <span className="dashboard-shell__nav-tooltip">{t(getNavLabelKey(item), item.label)}</span>
+              {isSidebarCollapsed && <span className="dashboard-shell__nav-tooltip">{t(getNavLabelKey(item), item.label)}</span>}
             </NavLink>
           ))}
         </nav>
