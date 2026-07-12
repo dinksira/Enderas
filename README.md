@@ -6,6 +6,8 @@
 
 <p align="center">
   <strong>A full-stack auction management platform for Enderas National PLC</strong>
+  <br />
+  <sub>Digitizing the complete auction lifecycle — from asset submission to winner payout</sub>
 </p>
 
 <p align="center">
@@ -17,50 +19,69 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
+  <img src="https://img.shields.io/badge/License-Proprietary-critical?style=for-the-badge" alt="License" />
   <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=for-the-badge" alt="Version" />
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=for-the-badge" alt="Platform" />
+  <img src="https://img.shields.io/badge/Built%20for-Enderas%20National%20PLC-078930?style=for-the-badge" alt="Built for Enderas National PLC" />
+</p>
+
+<p align="center">
+  <a href="#-about">About</a> •
+  <a href="#-key-features">Features</a> •
+  <a href="#-architecture">Architecture</a> •
+  <a href="#-tech-stack">Tech Stack</a> •
+  <a href="#-getting-started">Getting Started</a> •
+  <a href="#-project-structure">Structure</a> •
+  <a href="#-license">License</a>
 </p>
 
 ---
 
-## About
+## 📖 About
 
 The **Enderas Auction System** is an enterprise-grade platform built to digitize and manage the complete auction lifecycle for **Enderas National PLC** — an Ethiopian government enterprise. It handles everything from user registration and KYC verification to asset evaluation, bidding, payment processing, winner selection, and reporting across web, admin, and mobile applications.
 
 ---
 
-## Architecture
+## ✨ Key Features
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         CLIENTS                                 │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐   │
-│  │ Frontend │  │  Admin   │  │  Mobile  │  │    Backend   │   │
-│  │  (Vite)  │  │  (Vite)  │  │ (Expo)   │  │  (Node.js)   │   │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────┬───────┘   │
-│       │              │              │               │            │
-│       └──────────────┴──────────────┴───────┬───────┘            │
-│                                             │                    │
-│                                    ┌────────▼────────┐          │
-│                                    │   REST API v1   │          │
-│                                    └────────┬────────┘          │
-│                                             │                    │
-│                         ┌───────────────────┼───────────────┐   │
-│                         │                   │               │   │
-│                   ┌─────▼─────┐      ┌──────▼──────┐  ┌───▼───┐
-│                   │   MySQL   │      │    Redis    │  │ File  │
-│                   │  (Aiven)  │      │  (Upstash)  │  │Storage│
-│                   └───────────┘      └─────────────┘  └───────┘
-└─────────────────────────────────────────────────────────────────┘
+| Category | Highlights |
+|---|---|
+| 🔐 **Authentication & Security** | Mobile OTP registration & login · JWT access/refresh flow · RBAC with 7 roles · bcrypt hashing · SQL injection prevention |
+| ⚖️ **Auction Lifecycle** | Asset submission with ownership verification · multi-stage evaluation pipeline · multi-asset lot auctions · closed bidding with deadline enforcement · auto-close background job · timestamp tie-breaking |
+| 💳 **Financial** | Addis Pay gateway integration · manual receipt upload & finance review · CPO (Competitive Procurement Order) management · payment-gated document access |
+| 🗂️ **Operations** | KYC workflow (upload → review → approve/reject) · in-app, SMS & email notifications · full audit logging · staff & role management · PDF/Excel reporting |
+| 🌍 **Platform** | Bilingual (English & Amharic) · responsive web design · cross-platform mobile (Android 10+ / iOS 15+) · zero hardcoded configuration |
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart TB
+    subgraph Clients["Client Applications"]
+        FE["🖥️ Frontend<br/>React + Vite"]
+        AD["🛡️ Admin Dashboard<br/>React + Vite"]
+        MO["📱 Mobile App<br/>React Native + Expo"]
+    end
+
+    API["⚙️ REST API v1<br/>Node.js + Express"]
+
+    FE --> API
+    AD --> API
+    MO --> API
+
+    API --> DB[("🗄️ MySQL<br/>Aiven")]
+    API --> CACHE[("⚡ Redis<br/>Upstash")]
+    API --> STORE["📂 File Storage"]
 ```
 
 ---
 
-## Tech Stack
+## 🧰 Tech Stack
 
 | Layer | Technology | Purpose |
-|-------|-----------|---------|
+|---|---|---|
 | **Backend** | Node.js + Express.js | REST API server |
 | **Database** | MySQL (Aiven) | Primary data store |
 | **ORM** | Sequelize | Database abstraction & migrations |
@@ -73,48 +94,10 @@ The **Enderas Auction System** is an enterprise-grade platform built to digitize
 
 ---
 
-## Features
-
-### Authentication & Security
-- Mobile OTP registration & login
-- JWT access/refresh token flow
-- Role-Based Access Control (RBAC) with 7 distinct roles
-- bcrypt password hashing
-- Request validation & SQL injection prevention
-
-### Auction Lifecycle
-- Asset submission with ownership verification
-- Multi-stage evaluation pipeline (schedule, inspect, valuate, approve)
-- Auction creation with multi-asset lot support
-- Closed bid submission with deadline enforcement
-- Auto-close auctions via background job
-- Winner selection with tie-breaking by timestamp
-
-### Financial
-- Addis Pay gateway integration
-- Manual receipt upload & finance officer review
-- CPO (Competitive Procurement Order) management
-- Document access gated behind payment approval
-
-### Operations
-- KYC verification workflow (document upload → staff review → approve/reject)
-- In-app, SMS, and email notification tri-channel
-- Audit logging on all user actions
-- Staff management with role assignment
-- Reporting with PDF and Excel export
-
-### Platform
-- Bilingual support (English & Amharic)
-- Responsive web design
-- Cross-platform mobile (Android 10+ / iOS 15+)
-- Environment-based configuration (zero hardcoded values)
-
----
-
-## RBAC Roles
+## 🔑 RBAC Roles & Permissions
 
 | Role | Permissions |
-|------|-------------|
+|---|---|
 | **Super Administrator** | Full system access, evaluation approval, auction publication |
 | **Auction Manager** | Create auctions, manage bids & winners |
 | **Evaluation Officer** | Schedule inspections, complete valuations |
@@ -125,7 +108,7 @@ The **Enderas Auction System** is an enterprise-grade platform built to digitize
 
 ---
 
-## Quick Start
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -133,7 +116,7 @@ The **Enderas Auction System** is an enterprise-grade platform built to digitize
 - MySQL / MariaDB
 - Redis
 
-### Backend
+### 🔧 Backend
 
 ```bash
 cd backend
@@ -145,7 +128,7 @@ npm run dev
 
 API runs at `http://localhost:3000/api` by default.
 
-### Frontend
+### 🌐 Frontend
 
 ```bash
 cd frontend
@@ -154,7 +137,7 @@ npm install
 npm run dev
 ```
 
-### Admin
+### 🛡️ Admin
 
 ```bash
 cd admin
@@ -163,7 +146,7 @@ npm install
 npm run dev
 ```
 
-### Mobile
+### 📱 Mobile
 
 ```bash
 cd mobile
@@ -173,12 +156,12 @@ npx expo start
 
 ---
 
-## Database
+## 🗄️ Database
 
 ### Migrations
 
 | Migration | Purpose |
-|-----------|---------|
+|---|---|
 | `001_initial_schema.cjs` | Full schema — all core tables |
 | `002_seed_roles_and_settings.cjs` | Baseline roles, super-admin, system settings |
 | `003_bid_drafts.cjs` | Bid drafts table & schema updates |
@@ -186,7 +169,7 @@ npx expo start
 ### Seed Commands
 
 | Command | Description |
-|---------|-------------|
+|---|---|
 | `npm run db:setup:test` | Migrate + seed full test data |
 | `npm run db:setup:normal` | Migrate + seed baseline only |
 | `npm run db:seed:test` | Seed test data on existing DB |
@@ -196,12 +179,15 @@ npx expo start
 
 ---
 
-## Test Credentials
+## 🔐 Test Credentials
+
+> [!WARNING]
+> These accounts are seeded only by `db:setup:test` and are intended for **local development and QA**. Never seed test data or reuse these credentials in a production environment.
 
 After running `db:setup:test`:
 
 | Role | Mobile | Password |
-|------|--------|----------|
+|---|---|---|
 | Dev Super Admin | `0912345678` | `pass1` |
 | Bidder | `0987654321` | `pass2` |
 | Auction Manager | `0922222222` | `pass1` |
@@ -213,7 +199,10 @@ Production super-admin: `+251900000000`
 
 ---
 
-## Backend Structure
+## 📁 Project Structure
+
+<details>
+<summary><strong>Click to expand backend structure</strong></summary>
 
 ```
 backend/
@@ -229,8 +218,8 @@ backend/
 │   └── db/                    # Unified migrate/seed CLI
 │       ├── cli.mjs
 │       ├── data/              # Stable seed IDs & catalog
-│       ├── lib/               # Migration & purge helpers
-│       └── seeds/             # Baseline, users, auctions
+│       ├── lib/                # Migration & purge helpers
+│       └── seeds/              # Baseline, users, auctions
 ├── src/
 │   ├── config/                # DB, env, Redis, i18n
 │   ├── constants/
@@ -250,14 +239,16 @@ backend/
     └── mobile.util.test.js
 ```
 
+</details>
+
 ---
 
-## Environment Variables
+## ⚙️ Environment Variables
 
 All configuration lives in `.env`. Nothing is hardcoded.
 
 | Variable | Description |
-|----------|-------------|
+|---|---|
 | `NODE_ENV` | Environment mode |
 | `PORT` | Server port |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | MySQL connection |
@@ -271,23 +262,23 @@ See `backend/.env.example` for the full list.
 
 ---
 
-## Scripts
+## 📜 NPM Scripts
 
 ```bash
 npm run dev               # Start with --watch
 npm run start             # Production start
-npm run test              # RBAC policy unit tests
-npm run test:auction-flow # Integration smoke test
+npm run test               # RBAC policy unit tests
+npm run test:auction-flow  # Integration smoke test
 ```
 
 ---
 
-## License
+## 📄 License
 
 This project is proprietary software of **Enderas National PLC**. All rights reserved.
 
 ---
 
 <p align="center">
-  Built with precision for the Ethiopian auction ecosystem
+  Built with precision for the Ethiopian auction ecosystem 🇪🇹
 </p>
