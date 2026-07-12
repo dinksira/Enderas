@@ -8,6 +8,7 @@ function TrackingLayout() {
       <nav className="tracking-shell__header">
         <a href="/" className="tracking-shell__brand">
           <img src={logoUrl} alt="Enderas" className="tracking-shell__logo" />
+          <span className="tracking-shell__brand-text">Auction tracking</span>
         </a>
       </nav>
       <main className="tracking-shell__main">
