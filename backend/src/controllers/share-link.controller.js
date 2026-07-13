@@ -5,7 +5,7 @@ async function createShareLink(req, res, next) {
   try {
     const staffId = req.auth?.identity?.staffId;
     const { auctionId } = req.params;
-    const { organizationName, contactEmail, password, expiresInDays, maxViews } = req.body;
+    const { organizationName, contactEmail, password, expiresInDays, maxViews, visibilitySettings } = req.body;
 
     const result = await shareLinkService.createShareLink(staffId, auctionId, {
       organizationName,
@@ -13,6 +13,7 @@ async function createShareLink(req, res, next) {
       password,
       expiresInDays,
       maxViews,
+      visibilitySettings,
     });
 
     return sendSuccess(res, result);
