@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTracking } from '../hooks/use-tracking.js';
-import logoUrl from '../../../assets/images/blue_logo.svg';
+import logoUrl from '../../../assets/images/frontend_logo.svg';
 
 function TrackingAuthPage() {
   const { token } = useParams();
   const navigate = useNavigate();
   const { authenticated, authenticate, error, loading } = useTracking(token);
   const [password, setPassword] = useState('');
+  const [focused, setFocused] = useState(false);
 
   if (authenticated) {
     navigate(`/track/${token}/dashboard`, { replace: true });
@@ -25,55 +26,90 @@ function TrackingAuthPage() {
   }
 
   return (
-    <div className="tracking-auth">
-      <div className="tracking-auth__card">
-        <div className="tracking-auth__eyebrow">
-          <span>Private lot access</span>
-          <span className="tracking-auth__eyebrow-dot" />
-          <span>Secure link</span>
+    <div className="ta">
+      <div className="ta__bg-orbs">
+        <div className="ta__orb ta__orb--1" />
+        <div className="ta__orb ta__orb--2" />
+        <div className="ta__orb ta__orb--3" />
+      </div>
+
+      <div className="ta__card">
+        <div className="ta__icon-ring">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
         </div>
 
-        <div className="tracking-auth__logo-wrap">
-          <img src={logoUrl} alt="Enderas" className="tracking-auth__logo" />
+        <div className="ta__logo-wrap">
+          <img src={logoUrl} alt="Enderas" className="ta__logo" />
         </div>
 
-        <h1 className="tracking-auth__title">Auction tracking access</h1>
-        <p className="tracking-auth__desc">
-          This link is password protected. Enter the code from your invitation to continue.
+        <h1 className="ta__title">Auction Tracking</h1>
+        <p className="ta__desc">
+          This is a private tracking link. Enter your access code to view auction details.
         </p>
 
         {error && (
-          <div className="tracking-auth__error">
-            {error}
+          <div className="ta__error">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+            <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="track-password" className="tracking-auth__label">Password</label>
-          <div className="tracking-auth__field">
-            <svg className="tracking-auth__field-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <rect x="3" y="7" width="10" height="7" rx="1.2" stroke="#6B5D4B" strokeWidth="1.3" />
-              <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="#6B5D4B" strokeWidth="1.3" />
+        <form onSubmit={handleSubmit} className="ta__form">
+          <label htmlFor="track-password" className="ta__label">Access Code</label>
+          <div className={`ta__field ${focused ? 'ta__field--focus' : ''} ${error ? 'ta__field--error' : ''}`}>
+            <svg className="ta__field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
             <input
               id="track-password"
               type="password"
-              className="tracking-auth__input"
+              className="ta__input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
               placeholder="Enter password"
               autoComplete="off"
               autoFocus
             />
           </div>
+
           <button
             type="submit"
-            className="tracking-auth__submit"
+            className="ta__submit"
             disabled={loading}
           >
-            {loading ? 'Verifying...' : 'Unlock access'}
+            {loading ? (
+              <span className="ta__submit-loading">
+                <span className="ta__spinner" />
+                Verifying...
+              </span>
+            ) : (
+              <span className="ta__submit-content">
+                Unlock Access
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </span>
+            )}
           </button>
         </form>
+
+        <div className="ta__footer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <span>Secured &amp; encrypted connection</span>
+        </div>
       </div>
     </div>
   );
