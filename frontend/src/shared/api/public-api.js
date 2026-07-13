@@ -18,8 +18,12 @@ export async function publicApiRequest(endpoint, options = {}) {
         ...options.headers,
       },
     });
-  } catch {
-    const error = new Error('Unable to reach the server. Is the backend running on port 3000?');
+  } catch (err) {
+    const error = new Error(
+      ENV.isProd
+        ? 'Unable to reach the server. It may be starting up — please try again in a few seconds.'
+        : 'Unable to reach the server. Is the backend running on port 3000?',
+    );
     error.code = 'NETWORK_ERROR';
     throw error;
   }
