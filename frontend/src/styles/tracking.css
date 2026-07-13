@@ -982,12 +982,28 @@
 }
 
 /* ─── Responsive ─── */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .ts-dash__grid {
+    grid-template-columns: 1fr 260px;
+  }
+  .ts-card--timeline {
+    position: static;
+  }
+}
+
+/* Mobile */
 @media (max-width: 768px) {
   .tracking-shell__main {
     padding: 24px 16px;
   }
   .tracking-shell__header {
-    padding: 16px 18px;
+    padding: 14px 16px;
+  }
+  .tracking-shell__brand-text {
+    font-size: 12px;
+    padding-left: 10px;
   }
   .ts-dash__title {
     font-size: 24px;
@@ -1001,15 +1017,233 @@
   .ts-metric--hl {
     grid-column: 1;
   }
+  .ts-metric {
+    padding: 14px 16px;
+  }
+  .ts-card {
+    padding: 18px;
+  }
+  .ts-card--body {
+    padding: 18px;
+  }
+  .ts-card--timeline {
+    position: static;
+  }
   .ts-winner__main {
     flex-direction: column;
     gap: 8px;
   }
+  .ts-winner__ribbon {
+    width: 36px;
+    height: 36px;
+    top: 12px;
+    right: 12px;
+  }
+  .ts-winner__ribbon svg {
+    width: 16px;
+    height: 16px;
+  }
+  .ts-winner__org {
+    font-size: 18px;
+  }
+  .ts-winner__amount {
+    font-size: 16px;
+  }
   .ts-dates {
     gap: 16px;
   }
+  .ts-date-item__value {
+    font-size: 12px;
+  }
+  .ts-asset__img-wrap {
+    height: 180px;
+  }
+  .ts-asset__info {
+    padding: 16px 18px;
+  }
+  .ts-asset__title {
+    font-size: 18px;
+  }
+  .ts-doc {
+    padding: 10px 14px;
+  }
+  .ts-error {
+    padding: 48px 16px;
+  }
+  .ts-error h2 {
+    font-size: 18px;
+  }
+  .ts-loading {
+    min-height: 200px;
+  }
+  .ts-desc {
+    font-size: 14px;
+  }
+  .ts-timeline__label {
+    font-size: 13px;
+  }
+
   .ta__card {
     margin: 0 16px;
-    padding: 36px 28px 28px;
+    padding: 32px 24px 28px;
+  }
+  .ta__title {
+    font-size: 24px;
+  }
+  .ta__desc {
+    font-size: 13px;
+    max-width: 260px;
+  }
+  .ta__input {
+    height: 48px;
+    font-size: 14px;
+  }
+  .ta__submit {
+    height: 48px;
+    font-size: 13px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+  .tracking-shell__main {
+    padding: 16px 12px;
+  }
+  .tracking-shell__header {
+    padding: 12px;
+  }
+  .tracking-shell__brand {
+    gap: 10px;
+  }
+  .tracking-shell__logo {
+    height: 22px;
+  }
+  .tracking-shell__brand-text {
+    font-size: 11px;
+    padding-left: 8px;
+    border-left: none;
+  }
+  .ts-dash__title {
+    font-size: 20px;
+    word-break: break-word;
+  }
+  .ts-dash__meta {
+    gap: 6px;
+  }
+  .ts-dash__meta-item {
+    font-size: 10px;
+  }
+  .ts-badge {
+    font-size: 10px;
+    padding: 4px 10px;
+  }
+  .ts-card {
+    padding: 14px;
+    border-radius: var(--radius-md);
+  }
+  .ts-card--body {
+    padding: 14px;
+  }
+  .ts-card__title {
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+  .ts-metric {
+    padding: 12px 14px;
+  }
+  .ts-metric__value {
+    font-size: 15px;
+  }
+  .ts-metric--hl .ts-metric__value {
+    font-size: 20px;
+  }
+  .ts-asset__img-wrap {
+    height: 150px;
+  }
+  .ts-asset__info {
+    padding: 14px;
+  }
+  .ts-asset__title {
+    font-size: 16px;
+  }
+  .ts-winner__org {
+    font-size: 16px;
+  }
+  .ts-winner__amount {
+    font-size: 14px;
+  }
+  .ts-dates {
+    gap: 12px;
+  }
+  .ts-date-item__label {
+    font-size: 9px;
+  }
+  .ts-date-item__value {
+    font-size: 11px;
+  }
+  .ts-doc__name {
+    font-size: 12px;
+  }
+  .ts-doc__icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+  .ts-doc__icon svg {
+    width: 14px;
+    height: 14px;
+  }
+  .ts-disclaimer {
+    font-size: 10px;
+    padding: 12px 0;
+  }
+  .ts-error {
+    padding: 36px 12px;
+  }
+  .ts-error h2 {
+    font-size: 16px;
+  }
+  .ts-error p {
+    font-size: 13px;
+  }
+  .ts-loading {
+    min-height: 160px;
+    font-size: 13px;
+  }
+
+  .ta__card {
+    margin: 0 10px;
+    padding: 28px 20px 24px;
+    border-radius: var(--radius-lg);
+  }
+  .ta__title {
+    font-size: 22px;
+  }
+  .ta__desc {
+    font-size: 12px;
+    max-width: 220px;
+    margin-bottom: 24px;
+  }
+  .ta__label {
+    font-size: 9px;
+  }
+  .ta__input {
+    height: 46px;
+    font-size: 14px;
+    padding: 0 40px 0 42px;
+  }
+  .ta__field-icon {
+    left: 14px;
+  }
+  .ta__toggle-vis {
+    right: 10px;
+  }
+  .ta__submit {
+    height: 46px;
+  }
+  .ta__footer {
+    font-size: 9px;
+    margin-top: 22px;
+    padding-top: 16px;
   }
 }
