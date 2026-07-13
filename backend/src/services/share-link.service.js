@@ -45,6 +45,13 @@ const DEFAULT_VISIBILITY = {
   winnerInfo: true,
 };
 
+function normalizeDocumentFiles(docs) {
+  if (!docs || !Array.isArray(docs)) return [];
+  return docs
+    .filter((d) => d && typeof d.url === 'string' && d.url.length > 0)
+    .map((d) => ({ name: d.name || d.fileName || 'document.pdf', url: d.url, size: Number(d.size) || 0 }));
+}
+
 async function createShareLink(staffId, auctionId, { organizationName, contactEmail, password, expiresInDays, maxViews, visibilitySettings }) {
   const auction = await Auction.findByPk(auctionId);
   if (!auction) throw new NotFoundError('Auction not found');
@@ -225,9 +232,10 @@ async function getAuctionTrackingData(linkId, auctionId) {
       endDate: auction.end_date,
       publishedAt: auction.published_at,
       closedAt: auction.closed_at,
+      documents: vis.auctionDocuments ? normalizeDocumentFiles(auction.document_files) : null,
     } : { id: auction.id, title: auction.title, status: auction.status },
 
-    asset: auction.asset && vis.auctionDetails ? {
+    asset: auction.asset && vis.auctionDetails && vis.lotDetails ? {
       id: auction.asset.id,
       title: auction.asset.title,
       description: auction.asset.description,

@@ -680,6 +680,49 @@
   border-color: var(--brass);
 }
 
+/* ─── Documents ─── */
+.ts-docs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ts-doc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(247, 241, 228, 0.04);
+  border: 1px solid rgba(247, 241, 228, 0.08);
+  text-decoration: none;
+  color: var(--text-ink);
+  transition: background 0.15s, border-color 0.15s;
+}
+.ts-doc:hover {
+  background: rgba(247, 241, 228, 0.08);
+  border-color: var(--brass);
+}
+.ts-doc svg {
+  color: var(--brass);
+  flex-shrink: 0;
+}
+.ts-doc__name {
+  flex: 1;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ts-doc__size {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
   .tracking-shell__main {

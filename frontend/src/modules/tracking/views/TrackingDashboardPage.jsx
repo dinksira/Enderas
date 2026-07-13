@@ -225,6 +225,25 @@ function TrackingDashboardPage() {
         </div>
       )}
 
+      {/* Documents */}
+      {auction.documents && auction.documents.length > 0 && (
+        <div className="ts-card ts-card--body">
+          <h3 className="ts-card__title">Auction Documents</h3>
+          <div className="ts-docs">
+            {auction.documents.map((doc, i) => (
+              <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" className="ts-doc">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <span className="ts-doc__name">{doc.name}</span>
+                {doc.size > 0 && <span className="ts-doc__size">{(doc.size / 1024).toFixed(0)} KB</span>}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Dates bar */}
       <div className="ts-dates">
         <div className="ts-date-item">
