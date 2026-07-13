@@ -28,12 +28,6 @@ function TrackingAuthPage() {
 
   return (
     <div className="ta">
-      <div className="ta__bg-orbs">
-        <div className="ta__orb ta__orb--1" />
-        <div className="ta__orb ta__orb--2" />
-        <div className="ta__orb ta__orb--3" />
-      </div>
-
       <div className="ta__card">
         <div className="ta__logo-wrap">
           <img src={logoUrl} alt="Enderas" className="ta__logo" />
