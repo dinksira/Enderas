@@ -1,5 +1,4 @@
 :root {
-<<<<<<< HEAD
   --navy: #1a2a44;
   --navy-light: #243b62;
   --navy-bright: #2f5496;
@@ -32,37 +31,6 @@
   background-image:
     radial-gradient(ellipse at 20% 0%, rgba(26, 42, 68, 0.2) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 100%, rgba(26, 42, 68, 0.1) 0%, transparent 50%);
-=======
-  --ink: #14110D;
-  --ink-soft: #1E1912;
-  --ivory: #F7F1E4;
-  --ivory-deep: #EEE3CC;
-  --oxblood: #6E2430;
-  --oxblood-dark: #551C25;
-  --brass: #B08D4F;
-  --brass-soft: rgba(176, 141, 79, 0.28);
-  --text-ivory: #2B241C;
-  --text-ivory-secondary: #6B5D4B;
-  --text-ink: #EDE6D6;
-  --text-ink-muted: #8C8272;
-  --text-ink-dim: #5C5447;
-  --green-accent: #5B8C5A;
-  --green-soft: rgba(91, 140, 90, 0.2);
-  --red-accent: #A04040;
-  --red-soft: rgba(160, 64, 64, 0.2);
-  --amber-accent: #C49A3C;
-  --amber-soft: rgba(196, 154, 60, 0.2);
-  --card-bg: rgba(247, 241, 228, 0.08);
-  --card-border: rgba(176, 141, 79, 0.15);
-}
-
-* { box-sizing: border-box; }
-
-/* ─── Shell ─── */
-.tracking-shell {
-  min-height: 100vh;
-  background: radial-gradient(ellipse at 50% 28%, #221B12 0%, var(--ink) 62%);
->>>>>>> magersoftware/main
   font-family: 'Inter', sans-serif;
   display: flex;
   flex-direction: column;
@@ -72,7 +40,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-<<<<<<< HEAD
   padding: 20px 36px;
   border-bottom: 1px solid var(--glass-border);
   backdrop-filter: blur(16px);
@@ -80,11 +47,6 @@
   position: sticky;
   top: 0;
   z-index: 50;
-=======
-  padding: 22px 36px;
-  border-bottom: 1px solid var(--brass-soft);
-  flex-shrink: 0;
->>>>>>> magersoftware/main
 }
 
 .tracking-shell__brand {
@@ -95,11 +57,7 @@
 }
 
 .tracking-shell__logo {
-<<<<<<< HEAD
   height: 28px;
-=======
-  height: 32px;
->>>>>>> magersoftware/main
   width: auto;
   display: block;
 }
@@ -107,19 +65,11 @@
 .tracking-shell__brand-text {
   font-family: 'Fraunces', serif;
   font-weight: 500;
-<<<<<<< HEAD
   font-size: 14px;
   letter-spacing: 0.03em;
   color: var(--white);
   padding-left: 14px;
   border-left: 1px solid rgba(255, 255, 255, 0.15);
-=======
-  font-size: 15px;
-  letter-spacing: 0.03em;
-  color: var(--text-ink);
-  padding-left: 14px;
-  border-left: 1px solid var(--brass-soft);
->>>>>>> magersoftware/main
   line-height: 1;
 }
 
@@ -133,16 +83,11 @@
 
 .tracking-shell__footer {
   text-align: center;
-<<<<<<< HEAD
   padding: 20px 24px 28px;
-=======
-  padding: 22px 24px 30px;
->>>>>>> magersoftware/main
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-<<<<<<< HEAD
   color: var(--white-dim);
   border-top: 1px solid var(--glass-border);
 }
@@ -356,36 +301,10 @@
 }
 
 .ta__submit-content {
-=======
-  color: var(--text-ink-muted);
-  flex-shrink: 0;
-}
-
-/* ─── Auth Page ─── */
-.tracking-auth {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tracking-auth__card {
-  width: 100%;
-  max-width: 408px;
-  background: var(--ivory);
-  border: 1px solid var(--brass-soft);
-  border-top: 4px solid var(--oxblood);
-  border-radius: 6px;
-  padding: 44px 38px 38px;
-}
-
-.tracking-auth__eyebrow {
->>>>>>> magersoftware/main
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-<<<<<<< HEAD
 }
 
 .ta__submit-loading {
@@ -429,141 +348,6 @@
 /* ═══════════════════════════════════════════════════════════
    DASHBOARD
    ═══════════════════════════════════════════════════════════ */
-=======
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  color: var(--brass);
-  text-transform: uppercase;
-  margin-bottom: 26px;
-}
-
-.tracking-auth__eyebrow-dot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--oxblood);
-}
-
-.tracking-auth__logo-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 22px;
-}
-
-.tracking-auth__logo {
-  height: 52px;
-  width: auto;
-  display: block;
-}
-
-.tracking-auth__title {
-  font-family: 'Fraunces', serif;
-  font-weight: 600;
-  font-size: 26px;
-  text-align: center;
-  color: var(--text-ivory);
-  margin: 0 0 12px;
-  letter-spacing: -0.01em;
-}
-
-.tracking-auth__desc {
-  font-size: 14.5px;
-  line-height: 1.55;
-  color: var(--text-ivory-secondary);
-  text-align: center;
-  max-width: 300px;
-  margin: 0 auto 30px;
-}
-
-.tracking-auth__error {
-  background: #fef2f2;
-  color: #dc2626;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  margin-bottom: 16px;
-  text-align: center;
-  border: 1px solid #fecaca;
-}
-
-.tracking-auth__label {
-  display: block;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-ivory-secondary);
-  margin-bottom: 8px;
-}
-
-.tracking-auth__field {
-  position: relative;
-  margin-bottom: 24px;
-}
-
-.tracking-auth__field-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-
-.tracking-auth__input {
-  width: 100%;
-  height: 46px;
-  padding: 0 16px 0 42px;
-  background: var(--ivory-deep);
-  border: 1px solid var(--brass-soft);
-  border-radius: 4px;
-  font-family: 'Inter', sans-serif;
-  font-size: 15px;
-  color: var(--text-ivory);
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.tracking-auth__input:focus {
-  border-color: var(--brass);
-  box-shadow: 0 0 0 3px rgba(176, 141, 79, 0.18);
-}
-
-.tracking-auth__input::placeholder {
-  color: var(--text-ivory-secondary);
-  opacity: 0.6;
-}
-
-.tracking-auth__submit {
-  width: 100%;
-  height: 48px;
-  background: var(--oxblood);
-  border: none;
-  border-radius: 4px;
-  color: var(--ivory);
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.tracking-auth__submit:hover {
-  background: var(--oxblood-dark);
-}
-
-.tracking-auth__submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   DASHBOARD — dark theme
-   ═══════════════════════════════════════════════════════════ */
-
->>>>>>> magersoftware/main
 .ts-dash {
   display: flex;
   flex-direction: column;
@@ -572,13 +356,9 @@
 }
 
 /* ─── Header ─── */
-<<<<<<< HEAD
 .ts-dash__header {
   animation: ts-fadein 0.4s ease;
 }
-=======
-.ts-dash__header {}
->>>>>>> magersoftware/main
 .ts-dash__title-row {
   display: flex;
   align-items: center;
@@ -588,23 +368,15 @@
 .ts-dash__title {
   margin: 0;
   font-family: 'Fraunces', serif;
-<<<<<<< HEAD
   font-size: 32px;
   font-weight: 600;
   color: var(--white);
   letter-spacing: -0.02em;
-=======
-  font-size: 30px;
-  font-weight: 600;
-  color: var(--text-ink);
-  letter-spacing: -0.01em;
->>>>>>> magersoftware/main
   line-height: 1.2;
 }
 .ts-dash__meta {
   display: flex;
   align-items: center;
-<<<<<<< HEAD
   gap: 10px;
   margin-top: 10px;
   flex-wrap: wrap;
@@ -634,36 +406,15 @@
 @keyframes ts-fadein {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
-=======
-  gap: 8px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-}
-.ts-dash__meta-item {
-  font-size: 13px;
-  color: var(--text-ink-muted);
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.02em;
-}
-.ts-dash__meta-sep {
-  font-size: 12px;
-  color: var(--brass-soft);
->>>>>>> magersoftware/main
 }
 
 /* ─── Badge ─── */
 .ts-badge {
-<<<<<<< HEAD
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 5px 14px;
   border-radius: var(--radius-full);
-=======
-  display: inline-block;
-  padding: 5px 14px;
-  border-radius: 999px;
->>>>>>> magersoftware/main
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -671,7 +422,6 @@
   font-family: 'JetBrains Mono', monospace;
   border: 1px solid transparent;
 }
-<<<<<<< HEAD
 .ts-badge__dot {
   width: 6px;
   height: 6px;
@@ -736,55 +486,10 @@
 }
 .ts-countdown--ended {
   color: var(--white-dim);
-=======
-.ts-badge--active {
-  background: var(--green-soft);
-  color: #A3D9A5;
-  border-color: rgba(163, 217, 165, 0.25);
-}
-.ts-badge--closed {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-ink-muted);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-.ts-badge--pending {
-  background: var(--amber-soft);
-  color: #D4A843;
-  border-color: rgba(212, 168, 67, 0.25);
-}
-.ts-badge--suspended {
-  background: var(--red-soft);
-  color: #D47A7A;
-  border-color: rgba(212, 122, 122, 0.25);
-}
-.ts-badge--draft {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-ink-dim);
-  border-color: rgba(255, 255, 255, 0.06);
-}
-.ts-badge--cancelled {
-  background: rgba(160, 64, 64, 0.15);
-  color: #D47A7A;
-  border-color: rgba(160, 64, 64, 0.25);
-}
-
-/* ─── Countdown ─── */
-.ts-countdown {
-  display: block;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  color: var(--amber-accent);
-  margin-bottom: 16px;
-  letter-spacing: 0.02em;
-}
-.ts-countdown--ended {
-  color: var(--text-ink-muted);
->>>>>>> magersoftware/main
 }
 
 /* ─── Description ─── */
 .ts-desc {
-<<<<<<< HEAD
   font-size: 14.5px;
   line-height: 1.7;
   color: var(--white);
@@ -799,26 +504,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-=======
-  margin: 0;
-  font-size: 14.5px;
-  line-height: 1.65;
-  color: var(--text-ink);
-  opacity: 0.85;
-}
-.ts-conditions {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--card-border);
-}
-.ts-conditions__label {
-  display: block;
->>>>>>> magersoftware/main
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-<<<<<<< HEAD
   color: var(--navy-bright);
   margin-bottom: 10px;
 }
@@ -826,16 +515,6 @@
   font-size: 14px;
   line-height: 1.65;
   color: var(--white);
-=======
-  color: var(--brass);
-  margin-bottom: 8px;
-}
-.ts-conditions__text {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--text-ink);
->>>>>>> magersoftware/main
   opacity: 0.75;
 }
 
@@ -843,7 +522,6 @@
 .ts-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-<<<<<<< HEAD
   border-radius: var(--radius-lg);
   padding: 24px;
   transition: border-color 0.2s;
@@ -853,19 +531,11 @@
 }
 .ts-card--body {
   padding: 24px;
-=======
-  border-radius: 8px;
-  padding: 24px;
-}
-.ts-card--body {
-  padding: 22px 24px;
->>>>>>> magersoftware/main
 }
 .ts-card--asset {
   padding: 0;
   overflow: hidden;
 }
-<<<<<<< HEAD
 .ts-card--asset:hover {
   border-color: rgba(255, 255, 255, 0.15);
 }
@@ -891,44 +561,20 @@
 }
 .ts-card__title svg {
   color: var(--navy-bright);
-=======
-.ts-card--timeline {
-  position: sticky;
-  top: 20px;
-}
-.ts-card--winner {
-  border-left: 3px solid var(--brass);
-}
-.ts-card__title {
-  margin: 0 0 16px;
-  font-family: 'Fraunces', serif;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-ink);
-  letter-spacing: 0.02em;
->>>>>>> magersoftware/main
 }
 
 /* ─── Asset ─── */
 .ts-asset__img-wrap {
-<<<<<<< HEAD
   position: relative;
   width: 100%;
   height: 220px;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.4);
-=======
-  width: 100%;
-  height: 200px;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.2);
->>>>>>> magersoftware/main
 }
 .ts-asset__img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-<<<<<<< HEAD
   transition: transform 0.4s ease;
 }
 .ts-card--asset:hover .ts-asset__img {
@@ -949,23 +595,10 @@
   font-size: 20px;
   font-weight: 600;
   color: var(--white);
-=======
-}
-.ts-asset__info {
-  padding: 20px 24px;
-}
-.ts-asset__title {
-  margin: 0 0 4px;
-  font-family: 'Fraunces', serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-ink);
->>>>>>> magersoftware/main
 }
 .ts-asset__type {
   display: inline-block;
   font-family: 'JetBrains Mono', monospace;
-<<<<<<< HEAD
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -973,23 +606,13 @@
   background: var(--navy-soft);
   padding: 3px 10px;
   border-radius: var(--radius-full);
-=======
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--brass);
->>>>>>> magersoftware/main
   margin-bottom: 10px;
 }
 .ts-asset__desc {
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-<<<<<<< HEAD
   color: var(--white);
-=======
-  color: var(--text-ink);
->>>>>>> magersoftware/main
   opacity: 0.7;
 }
 
@@ -1015,7 +638,6 @@
 .ts-metric {
   display: flex;
   flex-direction: column;
-<<<<<<< HEAD
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-md);
@@ -1050,46 +672,19 @@
 .ts-metric--hl .ts-metric__icon {
   background: rgba(47, 84, 150, 0.2);
   color: var(--white);
-=======
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
-  padding: 14px 16px;
-  transition: background 0.15s, border-color 0.15s;
-}
-.ts-metric:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(176, 141, 79, 0.25);
-}
-.ts-metric--hl {
-  grid-column: 1 / -1;
-  background: rgba(196, 154, 60, 0.1);
-  border-color: rgba(176, 141, 79, 0.3);
-}
-.ts-metric--hl:hover {
-  background: rgba(196, 154, 60, 0.14);
->>>>>>> magersoftware/main
 }
 .ts-metric__label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-<<<<<<< HEAD
   color: var(--white-dim);
-=======
-  color: var(--text-ink-muted);
->>>>>>> magersoftware/main
   margin-bottom: 4px;
 }
 .ts-metric__value {
   font-size: 17px;
   font-weight: 700;
-<<<<<<< HEAD
   color: var(--white);
-=======
-  color: var(--text-ink);
->>>>>>> magersoftware/main
 }
 .ts-metric__value--mono {
   font-family: 'JetBrains Mono', monospace;
@@ -1098,11 +693,7 @@
 }
 .ts-metric--hl .ts-metric__value {
   font-size: 24px;
-<<<<<<< HEAD
   color: var(--white);
-=======
-  color: var(--amber-accent);
->>>>>>> magersoftware/main
 }
 
 /* ─── Timeline ─── */
@@ -1113,15 +704,9 @@
 .ts-timeline__step {
   display: flex;
   align-items: flex-start;
-<<<<<<< HEAD
   gap: 14px;
   position: relative;
   padding-bottom: 28px;
-=======
-  gap: 12px;
-  position: relative;
-  padding-bottom: 24px;
->>>>>>> magersoftware/main
 }
 .ts-timeline__step:last-child {
   padding-bottom: 0;
@@ -1129,7 +714,6 @@
 .ts-timeline__step--conn .ts-timeline__dot::after {
   content: '';
   position: absolute;
-<<<<<<< HEAD
   top: 16px;
   left: 6px;
   width: 2px;
@@ -1164,29 +748,6 @@
 .ts-timeline__step--active .ts-timeline__dot {
   background: var(--navy-bright);
   box-shadow: 0 0 0 4px rgba(47, 84, 150, 0.2);
-=======
-  top: 14px;
-  left: 5px;
-  width: 2px;
-  height: calc(100% + 4px);
-  background: rgba(255, 255, 255, 0.08);
-}
-.ts-timeline__step--active .ts-timeline__dot::after {
-  background: var(--brass);
-}
-.ts-timeline__dot {
-  position: relative;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
-  margin-top: 3px;
-}
-.ts-timeline__step--active .ts-timeline__dot {
-  background: var(--brass);
-  box-shadow: 0 0 0 3px rgba(176, 141, 79, 0.25);
->>>>>>> magersoftware/main
 }
 .ts-timeline__content {
   display: flex;
@@ -1195,7 +756,6 @@
 .ts-timeline__label {
   font-size: 14px;
   font-weight: 600;
-<<<<<<< HEAD
   color: var(--white-dim);
 }
 .ts-timeline__step--active .ts-timeline__label {
@@ -1205,22 +765,10 @@
   font-size: 11px;
   color: var(--white-dim);
   margin-top: 3px;
-=======
-  color: var(--text-ink-dim);
-}
-.ts-timeline__step--active .ts-timeline__label {
-  color: var(--text-ink);
-}
-.ts-timeline__date {
-  font-size: 11px;
-  color: var(--text-ink-dim);
-  margin-top: 2px;
->>>>>>> magersoftware/main
   font-family: 'JetBrains Mono', monospace;
 }
 
 /* ─── Winner ─── */
-<<<<<<< HEAD
 .ts-winner__ribbon {
   position: absolute;
   top: 16px;
@@ -1244,17 +792,10 @@
   display: flex;
   align-items: baseline;
   gap: 20px;
-=======
-.ts-winner {
-  display: flex;
-  align-items: center;
-  gap: 32px;
->>>>>>> magersoftware/main
   flex-wrap: wrap;
 }
 .ts-winner__org {
   font-family: 'Fraunces', serif;
-<<<<<<< HEAD
   font-size: 22px;
   font-weight: 600;
   color: var(--white);
@@ -1333,70 +874,35 @@
   color: var(--navy-bright);
 }
 
-=======
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-ink);
-}
-.ts-winner__amount {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 16px;
-  color: var(--brass);
-  font-weight: 600;
-}
-.ts-winner__date {
-  font-size: 12px;
-  color: var(--text-ink-muted);
-  font-family: 'JetBrains Mono', monospace;
-}
-
->>>>>>> magersoftware/main
 /* ─── Dates bar ─── */
 .ts-dates {
   display: flex;
   gap: 32px;
   flex-wrap: wrap;
-<<<<<<< HEAD
   padding: 18px 0;
-=======
-  padding: 16px 0;
->>>>>>> magersoftware/main
   border-top: 1px solid var(--card-border);
   border-bottom: 1px solid var(--card-border);
 }
 .ts-date-item {
   display: flex;
   flex-direction: column;
-<<<<<<< HEAD
   gap: 4px;
-=======
-  gap: 2px;
->>>>>>> magersoftware/main
 }
 .ts-date-item__label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-<<<<<<< HEAD
   color: var(--white-dim);
 }
 .ts-date-item__value {
   font-size: 13px;
   color: var(--white-muted);
-=======
-  color: var(--text-ink-dim);
-}
-.ts-date-item__value {
-  font-size: 13px;
-  color: var(--text-ink-muted);
->>>>>>> magersoftware/main
   font-family: 'JetBrains Mono', monospace;
 }
 
 /* ─── Disclaimer ─── */
 .ts-disclaimer {
-<<<<<<< HEAD
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1411,14 +917,6 @@
   flex-shrink: 0;
   opacity: 0.5;
 }
-=======
-  text-align: center;
-  font-size: 11px;
-  color: var(--text-ink-dim);
-  padding: 12px 0;
-  line-height: 1.5;
-}
->>>>>>> magersoftware/main
 
 /* ─── Loading ─── */
 .ts-loading {
@@ -1427,21 +925,15 @@
   align-items: center;
   justify-content: center;
   min-height: 300px;
-<<<<<<< HEAD
   gap: 14px;
   color: var(--white-muted);
   font-size: 14px;
-=======
-  gap: 12px;
-  color: var(--text-ink-muted);
->>>>>>> magersoftware/main
 }
 
 /* ─── Error ─── */
 .ts-error {
   text-align: center;
   padding: 80px 24px;
-<<<<<<< HEAD
   animation: ts-fadein 0.4s ease;
 }
 .ts-error__icon-wrap {
@@ -1455,29 +947,12 @@
   justify-content: center;
   margin: 0 auto 18px;
   border: 1px solid rgba(26, 42, 68, 0.3);
-=======
-}
-.ts-error__icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--red-soft);
-  color: #D47A7A;
-  font-size: 24px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 16px;
-  font-family: 'Fraunces', serif;
->>>>>>> magersoftware/main
 }
 .ts-error h2 {
   margin: 0 0 8px;
   font-family: 'Fraunces', serif;
   font-size: 22px;
   font-weight: 600;
-<<<<<<< HEAD
   color: var(--white);
 }
 .ts-error p {
@@ -1494,26 +969,10 @@
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--white);
-=======
-  color: #D47A7A;
-}
-.ts-error p {
-  margin: 0 0 24px;
-  color: var(--text-ink-muted);
-  font-size: 14px;
-}
-.ts-error__btn {
-  padding: 10px 28px;
-  border: 1px solid var(--brass-soft);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-ink);
->>>>>>> magersoftware/main
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-<<<<<<< HEAD
   transition: all 0.2s ease;
 }
 .ts-error__btn:hover {
@@ -1535,30 +994,16 @@
 }
 
 /* Mobile */
-=======
-  transition: background 0.15s, border-color 0.15s;
-}
-.ts-error__btn:hover {
-  background: rgba(176, 141, 79, 0.1);
-  border-color: var(--brass);
-}
-
-/* ─── Responsive ─── */
->>>>>>> magersoftware/main
 @media (max-width: 768px) {
   .tracking-shell__main {
     padding: 24px 16px;
   }
   .tracking-shell__header {
-<<<<<<< HEAD
     padding: 14px 16px;
   }
   .tracking-shell__brand-text {
     font-size: 12px;
     padding-left: 10px;
-=======
-    padding: 16px 18px;
->>>>>>> magersoftware/main
   }
   .ts-dash__title {
     font-size: 24px;
@@ -1572,7 +1017,6 @@
   .ts-metric--hl {
     grid-column: 1;
   }
-<<<<<<< HEAD
   .ts-metric {
     padding: 14px 16px;
   }
@@ -1802,14 +1246,4 @@
     margin-top: 22px;
     padding-top: 16px;
   }
-=======
-  .ts-winner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .ts-dates {
-    gap: 16px;
-  }
->>>>>>> magersoftware/main
 }
