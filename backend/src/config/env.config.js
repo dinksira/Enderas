@@ -40,6 +40,7 @@ export const env = Object.freeze({
     name: requireEnv('DB_NAME'),
     user: requireEnv('DB_USER'),
     password: requireEnv('DB_PASSWORD'),
+    ssl: optionalEnv('DB_SSL', 'false') === 'true',
   }),
 
   redis: Object.freeze({

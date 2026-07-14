@@ -10,6 +10,7 @@ import { Asset } from '../models/asset.model.js';
 import { Bid } from '../models/bid.model.js';
 import { Winner } from '../models/winner.model.js';
 import { User } from '../models/index.js';
+import { resolvePublicUploadUrl } from '../utils/media-url.util.js';
 import { sendShareLinkEmail } from '../integrations/email.integration.js';
 import { Op, fn, col, literal } from 'sequelize';
 
@@ -226,7 +227,11 @@ async function getAuctionTrackingData(linkId, auctionId) {
       documentPrice: auction.document_price ? Number(auction.document_price) : null,
       cpoPercentage: auction.cpo_percentage ? Number(auction.cpo_percentage) : null,
       currency: auction.currency,
-      imageUrls: vis.assetImages ? auction.image_urls : null,
+      imageUrls: vis.assetImages
+        ? (Array.isArray(auction.image_urls)
+          ? auction.image_urls.map((url) => resolvePublicUploadUrl(url)).filter(Boolean)
+          : null)
+        : null,
       auctionConditions: auction.auction_conditions,
       startDate: auction.start_date,
       endDate: auction.end_date,
@@ -240,7 +245,11 @@ async function getAuctionTrackingData(linkId, auctionId) {
       title: auction.asset.title,
       description: auction.asset.description,
       assetType: auction.asset.asset_type,
-      imageUrls: vis.lotImages ? auction.asset.image_urls : null,
+      imageUrls: vis.lotImages
+        ? (Array.isArray(auction.asset.image_urls)
+          ? auction.asset.image_urls.map((url) => resolvePublicUploadUrl(url)).filter(Boolean)
+          : null)
+        : null,
       desiredReservePrice: auction.asset.desired_reserve_price,
     } : null,
 

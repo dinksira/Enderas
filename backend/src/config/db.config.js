@@ -9,7 +9,7 @@ export const sequelize = new Sequelize(
     host: env.db.host,
     port: env.db.port,
     dialect: 'mysql',
-    dialectOptions: env.isProduction
+    dialectOptions: env.db.ssl
       ? {
           ssl: {
             require: true,
