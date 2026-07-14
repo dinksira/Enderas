@@ -1,10 +1,17 @@
-import { type ReactNode, useCallback, useMemo, useRef } from 'react';
-import { Animated, Easing, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { type ReactNode, useCallback, useMemo } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import {
   KeyboardAwareScrollView,
   KeyboardToolbar,
 } from 'react-native-keyboard-controller';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { useTheme } from '@/lib/appStore';
 import { useKeyboardToolbarTheme } from '@/lib/keyboardToolbarTheme';
@@ -74,7 +81,7 @@ export function ScreenShell({
 }: ScreenShellProps) {
   const { colors } = useTheme();
   const toolbarTheme = useKeyboardToolbarTheme();
-  const fade = useRef(new Animated.Value(noFade ? 1 : 0)).current;
+  const fade = useSharedValue(noFade ? 1 : 0);
   const useKeyboard = keyboardAware || keyboardToolbar;
 
   const refreshControl = useMemo(
@@ -95,28 +102,35 @@ export function ScreenShell({
   // interrupt the native-driver fade and leave content stuck at opacity 0.
   useFocusEffect(
     useCallback(() => {
-      if (noFade) return;
-      fade.setValue(0);
-      const animation = Animated.timing(fade, {
-        toValue: 1,
+      if (noFade) {
+        // Defensive: if the prop flipped from false→true on a mounted
+        // instance, force the value to 1 so we never get stuck at the
+        // prior animation's leftover opacity.
+        fade.value = 1;
+        return;
+      }
+      fade.value = 0;
+      fade.value = withTiming(1, {
         duration: Duration.fast,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
       });
-      animation.start();
-      return () => animation.stop();
+      return () => {
+        // Stop the animation cleanly on blur so the next focus can restart
+        // from 0 without a stale in-flight timing.
+        cancelAnimation(fade);
+      };
     }, [fade, noFade]),
   );
 
   // Subtle 4px slide-up paired with the fade for a softer entrance
   // (was 6px — modern apps lean toward subtler motion).
+  const contentAnimStyle = useAnimatedStyle(() => ({
+    opacity: fade.value,
+    transform: [{ translateY: 4 * (1 - fade.value) }],
+  }));
+
   const content = (
-    <Animated.View
-      style={{
-        opacity: fade,
-        transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
-      }}
-    >
+    <Animated.View style={contentAnimStyle}>
       {pageTitle ? (
         <Text style={[Typography.h1, styles.pageTitle, { color: colors.cream }]}>{pageTitle}</Text>
       ) : null}

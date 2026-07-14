@@ -116,6 +116,7 @@ function AuthenticatedKycForm() {
   const updateUserStatus = useAuthStore((s) => s.updateUserStatus);
 
   const [checkingStatus, setCheckingStatus] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [kycData, setKycData] = useState<KycRecord | null>(null);
   const [form, setForm] = useState<KycFormState>(() => emptyForm(user?.userType || 'individual'));
   const [loading, setLoading] = useState(false);
@@ -128,6 +129,23 @@ function AuthenticatedKycForm() {
     user?.status === 'kyc_under_review' &&
     kycData?.status === 'pending' &&
     !isRejected;
+
+  const refresh = async () => {
+    try {
+      const response = await getMyKYC();
+      if (response.kyc) {
+        setKycData(response.kyc);
+        if (response.kyc.status === 'approved' || user?.status === 'active') {
+          router.replace('/(tabs)/dashboard');
+          return;
+        }
+      } else {
+        setKycData(null);
+      }
+    } catch {
+      // No existing record — keep showing the submission form.
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -155,6 +173,15 @@ function AuthenticatedKycForm() {
       cancelled = true;
     };
   }, [user?.status]);
+
+  const handlePullRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const updateField = (field: keyof KycFormState) => (value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -279,6 +306,8 @@ function AuthenticatedKycForm() {
       bottomPadding={40}
       keyboardAware
       keyboardToolbar
+      refreshing={refreshing}
+      onRefresh={handlePullRefresh}
     >
       <GlassCard padding={18}>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('kyc.verificationSubtitle')}</Text>

@@ -1,6 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
-  FlatList,
   Pressable,
   StyleSheet,
   Text,
@@ -9,6 +8,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
 
 import { AuthRequired, GoldButton } from '@/components/auth';
 import { AssetCard } from '@/components/assets/AssetCard';
@@ -41,6 +41,17 @@ export default function AssetsScreen() {
   return <AuthenticatedAssetsScreen />;
 }
 
+/**
+ * Stable separator component for FlashList. FlashList v2 expects a
+ * component type for `ItemSeparatorComponent` (not an inline arrow that
+ * returns an element) so it can reuse the separator instance across
+ * items. Defining it once at module scope keeps the reference stable
+ * across re-renders and avoids the warning FlashList emits otherwise.
+ */
+function AssetSeparator() {
+  return <View style={styles.separator} />;
+}
+
 function AuthenticatedAssetsScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -53,13 +64,13 @@ function AuthenticatedAssetsScreen() {
   } = useOwnedAuctions();
   const [showKycModal, setShowKycModal] = useState(false);
 
-  const handleAddAsset = () => {
+  const handleAddAsset = useCallback(() => {
     if (!isKycVerified(user)) {
       setShowKycModal(true);
       return;
     }
     router.push('/assets/submit' as any);
-  };
+  }, [user]);
 
   const handleAssetPress = useCallback(
     (assetId: string) => {
@@ -68,54 +79,77 @@ function AuthenticatedAssetsScreen() {
     [],
   );
 
-  const listHeader = (
-    <View style={styles.headerBlock}>
-      <Text style={[Typography.body, { color: colors.textSecondary }]}>
-        {t('assets.subtitle')}
-      </Text>
-      <GoldButton label={t('assets.addAsset')} onPress={handleAddAsset} />
+  // Stable per-owned-auction press handler — keeps the row Pressables
+  // from re-rendering every time the parent does.
+  const handleOwnedAuctionPress = useCallback(
+    (auctionId: string) => {
+      router.push(`/auction/${auctionId}` as any);
+    },
+    [],
+  );
 
-      {!ownedLoading && ownedAuctions.length > 0 ? (
-        <View style={[styles.ownedSection, { borderColor: colors.goldBorder, backgroundColor: colors.glassFill }]}>
-          <Text style={[styles.ownedTitle, { color: colors.goldChampagne }]}>
-            {t('auction.owner.myAuctionsTitle')}
-          </Text>
-          <Text style={[Typography.caption, { color: colors.textSecondary, marginBottom: 10 }]}>
-            {t('auction.owner.myAuctionsSubtitle')}
-          </Text>
-          {ownedAuctions.map((ownedAuction) => (
-            <Pressable
-              key={ownedAuction.id}
-              onPress={() => router.push(`/auction/${ownedAuction.id}` as any)}
-              style={[styles.ownedRow, { borderColor: colors.goldBorder }]}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '700' }]}>
-                  {ownedAuction.title}
-                </Text>
-                <Text style={[Typography.caption, { color: colors.textMuted }]}>
-                  {ownedAuction.bidCount ?? 0} {t('auction.owner.bidCount').toLowerCase()}
-                </Text>
-              </View>
-              <MaterialCommunityIcons name="chevron-right" size={22} color={colors.goldBright} />
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
-    </View>
+  const renderAsset = useCallback(
+    ({ item }: { item: (typeof assets)[number] }) => (
+      // FlashList v2 positions cells absolutely and gives each cell
+      // an explicit width — the renderItem root just needs to FILL
+      // that cell. `width: '100%'` is the simplest way to do that
+      // without fighting FlashList's enforced layout.
+      <View style={{ width: '100%' }}>
+        <AssetCard asset={item} onPress={() => handleAssetPress(item.id)} />
+      </View>
+    ),
+    [handleAssetPress],
+  );
+
+  const listHeader = useMemo(
+    () => (
+      <View style={styles.headerBlock}>
+        <Text style={[Typography.body, { color: colors.textSecondary }]}>
+          {t('assets.subtitle')}
+        </Text>
+        <GoldButton label={t('assets.addAsset')} onPress={handleAddAsset} />
+
+        {!ownedLoading && ownedAuctions.length > 0 ? (
+          <View style={[styles.ownedSection, { borderColor: colors.goldBorder, backgroundColor: colors.glassFill }]}>
+            <Text style={[styles.ownedTitle, { color: colors.goldChampagne }]}>
+              {t('auction.owner.myAuctionsTitle')}
+            </Text>
+            <Text style={[Typography.caption, { color: colors.textSecondary, marginBottom: 10 }]}>
+              {t('auction.owner.myAuctionsSubtitle')}
+            </Text>
+            {ownedAuctions.map((ownedAuction) => (
+              <Pressable
+                key={ownedAuction.id}
+                onPress={() => handleOwnedAuctionPress(ownedAuction.id)}
+                style={[styles.ownedRow, { borderColor: colors.goldBorder }]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '700' }]}>
+                    {ownedAuction.title}
+                  </Text>
+                  <Text style={[Typography.caption, { color: colors.textMuted }]}>
+                    {ownedAuction.bidCount ?? 0} {t('auction.owner.bidCount').toLowerCase()}
+                  </Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={22} color={colors.goldBright} />
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+      </View>
+    ),
+    [colors, handleAddAsset, handleOwnedAuctionPress, ownedAuctions, ownedLoading, t],
   );
 
   return (
     <View style={[styles.host, { backgroundColor: colors.base }]}>
       <AppHeader title={t('assets.title')} />
-      <FlatList
+      <FlashList
         data={assets}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <AssetCard asset={item} onPress={() => handleAssetPress(item.id)} />
-        )}
+        renderItem={renderAsset}
         ListHeaderComponent={listHeader}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={AssetSeparator}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshing={refreshing}
@@ -123,6 +157,7 @@ function AuthenticatedAssetsScreen() {
           void refresh();
           void refreshOwnedAuctions();
         }}
+        maintainVisibleContentPosition={{ disabled: true }}
         ListEmptyComponent={
           loading ? (
             <View style={styles.skeletonCol}>

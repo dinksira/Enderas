@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -61,6 +61,7 @@ export default function AuctionBidScreen() {
     lots,
     auctionAssets,
     loading,
+    refreshing,
     error,
     kycVerified,
     documentApproved,
@@ -130,11 +131,17 @@ export default function AuctionBidScreen() {
   }, [participation?.bidDrafts]);
 
   useEffect(() => {
+    // Capture the ref's current value into a local so the cleanup
+    // function closes over the SAME Map instance that was live when
+    // the effect ran. Without this, ESLint's react-hooks/exhaustive-deps
+    // warns (correctly) that `saveTimersRef.current` could be a different
+    // Map by the time cleanup runs.
+    const timers = saveTimersRef.current;
     return () => {
-      for (const timer of saveTimersRef.current.values()) {
+      for (const timer of timers.values()) {
         clearTimeout(timer);
       }
-      saveTimersRef.current.clear();
+      timers.clear();
     };
   }, []);
 
@@ -698,6 +705,15 @@ export default function AuctionBidScreen() {
             contentContainerStyle={styles.staticScrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={refresh}
+                tintColor={colors.goldBright}
+                colors={[colors.goldBright]}
+                progressBackgroundColor={colors.baseElevated}
+              />
+            }
           >
             {listHeader}
             <GlassCard padding={Spacing.lg}>
@@ -721,6 +737,15 @@ export default function AuctionBidScreen() {
             initialNumToRender={8}
             maxToRenderPerBatch={6}
             windowSize={8}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={refresh}
+                tintColor={colors.goldBright}
+                colors={[colors.goldBright]}
+                progressBackgroundColor={colors.baseElevated}
+              />
+            }
           />
         )}
 

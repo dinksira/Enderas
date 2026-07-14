@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore, useTheme } from '@/lib/appStore';
 import { SheetDropdown } from '@/components/sheet';
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS, type SupportedLanguage } from '@/lib/i18n';
-import { Radii, Spacing, Typography } from '@/theme';
+import { Spacing, Typography } from '@/theme';
 
 /**
  * Compact language selector for the header. Shows the active language

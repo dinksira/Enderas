@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GoldButton } from '@/components/auth';
 import { formatEtbAmount } from '@/lib/auctionUtils';
 import { useTheme } from '@/lib/appStore';
-import { Typography, Spacing, Radii } from '@/theme';
+import { Typography, Spacing } from '@/theme';
 
 interface BidSummaryBarProps {
   selectedCount: number;

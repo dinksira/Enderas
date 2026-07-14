@@ -1,4 +1,5 @@
-import { Image, StyleSheet, Text, View, type ImageStyle, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, type ImageStyle, type ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useTheme } from '@/lib/appStore';
@@ -26,10 +27,18 @@ export function ProfileAvatar({
   ];
 
   if (imageUri) {
+    // expo-image provides memory+disk caching, placeholder, and a fast
+    // native decode path — noticeably smoother than the core Image on
+    // the profile screen and avoids the flash on re-mount that the
+    // core Image suffers whenever the parent re-renders.
     return (
       <Image
         source={{ uri: imageUri }}
         style={avatarStyle}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+        recyclingKey={imageUri}
+        transition={180}
         accessibilityIgnoresInvertColors
       />
     );

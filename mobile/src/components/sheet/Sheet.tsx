@@ -42,7 +42,7 @@ import {
   useRef,
   type ReactNode,
 } from 'react';
-import { Modal, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -168,9 +168,9 @@ export function Sheet({
         { backgroundColor: colors.glassFill, borderColor: colors.goldBorder },
       ]}
     >
-      <Animated.Text style={{ color: colors.textMuted, fontSize: 16, lineHeight: 18 }}>
+      <Text style={{ color: colors.textMuted, fontSize: 16, lineHeight: 18 }}>
         ×
-      </Animated.Text>
+      </Text>
     </Pressable>
   ) : null;
 

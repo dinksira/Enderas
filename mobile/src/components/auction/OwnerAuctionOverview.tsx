@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { GlassCard } from '@/components/shell/GlassCard';
 import { formatEtbAmount } from '@/lib/auctionUtils';
 import { useTheme } from '@/lib/appStore';
-import { Typography, Spacing } from '@/theme';
+import { Typography } from '@/theme';
 import type { OwnerLotOverviewApi } from '@/types/auctionApi';
 
 interface OwnerAuctionOverviewProps {

@@ -54,6 +54,7 @@ function BidCardImpl({ bid, onPress }: BidCardProps) {
               style={StyleSheet.absoluteFill}
               contentFit="cover"
               cachePolicy="memory-disk"
+              recyclingKey={coverUri}
               transition={120}
             />
           ) : (

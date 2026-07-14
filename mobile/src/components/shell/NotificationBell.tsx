@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -14,6 +14,16 @@ import { SheetDropdown } from '@/components/sheet';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Spacing, Typography } from '@/theme';
 import type { AppNotification } from '@/types/notification';
+
+/**
+ * Stable separator for the notification FlatList. Defining it at module
+ * scope keeps the reference stable across re-renders so FlatList doesn't
+ * remount the separator on every parent state tick (e.g. when the
+ * "refresh" promise resolves while the dropdown is open).
+ */
+function NotifSeparator({ color }: { color: string }) {
+  return <View style={[styles.separator, { backgroundColor: color }]} />;
+}
 
 /**
  * Notification bell for the header. Shows an unread badge; tapping
@@ -43,7 +53,7 @@ export function NotificationBell() {
     if (open) refresh();
   }, [open, refresh]);
 
-  const iconForKind = (kind: AppNotification['kind']) => {
+  const iconForKind = useCallback((kind: AppNotification['kind']) => {
     switch (kind) {
       case 'bid': return 'gavel';
       case 'auction': return 'timer-sand';
@@ -51,39 +61,42 @@ export function NotificationBell() {
       case 'system': return 'cog';
       default: return 'bell';
     }
-  };
+  }, []);
 
-  const renderItem = ({ item }: { item: AppNotification }) => (
-    <Pressable
-      onPress={() => markNotificationRead(item.id)}
-      style={({ pressed }) => [
-        styles.notifRow,
-        {
-          backgroundColor: item.read ? 'transparent' : colors.glassFillActive,
-          opacity: pressed ? 0.7 : 1,
-        },
-      ]}
-    >
-      <View style={[styles.notifIcon, { backgroundColor: colors.glassFill, borderColor: colors.goldBorder }]}>
-        <MaterialCommunityIcons name={iconForKind(item.kind)} size={18} color={colors.goldBright} />
-      </View>
-      <View style={styles.notifBody}>
-        <View style={styles.notifHeader}>
-          <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '700' }]} numberOfLines={1}>
-            {item.title}
-          </Text>
-          {!item.read ? (
-            <View style={[styles.unreadDot, { backgroundColor: colors.goldBright }]} />
-          ) : null}
+  const renderItem = useCallback(
+    ({ item }: { item: AppNotification }) => (
+      <Pressable
+        onPress={() => markNotificationRead(item.id)}
+        style={({ pressed }) => [
+          styles.notifRow,
+          {
+            backgroundColor: item.read ? 'transparent' : colors.glassFillActive,
+            opacity: pressed ? 0.7 : 1,
+          },
+        ]}
+      >
+        <View style={[styles.notifIcon, { backgroundColor: colors.glassFill, borderColor: colors.goldBorder }]}>
+          <MaterialCommunityIcons name={iconForKind(item.kind)} size={18} color={colors.goldBright} />
         </View>
-        <Text style={[Typography.caption, { color: colors.textSecondary }]} numberOfLines={2}>
-          {item.body}
-        </Text>
-        <Text style={[Typography.microCaps, { color: colors.textMuted, fontSize: 10, letterSpacing: 0.3 }]}>
-          {item.timestamp}
-        </Text>
-      </View>
-    </Pressable>
+        <View style={styles.notifBody}>
+          <View style={styles.notifHeader}>
+            <Text style={[Typography.bodyMedium, { color: colors.cream, fontWeight: '700' }]} numberOfLines={1}>
+              {item.title}
+            </Text>
+            {!item.read ? (
+              <View style={[styles.unreadDot, { backgroundColor: colors.goldBright }]} />
+            ) : null}
+          </View>
+          <Text style={[Typography.caption, { color: colors.textSecondary }]} numberOfLines={2}>
+            {item.body}
+          </Text>
+          <Text style={[Typography.microCaps, { color: colors.textMuted, fontSize: 10, letterSpacing: 0.3 }]}>
+            {item.timestamp}
+          </Text>
+        </View>
+      </Pressable>
+    ),
+    [colors, iconForKind, markNotificationRead],
   );
 
   return (
@@ -166,9 +179,7 @@ export function NotificationBell() {
             data={notifications}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
-            ItemSeparatorComponent={() => (
-              <View style={[styles.separator, { backgroundColor: colors.divider }]} />
-            )}
+            ItemSeparatorComponent={() => <NotifSeparator color={colors.divider} />}
             contentContainerStyle={{ paddingVertical: Spacing.xxs }}
             showsVerticalScrollIndicator={false}
           />

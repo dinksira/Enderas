@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
-  FlatList,
   Pressable,
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
 
 import { BrowseAuctionCard } from '@/components/auction/BrowseAuctionCard';
 import { CategoryFilter } from '@/components/auction/CategoryFilter';
@@ -143,13 +143,13 @@ export default function DashboardScreen() {
 
   const renderItem = useCallback(
     ({ item, index }: { item: BrowseAuction; index: number }) => (
-      <ListItemEntrance
-        index={index}
-        // Cap each cell at 1/numColumns of the row so a lone card (e.g. a
-        // single filtered result, or the odd last item in a row) stays
-        // grid-sized and left-aligned instead of stretching full width.
-        style={[styles.gridCell, numColumns > 1 && { maxWidth: `${100 / numColumns}%` }]}
-      >
+      // FlashList v2 positions each cell absolutely with an explicit
+      // width = listWidth / numColumns. The renderItem root just needs
+      // to FILL that cell — `flex: 1` + horizontal padding creates the
+      // gap between cards without needing the (unsupported) `columnWrapperStyle`.
+      // We must NOT set `width: '${100/numColumns}%'` here — that would
+      // shrink the card to 1/numColumns of an already-1/numColumns cell.
+      <ListItemEntrance index={index} style={styles.gridCell}>
         <BrowseAuctionCard
           auction={item}
           onPress={handleCardPress(item.id)}
@@ -157,7 +157,7 @@ export default function DashboardScreen() {
         />
       </ListItemEntrance>
     ),
-    [handleCardPress, numColumns],
+    [handleCardPress],
   );
 
   const ListEmptyComponent = loading ? (
@@ -194,16 +194,18 @@ export default function DashboardScreen() {
       <AppHeader title={t('tabs.dashboard')} />
       <AuctionParticipationBanner />
 
-      <FlatList
+      <FlashList
         data={records}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ListHeaderComponent={listHeader}
         // `numColumns` is fixed at mount — changing it requires a `key`
-        // reset so FlatList remounts its cells with the new layout.
+        // reset so FlashList remounts its cells with the new layout.
         key={`grid-${numColumns}`}
         numColumns={numColumns}
-        columnWrapperStyle={numColumns > 1 ? styles.rowGap : undefined}
+        // FlashList v2 has no `columnWrapperStyle` (cells are absolutely
+        // positioned, not row-wrapped). The gap between cards is created
+        // by the `paddingHorizontal` on each cell in `renderItem`.
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -211,9 +213,11 @@ export default function DashboardScreen() {
         refreshing={refreshing}
         onRefresh={refresh}
         ListEmptyComponent={ListEmptyComponent}
-        // Don't render a separator between grid rows — the gap is
-        // handled by the cell padding.
-        ItemSeparatorComponent={null}
+        // Disable maintainVisibleContentPosition (enabled by default in
+        // v2) — it's only useful for chat-like interfaces where content
+        // is prepended. For a browse grid it adds overhead and can cause
+        // items to jump when the data array is re-sorted on refresh.
+        maintainVisibleContentPosition={{ disabled: true }}
       />
     </View>
   );
@@ -244,12 +248,11 @@ const styles = StyleSheet.create({
   resultsLabel: {
     letterSpacing: 1.4,
   },
-  // Grid layout — each cell takes 1/numColumns of the row, minus the
-  // gap. We use `flex: 1` plus a small horizontal padding so cards
-  // don't touch each other or the screen edge.
-  rowGap: {
-    gap: Spacing.sm,
-  },
+  // Grid layout — FlashList v2 already sizes each cell to
+  // listWidth / numColumns. `flex: 1` makes the ListItemEntrance fill
+  // that cell, and the small horizontal padding creates the gap between
+  // cards (FlashList v2 has no `columnWrapperStyle`, so the gap can't
+  // go on a row wrapper — it must live on each cell).
   gridCell: {
     flex: 1,
     paddingHorizontal: Spacing.xxs2,

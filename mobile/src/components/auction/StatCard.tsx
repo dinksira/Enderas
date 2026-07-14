@@ -1,6 +1,12 @@
-import { memo, useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { memo, useEffect } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { useTheme } from '@/lib/appStore';
 import { Typography, Spacing, Radii } from '@/theme';
@@ -26,19 +32,21 @@ interface StatCardProps {
  *
  * Trend colors come from the theme's status palette so they auto-adjust
  * for WCAG contrast in light/dark mode (no per-component hex).
+ *
+ * Reanimated v3 implementation: the entrance scale-up runs on the UI
+ * thread so a row of stat cards animates without JS thread hops.
  */
 function StatCardImpl({ label, value, icon, trend }: StatCardProps) {
   const { colors } = useTheme();
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const scale = useSharedValue(0.95);
 
   useEffect(() => {
-    Animated.timing(scaleAnim, {
-      toValue: 1,
-      duration: 200,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
+    scale.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) });
+  }, [scale]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   const trendIcon =
     trend === 'up' ? 'trending-up' : trend === 'down' ? 'trending-down' : 'minus';
@@ -58,8 +66,8 @@ function StatCardImpl({ label, value, icon, trend }: StatCardProps) {
         {
           backgroundColor: colors.glassFill,
           borderColor: colors.goldBorder,
-          transform: [{ scale: scaleAnim }],
         },
+        animStyle,
       ]}
     >
       <View
