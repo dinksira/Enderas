@@ -23,7 +23,7 @@
     "db:reset": "node --env-file=.env scripts/db/cli.mjs reset test",
     "db:reset:normal": "node --env-file=.env scripts/db/cli.mjs reset normal",
     "db:reset:test": "node --env-file=.env scripts/db/cli.mjs reset test",
-    "test": "node --test tests/rbac.policy.test.js",
+    "test": "node --test tests",
     "test:rbac": "node --test tests/rbac.policy.test.js",
     "test:auction-flow": "node --env-file=.env scripts/run-auction-flow-test.mjs"
   },

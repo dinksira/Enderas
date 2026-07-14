@@ -71,6 +71,7 @@
       "settings": "System Settings",
       "setting": "System Settings",
       "profile": "Profile",
+      "about": "About Enderas",
       "browseauctions": "Browse Auctions",
       "mybids": "My Bids",
       "mypayments": "My Payments",
@@ -187,7 +188,8 @@
         "cpoPercentage": "CPO Percentage (%)",
         "images": "Auction Images",
         "documents": "Auction Documents",
-        "linkedAsset": "Linked Assets"
+        "linkedAsset": "Linked Assets",
+        "organization": "Organization"
       },
       "assetStep": {
         "search": "Search evaluated assets",
@@ -214,7 +216,13 @@
         "evaluationReport": "Evaluation Report"
       },
       "placeholders": {
-        "selectCategory": "Select a category"
+        "selectCategory": "Select a category",
+        "selectOrganization": "Select an organization (optional)"
+      },
+      "organizationStep": {
+        "loading": "Loading organizations...",
+        "loadFailed": "Failed to load organizations. You can try again later.",
+        "noOrganizations": "No organizations are available to link."
       },
       "sections": {
         "images": "Auction Images",
@@ -234,6 +242,7 @@
         "documentCount": "{{count}} document(s) selected",
         "noAsset": "Standalone auction (no linked asset)",
         "multiAssetCount": "{{count}} assets in this auction",
+        "noOrganization": "No organization linked",
         "lotsTitle": "Auction lots"
       },
       "actions": {
@@ -585,6 +594,9 @@
     "uploadFailed": "UPLOAD FAILED",
     "close": "CLOSE",
     "empty": "—",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
     "languages": {
       "english": "English",
       "amharic": "Amharic"
@@ -2018,7 +2030,31 @@
       "role": "Role",
       "userType": "User Type",
       "kycStatus": "KYC Status",
-      "kycSubmitted": "KYC Submitted"
+      "kycSubmitted": "KYC Submitted",
+      "tabs": {
+        "info": "Personal Info",
+        "password": "Change Password",
+        "kyc": "KYC Status"
+      },
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "preferredLanguage": "Preferred Language",
+      "editProfile": "Edit Profile",
+      "saveSuccess": "Profile updated successfully.",
+      "saveFailed": "Failed to update profile.",
+      "passwordDesc": "Update your password to keep your account secure.",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "changePassword": "Update Password",
+      "passwordMismatch": "Passwords do not match.",
+      "passwordTooShort": "Password must be at least 6 characters.",
+      "passwordChangeSuccess": "Password changed successfully. Please log in again.",
+      "passwordChangeFailed": "Failed to change password.",
+      "noKyc": "No KYC verification submitted yet.",
+      "changeAvatar": "Click to change avatar",
+      "avatarUpdateSuccess": "Avatar updated successfully.",
+      "avatarUpdateFailed": "Failed to update avatar."
     }
   },
   "staff": {
@@ -2265,16 +2301,21 @@
   },
   "settings": {
     "pageTitle": "System Settings",
-    "subtitle": "Localization, auction defaults, and platform limits.",
+    "subtitle": "Configure localization, auction defaults, and platform limits.",
     "loading": "Loading settings...",
     "loadFailed": "Failed to load settings.",
-    "save": "Save Settings",
+    "save": "Save Changes",
     "saving": "Saving...",
     "saveSuccess": "Settings saved successfully.",
     "saveFailed": "Failed to save settings.",
+    "tabs": {
+      "localization": "Localization",
+      "auction": "Auction",
+      "system": "System"
+    },
     "localization": {
-      "title": "Localization",
-      "description": "Default language and supported UI languages.",
+      "title": "Language & Region",
+      "description": "Set the default language and toggle which UI languages are available across the platform.",
       "defaultLanguage": "Default Language",
       "supportedLanguages": "Supported Languages",
       "languages": {
@@ -2284,14 +2325,21 @@
     },
     "auction": {
       "title": "Auction Defaults",
+      "description": "Configure default currency, commission percentage, and minimum bid increment for new auctions.",
       "defaultCurrency": "Default Currency",
-      "defaultCpoPercentage": "Default CPO Percentage",
-      "minBidIncrement": "Minimum Bid Increment"
+      "defaultCpoPercentage": "Commission Rate",
+      "minBidIncrement": "Minimum Bid Increment",
+      "currencyHint": "ISO 4217 currency code",
+      "cpoHint": "Percentage charged on successful bids",
+      "bidHint": "Smallest allowed bid increase"
     },
     "system": {
       "title": "System Limits",
-      "otpTtlSeconds": "OTP TTL (seconds)",
-      "maxFileSize": "Max File Size (bytes)"
+      "description": "Control platform-wide limits for OTP verification and file uploads.",
+      "otpTtlSeconds": "OTP Expiry Time",
+      "maxFileSize": "Maximum File Size",
+      "otpHint": "How long OTP codes remain valid",
+      "fileHint": "Maximum upload size in bytes"
     }
   },
   "audit": {
@@ -2496,5 +2544,24 @@
         "refresh": "Refresh"
       }
     }
+  },
+  "about": {
+    "pageTitle": "About Enderas",
+    "pageSubtitle": "System information and platform details.",
+    "title": "About Enderas",
+    "subtitle": "Auction Management System",
+    "systemInfo": "System Information",
+    "version": "Version",
+    "environment": "Environment",
+    "buildDate": "Build Date",
+    "aboutEnderas": "About Enderas",
+    "description": "Enderas is a comprehensive auction management system designed to streamline the auction process for organizations and individuals in Ethiopia. It provides end-to-end management of assets, evaluations, bids, payments, and winners with full transparency and audit trails.",
+    "features": "Key Features",
+    "feature1": "Full auction lifecycle management from creation to winner selection",
+    "feature2": "KYC verification and compliance tracking",
+    "feature3": "Real-time bid management with draft support",
+    "feature4": "Secure payment processing with CPO integration",
+    "feature5": "Public tracking portal for auction transparency",
+    "rights": "All rights reserved."
   }
 }

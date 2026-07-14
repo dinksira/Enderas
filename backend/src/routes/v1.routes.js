@@ -29,8 +29,10 @@ import { winnerController } from '../controllers/winner.controller.js';
 import { notificationController } from '../controllers/notification.controller.js';
 import { dashboardController } from '../controllers/dashboard.controller.js';
 import { shareLinkController } from '../controllers/share-link.controller.js';
+import { authController } from '../modules/auth/auth.controller.js';
 import { requireKYCVerified } from '../middleware/kyc.middleware.js';
 import { requireStaff } from '../middleware/staff.middleware.js';
+import { uploadSingleFile } from '../middlewares/upload.middleware.js';
 import fileUploadRoutes from './fileUpload.routes.js';
 
 const v1Router = Router();
@@ -977,6 +979,8 @@ v1Router.put(
 // Session introspection
 v1Router.get('/auth/me', authenticate, async (req, res) => {
   const principal = await authorizationPermissionService.resolvePrincipal(req.user.id);
+  const { User } = await import('../models/user.model.js');
+  const user = await User.findByPk(principal.userId, { attributes: ['avatar_url'] });
   return sendSuccess(res, {
     id: principal.userId,
     roleId: principal.effectiveRoleId,
@@ -984,6 +988,7 @@ v1Router.get('/auth/me', authenticate, async (req, res) => {
     userType: principal.userType,
     staffId: principal.staffId,
     status: principal.userStatus,
+    avatarUrl: user?.avatar_url || null,
     permissions: {
       wildcard: principal.wildcard,
       modules: principal.modules,
@@ -999,6 +1004,15 @@ v1Router.get('/auth/me', authenticate, async (req, res) => {
     },
   });
 });
+
+// Self-profile update
+v1Router.patch('/auth/me', authenticate, authController.updateMe);
+
+// Change password
+v1Router.post('/auth/change-password', authenticate, authController.changePassword);
+
+// Avatar upload
+v1Router.post('/auth/avatar', authenticate, uploadSingleFile('avatar'), authController.updateAvatar);
 
 // Navigation manifest for dynamic sidebar (permission-filtered on client too)
 v1Router.get('/auth/navigation', authenticate, async (req, res) => {

@@ -5,10 +5,12 @@ import { fileURLToPath } from 'node:url';
 const backendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
 function runSequelizeCli(args) {
+  const isWin = process.platform === 'win32';
   const result = spawnSync('npx', ['sequelize-cli', ...args], {
     cwd: backendRoot,
     stdio: 'inherit',
     env: process.env,
+    shell: isWin,
   });
 
   if (result.error) {

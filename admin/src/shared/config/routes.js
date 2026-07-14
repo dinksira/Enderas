@@ -38,6 +38,7 @@ export const ROUTES = Object.freeze({
   APP_REPORTS: '/app/reports',
   APP_NOTIFICATIONS: '/app/notifications',
   APP_PROFILE: '/app/profile',
+  APP_ABOUT: '/app/about',
   APP_ACCESS_DENIED: '/app/access-denied',
 
   // Deprecated standalone routes (redirect targets)

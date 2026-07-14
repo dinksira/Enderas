@@ -225,6 +225,18 @@ export const PAGE_REGISTRY = Object.freeze([
     searchEnabled: true,
   },
   {
+    id: 'about',
+    label: 'About Enderas',
+    path: '/app/about',
+    module: MODULES.USERS,
+    action: ACTIONS.READ,
+    group: 'account',
+    titleKey: 'about.pageTitle',
+    subtitleKey: 'about.pageSubtitle',
+    searchPlaceholderKey: 'admin.searchPlaceholder',
+    searchEnabled: false,
+  },
+  {
     id: 'browse-auctions',
     label: 'Browse Auctions',
     path: '/app/browse-auctions',

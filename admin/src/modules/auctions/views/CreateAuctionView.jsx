@@ -1,6 +1,6 @@
-import { useMemo, useState, useCallback, useRef } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { assetService, auctionService } from '@enderass/shared/services';
+import { assetService, auctionService, organizationService } from '@enderass/shared/services';
 import { formatEtbAmount } from '@enderass/shared/utils';
 import { Input, Button, FileUpload } from '@enderass/shared/ui';
 import { QuickCreateAssetModal } from '../components/QuickCreateAssetModal.jsx';
@@ -107,6 +107,10 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
   const [cpoPercentage, setCpoPercentage] = useState('');
   const [documentFee, setDocumentFee] = useState('');
   const [documents, setDocuments] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
+  const [organizationId, setOrganizationId] = useState('');
+  const [orgsLoading, setOrgsLoading] = useState(false);
+  const [orgsError, setOrgsError] = useState('');
 
   const [lots, setLots] = useState([EMPTY_LOT()]);
 
@@ -203,6 +207,36 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
     return Object.keys(errs).length === 0;
   };
 
+  useEffect(() => {
+    let cancelled = false;
+
+    setOrgsLoading(true);
+    setOrgsError('');
+
+    organizationService
+      .listOrganizations({ status: 'active', page: 1, limit: 100 })
+      .then((response) => {
+        if (!cancelled) {
+          setOrganizations(response?.organizations ?? []);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setOrganizations([]);
+          setOrgsError(t('auctions.create.organizationStep.loadFailed'));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setOrgsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
+
   const validateStep2 = () => {
     const errs = {};
     lots.forEach((lot) => {
@@ -275,7 +309,10 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
     };
 
     try {
-      await auctionService.create(payload);
+      const auction = await auctionService.create(payload);
+      if (organizationId) {
+        await organizationService.linkAuction(organizationId, auction.id);
+      }
       onSuccess?.();
       onClose?.();
     } catch (err) {
@@ -348,6 +385,26 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
                     ))}
                   </select>
                   {fieldErrors.category && <span className="input-field__error">{fieldErrors.category}</span>}
+                </div>
+
+                <div className="ca-form-group--full">
+                  <label className="input-field__label">{t('auctions.create.fields.organization', 'Organization')}</label>
+                  <select
+                    className={`input-field__control ${orgsError ? 'input-field__control--error' : ''}`}
+                    value={organizationId}
+                    onChange={(e) => setOrganizationId(e.target.value)}
+                    disabled={orgsLoading || organizations.length === 0}
+                  >
+                    <option value="">{t('auctions.create.placeholders.selectOrganization', 'Select an organization (optional)')}</option>
+                    {organizations.map((org) => (
+                      <option key={org.id} value={org.id}>{org.organizationName || org.name || org.id}</option>
+                    ))}
+                  </select>
+                  {orgsLoading && <span className="input-field__hint">{t('auctions.create.organizationStep.loading', 'Loading organizations...')}</span>}
+                  {!orgsLoading && orgsError && <span className="input-field__error">{orgsError}</span>}
+                  {!orgsLoading && !orgsError && organizations.length === 0 && (
+                    <span className="input-field__hint">{t('auctions.create.organizationStep.noOrganizations', 'No organizations are available to link.')}</span>
+                  )}
                 </div>
 
                 <div>

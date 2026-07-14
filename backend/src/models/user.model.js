@@ -59,6 +59,11 @@ export const User = sequelize.define(
       allowNull: false,
       defaultValue: 'en',
     },
+    avatar_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      defaultValue: null,
+    },
     is_mobile_verified: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

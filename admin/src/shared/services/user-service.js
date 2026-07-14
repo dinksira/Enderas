@@ -1,4 +1,4 @@
-import { ENV, api } from '@enderass/shared/api';
+import { ENV, api, apiRequest } from '@enderass/shared/api';
 import { END_USER_ROLE_CODES } from '@enderass/shared/config';
 
 const USERS_BASE = `${ENV.apiV1Prefix}/users`;
@@ -15,6 +15,8 @@ function buildQuery(params = {}) {
 }
 
 const AUTH_ME = `${ENV.apiV1Prefix}/auth/me`;
+const AUTH_CHANGE_PASSWORD = `${ENV.apiV1Prefix}/auth/change-password`;
+const AUTH_AVATAR = `${ENV.apiV1Prefix}/auth/avatar`;
 const ROLES_BASE = `${ENV.apiV1Prefix}/roles`;
 
 async function unwrapUser(responsePromise) {
@@ -68,6 +70,13 @@ export const userService = Object.freeze({
   updateUserStatus: (id, payload) => api.post(`${USERS_BASE}/${id}/status`, payload),
   deleteUser: (id) => api.delete(`${USERS_BASE}/${id}`),
   getMe: () => api.get(AUTH_ME),
+  updateMe: (payload) => apiRequest(AUTH_CHANGE_PASSWORD.replace('/change-password', '/me'), { method: 'PATCH', body: JSON.stringify(payload) }),
+  changePassword: (payload) => apiRequest(AUTH_CHANGE_PASSWORD, { method: 'POST', body: JSON.stringify(payload) }),
+  updateAvatar: async (file) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return apiRequest(AUTH_AVATAR, { method: 'POST', body: formData });
+  },
   listCreateRoles,
   getAll: (params = {}) => api.get(`${USERS_BASE}${buildQuery(params)}`),
   getById: (id) => {

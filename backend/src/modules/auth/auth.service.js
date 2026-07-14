@@ -29,6 +29,7 @@ const IDENTITY_AGGREGATION_SQL = `
     u.last_name,
     u.organization_name,
     u.preferred_language,
+    u.avatar_url,
     u.is_mobile_verified,
     u.is_email_verified,
     u.status AS user_status,
@@ -98,6 +99,7 @@ function mapIdentityRow(row) {
       lastName: row.last_name,
       organizationName: row.organization_name,
       preferredLanguage: row.preferred_language,
+      avatarUrl: row.avatar_url,
       isMobileVerified: Boolean(row.is_mobile_verified),
       isEmailVerified: Boolean(row.is_email_verified),
       displayName: buildDisplayName({
@@ -904,6 +906,180 @@ export async function verifyPasswordResetOtpCode(mobileNumber, otp) {
   return { valid: true };
 }
 
+/**
+ * Update the authenticated user's own profile fields.
+ * Allowed fields: email, firstName, lastName, preferredLanguage.
+ * @param {string} userId
+ * @param {object} patch
+ */
+export async function updateMe(userId, patch) {
+  const allowedFields = ['email', 'firstName', 'lastName', 'preferredLanguage'];
+  const updates = {};
+
+  for (const field of allowedFields) {
+    if (patch[field] !== undefined) {
+      updates[field] = patch[field];
+    }
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw new AppError('No valid fields to update', 400, 'VALIDATION_ERROR');
+  }
+
+  const user = await User.unscoped().findByPk(userId, {
+    attributes: ['id', 'email', 'first_name', 'last_name', 'preferred_language'],
+  });
+
+  if (!user) {
+    throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+  }
+
+  const dbUpdates = {};
+
+  if (updates.email !== undefined && updates.email !== user.email) {
+    if (updates.email) {
+      const existing = await User.unscoped().findOne({
+        where: {
+          email: updates.email,
+          id: { [Op.ne]: userId },
+          deleted_at: null,
+        },
+        attributes: ['id'],
+      });
+      if (existing) {
+        throw new AppError('Email already in use', 400, 'DUPLICATE_EMAIL');
+      }
+    }
+    dbUpdates.email = updates.email || null;
+  }
+
+  if (updates.firstName !== undefined) {
+    dbUpdates.first_name = updates.firstName || null;
+  }
+
+  if (updates.lastName !== undefined) {
+    dbUpdates.last_name = updates.lastName || null;
+  }
+
+  if (updates.preferredLanguage !== undefined) {
+    if (!['en', 'am'].includes(updates.preferredLanguage)) {
+      throw new AppError('Invalid language. Must be "en" or "am"', 400, 'VALIDATION_ERROR');
+    }
+    dbUpdates.preferred_language = updates.preferredLanguage;
+  }
+
+  if (Object.keys(dbUpdates).length === 0) {
+    return { success: true };
+  }
+
+  await user.update(dbUpdates);
+
+  await auditService.writeAuditLog({
+    userId: user.id,
+    action: AUDIT_ACTIONS.UPDATE,
+    entityType: 'User',
+    entityId: user.id,
+    metadata: { action: 'profile_update', fields: Object.keys(dbUpdates) },
+  });
+
+  const freshUser = await User.unscoped().findByPk(userId, {
+    attributes: ['id', 'email', 'first_name', 'last_name', 'preferred_language', 'avatar_url'],
+  });
+
+  return {
+    success: true,
+    user: {
+      email: freshUser.email,
+      firstName: freshUser.first_name,
+      lastName: freshUser.last_name,
+      preferredLanguage: freshUser.preferred_language,
+      avatarUrl: freshUser.avatar_url,
+    },
+  };
+}
+
+/**
+ * Update the authenticated user's avatar.
+ * @param {string} userId
+ * @param {object} file - multer file object (buffer, originalname, mimetype, size)
+ */
+export async function updateAvatar(userId, file) {
+  if (!file) {
+    throw new AppError('No file provided', 400, 'VALIDATION_ERROR');
+  }
+
+  const user = await User.unscoped().findByPk(userId, {
+    attributes: ['id', 'avatar_url'],
+  });
+
+  if (!user) {
+    throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+  }
+
+  const { fileStorageService } = await import('../../services/fileStorage.service.js');
+  const uploadResult = await fileStorageService.uploadFile(file, 'avatars');
+
+  await user.update({ avatar_url: uploadResult.fileUrl });
+
+  await auditService.writeAuditLog({
+    userId: user.id,
+    action: AUDIT_ACTIONS.UPDATE,
+    entityType: 'User',
+    entityId: user.id,
+    metadata: { action: 'avatar_update', avatarUrl: uploadResult.fileUrl },
+  });
+
+  return {
+    success: true,
+    avatarUrl: uploadResult.fileUrl,
+  };
+}
+
+/**
+ * Change the authenticated user's password.
+ * Requires currentPassword verification.
+ * @param {string} userId
+ * @param {string} currentPassword
+ * @param {string} newPassword
+ */
+export async function changePassword(userId, currentPassword, newPassword) {
+  if (!currentPassword || !newPassword) {
+    throw new AppError('Current password and new password are required', 400, 'VALIDATION_ERROR');
+  }
+
+  if (newPassword.length < 6) {
+    throw new AppError('New password must be at least 6 characters', 400, 'VALIDATION_ERROR');
+  }
+
+  const user = await User.unscoped().findByPk(userId, {
+    attributes: ['id', 'password'],
+  });
+
+  if (!user) {
+    throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+  }
+
+  const passwordMatches = await verifyPassword(currentPassword, user.password);
+  if (!passwordMatches) {
+    throw new AppError('Current password is incorrect', 400, 'INVALID_PASSWORD');
+  }
+
+  const hashedPassword = await hashPassword(newPassword);
+  await user.update({ password: hashedPassword });
+
+  await revokeUserRefreshTokens(userId);
+
+  await auditService.writeAuditLog({
+    userId: user.id,
+    action: AUDIT_ACTIONS.UPDATE,
+    entityType: 'User',
+    entityId: user.id,
+    metadata: { action: 'password_changed' },
+  });
+
+  return { success: true };
+}
+
 export const authService = Object.freeze({
   aggregateIdentity,
   loginWithCredentials,
@@ -914,6 +1090,9 @@ export const authService = Object.freeze({
   requestPasswordReset,
   verifyPasswordResetOtpCode,
   resetPasswordWithOtp,
+  updateMe,
+  changePassword,
+  updateAvatar,
 });
 
 export default authService;

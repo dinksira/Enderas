@@ -326,3 +326,42 @@
   --dashboard-status-closed-text: #1c1c1c;
   --dashboard-sidebar-divider: rgba(255, 255, 255, 0.08);
 }
+
+/* ─── DARK MODE ─────────────────────────────────────────────────────────── */
+.dark {
+  --dashboard-canvas-bg: #0f1117;
+  --dashboard-surface-bg: #181b22;
+  --dashboard-accent: #e8edf5;
+  --dashboard-accent-hover: #d0d8e6;
+  --dashboard-text-primary: #e8edf5;
+  --dashboard-text-muted: #6b7b8e;
+  --dashboard-text-subtle: #9ca3af;
+  --dashboard-text-inverse: #0a0f1e;
+  --dashboard-border: #2a2d35;
+  --dashboard-gold: #e4b853;
+  --dashboard-search-bg: rgba(255, 255, 255, 0.06);
+  --dashboard-status-closed-bg: #2a2d35;
+  --dashboard-status-closed-text: #d1d5db;
+  --dashboard-sidebar-divider: rgba(255, 255, 255, 0.06);
+
+  --semantic-color-text-primary: #e8edf5;
+  --semantic-color-text-secondary: #9ca3af;
+  --semantic-color-text-muted: #6b7b8e;
+  --semantic-color-background-primary: #181b22;
+  --semantic-color-background-secondary: #0f1117;
+  --semantic-color-border-default: #2a2d35;
+  --semantic-color-surface-hover: rgba(232, 237, 245, 0.05);
+
+  --component-card-bg: #181b22;
+  --component-card-border: #2a2d35;
+  --component-card-title-color: #e8edf5;
+  --component-card-body-color: #9ca3af;
+  --component-input-bg: #0f1117;
+  --component-input-border: #2a2d35;
+  --component-input-text: #e8edf5;
+  --component-input-placeholder: #6b7b8e;
+  --component-table-row-bg-odd: #181b22;
+  --component-table-row-bg-even: #0f1117;
+  --component-table-row-text: #e8edf5;
+  --component-table-border: #2a2d35;
+}

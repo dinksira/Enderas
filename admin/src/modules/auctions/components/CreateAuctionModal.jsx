@@ -1,7 +1,7 @@
 import { Button, Input } from '@enderass/shared/ui';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { auctionService, assetService } from '@enderass/shared/services';
+import { auctionService, assetService, organizationService } from '@enderass/shared/services';
 import { useAuthStore } from '@enderass/shared/auth';
 import {
   AUCTION_CATEGORY_KEYS,
@@ -65,6 +65,10 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [organizations, setOrganizations] = useState([]);
+  const [orgsLoading, setOrgsLoading] = useState(false);
+  const [orgsError, setOrgsError] = useState('');
+  const [organizationId, setOrganizationId] = useState('');
   const [imagePreviews, setImagePreviews] = useState([]);
   const [initialAssetApplied, setInitialAssetApplied] = useState(false);
   // New asset creation state
@@ -92,6 +96,10 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
       setErrors({});
       setSubmitError('');
       setSubmitting(false);
+      setOrganizations([]);
+      setOrgsLoading(false);
+      setOrgsError('');
+      setOrganizationId('');
       setInitialAssetApplied(false);
       setImagePreviews((current) => {
         current.forEach((preview) => {
@@ -154,6 +162,39 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
       window.clearTimeout(timer);
     };
   }, [open, assetSearch, initialAssetId, t]);
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    setOrgsLoading(true);
+    setOrgsError('');
+
+    organizationService
+      .listOrganizations({ status: 'active', page: 1, limit: 100 })
+      .then((response) => {
+        if (!cancelled) {
+          setOrganizations(response?.organizations ?? []);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setOrganizations([]);
+          setOrgsError(t('auctions.create.organizationStep.loadFailed'));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setOrgsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, t]);
 
   useEffect(() => {
     return () => {
@@ -586,6 +627,11 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
       ];
 
       const auction = await auctionService.create(payload);
+
+      if (organizationId) {
+        await organizationService.linkAuction(organizationId, auction.id);
+      }
+
       onSuccess(auction);
       onClose();
     } catch (err) {
@@ -603,6 +649,7 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
       const linkedAssetValue = isMultiMode
         ? t('auctions.create.review.multiAssetCount', { count: selectedLots.length })
         : selectedLots[0]?.asset?.title ?? t('auctions.create.review.noAsset');
+      const selectedOrganization = organizations.find((org) => org.id === organizationId);
 
       const rows = [
         {
@@ -616,6 +663,11 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
           label: t('auctions.create.fields.linkedAsset'),
           value: linkedAssetValue,
           step: AUCTION_STEPS.ASSET,
+        },
+        {
+          label: t('auctions.create.fields.organization'),
+          value: selectedOrganization?.organizationName || t('auctions.create.review.noOrganization'),
+          step: AUCTION_STEPS.BASIC,
         },
         { label: t('auctions.create.fields.title'), value: form.title, step: AUCTION_STEPS.BASIC },
         {
@@ -1320,6 +1372,37 @@ export function CreateAuctionModal({ open, onClose, onSuccess, initialAssetId = 
                 {errors.category && (
                   <span className="input-field__error" role="alert">
                     {errors.category}
+                  </span>
+                )}
+              </div>
+
+              <div className="input-field auction-create-modal__full">
+                <label className="input-field__label" htmlFor="auction-organization">
+                  {t('auctions.create.fields.organization')}
+                </label>
+                <select
+                  id="auction-organization"
+                  className="input-field__control auction-create-modal__select"
+                  value={organizationId}
+                  onChange={(event) => setOrganizationId(event.target.value)}
+                  disabled={submitting || orgsLoading || !organizations.length}
+                >
+                  <option value="">{t('auctions.create.placeholders.selectOrganization')}</option>
+                  {organizations.map((org) => (
+                    <option key={org.id} value={org.id}>
+                      {org.organizationName}
+                    </option>
+                  ))}
+                </select>
+                {orgsLoading && (
+                  <span className="kyc-modal__hint">{t('auctions.create.organizationStep.loading')}</span>
+                )}
+                {!orgsLoading && !orgsError && organizations.length === 0 && (
+                  <span className="kyc-modal__hint">{t('auctions.create.organizationStep.noOrganizations')}</span>
+                )}
+                {orgsError && (
+                  <span className="input-field__error" role="alert">
+                    {orgsError}
                   </span>
                 )}
               </div>

@@ -11,7 +11,9 @@ import { UserManagementView } from '../modules/users/views/UserManagementView.js
 import { UserProfileView } from '../modules/users/views/user-profile-view.jsx';
 import { StaffManagementView } from '../modules/staff/views/StaffManagementView.jsx';
 import { OrganizationManagementView } from '../modules/organizations/views/OrganizationManagementView.jsx';
-import { SettingsView } from '../modules/setting/views/SettingsView.jsx';
+import { SettingsView } from '../modules/setting/views/SettingsView.jsx';
+
+import { AboutView } from '../modules/about/views/AboutView.jsx';
 import { AuditTrailView } from '../modules/audit/views/AuditTrailView.jsx';
 import { AccessDeniedView } from '../views/AccessDeniedView.jsx';
 import { DashboardEntry } from '../modules/role-workspaces/DashboardEntry.jsx';
@@ -109,7 +111,8 @@ export function AppRoutes() {
         <Route path="cpo" element={guard(MODULES.CPO, ACTIONS.READ, <CpoManagementView />)} />
         <Route path="reports" element={guard(MODULES.DASHBOARD, ACTIONS.EXPORT, <ReportsAnalyticsView />)} />
         <Route path="notifications" element={guard(MODULES.NOTIFICATIONS, ACTIONS.READ, <NotificationCenterView />)} />
-        <Route path="profile" element={guard(MODULES.USERS, ACTIONS.READ, <UserProfileView />)} />
+        <Route path="profile" element={guard(MODULES.USERS, ACTIONS.READ, <UserProfileView />)} />
+        <Route path="about" element={guard(MODULES.USERS, ACTIONS.READ, <AboutView />)} />
       </Route>
 
       <Route path="/auctions" element={<Navigate to={ROUTES.APP_AUCTIONS} replace />} />

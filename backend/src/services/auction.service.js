@@ -105,6 +105,8 @@ function serializeLot(lot) {
     sortOrder: plain.sort_order,
     lotLabel: plain.lot_label,
     outcomeStatus: plain.outcome_status,
+    tags: plain.tags ?? null,
+    tagList: plain.tags ?? null,
     assetTitle: asset?.title ?? null,
     assetType: asset?.asset_type ?? null,
     assetLocation: asset?.location ?? null,
@@ -1688,4 +1690,5 @@ export const auctionService = Object.freeze({
   isUserAssetOwnerOfAuction,
 });
 
+export { serializeLot };
 export default auctionService;
