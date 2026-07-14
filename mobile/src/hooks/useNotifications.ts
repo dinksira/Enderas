@@ -10,6 +10,8 @@ import {
 } from '@/services/notificationApi';
 import type { AppNotification, NotificationKind } from '@/types/notification';
 
+const UNREAD_COUNT_REFRESH_MS = 60_000;
+
 function formatRelativeTimestamp(iso?: string | null): string {
   if (!iso) return '';
   const date = new Date(iso);
@@ -102,6 +104,20 @@ export function useNotifications(): UseNotificationsResult {
     }
   }, [isAuthenticated]);
 
+  const refreshUnreadCount = useCallback(async () => {
+    if (!isAuthenticated) {
+      setUnreadCount(0);
+      return;
+    }
+
+    try {
+      const count = await getUnreadNotificationCount();
+      setUnreadCount(count);
+    } catch {
+      // Keep the last badge value; the dropdown refresh surfaces full errors.
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       void refresh();
@@ -109,6 +125,16 @@ export function useNotifications(): UseNotificationsResult {
 
     return () => clearTimeout(timer);
   }, [refresh]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+
+    const interval = setInterval(() => {
+      void refreshUnreadCount();
+    }, UNREAD_COUNT_REFRESH_MS);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, refreshUnreadCount]);
 
   const markNotificationRead = useCallback(
     async (id: string) => {

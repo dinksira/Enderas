@@ -1,19 +1,9 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
-import {
-  Dimensions,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useEffect } from 'react';
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { ScreenShell } from '@/components/shell/ScreenShell';
 import { GlassCard } from '@/components/shell/GlassCard';
@@ -23,6 +13,7 @@ import { assetStatusTone, OWNERSHIP_DOC_LABEL_KEYS } from '@/lib/assetFormUtils'
 import { formatEtbAmount, getCategoryTheme } from '@/lib/auctionUtils';
 import { useTheme } from '@/lib/appStore';
 import { resolveMediaUrl } from '@/lib/media-utils';
+import { ImageGallery } from '@/components/shared/ImageGallery';
 import { Typography, Spacing, Radii } from '@/theme';
 import { toneToStatus } from '@/theme/statusTones';
 
@@ -35,23 +26,17 @@ export default function AssetDetailScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { asset, loading, error, refresh } = useAssetDetail(id);
-  const [activeImage, setActiveImage] = useState(0);
-  const galleryRef = useRef<ScrollView>(null);
 
-  const imageUrls = useMemo(
-    () => (asset?.imageUrls ?? []).map((url) => resolveMediaUrl(url)).filter(Boolean) as string[],
-    [asset?.imageUrls],
-  );
-
-  const handleGalleryScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(e.nativeEvent.contentOffset.x / HERO_WIDTH);
-    setActiveImage(index);
-  }, []);
-
-  const scrollToImage = useCallback((index: number) => {
-    setActiveImage(index);
-    galleryRef.current?.scrollTo({ x: index * HERO_WIDTH, animated: true });
-  }, []);
+  useEffect(() => {
+    if (!asset?.imageUrls?.length) return;
+    const urls = asset.imageUrls
+      .slice(0, 4)
+      .map((url) => resolveMediaUrl(url))
+      .filter(Boolean) as string[];
+    if (urls.length) {
+      void Image.prefetch(urls);
+    }
+  }, [asset?.imageUrls]);
 
   if (loading) {
     return (
@@ -121,74 +106,19 @@ export default function AssetDetailScreen() {
       showBack
       onBack={() => router.back()}
       bottomPadding={40}
+      noFade
     >
       {/* Image gallery hero */}
       <View style={styles.heroWrap}>
-        {imageUrls.length > 0 ? (
-          <>
-            <ScrollView
-              ref={galleryRef}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={handleGalleryScroll}
-              decelerationRate="fast"
-              snapToInterval={HERO_WIDTH}
-              snapToAlignment="start"
-              style={styles.heroScroll}
-            >
-              {imageUrls.map((uri, index) => (
-                <View key={`${uri}-${index}`} style={[styles.heroSlide, { width: HERO_WIDTH }]}>
-                  <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-                  <LinearGradient
-                    colors={['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.65)']}
-                    style={StyleSheet.absoluteFill}
-                  />
-                </View>
-              ))}
-            </ScrollView>
-            {imageUrls.length > 1 ? (
-              <View style={styles.dotsRow}>
-                {imageUrls.map((_, index) => (
-                  <Pressable
-                    key={index}
-                    onPress={() => scrollToImage(index)}
-                    hitSlop={6}
-                    style={[
-                      styles.dot,
-                      {
-                        backgroundColor:
-                          index === activeImage ? colors.goldBright : 'rgba(255,250,240,0.35)',
-                        width: index === activeImage ? 18 : 6,
-                      },
-                    ]}
-                  />
-                ))}
-              </View>
-            ) : (
-              <View style={styles.imageCountBadge}>
-                <MaterialCommunityIcons name="image" size={12} color={colors.cream} />
-                <Text style={[Typography.microCaps, { color: colors.cream, fontSize: 10 }]}>
-                  {t('assets.detail.photoCount', { count: 1 })}
-                </Text>
-              </View>
-            )}
-          </>
-        ) : (
-          <View style={styles.heroFallback}>
-            <LinearGradient
-              colors={theme.colors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <LinearGradient
-              colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.6)']}
-              style={StyleSheet.absoluteFill}
-            />
-            <MaterialCommunityIcons name={theme.icon} size={56} color="rgba(255,250,240,0.35)" />
-          </View>
-        )}
+        <ImageGallery
+          imageUrls={asset.imageUrls}
+          width={HERO_WIDTH}
+          height={HERO_HEIGHT}
+          category={asset.assetType}
+          mode="manual"
+          showThumbnails={asset.imageUrls.length > 1}
+          borderRadius={Radii.xl}
+        />
 
         <View style={styles.heroOverlay}>
           <View style={styles.categoryChip}>
@@ -197,43 +127,12 @@ export default function AssetDetailScreen() {
               {categoryLabel}
             </Text>
           </View>
-          <View
-            style={[
-              styles.statusChip,
-              { backgroundColor: statusColors.soft, borderColor: statusColors.border },
-            ]}
-          >
+          <View style={styles.statusChip}>
             <View style={[styles.statusDot, { backgroundColor: statusColors.fg }]} />
-            <Text style={[Typography.microCaps, { color: statusColors.fg }]}>{statusLabel}</Text>
+            <Text style={styles.statusLabel}>{statusLabel}</Text>
           </View>
         </View>
       </View>
-
-      {/* Thumbnail strip */}
-      {imageUrls.length > 1 ? (
-        <GlassCard padding={Spacing.sm} style={styles.thumbCard} noAnimation>
-          <Text style={[styles.sectionEyebrow, { color: colors.goldChampagne }]}>
-            {t('assets.detail.allPhotos')}
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbRow}>
-            {imageUrls.map((uri, index) => (
-              <Pressable
-                key={`thumb-${index}`}
-                onPress={() => scrollToImage(index)}
-                style={[
-                  styles.thumb,
-                  {
-                    borderColor: index === activeImage ? colors.goldBright : colors.goldBorder,
-                    borderWidth: index === activeImage ? 2 : 1,
-                  },
-                ]}
-              >
-                <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-              </Pressable>
-            ))}
-          </ScrollView>
-        </GlassCard>
-      ) : null}
 
       {/* Key facts */}
       <GlassCard padding={Spacing.sm2} style={styles.sectionGap}>
@@ -470,23 +369,8 @@ function formatFileSize(bytes: number): string {
 
 const styles = StyleSheet.create({
   heroWrap: {
-    height: HERO_HEIGHT,
-    borderRadius: Radii.xl,
-    overflow: 'hidden',
     marginBottom: Spacing.sm2,
     position: 'relative',
-  },
-  heroScroll: {
-    flex: 1,
-  },
-  heroSlide: {
-    height: HERO_HEIGHT,
-    position: 'relative',
-  },
-  heroFallback: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   heroOverlay: {
     position: 'absolute',
@@ -505,9 +389,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xs,
     paddingVertical: Spacing.xxs,
     borderRadius: Radii.full,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.72)',
     borderWidth: 1,
-    borderColor: 'rgba(255,250,240,0.3)',
+    borderColor: 'rgba(255,250,240,0.22)',
     maxWidth: 140,
   },
   categoryChipText: {
@@ -522,54 +406,20 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xxs,
     borderRadius: Radii.full,
     borderWidth: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    borderColor: 'rgba(255,250,240,0.24)',
+  },
+  statusLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: '#FFFAF0',
   },
   statusDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-  },
-  dotsRow: {
-    position: 'absolute',
-    bottom: Spacing.sm,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
-    zIndex: 3,
-  },
-  dot: {
-    height: 6,
-    borderRadius: 3,
-  },
-  imageCountBadge: {
-    position: 'absolute',
-    bottom: Spacing.sm,
-    right: Spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: Spacing.xxs,
-    borderRadius: Radii.full,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,250,240,0.25)',
-    zIndex: 3,
-  },
-  thumbCard: {
-    marginBottom: Spacing.sm2,
-  },
-  thumbRow: {
-    gap: Spacing.xs,
-    paddingTop: Spacing.xs,
-  },
-  thumb: {
-    width: 72,
-    height: 72,
-    borderRadius: Radii.sm,
-    overflow: 'hidden',
   },
   sectionGap: {
     marginBottom: Spacing.sm2,

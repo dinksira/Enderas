@@ -1,3 +1,4 @@
+import { ENV } from '../api/env.js';
 import { api } from '../api/api.js';
 import { formatMobileNumber, isValidEthiopianMobile } from '../utils/mobile-utils.js';
 
@@ -9,6 +10,7 @@ const AUTH_ENDPOINTS = Object.freeze({
   FORGOT_PASSWORD: '/auth/forgot-password',
   VERIFY_RESET_OTP: '/auth/verify-reset-otp',
   RESET_PASSWORD: '/auth/reset-password',
+  ME: `${ENV.apiV1Prefix}/auth/me`,
 });
 
 function normalizeAuthMobile(value) {
@@ -101,6 +103,14 @@ export async function resetPassword(payload) {
   });
 }
 
+export async function getMe() {
+  return api.get(AUTH_ENDPOINTS.ME);
+}
+
+export async function updateMyProfile(payload) {
+  return api.patch(AUTH_ENDPOINTS.ME, payload);
+}
+
 export const authApi = Object.freeze({
   login,
   register,
@@ -109,6 +119,8 @@ export const authApi = Object.freeze({
   forgotPassword,
   verifyResetOtp,
   resetPassword,
+  getMe,
+  updateMyProfile,
 });
 
 export default authApi;

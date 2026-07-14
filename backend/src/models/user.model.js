@@ -54,6 +54,10 @@ export const User = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    profile_picture: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
     preferred_language: {
       type: DataTypes.ENUM('en', 'am'),
       allowNull: false,

@@ -1,5 +1,5 @@
 /**
- * Bidder E2E checkpoint script — mirrors manual browser flow for 0987654321.
+ * Bidder E2E checkpoint script — mirrors manual browser flow for 0998765432.
  * Run: node scripts/run-bidder-e2e.mjs
  */
 import '../src/config/load-env.js';
@@ -8,7 +8,7 @@ import { sequelize } from '../src/config/db.config.js';
 const BASE = 'http://localhost:3000/api';
 
 const USERS = {
-  bidder: { mobile: '0987654321', password: 'pass2' },
+  bidder: { mobile: '0998765432', password: 'pass3' },
   admin: { mobile: '0912345678', password: 'pass1' },
   cso: { mobile: '0955555555', password: 'pass1' },
   finance: { mobile: '0944444444', password: 'pass1' },

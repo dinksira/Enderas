@@ -93,6 +93,8 @@ export const API_ACCESS_MAP = Object.freeze({
   'POST /api/v1/evaluations/:id/reschedule': { module: MODULES.EVALUATIONS, action: ACTIONS.UPDATE },
 
   // Auctions
+  'GET /api/v1/auctions/my-owned': { module: MODULES.ASSETS, action: ACTIONS.READ },
+  'GET /api/v1/auctions/browse/:id/owner-overview': { module: MODULES.ASSETS, action: ACTIONS.READ },
   'GET /api/v1/auctions/browse': { module: MODULES.BIDS, action: ACTIONS.READ },
   'GET /api/v1/auctions/browse/:id/participation': { module: MODULES.BIDS, action: ACTIONS.READ },
   'GET /api/v1/auctions/browse/:id': { module: MODULES.BIDS, action: ACTIONS.READ },
@@ -198,6 +200,7 @@ export const API_ACCESS_MAP = Object.freeze({
 
   // Auth session (authenticated, no module gate)
   'GET /api/v1/auth/me': { module: null, action: null },
+  'PATCH /api/v1/auth/me': { module: null, action: null },
 });
 
 /**

@@ -1,8 +1,11 @@
 import { publicApiRequest, ENV } from '@enderass/shared/api';
 
 const TRACK_STORAGE_KEY_PREFIX = 'track_token_';
+<<<<<<< HEAD
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 2000;
+=======
+>>>>>>> magersoftware/main
 
 function getStorageKey(token) {
   return `${TRACK_STORAGE_KEY_PREFIX}${token}`;
@@ -32,6 +35,7 @@ function clearStoredToken(token) {
   }
 }
 
+<<<<<<< HEAD
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -50,6 +54,8 @@ async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
   throw lastErr;
 }
 
+=======
+>>>>>>> magersoftware/main
 export const trackingService = {
   async authenticate(token, password) {
     const data = await publicApiRequest(`/track/${token}/authenticate`, {
@@ -64,7 +70,11 @@ export const trackingService = {
     const jwt = getStoredToken(token);
     if (!jwt) throw new Error('Not authenticated');
 
+<<<<<<< HEAD
     const response = await fetchWithRetry(
+=======
+    const response = await fetch(
+>>>>>>> magersoftware/main
       `${ENV.apiBaseUrl}/track/${token}/data`,
       {
         headers: {

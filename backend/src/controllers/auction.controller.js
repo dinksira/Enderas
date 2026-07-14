@@ -59,6 +59,32 @@ export async function getAuctionParticipation(req, res, next) {
   }
 }
 
+export async function listOwnedAuctions(req, res, next) {
+  try {
+    const userId = req.user?.id ?? req.auth?.userId ?? null;
+    if (!userId) {
+      return next(new AppError('Authentication required', 401, 'UNAUTHORIZED'));
+    }
+    const result = await auctionService.listOwnedAuctions(userId);
+    return sendSuccess(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function getAuctionOwnerOverview(req, res, next) {
+  try {
+    const userId = req.user?.id ?? req.auth?.userId ?? null;
+    if (!userId) {
+      return next(new AppError('Authentication required', 401, 'UNAUTHORIZED'));
+    }
+    const overview = await auctionService.getAuctionOwnerOverview(req.params.id, userId);
+    return sendSuccess(res, { overview });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export async function getAuctionById(req, res, next) {
   try {
     const auction = await auctionService.getAuctionById(req.params.id);
@@ -163,9 +189,11 @@ export const auctionController = Object.freeze({
   createAuction,
   listAuctions,
   listBrowseAuctions,
+  listOwnedAuctions,
   getAuctionById,
   getBrowseAuctionById,
   getAuctionParticipation,
+  getAuctionOwnerOverview,
   updateAuction,
   publishAuction,
   suspendAuction,

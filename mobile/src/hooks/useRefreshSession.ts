@@ -29,10 +29,15 @@ export function useRefreshSession(): UseRefreshSessionResult {
           userType: me.userType,
           staffId: me.staffId,
           displayName: me.identity.displayName,
+          firstName: me.identity.firstName ?? null,
+          lastName: me.identity.lastName ?? null,
+          organizationName: me.identity.organizationName ?? null,
           mobileNumber: me.identity.mobileNumber,
           email: me.identity.email,
           isStaff: me.identity.isStaff,
           status: me.status,
+          preferredLanguage: me.identity.preferredLanguage ?? null,
+          profilePicture: me.identity.profilePicture ?? null,
         },
       });
     } catch {

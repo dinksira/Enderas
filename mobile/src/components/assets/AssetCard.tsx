@@ -54,7 +54,13 @@ function AssetCardImpl({ asset, onPress }: AssetCardProps) {
       >
         <View style={styles.thumbWrap}>
           {thumbnailUri ? (
-            <Image source={{ uri: thumbnailUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <Image
+              source={{ uri: thumbnailUri }}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={0}
+            />
           ) : (
             <LinearGradient
               colors={theme.colors}

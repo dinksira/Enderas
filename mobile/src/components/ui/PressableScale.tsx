@@ -1,5 +1,6 @@
-import { useEffect, type ReactNode } from 'react';
+import { useCallback, useEffect, type ReactNode } from 'react';
 import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -112,12 +113,47 @@ export function ListItemEntrance({
   useEffect(() => {
     // Cap the stagger so a 20-item list doesn't take 800ms to finish.
     const cappedIndex = Math.min(index, 8);
+    const totalDelay = cappedIndex * staggerMs;
     progress.value = withDelay(
-      cappedIndex * staggerMs,
+      totalDelay,
       withTiming(1, { duration: 280, easing: Easing.out(Easing.cubic) }),
     );
+
+    // Safety net: Reanimated entrance can stall at opacity 0 while the tab is
+    // frozen (cold start, splash handoff, etc.) leaving items touchable but invisible.
+    const safety = setTimeout(() => {
+      if (progress.value < 1) {
+        progress.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.cubic) });
+      }
+    }, totalDelay + 450);
+
+    return () => clearTimeout(safety);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+
+      const recover = () => {
+        if (!cancelled && progress.value < 1) {
+          progress.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.cubic) });
+        }
+      };
+
+      // Recover immediately when returning to a screen with a stalled animation.
+      const raf = requestAnimationFrame(recover);
+
+      // Also recover on first paint if the mount animation never started.
+      const safety = setTimeout(recover, Math.min(index, 8) * staggerMs + 450);
+
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(raf);
+        clearTimeout(safety);
+      };
+    }, [index, staggerMs, progress]),
+  );
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: progress.value,

@@ -20,6 +20,7 @@ import { AppHeader } from '@/components/shell/AppHeader';
 import { ListItemEntrance, Skeleton } from '@/components/ui';
 import { useTheme } from '@/lib/appStore';
 import { useBrowseAuctions } from '@/hooks/useBrowseAuctions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { Typography, Spacing, Radii } from '@/theme';
 import type { AuctionStatusFilter, BrowseAuction } from '@/types/auction';
 
@@ -76,11 +77,12 @@ export default function DashboardScreen() {
   const [statusFilter, setStatusFilter] = useState<AuctionStatusFilter>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 350);
 
   const { records, loading, refreshing, error, refresh } = useBrowseAuctions({
     status: statusFilter,
     category: categoryFilter,
-    search,
+    search: debouncedSearch,
   });
 
   // Responsive column count — 2 on phones, 3 on larger screens.
@@ -141,7 +143,13 @@ export default function DashboardScreen() {
 
   const renderItem = useCallback(
     ({ item, index }: { item: BrowseAuction; index: number }) => (
-      <ListItemEntrance index={index} style={styles.gridCell}>
+      <ListItemEntrance
+        index={index}
+        // Cap each cell at 1/numColumns of the row so a lone card (e.g. a
+        // single filtered result, or the odd last item in a row) stays
+        // grid-sized and left-aligned instead of stretching full width.
+        style={[styles.gridCell, numColumns > 1 && { maxWidth: `${100 / numColumns}%` }]}
+      >
         <BrowseAuctionCard
           auction={item}
           onPress={handleCardPress(item.id)}
@@ -149,7 +157,7 @@ export default function DashboardScreen() {
         />
       </ListItemEntrance>
     ),
-    [handleCardPress],
+    [handleCardPress, numColumns],
   );
 
   const ListEmptyComponent = loading ? (

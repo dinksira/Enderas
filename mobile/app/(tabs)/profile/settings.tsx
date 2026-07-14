@@ -1,18 +1,22 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, Modal, TouchableWithoutFeedback } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import { useAppStore, useTheme } from '@/lib/appStore';
+import { useAuthStore } from '@/lib/authStore';
 import { useRefreshSession } from '@/hooks/useRefreshSession';
+import { forgotPassword } from '@/services/authApi';
+import { AuthSuccessModal } from '@/components/auth';
+import { Sheet } from '@/components/sheet';
+import { maskMobileNumber } from '@/utils/mobile-utils';
 
 import { type ThemePreference } from '@/theme';
-import { glassElevation } from '@/lib/glassStyles';
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from '@/lib/i18n';
 import { ScreenShell } from '@/components/shell/ScreenShell';
 import { GlassCard } from '@/components/shell/GlassCard';
-import { Typography, Spacing } from '@/theme';
+import { Typography, Spacing, Radii } from '@/theme';
 
 function Row({
   icon,
@@ -74,13 +78,72 @@ function Row({
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
+  const { passwordChanged } = useLocalSearchParams<{ passwordChanged?: string }>();
   const themeMode = useAppStore((s) => s.themeMode);
   const setThemeMode = useAppStore((s) => s.setThemeMode);
   const language = useAppStore((s) => s.language);
   const setLanguage = useAppStore((s) => s.setLanguage);
   const [showLangModal, setShowLangModal] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [changePasswordError, setChangePasswordError] = useState<string | null>(null);
+  const [showOtpSentModal, setShowOtpSentModal] = useState(false);
+  const [showPasswordChangedBanner, setShowPasswordChangedBanner] = useState(false);
+  const passwordChangedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const passwordChangedShownRef = useRef(false);
   const { refreshing, refresh } = useRefreshSession();
+  const userMobile = useAuthStore((s) => s.user?.mobileNumber);
+  const setPendingPasswordReset = useAuthStore((s) => s.setPendingPasswordReset);
+
+  useEffect(() => {
+    if (passwordChanged !== '1' || passwordChangedShownRef.current) return;
+
+    passwordChangedShownRef.current = true;
+    setShowPasswordChangedBanner(true);
+
+    if (passwordChangedTimeoutRef.current) {
+      clearTimeout(passwordChangedTimeoutRef.current);
+    }
+    passwordChangedTimeoutRef.current = setTimeout(() => {
+      setShowPasswordChangedBanner(false);
+    }, 5000);
+  }, [passwordChanged]);
+
+  useEffect(() => {
+    return () => {
+      if (passwordChangedTimeoutRef.current) {
+        clearTimeout(passwordChangedTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleChangePassword = async () => {
+    if (changingPassword) return;
+
+    setChangePasswordError(null);
+
+    if (!userMobile) {
+      router.push('/(auth)/forgot-password');
+      return;
+    }
+
+    setChangingPassword(true);
+    setPendingPasswordReset(userMobile, 'settings');
+
+    try {
+      await forgotPassword({ mobileNumber: userMobile, phoneNumber: userMobile });
+      setShowOtpSentModal(true);
+    } catch {
+      setChangePasswordError(t('auth.errors.resetRequestFailed'));
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleOtpSentContinue = () => {
+    setShowOtpSentModal(false);
+    router.push('/(auth)/verify-reset-otp');
+  };
 
   const THEME_OPTIONS: {
     value: ThemePreference;
@@ -101,6 +164,37 @@ export default function SettingsScreen() {
       refreshing={refreshing}
       onRefresh={refresh}
     >
+      {showPasswordChangedBanner ? (
+        <View
+          style={[
+            styles.successBanner,
+            {
+              backgroundColor: colors.success.soft,
+              borderColor: colors.success.border,
+            },
+          ]}
+        >
+          <MaterialCommunityIcons name="check-circle" size={16} color={colors.success.fg} />
+          <Text style={[styles.successBannerText, { color: colors.success.fg }]}>
+            {t('settings.account.passwordChanged')}
+          </Text>
+        </View>
+      ) : null}
+
+      {changePasswordError ? (
+        <View
+          style={[
+            styles.errorBanner,
+            {
+              backgroundColor: colors.danger.soft,
+              borderColor: colors.danger.border,
+            },
+          ]}
+        >
+          <Text style={[styles.errorBannerText, { color: colors.danger.fg }]}>{changePasswordError}</Text>
+        </View>
+      ) : null}
+
       <View style={styles.section}>
         <GlassCard padding={4}>
           <View style={[styles.inlineSectionHeader, { borderBottomColor: colors.divider }]}>
@@ -178,62 +272,72 @@ export default function SettingsScreen() {
             icon="lock-reset"
             label={t('settings.account.changePassword')}
             description={t('settings.account.changePasswordDesc')}
-            onPress={() => {}}
+            onPress={handleChangePassword}
+            right={
+              changingPassword ? (
+                <ActivityIndicator size="small" color={colors.goldBright} />
+              ) : undefined
+            }
             isLast
           />
         </GlassCard>
       </View>
 
-      <Modal visible={showLangModal} transparent animationType="fade" onRequestClose={() => setShowLangModal(false)}>
-        <TouchableWithoutFeedback onPress={() => setShowLangModal(false)}>
-          <View style={[styles.modalOverlay, { backgroundColor: colors.scrim }]}>
-            <TouchableWithoutFeedback>
-              <View
-                style={[
-                  styles.langModal,
-                  {
-                    backgroundColor: colors.baseElevated,
-                    borderColor: colors.goldBorder,
-                    ...glassElevation(isDark, 'floating'),
-                  },
-                ]}
-              >
-                <Text style={[Typography.eyebrow, styles.langModalTitle, { color: colors.goldBright, letterSpacing: 2 }]}>
-                  {t('settings.language.label').toUpperCase()}
-                </Text>
-                {SUPPORTED_LANGUAGES.map((lang) => {
-                  const active = lang === language;
-                  return (
-                    <Pressable
-                      key={lang}
-                      onPress={() => {
-                        setLanguage(lang);
-                        setShowLangModal(false);
-                      }}
-                      style={({ pressed }) => [
-                        styles.langRow,
-                        {
-                          backgroundColor: active ? colors.glassFillActive : 'transparent',
-                          opacity: pressed ? 0.7 : 1,
-                        },
-                      ]}
-                    >
-                      <Text style={[Typography.bodyMedium, { color: active ? colors.goldBright : colors.cream, fontWeight: '600' }]}>
-                        {LANGUAGE_LABELS[lang]}
-                      </Text>
-                      {active ? (
-                        <MaterialCommunityIcons name="check-circle" size={18} color={colors.goldBright} />
-                      ) : (
-                        <MaterialCommunityIcons name="circle-outline" size={18} color={colors.textMuted} />
-                      )}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+      <Sheet
+        visible={showLangModal}
+        snapPoints={['50%']}
+        onDismiss={() => setShowLangModal(false)}
+        showCloseButton
+      >
+        <View style={styles.langSheetHeader}>
+          <MaterialCommunityIcons name="translate" size={20} color={colors.goldBright} />
+          <Text style={[Typography.h1, { color: colors.cream, flex: 1 }]}>
+            {t('settings.language.label')}
+          </Text>
+        </View>
+        <Text style={[Typography.caption, { color: colors.textSecondary, marginBottom: Spacing.md }]}>
+          {t('settings.language.description')}
+        </Text>
+        {SUPPORTED_LANGUAGES.map((lang) => {
+          const active = lang === language;
+          return (
+            <Pressable
+              key={lang}
+              onPress={() => {
+                setLanguage(lang);
+                setShowLangModal(false);
+              }}
+              style={({ pressed }) => [
+                styles.langRow,
+                {
+                  backgroundColor: active ? colors.glassFillActive : colors.glassFill,
+                  borderColor: active ? colors.goldBorderActive : colors.goldBorder,
+                  opacity: pressed ? 0.7 : 1,
+                },
+              ]}
+            >
+              <Text style={[Typography.bodyMedium, { color: active ? colors.goldBright : colors.cream, fontWeight: '600' }]}>
+                {LANGUAGE_LABELS[lang]}
+              </Text>
+              {active ? (
+                <MaterialCommunityIcons name="check-circle" size={18} color={colors.goldBright} />
+              ) : (
+                <MaterialCommunityIcons name="circle-outline" size={18} color={colors.textMuted} />
+              )}
+            </Pressable>
+          );
+        })}
+      </Sheet>
+
+      {userMobile ? (
+        <AuthSuccessModal
+          visible={showOtpSentModal}
+          title={t('auth.otpSentTitle')}
+          message={t('auth.otpSentBody', { mobileNumber: maskMobileNumber(userMobile) })}
+          ctaLabel={t('common.continue')}
+          onContinue={handleOtpSentContinue}
+        />
+      ) : null}
     </ScreenShell>
   );
 }
@@ -241,6 +345,34 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   section: {
     marginBottom: 18,
+  },
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  successBannerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  errorBanner: {
+    marginBottom: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  errorBannerText: {
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   row: {
     flexDirection: 'row',
@@ -324,36 +456,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1.5,
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // Scrim color is bound at runtime to colors.scrim (theme-aware).
-    padding: Spacing.xl2,
-  },
-  langModal: {
-    width: '100%',
-    maxWidth: 320,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    overflow: 'hidden',
-  },
-  langModalTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 2,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
   langRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm2,
+    borderRadius: Radii.input,
+    borderWidth: 1,
+    marginBottom: Spacing.xs,
   },
-  langRowText: {
-    fontSize: 14,
-    fontWeight: '600',
+  langSheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+    paddingRight: Spacing.xxl,
   },
 });

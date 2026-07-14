@@ -8,27 +8,70 @@ export type ParticipationStatus =
   | 'ready_to_bid'
   | 'bidding_waiting'
   | 'bidding_closed'
-  | 'bid_submitted';
+  | 'bid_submitted'
+  | 'owner_monitoring';
 
 export type ReviewStatus = 'pending' | 'approved' | 'rejected';
 
-export interface AuctionLotApi {
+export interface AuctionAssetApi {
   id: string;
-  auctionId: string;
+  auctionId?: string;
+  lotId?: string | null;
+  lotTitle?: string;
   assetId?: string;
   reservePrice: number;
-  sortOrder: number;
-  lotLabel: string;
+  sortOrder?: number;
+  lotLabel?: string;
   assetTitle?: string | null;
   assetType?: string | null;
   assetLocation?: string | null;
   imageUrls?: string[];
+  assetImages?: string[];
+  tags?: string[];
+}
+
+export interface AuctionLotApi {
+  id: string;
+  title: string;
+  description?: string | null;
+  sortOrder: number;
+  assets: AuctionAssetApi[];
 }
 
 export interface AuctionDocumentApi {
   name: string;
   url: string;
   size?: number;
+}
+
+export interface OwnerLotOverviewApi {
+  id: string;
+  lotId?: string | null;
+  lotTitle?: string | null;
+  assetId?: string;
+  assetTitle?: string | null;
+  assetType?: string | null;
+  assetLocation?: string | null;
+  reservePrice: number;
+  bidCount: number;
+  imageUrls?: string[];
+  tags?: string[];
+}
+
+export interface AuctionOwnerOverviewApi {
+  auctionId: string;
+  isAuctionOwner: boolean;
+  summary: {
+    assetCount: number;
+    lotCount: number;
+    totalBidCount: number;
+    documentFee: number;
+    reservePrice: number;
+    totalReservePrice?: number | null;
+  };
+  lots: OwnerLotOverviewApi[];
+  documents: AuctionDocumentApi[];
+  auction?: BrowseAuctionApi;
 }
 
 export interface BrowseAuctionApi {
@@ -48,8 +91,11 @@ export interface BrowseAuctionApi {
   endingDate?: string;
   lots?: AuctionLotApi[];
   lotCount?: number;
+  assetCount?: number;
   documents?: AuctionDocumentApi[];
   documentAccess?: boolean;
+  isAuctionOwner?: boolean;
+  ownerId?: string | null;
   myParticipation?: {
     participationStatus: ParticipationStatus;
     isRegisteredBidder?: boolean;
@@ -84,7 +130,16 @@ export interface AuctionParticipationApi {
   auctionId: string;
   participationStatus: ParticipationStatus;
   isRegisteredBidder: boolean;
+  isAuctionOwner?: boolean;
   isMultiLot: boolean;
+  ownerOverview?: {
+    lots: OwnerLotOverviewApi[];
+    totalBidCount: number;
+    documents: AuctionDocumentApi[];
+    documentFee: number;
+    reservePrice: number;
+    totalReservePrice?: number | null;
+  };
   requiredCpoAmountPreview?: number | null;
   payment: {
     id: string;
@@ -105,7 +160,7 @@ export interface AuctionParticipationApi {
   } | null;
   bids: ParticipationBidApi[];
   bidDrafts: BidDraftApi[];
-  lotParticipation?: (AuctionLotApi & {
+  lotParticipation?: (AuctionAssetApi & {
     selected?: boolean;
     bid?: ParticipationBidApi | null;
     canPlaceBid?: boolean;
@@ -123,6 +178,8 @@ export interface AuctionParticipationApi {
     biddingWindowStatus?: string;
     paymentPending: boolean;
     cpoPending: boolean;
+    isAuctionOwner?: boolean;
+    biddingBlockedReason?: string | null;
   };
   flags: {
     paymentApproved: boolean;
@@ -132,6 +189,7 @@ export interface AuctionParticipationApi {
     hasBid: boolean;
     allBidsSubmitted: boolean;
     pendingLotCount: number;
+    isAuctionOwner?: boolean;
   };
 }
 

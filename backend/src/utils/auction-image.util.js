@@ -60,11 +60,7 @@ export function normalizePublicImageUrl(url) {
   }
 
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-    try {
-      return new URL(trimmed).pathname;
-    } catch {
-      return trimmed;
-    }
+    return trimmed;
   }
 
   if (trimmed.startsWith('/api/uploads/')) {

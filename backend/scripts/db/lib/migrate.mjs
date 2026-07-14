@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sequelize } from '../../../src/config/db.config.js';
 
 const backendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -34,7 +35,26 @@ export function undoAllMigrations() {
   runSequelizeCli(['db:migrate:undo:all']);
 }
 
-export function resetDatabase() {
-  undoAllMigrations();
+async function dropAllTables() {
+  const queryInterface = sequelize.getQueryInterface();
+  await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+  try {
+    const tableNames = await queryInterface.showAllTables();
+    for (const tableName of tableNames) {
+      const normalized = typeof tableName === 'string'
+        ? tableName
+        : tableName?.tableName ?? tableName?.table_name ?? null;
+      if (!normalized) {
+        continue;
+      }
+      await queryInterface.dropTable(normalized);
+    }
+  } finally {
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+  }
+}
+
+export async function resetDatabase() {
+  await dropAllTables();
   runMigrations();
 }

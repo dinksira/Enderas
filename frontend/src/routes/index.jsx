@@ -111,11 +111,15 @@ export function AppRoutes() {
         <Route path="reports" element={<Navigate to="/app/access-denied" replace />} />
         <Route path="notifications" element={guard(MODULES.NOTIFICATIONS, ACTIONS.READ, <NotificationCenterView />)} />
         <Route path="org-portal" element={<OrganizationPortalView />} />
+<<<<<<< HEAD
         <Route path="profile" element={
           <ProtectedRoute>
             <UserProfileView />
           </ProtectedRoute>
         } />
+=======
+        <Route path="profile" element={guard(MODULES.USERS, ACTIONS.READ, <UserProfileView />)} />
+>>>>>>> magersoftware/main
       </Route>
 
       {/* Legacy redirects */}

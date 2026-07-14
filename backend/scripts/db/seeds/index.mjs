@@ -57,7 +57,8 @@ export function printSeedCredentials(mode, logger = console) {
 
   logger.log('\n[credentials] test accounts:');
   logger.log('  Super Admin (dev)     0912345678 / pass1');
-  logger.log('  Bidder                0987654321 / pass2');
+  logger.log('  Test Owner            0987654321 / pass2');
+  logger.log('  Test Bidder           0998765432 / pass3');
   logger.log('  Auction Manager       0922222222 / pass1');
   logger.log('  Evaluation Officer    0933333333 / pass1');
   logger.log('  Finance Officer       0944444444 / pass1');

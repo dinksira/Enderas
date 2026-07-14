@@ -9,6 +9,7 @@ import {
 import { useTheme } from '@/lib/appStore';
 import { useKeyboardToolbarTheme } from '@/lib/keyboardToolbarTheme';
 import { Spacing, Typography } from '@/theme';
+import { Duration } from '@/theme/motion';
 import { AppHeader } from './AppHeader';
 
 interface ScreenShellProps {
@@ -38,6 +39,10 @@ interface ScreenShellProps {
   /** Pull-to-refresh state for scrollable shell screens. */
   refreshing?: boolean;
   onRefresh?: () => void | Promise<void>;
+  /** Fixed footer rendered below the scroll area (e.g. sticky bid summary). */
+  stickyFooter?: ReactNode;
+  /** When false, children render in a flex View instead of ScrollView (for nested lists). */
+  scrollable?: boolean;
 }
 
 /**
@@ -63,6 +68,8 @@ export function ScreenShell({
   keyboardBottomOffset = 12,
   refreshing = false,
   onRefresh,
+  stickyFooter,
+  scrollable = true,
   ...header
 }: ScreenShellProps) {
   const { colors } = useTheme();
@@ -92,7 +99,7 @@ export function ScreenShell({
       fade.setValue(0);
       const animation = Animated.timing(fade, {
         toValue: 1,
-        duration: 220,
+        duration: Duration.fast,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       });
@@ -101,12 +108,13 @@ export function ScreenShell({
     }, [fade, noFade]),
   );
 
-  // Subtle 6px slide-up paired with the fade for a softer entrance.
+  // Subtle 4px slide-up paired with the fade for a softer entrance
+  // (was 6px — modern apps lean toward subtler motion).
   const content = (
     <Animated.View
       style={{
         opacity: fade,
-        transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }],
+        transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
       }}
     >
       {pageTitle ? (
@@ -126,20 +134,29 @@ export function ScreenShell({
       <AppHeader {...header} />
       {useKeyboard ? (
         <View style={styles.keyboardHost}>
-          <KeyboardAwareScrollView
-            style={styles.scroll}
-            contentContainerStyle={contentContainerStyle}
-            showsVerticalScrollIndicator={false}
-            bounces
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            bottomOffset={keyboardBottomOffset}
-            extraKeyboardSpace={keyboardToolbar ? 44 : 0}
-            mode="insets"
-            refreshControl={refreshControl}
-          >
-            {content}
-          </KeyboardAwareScrollView>
+          {scrollable ? (
+            <KeyboardAwareScrollView
+              style={styles.scroll}
+              contentContainerStyle={contentContainerStyle}
+              showsVerticalScrollIndicator={false}
+              bounces
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+              bottomOffset={keyboardBottomOffset}
+              extraKeyboardSpace={keyboardToolbar ? 44 : 0}
+              mode="insets"
+              refreshControl={refreshControl}
+            >
+              {content}
+            </KeyboardAwareScrollView>
+          ) : (
+            <View style={[styles.scroll, { paddingHorizontal: 16, paddingTop: 12 }]}>
+              {pageTitle ? (
+                <Text style={[Typography.h1, styles.pageTitle, { color: colors.cream }]}>{pageTitle}</Text>
+              ) : null}
+              {children}
+            </View>
+          )}
           {keyboardToolbar ? (
             <KeyboardToolbar theme={toolbarTheme}>
               {keyboardToolbarArrows ? <KeyboardToolbar.Prev /> : null}
@@ -148,7 +165,7 @@ export function ScreenShell({
             </KeyboardToolbar>
           ) : null}
         </View>
-      ) : (
+      ) : scrollable ? (
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={contentContainerStyle}
@@ -159,7 +176,15 @@ export function ScreenShell({
         >
           {content}
         </ScrollView>
+      ) : (
+        <View style={[styles.scroll, { paddingHorizontal: 16, paddingTop: 12 }]}>
+          {pageTitle ? (
+            <Text style={[Typography.h1, styles.pageTitle, { color: colors.cream }]}>{pageTitle}</Text>
+          ) : null}
+          {children}
+        </View>
       )}
+      {stickyFooter}
     </View>
   );
 }

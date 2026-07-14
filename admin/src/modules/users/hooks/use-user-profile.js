@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { userService } from '@enderass/shared/services';
-
 export function useUserProfile() {
   const { t } = useTranslation();
   const [profile, setProfile] = useState(null);

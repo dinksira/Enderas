@@ -3,10 +3,14 @@ import { StyleSheet } from 'react-native';
 
 import { useTheme } from '@/lib/appStore';
 import type { ThemeColors } from '@/lib/theme';
+import { Radii, Typography } from '@/theme';
 
 function createAuthStyles(colors: ThemeColors, isDark: boolean) {
+  // Title shadow now uses the brand's goldGlow token (blue-tinted) so it
+  // stays in sync with the rest of the palette. Previously hardcoded a
+  // warm-gold RGB that no longer matched the post-rebrand blue tokens.
   const titleShadow = isDark
-    ? { textShadowColor: 'rgba(212, 160, 23, 0.45)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 22 }
+    ? { textShadowColor: colors.goldGlow, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 22 }
     : { textShadowColor: 'transparent', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 0 };
 
   return StyleSheet.create({
@@ -62,12 +66,10 @@ function createAuthStyles(colors: ThemeColors, isDark: boolean) {
       shadowOffset: { width: 0, height: 0 },
     },
     title: {
-      fontSize: 30,
-      fontWeight: '700',
+      ...Typography.display,
       color: colors.cream,
       textAlign: 'center',
       marginBottom: 10,
-      letterSpacing: 0.4,
       ...titleShadow,
     },
     subtitle: {
@@ -121,6 +123,12 @@ function createAuthStyles(colors: ThemeColors, isDark: boolean) {
       color: colors.cream,
       paddingVertical: 14,
     },
+    fieldPrefix: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.textMuted,
+      marginRight: 6,
+    },
     passwordToggle: {
       paddingLeft: 12,
       paddingVertical: 8,
@@ -158,8 +166,64 @@ function createAuthStyles(colors: ThemeColors, isDark: boolean) {
       textAlign: 'center',
       lineHeight: 20,
     },
+    // Inline banner shown directly above the submit button so it stays in
+    // view on long forms (the user is already looking at the button on submit).
+    formErrorBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      width: '100%',
+      backgroundColor: colors.danger.soft,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.danger.border,
+      borderLeftWidth: 3,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      marginBottom: 16,
+    },
+    formErrorBadge: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: colors.danger.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    formErrorBadgeText: {
+      color: colors.danger.fg,
+      fontSize: 13,
+      fontWeight: '900',
+      lineHeight: 16,
+    },
+    formErrorBannerText: {
+      flex: 1,
+      fontSize: 13,
+      color: colors.danger.fg,
+      lineHeight: 19,
+    },
+    successBanner: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.success.soft,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.success.border,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+    },
+    successBannerText: {
+      fontSize: 13,
+      color: colors.success.fg,
+      textAlign: 'center',
+      lineHeight: 20,
+      fontWeight: '600',
+    },
     submitButton: {
-      borderRadius: 14,
+      borderRadius: Radii.lg,
       overflow: 'hidden',
       minHeight: 52,
       width: '100%',
@@ -171,6 +235,8 @@ function createAuthStyles(colors: ThemeColors, isDark: boolean) {
       borderColor: colors.goldBorderActive,
     },
     submitButtonInner: {
+      flex: 1,
+      width: '100%',
       paddingVertical: 16,
       paddingHorizontal: 10,
       alignItems: 'center',

@@ -48,6 +48,7 @@ module.exports = {
       first_name: { type: STRING(100), allowNull: true },
       last_name: { type: STRING(100), allowNull: true },
       organization_name: { type: STRING(255), allowNull: true },
+      profile_picture: { type: STRING(500), allowNull: true },
       preferred_language: {
         type: ENUM('en', 'am'),
         allowNull: false,
@@ -272,6 +273,7 @@ module.exports = {
       id: { type: CHAR(36), allowNull: false, primaryKey: true },
       asset_id: { type: CHAR(36), allowNull: true },
       created_by_staff_id: { type: CHAR(36), allowNull: false },
+      owner_id: { type: CHAR(36), allowNull: true },
       title: { type: STRING(255), allowNull: false },
       category: {
         type: ENUM(
@@ -320,6 +322,7 @@ module.exports = {
     await queryInterface.addIndex('auctions', ['end_date'], { name: 'auctions_end_date_idx' });
     await queryInterface.addIndex('auctions', ['status', 'end_date'], { name: 'auctions_status_end_date_idx' });
     await queryInterface.addIndex('auctions', ['asset_id'], { name: 'auctions_asset_id_idx' });
+    await queryInterface.addIndex('auctions', ['owner_id'], { name: 'auctions_owner_id_idx' });
 
     // ─────────────────────────────────────────────
     // 9. LOTS (from 004)
@@ -440,8 +443,8 @@ module.exports = {
         defaultValue: 'draft',
       },
       cpo_id: { type: CHAR(36), allowNull: true },
-      created_at: { type: DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-      updated_at: { type: DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+      created_at: { type: DATE, allowNull: false, defaultValue: NOW },
+      updated_at: { type: DATE, allowNull: false, defaultValue: NOW },
     });
 
     await queryInterface.addIndex('bid_drafts', ['user_id'], { name: 'bid_drafts_user_id_idx' });
@@ -495,6 +498,7 @@ module.exports = {
     await queryInterface.addIndex('cpos', ['refund_status'], { name: 'cpos_refund_status_idx' });
     await queryInterface.addIndex('cpos', ['reviewed_by_staff_id'], { name: 'cpos_reviewed_by_staff_id_idx' });
     await queryInterface.addIndex('cpos', ['user_id', 'auction_id'], { name: 'cpos_user_id_auction_id_idx' });
+    await queryInterface.addIndex('cpos', ['refund_status'], { name: 'cpos_refund_status_idx' });
 
     // ─────────────────────────────────────────────
     // 15. CPO PAYMENTS (from 007)
@@ -851,7 +855,10 @@ module.exports = {
           ON DELETE SET NULL ON UPDATE CASCADE,
         ADD CONSTRAINT fk_auctions_created_by_staff_id
           FOREIGN KEY (created_by_staff_id) REFERENCES staff (id)
-          ON UPDATE CASCADE
+          ON UPDATE CASCADE,
+        ADD CONSTRAINT auctions_owner_id_fk
+          FOREIGN KEY (owner_id) REFERENCES users (id)
+          ON DELETE SET NULL ON UPDATE CASCADE
     `);
 
     await queryInterface.sequelize.query(`
@@ -1086,11 +1093,14 @@ module.exports = {
       'audit_logs',
       'notifications',
       'winners',
+      'cpo_payments',
       'payments',
       'cpos',
+      'bid_drafts',
       'bids',
       'auction_documents',
       'auction_assets',
+      'lots',
       'auctions',
       'evaluations',
       'assets',

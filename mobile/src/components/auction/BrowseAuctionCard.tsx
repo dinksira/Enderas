@@ -57,8 +57,6 @@ function BrowseAuctionCardImpl({ auction, onPress, compact }: BrowseAuctionCardP
 
   const thumbHeight = compact ? 96 : 140;
   const bodyPadding = compact ? Spacing.sm : Spacing.sm2;
-  const titleLines = compact ? 1 : 2;
-  const descLines = compact ? 1 : 2;
   return (
     <PressableScale
       onPress={onPress}
@@ -75,7 +73,13 @@ function BrowseAuctionCardImpl({ auction, onPress, compact }: BrowseAuctionCardP
       >
         <View style={[styles.thumbWrap, { height: thumbHeight }]}>
           {thumbnailUri ? (
-            <Image source={{ uri: thumbnailUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <Image
+              source={{ uri: thumbnailUri }}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={0}
+            />
           ) : (
             <LinearGradient
               colors={theme.colors}
@@ -123,17 +127,8 @@ function BrowseAuctionCardImpl({ auction, onPress, compact }: BrowseAuctionCardP
         </View>
 
         <View style={[styles.body, { padding: bodyPadding }]}>
-          <Text
-            style={[Typography.cardTitle, { color: colors.cream }]}
-            numberOfLines={titleLines}
-          >
+          <Text style={[Typography.cardTitle, { color: colors.cream }]}>
             {auction.title}
-          </Text>
-          <Text
-            style={[Typography.bodySmall, { color: colors.textSecondary }]}
-            numberOfLines={descLines}
-          >
-            {auction.description}
           </Text>
 
           <View style={[styles.dateRow, { borderTopColor: colors.divider }]}>

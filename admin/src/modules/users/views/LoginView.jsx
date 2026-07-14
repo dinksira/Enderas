@@ -37,8 +37,6 @@ function validateCredentials(phoneNumber, password) {
   return errors;
 }
 
-const MOCK_SESSION_DELAY_MS = 600;
-
 function resolveLoginError(err) {
   if (err?.code === 'INVALID_CREDENTIALS') {
     return 'Invalid credentials. Please check your phone number and password.';
@@ -72,6 +70,34 @@ export function LoginView() {
     setErrors((current) => ({ ...current, [field]: undefined, form: undefined }));
   };
 
+  const applySession = (session) => {
+    setSession({
+      accessToken: session.accessToken,
+      identity: session.identity,
+      authz: session.authz,
+      user: session.user,
+    });
+  };
+
+  const finishLogin = (session) => {
+    applySession(session);
+
+    if (!session.identity?.isStaff) {
+      window.location.href = `${ENV.publicAppUrl}/login?redirect=bidder`;
+      return;
+    }
+
+    const roleCode = useAuthStore.getState().permissions?.roleCode;
+    const userStatus = session.identity?.status || session.user?.status;
+
+    if (['kyc_pending', 'kyc_rejected', 'pending'].includes(userStatus)) {
+      navigate(ROUTES.KYC_VERIFICATION, { replace: true });
+      return;
+    }
+
+    navigate(resolveDefaultRoute(roleCode), { replace: true });
+  };
+
   const handlePhoneChange = (event) => {
     setPhoneNumber(event.target.value);
     clearFieldError('phoneNumber');
@@ -97,14 +123,8 @@ export function LoginView() {
     try {
       const session = await authApi.login({ phoneNumber, password });
 
-      setSession({
-        accessToken: session.accessToken,
-        identity: session.identity,
-        authz: session.authz,
-        user: session.user,
-      });
-
       if (session.identity?.isMobileVerified === false) {
+        applySession(session);
         setSessionId(session.session?.sessionId || '');
         setOtpDigits(EMPTY_OTP);
         resetOtpTimer();
@@ -112,20 +132,7 @@ export function LoginView() {
         return;
       }
 
-      const roleCode = useAuthStore.getState().permissions?.roleCode;
-      const userStatus = session.identity?.status || session.user?.status;
-
-      if (!session.identity?.isStaff) {
-        window.location.href = `${ENV.publicAppUrl}/login?redirect=bidder`;
-        return;
-      }
-
-      if (['kyc_pending', 'kyc_rejected', 'pending'].includes(userStatus)) {
-        navigate(ROUTES.KYC_VERIFICATION, { replace: true });
-        return;
-      }
-
-      navigate(resolveDefaultRoute(roleCode), { replace: true });
+      finishLogin(session);
     } catch (err) {
       setErrors({
         form: resolveLoginError(err),
@@ -148,10 +155,8 @@ export function LoginView() {
     setErrors({});
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, MOCK_SESSION_DELAY_MS));
-
-      const roleCode = useAuthStore.getState().permissions?.roleCode;
-      navigate(resolveDefaultRoute(roleCode), { replace: true });
+      const session = await authApi.verifyOtp({ phoneNumber, otp });
+      finishLogin(session);
     } catch (err) {
       setErrors({
         form: err instanceof Error ? err.message : 'Invalid verification code. Please try again.',
@@ -170,7 +175,7 @@ export function LoginView() {
     setErrors({});
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, MOCK_SESSION_DELAY_MS));
+      await authApi.resendOtp({ phoneNumber });
 
       setOtpDigits(EMPTY_OTP);
       resetOtpTimer();

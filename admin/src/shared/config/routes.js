@@ -18,6 +18,7 @@ export const ROUTES = Object.freeze({
   APP_USERS: '/app/users',
   APP_STAFF: '/app/staff',
   APP_ROLES: '/app/roles',
+  APP_AUDIT: '/app/audit',
   APP_SETTINGS: '/app/settings',
   APP_ORGANIZATIONS: '/app/organizations',
   APP_KYC: '/app/kyc',

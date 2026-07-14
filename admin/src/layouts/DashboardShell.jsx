@@ -216,6 +216,8 @@ const ICON_MAP = {
       <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   ),
+    </svg>
+  ),
 };
 
 function resolveLanguage(language) {

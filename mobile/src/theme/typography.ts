@@ -16,6 +16,17 @@
  *   - JetBrains Mono → numeric/monospace tabs (stats, amounts, codes)
  * Each role is named so a future rebrand swaps one family without
  * touching every Text element.
+ *
+ * 2026 redesign
+ * -------------
+ *   - Slightly tighter letter-spacing on display sizes (0.4 → 0.2)
+ *     so large headings read as a single shape, not as letterforms.
+ *   - Tighter line-heights on captions and body small so dense
+ *     auction lists pack more vertically without feeling cramped.
+ *   - Larger display / hero sizes (30 → 32, 38 → 40) — a 2026 app
+ *     leans more on confident hierarchy.
+ *   - Introduced `sectionTitle` between `cardTitle` and `h1` so
+ *     mid-level headings don't have to overload `cardTitle`.
  */
 
 export const FontFamilies = {
@@ -57,10 +68,10 @@ export const FontSize = {
   xl: 19,
   /** 22px — section headings. */
   xxl: 22,
-  /** 30px — auth screen titles. */
-  display: 30,
-  /** 38px — splash brand name. */
-  hero: 38,
+  /** 32px — auth screen titles (was 30). */
+  display: 32,
+  /** 40px — splash brand name (was 38). */
+  hero: 40,
 } as const;
 
 /** Named weights matching the loaded font variants. */
@@ -78,13 +89,13 @@ export const LineHeight = {
   tight: 16,
   body: 20,
   bodyLg: 22,
-  heading: 24,
-  display: 32,
+  heading: 26,
+  display: 34,
 } as const;
 
 /** Letter spacing scale. Negative tightens large display; positive opens caps. */
 export const LetterSpacing = {
-  tight: -0.2,
+  tight: -0.3,
   none: 0,
   subtle: 0.2,
   small: 0.4,
@@ -107,7 +118,7 @@ export const Typography = {
     fontFamily: FontFamilies.displayBold,
     fontSize: FontSize.hero,
     fontWeight: FontWeight.extrabold,
-    letterSpacing: 2,
+    letterSpacing: 1.6,
     lineHeight: LineHeight.display,
   },
   /** Display heading — auth screen titles. */
@@ -115,7 +126,7 @@ export const Typography = {
     fontFamily: FontFamilies.displayBold,
     fontSize: FontSize.display,
     fontWeight: FontWeight.bold,
-    letterSpacing: 0.4,
+    letterSpacing: 0.2,
     lineHeight: LineHeight.display,
   },
   /** Section heading. */
@@ -123,22 +134,30 @@ export const Typography = {
     fontFamily: FontFamilies.display,
     fontSize: FontSize.xxl,
     fontWeight: FontWeight.semibold,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
     lineHeight: LineHeight.heading,
+  },
+  /** Mid-level section title — between cardTitle and h1. */
+  sectionTitle: {
+    fontFamily: FontFamilies.display,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    letterSpacing: 0.2,
+    lineHeight: 22,
   },
   /** Header title — AppHeader center. */
   headerTitle: {
     fontFamily: FontFamilies.display,
     fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   /** Card title. */
   cardTitle: {
     fontFamily: FontFamilies.display,
     fontSize: FontSize.md,
     fontWeight: FontWeight.bold,
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
     lineHeight: LineHeight.bodyLg,
   },
   /** Body text — default. */
@@ -160,14 +179,14 @@ export const Typography = {
     fontFamily: FontFamilies.body,
     fontSize: FontSize.bodySm,
     fontWeight: FontWeight.medium,
-    lineHeight: 19,
+    lineHeight: 18,
   },
   /** Caption — hints, meta. */
   caption: {
     fontFamily: FontFamilies.body,
     fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
-    lineHeight: LineHeight.body,
+    lineHeight: 17,
   },
   /** Eyebrow caps — section labels above titles. */
   eyebrow: {
@@ -197,7 +216,7 @@ export const Typography = {
     fontFamily: FontFamilies.bodyBold,
     fontSize: FontSize.bodySm,
     fontWeight: FontWeight.extrabold,
-    letterSpacing: 2,
+    letterSpacing: 1.8,
     textTransform: 'uppercase',
   },
 } as const;

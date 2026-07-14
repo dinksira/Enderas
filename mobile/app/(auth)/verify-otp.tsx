@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { AuthShell, GoldButton, OtpInput } from '@/components/auth';
@@ -28,6 +28,7 @@ function resolveOtpError(err: unknown, t: (key: string) => string): string {
 export default function VerifyOtpScreen() {
   const authStyles = useAuthStyles();
   const { t } = useTranslation();
+  const { from } = useLocalSearchParams<{ from?: string }>();
   const pendingOtpMobile = useAuthStore((s) => s.pendingOtpMobile);
   const isAuthenticated = useIsAuthenticated();
   const setSession = useAuthStore((s) => s.setSession);
@@ -40,6 +41,8 @@ export default function VerifyOtpScreen() {
   const [resending, setResending] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const verifyingRef = useRef(false);
+
+  const cameFromRegister = from === 'register';
 
   useEffect(() => {
     if (!pendingOtpMobile && !isAuthenticated) {
@@ -54,6 +57,13 @@ export default function VerifyOtpScreen() {
     }
   }, [formError]);
 
+  const navigateAfterVerification = useCallback(() => {
+    if (router.canDismiss()) {
+      router.dismissAll();
+    }
+    router.replace('/(tabs)/dashboard');
+  }, []);
+
   const handleVerify = useCallback(async () => {
     if (!pendingOtpMobile || verifyingRef.current) return;
 
@@ -67,23 +77,32 @@ export default function VerifyOtpScreen() {
     setFormError(null);
 
     try {
-      const response = await verifyOtp({
+      const response = (await verifyOtp({
         mobileNumber: pendingOtpMobile,
         phoneNumber: pendingOtpMobile,
         otp,
-      });
+      })) as {
+        accessToken: string;
+        refreshToken?: string | null;
+        refreshTokenExpiresAt?: string | null;
+        identity?: Record<string, unknown>;
+        authz?: Record<string, unknown>;
+        user?: Record<string, unknown>;
+      };
 
+      const identity = (response.identity ?? {}) as Record<string, unknown>;
+      const authz = (response.authz ?? {}) as Record<string, unknown>;
       const sessionUser: AuthUser = {
-        id: String(response.identity?.userId || response.identity?.id || ''),
-        roleCode: response.authz?.roleCode ?? null,
-        isStaff: response.identity?.isStaff,
-        staffId: response.identity?.staffId ?? null,
-        employeeId: response.identity?.employeeId ?? null,
-        displayName: response.identity?.displayName,
-        mobileNumber: response.identity?.mobileNumber,
-        email: response.identity?.email,
-        status: response.identity?.status,
-        userType: response.identity?.userType,
+        id: String(identity.userId || identity.id || ''),
+        roleCode: (authz.roleCode as string | null) ?? null,
+        isStaff: Boolean(identity.isStaff),
+        staffId: (identity.staffId as string | null) ?? null,
+        employeeId: (identity.employeeId as string | null) ?? null,
+        displayName: (identity.displayName as string) ?? '',
+        mobileNumber: (identity.mobileNumber as string) ?? '',
+        email: (identity.email as string) ?? '',
+        status: (identity.status as string) ?? '',
+        userType: (identity.userType as string) ?? '',
       };
 
       if (!isMobileAllowedUser(sessionUser)) {
@@ -94,13 +113,15 @@ export default function VerifyOtpScreen() {
 
       setSession({
         accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        refreshTokenExpiresAt: response.refreshTokenExpiresAt,
         identity: response.identity,
         authz: response.authz,
         user: response.user,
       });
 
       clearPendingOtpVerification();
-      router.replace('/(tabs)/dashboard');
+      navigateAfterVerification();
     } catch (err) {
       setFormError(resolveOtpError(err, t));
     } finally {
@@ -110,6 +131,7 @@ export default function VerifyOtpScreen() {
   }, [
     clearPendingOtpVerification,
     clearSession,
+    navigateAfterVerification,
     otp,
     pendingOtpMobile,
     setSession,
@@ -136,6 +158,10 @@ export default function VerifyOtpScreen() {
     }
   };
 
+  const handleWrongNumberBack = () => {
+    router.back();
+  };
+
   if (!pendingOtpMobile) {
     return null;
   }
@@ -155,6 +181,16 @@ export default function VerifyOtpScreen() {
       <Text style={authStyles.bodyText}>
         {t('auth.otpDescription', { mobileNumber: maskedMobile })}
       </Text>
+
+      {cameFromRegister ? (
+        <TouchableOpacity
+          style={authStyles.linkRow}
+          onPress={handleWrongNumberBack}
+          activeOpacity={0.7}
+        >
+          <Text style={authStyles.linkAction}>{t('auth.wrongNumberBack')}</Text>
+        </TouchableOpacity>
+      ) : null}
 
       <View style={authStyles.errorBannerSlot}>
         {formError ? (

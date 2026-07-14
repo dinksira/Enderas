@@ -1,12 +1,13 @@
 import { AppError } from '../../utils/error.util.js';
 import { isValidEthiopianMobile, normalizeMobileNumber } from '../../utils/mobile.util.js';
+import { isValidEmail } from '../../utils/email.util.js';
 
 function assignNormalizedMobile(req, sourceValue, targetKeys) {
   const normalized = normalizeMobileNumber(sourceValue);
 
   if (!isValidEthiopianMobile(normalized)) {
     throw new AppError(
-      'Enter a valid Ethiopian mobile number (e.g. 0912345678 or +251912345678)',
+      'Enter a valid Ethiopian phone number (e.g. 0912345678 or 0111234567)',
       400,
       'INVALID_MOBILE_NUMBER',
     );
@@ -52,6 +53,17 @@ export function validateLoginBody(req, res, next) {
   return next();
 }
 
+export function validateRefreshBody(req, res, next) {
+  const refreshToken = req.body?.refreshToken ?? req.body?.refresh_token;
+
+  if (!refreshToken || typeof refreshToken !== 'string' || !refreshToken.trim()) {
+    return next(new AppError('refreshToken is required', 400, 'VALIDATION_ERROR'));
+  }
+
+  req.body.refreshToken = refreshToken.trim();
+  return next();
+}
+
 export function validateRegistrationBody(req, res, next) {
   const {
     firstName,
@@ -59,6 +71,7 @@ export function validateRegistrationBody(req, res, next) {
     mobileNumber,
     phoneNumber,
     password,
+    email,
     userType = 'individual',
     organizationName,
     nationalIdNumber,
@@ -69,10 +82,15 @@ export function validateRegistrationBody(req, res, next) {
   const resolvedMobile = mobileNumber ?? phoneNumber;
   const resolvedNationalId = (nationalIdNumber ?? nationalId ?? '').trim();
   const resolvedTin = (tinNumber ?? '').trim();
+  const resolvedEmail = (email ?? '').trim();
   const errors = [];
 
   if (!resolvedMobile || typeof resolvedMobile !== 'string' || !resolvedMobile.trim()) {
     errors.push('mobileNumber is required');
+  }
+
+  if (resolvedEmail && !isValidEmail(resolvedEmail)) {
+    errors.push('email must be a valid email address');
   }
 
   if (!password || typeof password !== 'string' || password.length < 6) {
@@ -200,12 +218,69 @@ export function validateResetPasswordBody(req, res, next) {
   return next();
 }
 
+export function validateUpdateProfileBody(req, res, next) {
+  const {
+    email,
+    firstName,
+    lastName,
+    organizationName,
+    preferredLanguage,
+    profilePicture,
+  } = req.body ?? {};
+
+  const errors = [];
+
+  if (email !== undefined && email !== null && email !== '') {
+    if (typeof email !== 'string' || !isValidEmail(email)) {
+      errors.push('email must be a valid email address');
+    }
+  }
+
+  if (firstName !== undefined && firstName !== null && firstName !== '') {
+    if (typeof firstName !== 'string' || !firstName.trim()) {
+      errors.push('firstName must be a non-empty string');
+    }
+  }
+
+  if (lastName !== undefined && lastName !== null && lastName !== '') {
+    if (typeof lastName !== 'string') {
+      errors.push('lastName must be a string');
+    }
+  }
+
+  if (organizationName !== undefined && organizationName !== null && organizationName !== '') {
+    if (typeof organizationName !== 'string' || !organizationName.trim()) {
+      errors.push('organizationName must be a non-empty string');
+    }
+  }
+
+  if (preferredLanguage !== undefined && preferredLanguage !== null && preferredLanguage !== '') {
+    if (!['en', 'am'].includes(preferredLanguage)) {
+      errors.push('preferredLanguage must be en or am');
+    }
+  }
+
+  if (profilePicture !== undefined && profilePicture !== null && profilePicture !== '') {
+    if (typeof profilePicture !== 'string') {
+      errors.push('profilePicture must be a string URL');
+    }
+  }
+
+  if (errors.length > 0) {
+    return next(new AppError(errors.join('; '), 400, 'VALIDATION_ERROR'));
+  }
+
+  return next();
+}
+
 export default {
   validateLoginBody,
+  validateRefreshBody,
   validateRegistrationBody,
   validateOTPBody,
   validateResendOTPBody,
   validateForgotPasswordBody,
   validateVerifyResetOtpBody,
   validateResetPasswordBody,
+  validateUpdateProfileBody,
 };

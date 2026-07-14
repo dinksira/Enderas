@@ -3,6 +3,7 @@ import { staffRoleService } from '@enderass/shared/services';
 
 export function useStaffRoles() {
   const [records, setRecords] = useState([]);
+  const [permissionCatalog, setPermissionCatalog] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -11,9 +12,12 @@ export function useStaffRoles() {
     setError(null);
     try {
       const data = await staffRoleService.getAll();
-      setRecords(Array.isArray(data) ? data : data?.items ?? []);
+      setRecords(Array.isArray(data?.items) ? data.items : []);
+      setPermissionCatalog(data?.permissionCatalog ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load records.');
+      setRecords([]);
+      setPermissionCatalog(null);
     } finally {
       setLoading(false);
     }
@@ -23,7 +27,7 @@ export function useStaffRoles() {
     fetchRecords();
   }, [fetchRecords]);
 
-  return { records, loading, error, refetch: fetchRecords };
+  return { records, permissionCatalog, loading, error, refetch: fetchRecords };
 }
 
 export default useStaffRoles;

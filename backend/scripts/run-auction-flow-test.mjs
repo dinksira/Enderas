@@ -10,7 +10,7 @@ import { sequelize } from '../src/config/db.config.js';
 const BASE = `http://localhost:${process.env.PORT || 3000}/api`;
 
 const USERS = {
-  bidder: { mobile: '0987654321', password: 'pass2' },
+  bidder: { mobile: '0998765432', password: 'pass3' },
   admin: { mobile: '0912345678', password: 'pass1' },
 };
 
@@ -68,6 +68,119 @@ async function uploadFile(token, folder, filename = 'test.pdf') {
   return json.data.fileUrl;
 }
 
+function flattenAuctionAssets(lots = []) {
+  if (!Array.isArray(lots) || lots.length === 0) {
+    return [];
+  }
+  if (Array.isArray(lots[0]?.assets)) {
+    return lots.flatMap((lot) => lot.assets ?? []);
+  }
+  return lots;
+}
+
+async function fetchEligibleAssets(token, count = 2) {
+  const res = await api(token, 'GET', '/auctions/eligible-assets');
+  const items = res.json.data?.items ?? res.json.data ?? [];
+  return items.slice(0, count);
+}
+
+async function createEvaluatedAssetForFlow(bidderToken, staffToken) {
+  const ownershipUrl = await uploadFile(staffToken, 'assets/ownership', 'ownership.pdf');
+  const photoUrl = await uploadFile(staffToken, 'assets/photos', 'asset-photo.jpg');
+
+  const title = `Flow Test Asset ${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const createRes = await api(bidderToken, 'POST', '/assets', {
+    title,
+    assetType: 'vehicle',
+    description: 'Flow test asset',
+    conditionNotes: 'Flow test condition notes',
+    location: 'Addis Ababa',
+    imageUrls: [photoUrl],
+    desiredReservePrice: 120000,
+    auctionConditions: 'Standard conditions',
+    ownershipDocumentType: 'vehicle_registration_book',
+    ownershipDocumentUrl: ownershipUrl,
+  });
+
+  const asset = createRes.json.data?.asset ?? createRes.json.data;
+  if (!createRes.ok || !asset?.id) {
+    throw new Error(`Asset create failed: ${createRes.json.message}`);
+  }
+
+  const approveAsset = await api(staffToken, 'POST', `/assets/${asset.id}/approve`, { reviewNotes: 'Flow test' });
+  if (!approveAsset.ok) {
+    throw new Error(`Asset approve failed: ${approveAsset.json.message}`);
+  }
+
+  const scheduleRes = await api(staffToken, 'POST', '/evaluations', {
+    assetId: asset.id,
+    scheduledAt: new Date(Date.now() + 3600000).toISOString(),
+    notes: 'Flow test evaluation',
+  });
+  const evaluationId = scheduleRes.json.data?.evaluation?.id;
+  if (!scheduleRes.ok || !evaluationId) {
+    throw new Error(`Failed to schedule evaluation: ${scheduleRes.json.message}`);
+  }
+
+  const startEval = await api(staffToken, 'POST', `/evaluations/${evaluationId}/start`);
+  if (!startEval.ok) {
+    throw new Error(`Failed to start evaluation: ${startEval.json.message}`);
+  }
+
+  const reportUrl = await uploadFile(staffToken, 'evaluations/reports', 'eval-report.pdf');
+  const evalPhotoUrl = await uploadFile(staffToken, 'evaluations/photos', 'eval-photo.jpg');
+
+  const completeEval = await api(staffToken, 'POST', `/evaluations/${evaluationId}/complete`, {
+    valuationAmount: 130000,
+    reservePriceRecommendation: 120000,
+    photoUrls: [evalPhotoUrl],
+    reportUrl,
+    recommendation: 'approved',
+    notes: 'Flow test complete',
+  });
+  if (!completeEval.ok) {
+    throw new Error(`Failed to complete evaluation: ${completeEval.json.message}`);
+  }
+
+  const approveEval = await api(staffToken, 'POST', `/evaluations/${evaluationId}/approve`, {
+    reviewNotes: 'Flow test approved',
+  });
+  if (!approveEval.ok) {
+    throw new Error(`Failed to approve evaluation: ${approveEval.json.message}`);
+  }
+
+  return {
+    id: asset.id,
+    desiredReservePrice: 120000,
+  };
+}
+
+async function ensureEligibleAssets(bidderToken, staffToken, count = 2) {
+  const merged = new Map();
+
+  const refresh = async () => {
+    const items = await fetchEligibleAssets(staffToken, count);
+    for (const item of items) {
+      merged.set(item.id, item);
+    }
+  };
+
+  await refresh();
+
+  let attempts = 0;
+  while (merged.size < count && attempts < count + 3) {
+    await createEvaluatedAssetForFlow(bidderToken, staffToken);
+    await refresh();
+    attempts += 1;
+  }
+
+  if (merged.size < count) {
+    throw new Error(`Could not prepare ${count} eligible assets (have ${merged.size})`);
+  }
+
+  return [...merged.values()].slice(0, count);
+}
+
 async function main() {
   console.log('\n=== Full Auction Flow Test ===\n');
 
@@ -87,19 +200,44 @@ async function main() {
   const start = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const end = new Date(Date.now() + 14 * 86400000).toISOString();
 
+  const eligibleAssets = await ensureEligibleAssets(bidder.accessToken, admin.accessToken, 2);
+  const reserveA = Number(eligibleAssets[0].desiredReservePrice ?? eligibleAssets[0].desired_reserve_price ?? 120000);
+  const reserveB = Number(eligibleAssets[1].desiredReservePrice ?? eligibleAssets[1].desired_reserve_price ?? 95000);
+  const plannedBidAmounts = [
+    { assetId: eligibleAssets[0].id, reservePrice: reserveA },
+    { assetId: eligibleAssets[1].id, reservePrice: reserveB },
+  ];
+
   const createRes = await api(admin.accessToken, 'POST', '/auctions', {
     title: `Flow Test Auction ${Date.now()}`,
     category: 'vehicles',
-    description: 'Automated full auction flow test',
+    description: 'Automated full auction flow test with hierarchical lots',
     auctionConditions: 'Standard conditions',
     startDate: start,
     endDate: end,
-    reservePrice: 120000,
     documentFee: 750,
     cpoPercentage: 10,
     imageUrls: [],
     documents: [{ name: 'auction-doc.pdf', url: docUrl, size: 128 }],
-    assetId: null,
+    auctionMode: 'multi',
+    lots: [
+      {
+        title: 'Fleet Package',
+        sortOrder: 0,
+        assets: [
+          {
+            assetId: eligibleAssets[0].id,
+            reservePrice: reserveA,
+            tags: ['fleet', 'related'],
+          },
+          {
+            assetId: eligibleAssets[1].id,
+            reservePrice: reserveB,
+            tags: ['fleet', 'related'],
+          },
+        ],
+      },
+    ],
   });
 
   const auctionId = createRes.json.data?.auction?.id;
@@ -122,7 +260,23 @@ async function main() {
     fail('browse-detail', 'Bidder could not load auction detail');
     process.exit(1);
   }
-  pass('browse-detail', `Loaded detail — documentFee: ${auction.documentFee}`);
+
+  const lotGroups = auction.lots ?? [];
+  const flatAssets = flattenAuctionAssets(lotGroups);
+  if (lotGroups.length > 0 && Array.isArray(lotGroups[0]?.assets) && lotGroups[0].assets.length >= 2) {
+    pass('nested-lots', `Hierarchical lots returned — ${lotGroups.length} group(s), ${flatAssets.length} asset(s)`);
+    const tags = lotGroups[0].assets[0]?.tags ?? [];
+    if (Array.isArray(tags) && tags.includes('fleet')) {
+      pass('asset-tags', `Asset tags persisted: ${tags.join(', ')}`);
+    } else {
+      fail('asset-tags', `Expected fleet tag on first asset, got ${JSON.stringify(tags)}`);
+    }
+  } else {
+    fail('nested-lots', `Expected nested lots[].assets[], got ${JSON.stringify(lotGroups).slice(0, 200)}`);
+    process.exit(1);
+  }
+
+  pass('browse-detail', `Loaded detail — documentFee: ${auction.documentFee}, assets: ${flatAssets.length}`);
 
   const receiptUrl = await uploadFile(bidder.accessToken, 'payments/receipts', 'payment-receipt.pdf');
   const payRes = await api(bidder.accessToken, 'POST', '/payments', {
@@ -165,33 +319,27 @@ async function main() {
     fail('document-stream', err.message || String(streamRes.status));
   }
 
-  const bidAmount = Number(auction.reservePrice ?? 120000);
-  const draftRes = await api(bidder.accessToken, 'PUT', '/bid-drafts', {
-    auctionId,
-    auctionAssetId: null,
-    amount: bidAmount,
+  const bidAmounts = flatAssets.map((asset) => {
+    const planned = plannedBidAmounts.find((entry) => entry.assetId === asset.assetId);
+    return {
+      auctionAssetId: asset.id,
+      amount: Number(planned?.reservePrice ?? asset.reservePrice),
+    };
   });
+  const totalBidAmount = bidAmounts.reduce((sum, entry) => sum + entry.amount, 0);
 
-  if (!draftRes.ok) {
-    const lots = auction.lots ?? [];
-    if (lots.length > 0) {
-      const lotDraft = await api(bidder.accessToken, 'PUT', '/bid-drafts', {
-        auctionId,
-        auctionAssetId: lots[0].id,
-        amount: bidAmount,
-      });
-      if (!lotDraft.ok) {
-        fail('bid-draft', lotDraft.json.message || 'Bid draft failed');
-        process.exit(1);
-      }
-      pass('bid-draft', `Draft saved for lot ${lots[0].id} at ${bidAmount}`);
-    } else {
-      fail('bid-draft', draftRes.json.message || 'Bid draft failed');
+  for (const entry of bidAmounts) {
+    const lotDraft = await api(bidder.accessToken, 'PUT', '/bid-drafts', {
+      auctionId,
+      auctionAssetId: entry.auctionAssetId,
+      amount: entry.amount,
+    });
+    if (!lotDraft.ok) {
+      fail('bid-draft', lotDraft.json.message || `Bid draft failed for ${entry.auctionAssetId}`);
       process.exit(1);
     }
-  } else {
-    pass('bid-draft', `Legacy draft saved at ${bidAmount}`);
   }
+  pass('bid-draft', `Drafts saved for ${bidAmounts.length} asset(s), total ${totalBidAmount}`);
 
   const partBeforeCpo = await api(bidder.accessToken, 'GET', `/auctions/browse/${auctionId}/participation`);
   const preview = partBeforeCpo.json.data?.participation?.requiredCpoAmountPreview;
@@ -202,16 +350,20 @@ async function main() {
   }
 
   const cpoUrl = await uploadFile(bidder.accessToken, 'cpo/documents', 'cpo-receipt.pdf');
-  const lots = auction.lots ?? [];
-  const proposedBids = lots.length > 0
-    ? [{ auctionAssetId: lots[0].id, amount: bidAmount }]
-    : [{ auctionAssetId: null, amount: bidAmount }];
+  const proposedBids = bidAmounts;
+  const expectedCpo = Math.round(
+    bidAmounts.reduce((sum, entry) => {
+      const asset = flatAssets.find((item) => item.id === entry.auctionAssetId);
+      const reserve = Number(asset?.reservePrice ?? 0);
+      return sum + (reserve * Number(auction.cpoPercentage ?? 10)) / 100;
+    }, 0),
+  );
 
   const cpoRes = await api(bidder.accessToken, 'POST', '/cpo', {
     auctionId,
     documentUrl: cpoUrl,
     proposedBids,
-    declaredCpoAmount: preview ?? Math.round((bidAmount * Number(auction.cpoPercentage ?? 10)) / 100),
+    declaredCpoAmount: preview ?? expectedCpo,
   });
 
   const cpoId = cpoRes.json.data?.cpo?.id ?? cpoRes.json.data?.id;
@@ -260,8 +412,8 @@ async function main() {
 
   const duplicateBid = await api(bidder.accessToken, 'POST', '/bids', {
     auctionId,
-    amount: bidAmount + 5000,
-    auctionAssetId: lots[0]?.id ?? undefined,
+    amount: bidAmounts[0].amount + 5000,
+    auctionAssetId: flatAssets[0]?.id,
   });
   if (!duplicateBid.ok && duplicateBid.json.code === 'BID_EXISTS') {
     pass('bid-immutable', 'Duplicate bid correctly blocked (BID_EXISTS)');

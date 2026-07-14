@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { AuthShell, FormField, GoldButton, UserTypeCard } from '@/components/auth';
+import { AuthShell, FormField, GoldButton, UserTypeCard, ConfirmPhoneModal } from '@/components/auth';
 import { register } from '@/services/authApi';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/lib/authStore';
-import { isValidEthiopianMobile } from '@/utils/mobile-utils';
+import { isValidLocalPhone, isValidEmail, normalizeMobileNumber } from '@/utils/mobile-utils';
 
 import { useAuthStyles } from '@/components/auth/authStyles';
 
@@ -27,20 +27,62 @@ function splitFullName(fullName: string) {
   };
 }
 
-function resolveRegisterError(err: unknown, t: (key: string) => string): string {
+type RegisterFieldKey =
+  | 'fullName'
+  | 'nationalIdNumber'
+  | 'organizationName'
+  | 'tinNumber'
+  | 'mobileNumber'
+  | 'email'
+  | 'password'
+  | 'confirmPassword';
+
+/**
+ * Maps a failed registration into either a field-scoped error (rendered inline
+ * on the offending input so it's discoverable on a long form) or a general
+ * message shown in the banner above the submit button.
+ */
+function mapRegisterApiError(
+  err: unknown,
+  t: (key: string) => string,
+): { field?: RegisterFieldKey; message: string } {
   if (err instanceof ApiError) {
-    return err.message;
+    switch (err.code) {
+      case 'DUPLICATE_MOBILE':
+        return { field: 'mobileNumber', message: t('auth.errors.alreadyRegistered') };
+      case 'INVALID_MOBILE_NUMBER':
+        return { field: 'mobileNumber', message: t('auth.errors.invalidPhone') };
+      case 'DUPLICATE_EMAIL':
+        return { field: 'email', message: t('auth.errors.duplicateEmail') };
+      case 'DUPLICATE_NATIONAL_ID':
+        return { field: 'nationalIdNumber', message: t('auth.errors.duplicateNationalId') };
+      case 'DUPLICATE_TIN':
+        return { field: 'tinNumber', message: t('auth.errors.duplicateTin') };
+      default:
+        return { message: err.message };
+    }
   }
 
   if (err instanceof Error) {
     if (err.message.includes('Ethiopian mobile')) {
-      return t('auth.errors.invalidPhone');
+      return { field: 'mobileNumber', message: t('auth.errors.invalidPhone') };
     }
-    return err.message;
+    return { message: err.message };
   }
 
-  return t('auth.errors.registerFailed');
+  return { message: t('auth.errors.registerFailed') };
 }
+
+const FIELD_FOCUS_ORDER: RegisterFieldKey[] = [
+  'fullName',
+  'organizationName',
+  'nationalIdNumber',
+  'tinNumber',
+  'mobileNumber',
+  'email',
+  'password',
+  'confirmPassword',
+];
 
 export default function RegisterScreen() {
   const authStyles = useAuthStyles();
@@ -61,6 +103,7 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
   const fullNameRef = useRef<TextInput>(null);
   const nationalIdRef = useRef<TextInput>(null);
@@ -70,15 +113,97 @@ export default function RegisterScreen() {
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const confirmPasswordRef = useRef<TextInput>(null);
+  // Deferred until the confirm dialog finishes its close animation — running
+  // submit/focus mid-dismiss interrupts the bottom-sheet transition and leaves
+  // it unable to re-present (register press appears to "do nothing").
+  const confirmActionRef = useRef<'submit' | 'edit' | null>(null);
 
-  const handleRegister = async () => {
+  const fieldRefs: Record<RegisterFieldKey, React.RefObject<TextInput | null>> = {
+    fullName: fullNameRef,
+    nationalIdNumber: nationalIdRef,
+    organizationName: orgNameRef,
+    tinNumber: tinRef,
+    mobileNumber: mobileRef,
+    email: emailRef,
+    password: passwordRef,
+    confirmPassword: confirmPasswordRef,
+  };
+
+  // Focusing the offending field makes the KeyboardAwareScrollView bring it
+  // into view, so errors are never stranded off-screen on the long form.
+  const focusField = (field: RegisterFieldKey) => {
+    setTimeout(() => fieldRefs[field]?.current?.focus(), 80);
+  };
+
+  const focusFirstError = (errors: Record<string, string | undefined>) => {
+    const first = FIELD_FOCUS_ORDER.find((key) => errors[key]);
+    if (first) {
+      focusField(first);
+    }
+  };
+
+  const submitRegistration = async () => {
+    const trimmedMobile = mobileNumber.trim();
+    const trimmedEmail = email.trim();
+
+    setLoading(true);
+    setFormError(null);
+    setFieldErrors({});
+
+    try {
+      const nameParts = splitFullName(fullName);
+      const normalizedMobile = normalizeMobileNumber(trimmedMobile);
+
+      await register({
+        userType,
+        mobileNumber: normalizedMobile,
+        phoneNumber: normalizedMobile,
+        password,
+        email: trimmedEmail || undefined,
+        firstName: userType === 'individual' ? nameParts.firstName : undefined,
+        lastName: userType === 'individual' ? nameParts.lastName : undefined,
+        organizationName: userType === 'organization' ? organizationName.trim() : undefined,
+        nationalIdNumber: userType === 'individual' ? nationalIdNumber.trim() : undefined,
+        tinNumber: userType === 'organization' ? tinNumber.trim() : undefined,
+      });
+
+      setPendingOtpVerification(normalizedMobile, {
+        userType,
+        tinNumber: userType === 'organization' ? tinNumber.trim() : null,
+      });
+
+      router.push({
+        pathname: '/(auth)/verify-otp',
+        params: { from: 'register' },
+      });
+    } catch (err) {
+      const mapped = mapRegisterApiError(err, t);
+      if (mapped.field) {
+        setFormError(null);
+        setFieldErrors({ [mapped.field]: mapped.message });
+        focusField(mapped.field);
+      } else {
+        setFieldErrors({});
+        setFormError(mapped.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = () => {
     const nextErrors: Record<string, string | undefined> = {};
     const trimmedMobile = mobileNumber.trim();
+    const trimmedEmail = email.trim();
 
     if (!trimmedMobile) {
       nextErrors.mobileNumber = t('auth.errors.phoneRequired');
-    } else if (!isValidEthiopianMobile(trimmedMobile)) {
+    } else if (!isValidLocalPhone(trimmedMobile)) {
       nextErrors.mobileNumber = t('auth.errors.invalidPhone');
+    }
+
+    if (trimmedEmail && !isValidEmail(trimmedEmail)) {
+      nextErrors.email = t('auth.errors.emailInvalid');
     }
 
     if (!password || password.length < 6) {
@@ -105,40 +230,12 @@ export default function RegisterScreen() {
     if (Object.keys(nextErrors).length > 0) {
       setFieldErrors(nextErrors);
       setFormError(null);
+      focusFirstError(nextErrors);
       return;
     }
 
-    setLoading(true);
-    setFormError(null);
-    setFieldErrors({});
-
-    try {
-      const nameParts = splitFullName(fullName);
-
-      await register({
-        userType,
-        mobileNumber: trimmedMobile,
-        phoneNumber: trimmedMobile,
-        password,
-        email: email.trim() || undefined,
-        firstName: userType === 'individual' ? nameParts.firstName : undefined,
-        lastName: userType === 'individual' ? nameParts.lastName : undefined,
-        organizationName: userType === 'organization' ? organizationName.trim() : undefined,
-        nationalIdNumber: userType === 'individual' ? nationalIdNumber.trim() : undefined,
-        tinNumber: userType === 'organization' ? tinNumber.trim() : undefined,
-      });
-
-      setPendingOtpVerification(trimmedMobile, {
-        userType,
-        tinNumber: userType === 'organization' ? tinNumber.trim() : null,
-      });
-
-      router.replace('/(auth)/verify-otp');
-    } catch (err) {
-      setFormError(resolveRegisterError(err, t));
-    } finally {
-      setLoading(false);
-    }
+    Keyboard.dismiss();
+    setConfirmVisible(true);
   };
 
   return (
@@ -152,12 +249,6 @@ export default function RegisterScreen() {
       <Text style={authStyles.subtitle}>{t('auth.registerSubtitle')}</Text>
       <Text style={authStyles.title}>{t('auth.register')}</Text>
       <Text style={authStyles.bodyText}>{t('auth.registerBody')}</Text>
-
-      {formError ? (
-        <View style={authStyles.errorBanner}>
-          <Text style={authStyles.errorBannerText}>{formError}</Text>
-        </View>
-      ) : null}
 
       <View style={authStyles.form}>
         <View style={authStyles.userTypeSection}>
@@ -185,7 +276,10 @@ export default function RegisterScreen() {
               ref={fullNameRef}
               label={t('auth.fullName')}
               value={fullName}
-              onChangeText={setFullName}
+              onChangeText={(value) => {
+                setFullName(value);
+                setFieldErrors((current) => ({ ...current, fullName: undefined }));
+              }}
               placeholder="Abebe Kebede"
               autoCapitalize="words"
               textContentType="name"
@@ -199,9 +293,13 @@ export default function RegisterScreen() {
               ref={nationalIdRef}
               label={t('auth.nationalIdNumber')}
               value={nationalIdNumber}
-              onChangeText={setNationalIdNumber}
+              onChangeText={(value) => {
+                setNationalIdNumber(value);
+                setFieldErrors((current) => ({ ...current, nationalIdNumber: undefined }));
+              }}
               placeholder="ID-123456"
               returnKeyType="next"
+              error={fieldErrors.nationalIdNumber}
               onSubmitEditing={() => mobileRef.current?.focus()}
               blurOnSubmit={false}
             />
@@ -212,7 +310,10 @@ export default function RegisterScreen() {
               ref={orgNameRef}
               label={t('auth.organizationName')}
               value={organizationName}
-              onChangeText={setOrganizationName}
+              onChangeText={(value) => {
+                setOrganizationName(value);
+                setFieldErrors((current) => ({ ...current, organizationName: undefined }));
+              }}
               placeholder="ABC Trading PLC"
               autoCapitalize="words"
               textContentType="organizationName"
@@ -226,7 +327,10 @@ export default function RegisterScreen() {
               ref={tinRef}
               label={t('auth.tinNumber')}
               value={tinNumber}
-              onChangeText={setTinNumber}
+              onChangeText={(value) => {
+                setTinNumber(value);
+                setFieldErrors((current) => ({ ...current, tinNumber: undefined }));
+              }}
               placeholder="TIN-123456"
               returnKeyType="next"
               error={fieldErrors.tinNumber}
@@ -240,8 +344,13 @@ export default function RegisterScreen() {
           ref={mobileRef}
           label={t('auth.mobileNumber')}
           value={mobileNumber}
-          onChangeText={setMobileNumber}
+          onChangeText={(value) => {
+            setMobileNumber(value.replace(/\D/g, '').slice(0, 10));
+            setFieldErrors((current) => ({ ...current, mobileNumber: undefined }));
+          }}
           placeholder={t('auth.mobilePlaceholder')}
+          prefix="+251"
+          maxLength={10}
           keyboardType="phone-pad"
           textContentType="telephoneNumber"
           autoComplete="tel"
@@ -255,13 +364,17 @@ export default function RegisterScreen() {
           ref={emailRef}
           label={t('auth.email')}
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(value) => {
+            setEmail(value);
+            setFieldErrors((current) => ({ ...current, email: undefined }));
+          }}
           placeholder="email@example.com"
           keyboardType="email-address"
           autoCapitalize="none"
           textContentType="emailAddress"
           autoComplete="email"
           returnKeyType="next"
+          error={fieldErrors.email}
           onSubmitEditing={() => passwordRef.current?.focus()}
           blurOnSubmit={false}
         />
@@ -298,6 +411,15 @@ export default function RegisterScreen() {
         />
       </View>
 
+      {formError ? (
+        <View style={authStyles.formErrorBanner}>
+          <View style={authStyles.formErrorBadge}>
+            <Text style={authStyles.formErrorBadgeText}>!</Text>
+          </View>
+          <Text style={authStyles.formErrorBannerText}>{formError}</Text>
+        </View>
+      ) : null}
+
       <GoldButton label={t('auth.register')} onPress={handleRegister} loading={loading} />
 
       <View style={authStyles.linkRow}>
@@ -316,6 +438,30 @@ export default function RegisterScreen() {
       >
         <Text style={authStyles.backLinkText}>{t('auth.continueAsGuest')}</Text>
       </TouchableOpacity>
+
+      <ConfirmPhoneModal
+        visible={confirmVisible}
+        mobileNumber={normalizeMobileNumber(mobileNumber.trim())}
+        loading={loading}
+        onConfirm={() => {
+          confirmActionRef.current = 'submit';
+          setConfirmVisible(false);
+        }}
+        onEdit={() => {
+          confirmActionRef.current = 'edit';
+          setConfirmVisible(false);
+        }}
+        onDismiss={() => {
+          setConfirmVisible(false);
+          const action = confirmActionRef.current;
+          confirmActionRef.current = null;
+          if (action === 'submit') {
+            submitRegistration();
+          } else if (action === 'edit') {
+            focusField('mobileNumber');
+          }
+        }}
+      />
     </AuthShell>
   );
 }

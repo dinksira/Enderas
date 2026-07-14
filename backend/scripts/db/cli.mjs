@@ -17,7 +17,7 @@ Commands:
   seed [normal|test]      Seed baseline (normal) or full test data (test, default)
   setup [normal|test]     migrate + seed
   reseed [normal|test]    purge seeded data, then seed again
-  reset [normal|test]     undo all migrations, migrate, then seed (destructive)
+  reset [normal|test]     drop all tables, migrate, then seed (destructive)
   help                    Show this help
 
 Options:
@@ -25,9 +25,11 @@ Options:
   --force                       Required for reset on non-development NODE_ENV
 
 Examples:
-  npm run db -- setup test
-  npm run db -- seed test
-  npm run db -- reseed test
+  npm run db:test
+  npm run db:test:reseed
+  npm run db:setup
+  npm run db:setup:reseed
+  npm run db -- migrate
   npm run db -- seed test --only=auctions
 `.trim();
 
@@ -113,7 +115,7 @@ export async function runCli(argv) {
 
     case 'reset':
       assertSafeReset(force);
-      resetDatabase();
+      await resetDatabase();
       await runSeed({ mode, only, logger: console });
       printSeedCredentials(mode, console);
       break;

@@ -10,9 +10,11 @@
     "db:migrate": "node --env-file=.env scripts/db/cli.mjs migrate",
     "db:patch-bid-drafts": "node --env-file=.env scripts/apply-bid-drafts-schema.mjs",
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
-    "db:setup": "node --env-file=.env scripts/db/cli.mjs setup test",
-    "db:setup:normal": "node --env-file=.env scripts/db/cli.mjs setup normal",
+    "db:setup": "node --env-file=.env scripts/db/cli.mjs setup normal",
     "db:setup:test": "node --env-file=.env scripts/db/cli.mjs setup test",
+    "db:test": "node --env-file=.env scripts/db/cli.mjs setup test",
+    "db:setup:reseed": "node --env-file=.env scripts/db/cli.mjs reseed normal",
+    "db:test:reseed": "node --env-file=.env scripts/db/cli.mjs reseed test",
     "db:seed": "node --env-file=.env scripts/db/cli.mjs seed test",
     "db:seed:normal": "node --env-file=.env scripts/db/cli.mjs seed normal",
     "db:seed:test": "node --env-file=.env scripts/db/cli.mjs seed test",
@@ -23,6 +25,7 @@
     "db:reset": "node --env-file=.env scripts/db/cli.mjs reset test",
     "db:reset:normal": "node --env-file=.env scripts/db/cli.mjs reset normal",
     "db:reset:test": "node --env-file=.env scripts/db/cli.mjs reset test",
+    "seed-assets:build": "node scripts/db/lib/build-seed-assets.mjs",
     "test": "node --test tests",
     "test:rbac": "node --test tests/rbac.policy.test.js",
     "test:auction-flow": "node --env-file=.env scripts/run-auction-flow-test.mjs"
@@ -37,10 +40,10 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.2.0",
     "mysql2": "^3.14.1",
-    "sequelize": "^6.37.7",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "sequelize-cli": "^6.6.3"
+    "sequelize-cli": "^6.6.3",
+    "sharp": "^0.35.3"
   }
 }

@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { GlassCard } from '@/components/shell/GlassCard';
 import { formatEtbAmount, getCategoryTheme } from '@/lib/auctionUtils';
+import { resolveMediaUrl } from '@/lib/media-utils';
 import type { LotParticipationRow, LotParticipationRowStatus } from '@/lib/lotParticipationUtils';
 import { countActiveLotParticipation } from '@/lib/lotParticipationUtils';
 import { useTheme } from '@/lib/appStore';
@@ -57,10 +58,10 @@ export function LotParticipationOverview({
     <GlassCard padding={compact ? 14 : 16} style={styles.card}>
       <View style={styles.header}>
         <Text style={[styles.sectionTitle, { color: colors.goldChampagne }]}>
-          {t('auction.participation.lotOverviewTitle')}
+          {t('auction.participation.itemOverviewTitle')}
         </Text>
         <Text style={[Typography.caption, { color: colors.textMuted }]}>
-          {t('auction.participation.lotOverviewSubtitle', {
+          {t('auction.participation.itemOverviewSubtitle', {
             active: activeCount,
             total: rows.length,
           })}
@@ -72,7 +73,7 @@ export function LotParticipationOverview({
           const meta = statusMeta(row.status);
           const statusColors = toneToStatus(meta.tone, colors);
           const theme = getCategoryTheme(row.category);
-          const thumbnailUri = row.imageUrls[0];
+          const thumbnailUri = resolveMediaUrl(row.imageUrls[0]);
           const isActive = row.status !== 'not_bidding';
 
           return (
@@ -89,7 +90,13 @@ export function LotParticipationOverview({
             >
               <View style={[styles.thumb, compact && styles.thumbCompact]}>
                 {thumbnailUri ? (
-                  <Image source={{ uri: thumbnailUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+                  <Image
+                    source={{ uri: thumbnailUri }}
+                    style={StyleSheet.absoluteFill}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    transition={0}
+                  />
                 ) : (
                   <LinearGradient colors={theme.colors} style={StyleSheet.absoluteFill} />
                 )}

@@ -7,12 +7,12 @@ import { Auction, AuctionAsset, User } from '../models/index.js';
 import { sequelize } from '../config/db.config.js';
 import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
-import { normalizeLotIdList, computeMinimumBidFromReserve, computeCpoDepositAmount } from '../utils/auction-lot.util.js';
+import { normalizeLotIdList, computeMinimumBidFromReserve, computeCpoFromBidAndReserve } from '../utils/auction-lot.util.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { cpoService } from './cpo.service.js';
 import { paymentService } from './payment.service.js';
 import { notificationService } from './notification.service.js';
-import { auctionService } from './auction.service.js';
+import { assertNotAuctionOwner } from '../utils/auction-owner.util.js';
 
 const bidInclude = [
   {
@@ -23,9 +23,17 @@ const bidInclude = [
   {
     model: Auction,
     as: 'auction',
-    attributes: ['id', 'title', 'status', 'reserve_price', 'start_date', 'end_date', 'currency'],
+    attributes: ['id', 'title', 'status', 'reserve_price', 'start_date', 'end_date', 'currency', 'image_urls'],
   },
 ];
+
+function resolveAuctionCoverImage(imageUrls) {
+  if (!Array.isArray(imageUrls)) {
+    return null;
+  }
+  const first = imageUrls.find((url) => typeof url === 'string' && url.length > 0);
+  return first ?? null;
+}
 
 function buildUserDisplayName(user) {
   if (!user) return null;
@@ -42,6 +50,7 @@ function serializeBidListRow(bid) {
     auctionId: plain.auction_id,
     auctionAssetId: plain.auction_asset_id ?? null,
     auctionTitle: plain.auction?.title ?? null,
+    auctionImageUrl: resolveAuctionCoverImage(plain.auction?.image_urls),
     userId: plain.user_id,
     bidderName: buildUserDisplayName(plain.user),
     amount: Number(plain.amount),
@@ -118,7 +127,7 @@ export async function listBids(options = {}, scope = {}) {
     where,
     include: [
       userInclude,
-      { model: Auction, as: 'auction', attributes: ['id', 'title', 'status'] },
+      { model: Auction, as: 'auction', attributes: ['id', 'title', 'status', 'image_urls'] },
     ],
     order: [['submitted_at', 'DESC']],
     limit,
@@ -166,6 +175,8 @@ export async function placeBid({ auctionId, auctionAssetId, amount }, userId) {
   if (auction.status !== 'published') {
     throw new AppError('Auction is not open for bidding', 400, 'AUCTION_NOT_OPEN');
   }
+
+  await assertNotAuctionOwner(userId, auctionId);
 
   const now = new Date();
   if (now < new Date(auction.start_date) || now > new Date(auction.end_date)) {
@@ -358,6 +369,8 @@ export async function submitBidWithCpo({ auctionId, bids, cpoDocumentUrl, transa
     throw new AppError('Auction is not open for bidding', 400, 'AUCTION_NOT_PUBLISHED');
   }
 
+  await assertNotAuctionOwner(userId, auctionId);
+
   const now = new Date();
   if (now < new Date(auction.start_date)) {
     throw new AppError('Auction has not started yet', 400, 'AUCTION_NOT_STARTED');
@@ -430,7 +443,7 @@ export async function submitBidWithCpo({ auctionId, bids, cpoDocumentUrl, transa
       );
     }
 
-    const deposit = computeCpoDepositAmount(reservePrice, cpoPercentage);
+    const deposit = computeCpoFromBidAndReserve(amount, reservePrice, cpoPercentage);
     totalDeposit += deposit;
 
     validatedBids.push({

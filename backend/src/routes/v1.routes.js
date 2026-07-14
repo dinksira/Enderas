@@ -30,6 +30,7 @@ import { notificationController } from '../controllers/notification.controller.j
 import { dashboardController } from '../controllers/dashboard.controller.js';
 import { shareLinkController } from '../controllers/share-link.controller.js';
 import { authController } from '../modules/auth/auth.controller.js';
+import { validateUpdateProfileBody } from '../modules/auth/auth.validation.js';
 import { requireKYCVerified } from '../middleware/kyc.middleware.js';
 import { requireStaff } from '../middleware/staff.middleware.js';
 import { uploadSingleFile } from '../middlewares/upload.middleware.js';
@@ -340,6 +341,20 @@ v1Router.post(
 );
 
 // Auctions — public browse (optional auth for myParticipation)
+v1Router.get(
+  '/auctions/my-owned',
+  authenticate,
+  attachDataScope(MODULES.ASSETS),
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.READ }),
+  auctionController.listOwnedAuctions,
+);
+v1Router.get(
+  '/auctions/browse/:id/owner-overview',
+  authenticate,
+  attachDataScope(MODULES.ASSETS),
+  authorize({ module: MODULES.ASSETS, action: ACTIONS.READ }),
+  auctionController.getAuctionOwnerOverview,
+);
 v1Router.get(
   '/auctions/browse',
   optionalAuthenticate,
@@ -977,36 +992,8 @@ v1Router.put(
 );
 
 // Session introspection
-v1Router.get('/auth/me', authenticate, async (req, res) => {
-  const principal = await authorizationPermissionService.resolvePrincipal(req.user.id);
-  const { User } = await import('../models/user.model.js');
-  const user = await User.findByPk(principal.userId, { attributes: ['avatar_url'] });
-  return sendSuccess(res, {
-    id: principal.userId,
-    roleId: principal.effectiveRoleId,
-    roleCode: principal.role.code,
-    userType: principal.userType,
-    staffId: principal.staffId,
-    status: principal.userStatus,
-    avatarUrl: user?.avatar_url || null,
-    permissions: {
-      wildcard: principal.wildcard,
-      modules: principal.modules,
-      actions: principal.actions,
-      routes: principal.routes,
-      moduleActions: principal.moduleActions ?? {},
-    },
-    identity: {
-      displayName: principal.displayName,
-      mobileNumber: principal.mobileNumber,
-      email: principal.email,
-      isStaff: principal.isStaff,
-    },
-  });
-});
-
-// Self-profile update
-v1Router.patch('/auth/me', authenticate, authController.updateMe);
+v1Router.get('/auth/me', authenticate, authController.getMe);
+v1Router.patch('/auth/me', authenticate, validateUpdateProfileBody, authController.updateMe);
 
 // Change password
 v1Router.post('/auth/change-password', authenticate, authController.changePassword);

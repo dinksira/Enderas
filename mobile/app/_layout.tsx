@@ -21,6 +21,7 @@ import {
   SpaceGrotesk_600SemiBold,
   SpaceGrotesk_700Bold,
 } from '@expo-google-fonts/space-grotesk';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { StatusBar } from 'expo-status-bar';
@@ -31,6 +32,8 @@ import { useAppStore, useTheme, useHydrated } from '@/lib/appStore';
 import { resolveThemeMode, THEMES } from '@/theme';
 import { NAV_TRANSITION_MS } from '@/theme/motion';
 import SplashScreen from '@/components/splash-screen/SplashScreen';
+import { AppErrorBoundary } from '@/components/shell/AppErrorBoundary';
+import { SessionExpiryWatcher } from '@/components/shell/SessionExpiryWatcher';
 
 /**
  * Root layout.
@@ -188,10 +191,13 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: resolvedColors.base }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <KeyboardProvider>
+        <BottomSheetModalProvider>
         <View style={{ flex: 1, backgroundColor: resolvedColors.base }}>
           <View style={{ flex: 1 }}>
             {navigatorMounted ? (
               <View style={{ flex: 1 }} onLayout={handleNavigatorLayout}>
+              <AppErrorBoundary>
+              <SessionExpiryWatcher />
               <Stack
                 screenOptions={{
                   headerShown: false,
@@ -225,6 +231,7 @@ export default function RootLayout() {
                   options={{ animation: 'slide_from_right', animationDuration: NAV_TRANSITION_MS }}
                 />
               </Stack>
+              </AppErrorBoundary>
               </View>
             ) : null}
           </View>
@@ -238,6 +245,7 @@ export default function RootLayout() {
             </View>
           ) : null}
         </View>
+        </BottomSheetModalProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );

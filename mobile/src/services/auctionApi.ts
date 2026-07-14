@@ -1,6 +1,7 @@
 import { ENV } from '@/lib/env';
 import { api } from '@/services/api';
 import type {
+  AuctionOwnerOverviewApi,
   AuctionParticipationApi,
   BidDraftApi,
   BrowseAuctionApi,
@@ -51,10 +52,24 @@ export function getDocumentStreamUrl(auctionId: string, docIndex = 0): string {
   return `${ENV.apiBaseUrl}${ENV.apiV1Prefix}/auctions/browse/${auctionId}/documents/${docIndex}/stream`;
 }
 
+export async function getOwnerOverview(id: string): Promise<AuctionOwnerOverviewApi> {
+  const response = await api.get<{ overview: AuctionOwnerOverviewApi } | AuctionOwnerOverviewApi>(
+    `${AUCTIONS_BASE}/browse/${id}/owner-overview`,
+  );
+  return (response as { overview?: AuctionOwnerOverviewApi }).overview
+    ?? (response as AuctionOwnerOverviewApi);
+}
+
+export async function listOwnedAuctions(): Promise<BrowseAuctionListResponse> {
+  return api.get<BrowseAuctionListResponse>(`${AUCTIONS_BASE}/my-owned`);
+}
+
 export const auctionApi = Object.freeze({
   browseAuctions,
   browseAuctionById,
   getParticipation,
+  getOwnerOverview,
+  listOwnedAuctions,
   getBidDrafts,
   getDocumentStreamUrl,
 });

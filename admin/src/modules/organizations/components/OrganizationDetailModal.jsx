@@ -225,7 +225,6 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
     setVisModalAuctionId(null);
     setVisModalAuctionTitle('');
   };
-
   const handleCopy = (text) => {
     try {
       navigator.clipboard.writeText(text);

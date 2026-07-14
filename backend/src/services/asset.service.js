@@ -8,6 +8,7 @@ import {
 import { AssetOwner } from '../models/assetOwner.model.js';
 import { User, Staff } from '../models/index.js';
 import { AppError } from '../utils/error.util.js';
+import { normalizePublicImageUrl } from '../utils/auction-image.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import { Auction } from '../models/auction.model.js';
 import { LAUNCH_WORKFLOW_ROLES } from '../constants/staff-role.constants.js';
@@ -110,22 +111,29 @@ function assertOwnershipDocMatchesType(assetType, ownershipDocumentType) {
 }
 
 function normalizeImageUrls(urls) {
-  if (Array.isArray(urls)) {
-    return urls.filter((url) => typeof url === 'string' && url.trim().length > 0);
-  }
-
-  if (typeof urls === 'string' && urls.trim()) {
-    try {
-      const parsed = JSON.parse(urls);
-      if (Array.isArray(parsed)) {
-        return parsed.filter((url) => typeof url === 'string' && url.trim().length > 0);
-      }
-    } catch {
-      return [];
+  const list = (() => {
+    if (Array.isArray(urls)) {
+      return urls;
     }
-  }
 
-  return [];
+    if (typeof urls === 'string' && urls.trim()) {
+      try {
+        const parsed = JSON.parse(urls);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch {
+        return [urls.trim()];
+      }
+    }
+
+    return [];
+  })();
+
+  return list
+    .filter((url) => typeof url === 'string' && url.trim().length > 0)
+    .map((url) => normalizePublicImageUrl(url.trim()))
+    .filter(Boolean);
 }
 
 function normalizeStoredDocuments(documents) {

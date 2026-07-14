@@ -1,6 +1,7 @@
 import {
   loginWithCredentials,
   completeLogin,
+  refreshSession as refreshAuthSession,
   register as registerUser,
   verifyOTP as verifyUserOTP,
   resendOTP as resendUserOTP,
@@ -14,6 +15,8 @@ import {
 import { sendSuccess } from '../../utils/response.util.js';
 import { InvalidCredentialsError, AppError, UnauthorizedError } from '../../utils/error.util.js';
 import { logLogin } from '../../services/audit.service.js';
+import { userService } from '../../services/user.service.js';
+import { authorizationPermissionService } from '../../core/authorization/permission.service.js';
 
 export async function login(req, res, next) {
   const mobileNumber = req.body?.mobile_number ?? req.body?.phoneNumber;
@@ -24,7 +27,24 @@ export async function login(req, res, next) {
       throw new InvalidCredentialsError();
     }
 
-    const userId = await loginWithCredentials(mobileNumber, password);
+    const { userId, requiresVerification, mobileNumber: verifiedMobile } =
+      await loginWithCredentials(mobileNumber, password);
+
+    // Correct credentials on an unverified account: re-issue the OTP and route
+    // the client to the verification screen instead of failing the sign-in.
+    if (requiresVerification) {
+      const targetMobile = verifiedMobile ?? mobileNumber;
+      const otpInfo = await resendUserOTP(targetMobile);
+
+      return sendSuccess(res, {
+        requiresOTPVerification: true,
+        mobileNumber: targetMobile,
+        otpExpiresIn: otpInfo.otpExpiresIn,
+        otpExpiresAt: otpInfo.otpExpiresAt,
+        ...(otpInfo.devOtp ? { devOtp: otpInfo.devOtp } : {}),
+        message: 'Please verify your phone number to finish signing in.',
+      });
+    }
 
     const session = await completeLogin(userId, {
       ipAddress: req.ip,
@@ -61,6 +81,27 @@ export async function login(req, res, next) {
       code: 'INTERNAL_SERVER_ERROR',
       message: res.__('generic.server_error'),
     });
+  }
+}
+
+export async function refreshSession(req, res, next) {
+  try {
+    const session = await refreshAuthSession(req.body.refreshToken, {
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+
+    return sendSuccess(res, {
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      refreshTokenExpiresAt: session.refreshTokenExpiresAt,
+      session: session.session,
+      identity: session.identity,
+      authz: session.authz,
+      user: session.user,
+    });
+  } catch (error) {
+    return next(error);
   }
 }
 
@@ -172,15 +213,63 @@ export async function verifyResetOtp(req, res, next) {
   }
 }
 
+function serializeAuthMe(principal) {
+  return {
+    id: principal.userId,
+    roleId: principal.effectiveRoleId,
+    roleCode: principal.role.code,
+    userType: principal.userType,
+    staffId: principal.staffId,
+    status: principal.userStatus,
+    permissions: {
+      wildcard: principal.wildcard,
+      modules: principal.modules,
+      actions: principal.actions,
+      routes: principal.routes,
+      moduleActions: principal.moduleActions ?? {},
+    },
+    identity: {
+      displayName: principal.displayName,
+      mobileNumber: principal.mobileNumber,
+      email: principal.email,
+      firstName: principal.firstName ?? null,
+      lastName: principal.lastName ?? null,
+      organizationName: principal.organizationName ?? null,
+      profilePicture: principal.profilePicture ?? null,
+      avatarUrl: principal.avatarUrl ?? null,
+      preferredLanguage: principal.preferredLanguage ?? null,
+      isStaff: principal.isStaff,
+    },
+  };
+}
+
+export async function getMe(req, res, next) {
+  try {
+    const principal = await authorizationPermissionService.resolvePrincipal(req.user.id);
+    return sendSuccess(res, serializeAuthMe(principal));
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export async function updateMe(req, res, next) {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return next(new UnauthorizedError());
-    }
+    const profile = await userService.updateMyProfile(req.user.id, {
+      email: req.body.email,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      organizationName: req.body.organizationName,
+      preferredLanguage: req.body.preferredLanguage,
+      profilePicture: req.body.profilePicture ?? req.body.profile_picture,
+    });
 
-    const result = await updateMeService(userId, req.body);
-    return sendSuccess(res, result);
+    await authorizationPermissionService.invalidateUserPermissions(req.user.id);
+    const principal = await authorizationPermissionService.resolvePrincipal(req.user.id);
+
+    return sendSuccess(res, {
+      ...serializeAuthMe(principal),
+      profile,
+    });
   } catch (error) {
     return next(error);
   }
@@ -214,15 +303,21 @@ export async function updateAvatar(req, res, next) {
     return next(error);
   }
 }
+  } catch (error) {
+    return next(error);
+  }
+}
 
 export const authController = Object.freeze({
   login,
+  refreshSession,
   register,
   verifyOTP,
   resendOTP,
   forgotPassword,
   resetPassword,
   verifyResetOtp,
+  getMe,
   updateMe,
   changePassword,
   updateAvatar,

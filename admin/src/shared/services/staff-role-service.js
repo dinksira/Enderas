@@ -1,16 +1,26 @@
 import { ENV, api } from '../api/index.js';
+import { staffService } from './staff-service.js';
 
 const ROLES_BASE = `${ENV.apiV1Prefix}/roles`;
 
 export const staffRoleService = Object.freeze({
-  getAll: (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return api.get(query ? `${ROLES_BASE}?${query}` : ROLES_BASE);
+  getAll: async () => {
+    const response = await staffService.getAssignableRoles();
+    return {
+      items: response?.roles ?? [],
+      permissionCatalog: response?.permissionCatalog ?? null,
+    };
   },
-  getById: (id) => api.get(`${ROLES_BASE}/${id}`),
-  create: (payload) => api.post(ROLES_BASE, payload),
-  update: (id, payload) => api.put(`${ROLES_BASE}/${id}`, payload),
-  remove: (id) => api.delete(`${ROLES_BASE}/${id}`),
+  getById: async (id) => {
+    const response = await staffService.getAssignableRoles();
+    const role = (response?.roles ?? []).find((item) => item.id === id);
+    if (!role) {
+      throw new Error('Role not found');
+    }
+    return { role, permissionCatalog: response?.permissionCatalog ?? null };
+  },
+  update: (id, payload) =>
+    api.put(`${ROLES_BASE}/${id}`, payload).then((response) => response?.role ?? response),
 });
 
 export default staffRoleService;

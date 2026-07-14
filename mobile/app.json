@@ -50,6 +50,21 @@
             "imageWidth": 76
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Enderas needs access to your photos so you can upload KYC documents, asset images, and your profile picture.",
+          "cameraPermission": "Enderas needs access to your camera so you can capture KYC documents and asset images."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
       ]
     ],
     "experiments": {

@@ -1,10 +1,14 @@
-export type BidStatus = 'submitted' | 'winning' | 'lost' | 'invalid';
+// The backend only ever sets `submitted` or `invalid` on a bid. Winners are
+// tracked separately (Winner table), so there is no winning/lost/outbid state
+// surfaced through the bids API.
+export type BidStatus = 'submitted' | 'invalid';
 
 export interface BidRecord {
   id: string;
   auctionId: string;
   auctionAssetId: string | null;
   auctionTitle: string | null;
+  auctionImageUrl: string | null;
   userId: string;
   bidderName: string | null;
   amount: number;
@@ -25,16 +29,4 @@ export interface BidListResponse {
   };
 }
 
-export type BidTabFilter = '' | 'active' | 'winning' | 'outbid' | 'won' | 'lost';
-
-export interface CpoRecord {
-  id: string;
-  status: string;
-  depositAmount: number;
-}
-
-export interface BidDraftRecord {
-  auctionAssetId: string;
-  amount: number;
-  status: string;
-}
+export type BidTabFilter = '' | 'submitted' | 'invalid';

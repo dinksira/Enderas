@@ -11,10 +11,19 @@ export const TEST_USERS = Object.freeze({
     department: 'Executive Management',
     roleCode: 'super_admin',
   }),
-  bidder: Object.freeze({
+  owner: Object.freeze({
     id: 'a1000002-0002-4002-8002-000000000002',
     mobileNumber: '0987654321',
     password: 'pass2',
+    firstName: 'Test',
+    lastName: 'Owner',
+    email: 'test.owner@enderass.local',
+    roleCode: 'bidder',
+  }),
+  bidder: Object.freeze({
+    id: 'a1000007-0007-4007-8007-000000000007',
+    mobileNumber: '0998765432',
+    password: 'pass3',
     firstName: 'Test',
     lastName: 'Bidder',
     email: 'test.bidder@enderass.local',

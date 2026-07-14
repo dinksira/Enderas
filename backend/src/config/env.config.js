@@ -86,6 +86,16 @@ export const env = Object.freeze({
     enabled: optionalEnv('AUCTION_AUTO_CLOSE_ENABLED', 'true') === 'true',
     intervalMs: Number(optionalEnv('AUCTION_AUTO_CLOSE_INTERVAL_MS', '60000')),
   }),
+
+  pendingUserCleanup: Object.freeze({
+    enabled: optionalEnv('PENDING_USER_CLEANUP_ENABLED', 'true') === 'true',
+    intervalMs: Number(optionalEnv('PENDING_USER_CLEANUP_INTERVAL_MS', '3600000')),
+    ttlHours: Number(optionalEnv('PENDING_USER_CLEANUP_TTL_HOURS', '12')),
+  }),
+
+  unsplash: Object.freeze({
+    accessKey: optionalEnv('UNSPLASH_ACCESS_KEY', ''),
+  }),
 });
 
 export default env;

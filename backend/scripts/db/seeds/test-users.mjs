@@ -20,11 +20,16 @@ export async function seedTestUsers({ transaction, logger = console }) {
   }
 
   await purgeUsersByMobiles(
-    [TEST_USERS.admin.mobileNumber, TEST_USERS.bidder.mobileNumber],
+    [
+      TEST_USERS.admin.mobileNumber,
+      TEST_USERS.owner.mobileNumber,
+      TEST_USERS.bidder.mobileNumber,
+    ],
     transaction,
   );
 
   const adminPasswordHash = await hashPassword(TEST_USERS.admin.password);
+  const ownerPasswordHash = await hashPassword(TEST_USERS.owner.password);
   const bidderPasswordHash = await hashPassword(TEST_USERS.bidder.password);
 
   const adminUserId = await upsertUser(
@@ -36,6 +41,15 @@ export async function seedTestUsers({ transaction, logger = console }) {
 
   await upsertStaff(TEST_USERS.admin, adminUserId, superAdminRole.id, transaction);
 
+  const ownerUserId = await upsertUser(
+    TEST_USERS.owner,
+    bidderRole.id,
+    ownerPasswordHash,
+    transaction,
+  );
+
+  await removeStaffForUser(ownerUserId, transaction);
+
   const bidderUserId = await upsertUser(
     TEST_USERS.bidder,
     bidderRole.id,
@@ -45,5 +59,7 @@ export async function seedTestUsers({ transaction, logger = console }) {
 
   await removeStaffForUser(bidderUserId, transaction);
 
-  logger.log('[seed] upserted test admin (0912345678 / pass1) and bidder (0987654321 / pass2)');
+  logger.log(
+    '[seed] upserted test admin (0912345678 / pass1), owner (0987654321 / pass2), bidder (0998765432 / pass3)',
+  );
 }

@@ -1,12 +1,14 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useTheme } from '@/lib/appStore';
 import { bidStatusTone, formatBidDate } from '@/lib/bidUtils';
 import { formatEtbAmount, getCategoryTheme } from '@/lib/auctionUtils';
+import { resolveMediaUrl } from '@/lib/media-utils';
 import { Typography, Spacing, Radii } from '@/theme';
 import { toneToStatus, type UiTone } from '@/theme/statusTones';
 import { PressableScale } from '@/components/ui';
@@ -35,6 +37,8 @@ function BidCardImpl({ bid, onPress }: BidCardProps) {
     defaultValue: bid.status.replace(/_/g, ' '),
   });
 
+  const coverUri = useMemo(() => resolveMediaUrl(bid.auctionImageUrl), [bid.auctionImageUrl]);
+
   return (
     <PressableScale onPress={onPress} scaleTo={0.98}>
       <View
@@ -44,23 +48,28 @@ function BidCardImpl({ bid, onPress }: BidCardProps) {
         ]}
       >
         <View style={styles.cover}>
+          {coverUri ? (
+            <Image
+              source={{ uri: coverUri }}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={120}
+            />
+          ) : (
+            <LinearGradient
+              colors={theme.colors}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          )}
           <LinearGradient
-            colors={theme.colors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <LinearGradient
-            colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.45)']}
+            colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.7)']}
             style={StyleSheet.absoluteFill}
           />
           <View style={styles.coverTop}>
-            <View style={styles.categoryChip}>
-              <MaterialCommunityIcons name="gavel" size={12} color={colors.cream} />
-              <Text style={[Typography.microCaps, { color: colors.cream }]}>
-                {t('bids.title')}
-              </Text>
-            </View>
+            <View style={styles.spacer} />
             <View
               style={[
                 styles.statusChip,
@@ -78,7 +87,7 @@ function BidCardImpl({ bid, onPress }: BidCardProps) {
           </View>
           <View style={styles.coverBottom}>
             <Text
-              style={[Typography.cardTitle, { color: colors.cream }]}
+              style={[Typography.cardTitle, { color: '#FFFAF0' }]}
               numberOfLines={2}
             >
               {bid.auctionTitle || t('bids.untitledAuction')}
@@ -127,7 +136,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cover: {
-    height: 108,
+    height: 132,
     padding: Spacing.sm,
     justifyContent: 'space-between',
   },
@@ -137,14 +146,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: Spacing.xs,
   },
-  categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xxs,
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: Spacing.xxs,
-    borderRadius: Radii.sm,
-    backgroundColor: 'rgba(0,0,0,0.28)',
+  spacer: {
+    flex: 1,
   },
   statusChip: {
     flexDirection: 'row',

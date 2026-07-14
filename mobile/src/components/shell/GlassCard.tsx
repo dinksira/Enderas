@@ -1,6 +1,8 @@
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef } from 'react';
 import { Animated, Easing } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 
+import { Duration } from '@/theme/motion';
 import { GlassSurface, type GlassSurfaceProps } from './GlassSurface';
 
 type GlassCardProps = Omit<GlassSurfaceProps, 'children'> & {
@@ -11,6 +13,9 @@ type GlassCardProps = Omit<GlassSurfaceProps, 'children'> & {
 
 /**
  * Animated glass card — wraps `GlassSurface` with a short fade/slide-in.
+ *
+ * 2026 redesign: entrance is 200ms with a 6px slide-up (was 220ms / 10px)
+ * for a snappier, subtler entrance.
  */
 export function GlassCard({
   children,
@@ -25,22 +30,45 @@ export function GlassCard({
   noAnimation,
 }: GlassCardProps) {
   const anim = useRef(new Animated.Value(noAnimation ? 1 : 0)).current;
+  const isFirstFocus = useRef(true);
 
   useEffect(() => {
     if (noAnimation) return;
     Animated.timing(anim, {
       toValue: 1,
-      duration: 220,
+      duration: Duration.fast,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
   }, [anim, noAnimation]);
 
+  // Parent screens freeze while a child route is open. A mount-only fade can
+  // stall at opacity 0 and leave card content invisible but still tappable.
+  useFocusEffect(
+    useCallback(() => {
+      if (noAnimation) return;
+      if (isFirstFocus.current) {
+        isFirstFocus.current = false;
+        return;
+      }
+      anim.stopAnimation((value) => {
+        if (value < 1) {
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: Duration.micro,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }).start();
+        }
+      });
+    }, [anim, noAnimation]),
+  );
+
   return (
     <Animated.View
       style={{
         opacity: anim,
-        transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+        transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }],
       }}
     >
       <GlassSurface

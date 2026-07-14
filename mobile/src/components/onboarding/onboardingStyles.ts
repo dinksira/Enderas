@@ -6,7 +6,7 @@ import type { ThemeColors } from '@/lib/theme';
 
 function createOnboardingStyles(colors: ThemeColors, isDark: boolean) {
   const titleShadow = isDark
-    ? { textShadowColor: 'rgba(212, 160, 23, 0.45)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 18 }
+    ? { textShadowColor: colors.goldGlow, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 18 }
     : { textShadowColor: 'transparent', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 0 };
 
   return StyleSheet.create({
@@ -103,6 +103,19 @@ function createOnboardingStyles(colors: ThemeColors, isDark: boolean) {
       borderRadius: 9999,
       backgroundColor: colors.chipFill,
       alignSelf: 'center',
+    },
+    gavelGlow: {
+      position: 'absolute',
+      borderRadius: 9999,
+      backgroundColor: colors.goldGlow,
+      alignSelf: 'center',
+    },
+    gavelIconWrapper: {
+      flex: 1,
+      width: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 2,
     },
     textArea: {
       alignItems: 'center',
@@ -333,40 +346,6 @@ function createOnboardingStyles(colors: ThemeColors, isDark: boolean) {
     navRowSlot: {
       flex: 1,
       alignSelf: 'stretch',
-    },
-    navButtonShell: {
-      borderRadius: 14,
-      overflow: 'hidden',
-      minHeight: 52,
-      width: '100%',
-    },
-    navButtonInner: {
-      paddingVertical: 16,
-      paddingHorizontal: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    navButtonOutline: {
-      backgroundColor: 'transparent',
-      borderWidth: 1.5,
-      borderColor: colors.goldBorderActive,
-    },
-    navButtonText: {
-      fontSize: 13,
-      fontWeight: '800',
-      color: colors.textOnGold,
-      letterSpacing: 2,
-      textTransform: 'uppercase',
-    },
-    navButtonTextOutline: {
-      color: colors.goldBright,
-    },
-    shimmerOverlay: {
-      position: 'absolute',
-      top: -10,
-      bottom: -10,
-      width: 70,
-      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.55)',
     },
   });
 }
