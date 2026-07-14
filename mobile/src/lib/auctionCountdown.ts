@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type CountdownUrgency = 'expired' | 'critical' | 'soon' | 'warm' | 'far';
 
@@ -117,23 +117,79 @@ function getCountdownState(endDate: string | null | undefined, endedLabel: strin
   };
 }
 
+/**
+ * Performance-optimised countdown hook.
+ *
+ * Previous version called `setCountdown` every 1000ms unconditionally,
+ * which forced the ENTIRE parent component (and all its children,
+ * including ImageGallery carousels) to re-render every second — even
+ * when the displayed label hadn't changed (e.g. "2d 5h 30m" stays the
+ * same for a full minute).
+ *
+ * Fix: compute the new state, compare the `shortLabel` + `label` +
+ * `urgency` + `expired` strings/booleans against the previous values,
+ * and only call `setCountdown` when something the UI actually displays
+ * has changed. This reduces re-renders from 60/min to ~1/min for
+ * multi-day auctions, and from 60/min to ~1/sec only for the final
+ * hour (where seconds are shown).
+ *
+ * The interval also adapts: when seconds aren't displayed (days or
+ * hours > 0), poll every 5s instead of every 1s — the label won't
+ * change more than once per minute anyway, so 5s polling catches the
+ * minute boundary with at most a 4s delay.
+ */
 export function useAuctionCountdown(endDate: string | null | undefined, endedLabel: string) {
   const initialCountdown = getCountdownState(endDate, endedLabel);
   const [countdown, setCountdown] = useState<CountdownState>(initialCountdown);
+  // Track the last-displayed values so we can skip redundant state updates.
+  const lastLabelRef = useRef(initialCountdown.label);
+  const lastShortLabelRef = useRef(initialCountdown.shortLabel);
+  const lastUrgencyRef = useRef(initialCountdown.urgency);
+  const lastExpiredRef = useRef(initialCountdown.expired);
 
   useEffect(() => {
-    const syncTimer = setTimeout(() => {
-      setCountdown(getCountdownState(endDate, endedLabel));
-    }, 0);
+    // Sync immediately on mount / when endDate changes.
+    const nextState = getCountdownState(endDate, endedLabel);
+
+    const changed =
+      nextState.label !== lastLabelRef.current ||
+      nextState.shortLabel !== lastShortLabelRef.current ||
+      nextState.urgency !== lastUrgencyRef.current ||
+      nextState.expired !== lastExpiredRef.current;
+
+    if (changed) {
+      lastLabelRef.current = nextState.label;
+      lastShortLabelRef.current = nextState.shortLabel;
+      lastUrgencyRef.current = nextState.urgency;
+      lastExpiredRef.current = nextState.expired;
+      setCountdown(nextState);
+    }
+
+    // Determine polling interval: if we're in the final hour (seconds
+    // are shown), poll every 1s. Otherwise poll every 5s — the label
+    // only changes once per minute, so 5s polling is enough.
+    const showSeconds =
+      nextState.totalSeconds > 0 && nextState.totalSeconds < 3600;
+    const intervalMs = showSeconds ? 1000 : 5000;
 
     const timer = setInterval(() => {
-      setCountdown(getCountdownState(endDate, endedLabel));
-    }, 1000);
+      const state = getCountdownState(endDate, endedLabel);
+      const shouldUpdate =
+        state.label !== lastLabelRef.current ||
+        state.shortLabel !== lastShortLabelRef.current ||
+        state.urgency !== lastUrgencyRef.current ||
+        state.expired !== lastExpiredRef.current;
 
-    return () => {
-      clearTimeout(syncTimer);
-      clearInterval(timer);
-    };
+      if (shouldUpdate) {
+        lastLabelRef.current = state.label;
+        lastShortLabelRef.current = state.shortLabel;
+        lastUrgencyRef.current = state.urgency;
+        lastExpiredRef.current = state.expired;
+        setCountdown(state);
+      }
+    }, intervalMs);
+
+    return () => clearInterval(timer);
   }, [endDate, endedLabel]);
 
   return countdown;

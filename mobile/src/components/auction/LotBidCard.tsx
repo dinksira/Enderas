@@ -101,6 +101,7 @@ function LotBidCardImpl({
                 style={StyleSheet.absoluteFill}
                 contentFit="cover"
                 cachePolicy="memory-disk"
+                recyclingKey={thumbUri}
                 transition={0}
               />
             ) : (

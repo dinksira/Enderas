@@ -1,11 +1,10 @@
-import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { GoldButton } from './GoldButton';
 import { Dialog } from '@/components/sheet';
 import { useTheme } from '@/lib/appStore';
-import { Radii, Spacing, Typography } from '@/theme';
+import { Spacing, Typography } from '@/theme';
 
 interface AuthSuccessModalProps {
   visible: boolean;

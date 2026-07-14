@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GoldButton } from '@/components/auth';
 import { Dialog } from '@/components/sheet';
 import { useTheme } from '@/lib/appStore';
-import { Radii, Spacing, Typography } from '@/theme';
+import { Spacing, Typography } from '@/theme';
 
 interface KycRequiredModalProps {
   visible: boolean;

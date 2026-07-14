@@ -498,7 +498,6 @@ module.exports = {
     await queryInterface.addIndex('cpos', ['refund_status'], { name: 'cpos_refund_status_idx' });
     await queryInterface.addIndex('cpos', ['reviewed_by_staff_id'], { name: 'cpos_reviewed_by_staff_id_idx' });
     await queryInterface.addIndex('cpos', ['user_id', 'auction_id'], { name: 'cpos_user_id_auction_id_idx' });
-    await queryInterface.addIndex('cpos', ['refund_status'], { name: 'cpos_refund_status_idx' });
 
     // ─────────────────────────────────────────────
     // 15. CPO PAYMENTS (from 007)

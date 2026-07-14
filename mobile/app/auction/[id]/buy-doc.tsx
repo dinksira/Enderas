@@ -35,7 +35,7 @@ export default function BuyAuctionDocScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const auctionId = id ?? '';
-  const { auction, participation, loading, error, refresh, kycVerified } = useAuctionParticipation(auctionId);
+  const { auction, participation, loading, refreshing, error, refresh, kycVerified } = useAuctionParticipation(auctionId);
   const { isAuthenticated } = useAuctionActionGate();
   const accessToken = useAuthStore((s) => s.accessToken);
   const [kycModalVisible, setKycModalVisible] = useState(false);
@@ -138,6 +138,8 @@ export default function BuyAuctionDocScreen() {
       showBack
       onBack={() => router.back()}
       bottomPadding={40}
+      refreshing={refreshing}
+      onRefresh={refresh}
     >
       {isPending ? (
         <ParticipationStatusBanner

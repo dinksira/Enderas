@@ -25,7 +25,7 @@ export default function AssetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { asset, loading, error, refresh } = useAssetDetail(id);
+  const { asset, loading, refreshing, error, refresh } = useAssetDetail(id);
 
   useEffect(() => {
     if (!asset?.imageUrls?.length) return;
@@ -107,6 +107,8 @@ export default function AssetDetailScreen() {
       onBack={() => router.back()}
       bottomPadding={40}
       noFade
+      refreshing={refreshing}
+      onRefresh={refresh}
     >
       {/* Image gallery hero */}
       <View style={styles.heroWrap}>

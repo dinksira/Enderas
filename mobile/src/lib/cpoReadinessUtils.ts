@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next';
 
 import { formatEtbAmount } from '@/lib/auctionUtils';
 import { mapAuctionAssetForDisplay } from '@/lib/auctionAssetUtils';
-import { getLotBidFeedback, validateLotBid } from '@/lib/auctionParticipationUtils';
+import { getLotBidFeedback } from '@/lib/auctionParticipationUtils';
 import type { CpoReadinessItem } from '@/components/auction/CpoReadinessSheet';
 import type { AuctionAssetApi } from '@/types/auctionApi';
 

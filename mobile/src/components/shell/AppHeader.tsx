@@ -1,8 +1,14 @@
-import { useEffect, useRef } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { useTheme } from '@/lib/appStore';
 import { glassElevation } from '@/lib/glassStyles';
@@ -55,25 +61,27 @@ export function AppHeader({
 }: AppHeaderProps) {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
-  const titleAnim = useRef(new Animated.Value(instantTitle ? 1 : 0)).current;
+  const titleProgress = useSharedValue(instantTitle ? 1 : 0);
 
   useEffect(() => {
     if (instantTitle) {
-      titleAnim.setValue(1);
+      titleProgress.value = 1;
       return;
     }
     // Reset on title change so the entrance replays for each screen.
-    titleAnim.setValue(0);
-    Animated.timing(titleAnim, {
-      toValue: 1,
+    titleProgress.value = 0;
+    titleProgress.value = withTiming(1, {
       duration: Duration.fast,
       easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [instantTitle, title, titleAnim]);
+    });
+  }, [instantTitle, title, titleProgress]);
 
-  const titleOpacity = titleAnim;
-  const titleY = titleAnim.interpolate({ inputRange: [0, 1], outputRange: [4, 0] });
+  // Reanimated v3 animated style — runs entirely on the UI thread so the
+  // title entrance no longer hops the JS thread on every screen focus.
+  const titleAnimStyle = useAnimatedStyle(() => ({
+    opacity: titleProgress.value,
+    transform: [{ translateY: 4 * (1 - titleProgress.value) }],
+  }));
 
   const handleBack = () => {
     if (onBack) onBack();
@@ -112,9 +120,7 @@ export function AppHeader({
         ) : null}
 
         {/* Center: title (and optional eyebrow). */}
-        <Animated.View
-          style={[styles.titleWrap, { opacity: titleOpacity, transform: [{ translateY: titleY }] }]}
-        >
+        <Animated.View style={[styles.titleWrap, titleAnimStyle]}>
           {eyebrow ? (
             <Text style={[Typography.eyebrow, { color: colors.goldChampagne, marginBottom: 1 }]} numberOfLines={1}>
               {eyebrow}

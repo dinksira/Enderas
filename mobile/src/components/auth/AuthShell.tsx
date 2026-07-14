@@ -1,10 +1,16 @@
-import { useEffect, useRef, type ReactNode } from 'react';
-import { Animated, Easing, View } from 'react-native';
+import { useEffect, type ReactNode } from 'react';
+import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   KeyboardAwareScrollView,
   KeyboardToolbar,
 } from 'react-native-keyboard-controller';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { useKeyboardToolbarTheme } from '@/lib/keyboardToolbarTheme';
 import { Duration } from '@/theme/motion';
@@ -22,6 +28,9 @@ import { useAuthStyles } from './authStyles';
  * -------------
  *   - Entrance is 200ms (was 250ms) — snappier.
  *   - Slide-up is 16px (was 24) — subtler, more refined.
+ *
+ * Reanimated v3: entrance runs on the UI thread so first-paint isn't
+ * blocked by the auth form's mount.
  */
 export function AuthShell({
   children,
@@ -32,19 +41,19 @@ export function AuthShell({
 }) {
   const authStyles = useAuthStyles();
   const toolbarTheme = useKeyboardToolbarTheme();
-  const entrance = useRef(new Animated.Value(0)).current;
+  const entrance = useSharedValue(0);
 
   useEffect(() => {
-    Animated.timing(entrance, {
-      toValue: 1,
+    entrance.value = withTiming(1, {
       duration: Duration.fast,
       easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
+    });
   }, [entrance]);
 
-  const entranceOpacity = entrance;
-  const entranceY = entrance.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
+  const entranceStyle = useAnimatedStyle(() => ({
+    opacity: entrance.value,
+    transform: [{ translateY: 16 * (1 - entrance.value) }],
+  }));
 
   return (
     <View style={authStyles.safeArea}>
@@ -69,12 +78,7 @@ export function AuthShell({
             scrollEnabled={keyboardAware}
           >
             <Animated.View
-              style={{
-                width: '100%',
-                alignItems: 'center',
-                opacity: entranceOpacity,
-                transform: [{ translateY: entranceY }],
-              }}
+              style={[{ width: '100%', alignItems: 'center' }, entranceStyle]}
             >
               {children}
             </Animated.View>

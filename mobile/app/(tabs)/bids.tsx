@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
-  FlatList,
   Pressable,
   StyleSheet,
   Text,
@@ -9,6 +8,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
 
 import { AuthRequired } from '@/components/auth';
 import { BidCard } from '@/components/bids/BidCard';
@@ -43,6 +43,17 @@ export default function BidsScreen() {
   return <AuthenticatedBidsScreen />;
 }
 
+/**
+ * Stable separator component for FlashList. FlashList v2 expects a
+ * component type for `ItemSeparatorComponent` (not an inline arrow that
+ * returns an element) so it can reuse the separator instance across
+ * items. Defining it once at module scope keeps the reference stable
+ * across re-renders and avoids the warning FlashList emits otherwise.
+ */
+function BidSeparator() {
+  return <View style={styles.separator} />;
+}
+
 function AuthenticatedBidsScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -52,55 +63,70 @@ function AuthenticatedBidsScreen() {
   const summary = useMemo(() => summarizeBids(bids), [bids]);
   const filteredBids = useMemo(() => filterBidsByTab(bids, tab), [bids, tab]);
 
-  const listHeader = (
-    <View style={styles.headerBlock}>
-      <Text style={[Typography.body, { color: colors.textSecondary }]}>
-        {t('bids.subtitle')}
-      </Text>
+  const listHeader = useMemo(
+    () => (
+      <View style={styles.headerBlock}>
+        <Text style={[Typography.body, { color: colors.textSecondary }]}>
+          {t('bids.subtitle')}
+        </Text>
 
-      <View style={styles.statsRow}>
-        <StatCard
-          label={t('bids.summary.totalBids')}
-          value={String(summary.total)}
-          icon="gavel"
-        />
-        <StatCard
-          label={t('bids.summary.totalValue')}
-          value={formatEtbAmount(summary.totalValue)}
-          icon="cash-multiple"
+        <View style={styles.statsRow}>
+          <StatCard
+            label={t('bids.summary.totalBids')}
+            value={String(summary.total)}
+            icon="gavel"
+          />
+          <StatCard
+            label={t('bids.summary.totalValue')}
+            value={formatEtbAmount(summary.totalValue)}
+            icon="cash-multiple"
+          />
+        </View>
+
+        <BidFilterPills value={tab} onChange={setTab} />
+
+        <Text style={[Typography.microCaps, { color: colors.goldChampagne }]}>
+          {t('bids.results', { count: filteredBids.length })}
+        </Text>
+      </View>
+    ),
+    [colors, filteredBids.length, summary.total, summary.totalValue, t, tab],
+  );
+
+  const renderBid = useCallback(
+    ({ item }: { item: (typeof filteredBids)[number] }) => (
+      // FlashList v2 positions cells absolutely and gives each cell an
+      // explicit width — the renderItem root just needs to FILL that
+      // cell. `width: '100%'` is the simplest way to do that without
+      // fighting FlashList's enforced layout.
+      <View style={{ width: '100%' }}>
+        <BidCard
+          bid={item}
+          onPress={
+            item.auctionId
+              ? () => router.push(`/auction/${item.auctionId}` as any)
+              : undefined
+          }
         />
       </View>
-
-      <BidFilterPills value={tab} onChange={setTab} />
-
-      <Text style={[Typography.microCaps, { color: colors.goldChampagne }]}>
-        {t('bids.results', { count: filteredBids.length })}
-      </Text>
-    </View>
+    ),
+    [],
   );
 
   return (
     <View style={[styles.host, { backgroundColor: colors.base }]}>
       <AppHeader title={t('bids.title')} />
-      <FlatList
+      <FlashList
         data={filteredBids}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <BidCard
-            bid={item}
-            onPress={
-              item.auctionId
-                ? () => router.push(`/auction/${item.auctionId}` as any)
-                : undefined
-            }
-          />
-        )}
+        renderItem={renderBid}
         ListHeaderComponent={listHeader}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={BidSeparator}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshing={refreshing}
         onRefresh={refresh}
+        maintainVisibleContentPosition={{ disabled: true }}
         ListEmptyComponent={
           loading ? (
             <View style={styles.skeletonCol}>

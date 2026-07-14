@@ -59,6 +59,7 @@ function AssetCardImpl({ asset, onPress }: AssetCardProps) {
               style={StyleSheet.absoluteFill}
               contentFit="cover"
               cachePolicy="memory-disk"
+              recyclingKey={thumbnailUri}
               transition={0}
             />
           ) : (

@@ -41,6 +41,7 @@ export const Payment = sequelize.define(
     transaction_reference: {
       type: DataTypes.STRING(255),
       allowNull: true,
+      unique: true,
     },
     receipt_url: {
       type: DataTypes.STRING(500),

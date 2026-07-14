@@ -40,7 +40,7 @@ export default function EditProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
   const updateUserFields = useAuthStore((s) => s.updateUserFields);
-  const { refresh } = useRefreshSession();
+  const { refreshing, refresh } = useRefreshSession();
 
   const isOrganization = user?.userType === 'organization';
 
@@ -244,6 +244,8 @@ export default function EditProfileScreen() {
       bottomPadding={120}
       keyboardAware
       keyboardToolbar
+      refreshing={refreshing}
+      onRefresh={refresh}
     >
       <GlassCard padding={18}>
         <View style={styles.avatarSection}>
