@@ -57,6 +57,8 @@ export const api = Object.freeze({
     apiRequest(endpoint, { method: 'POST', body: body instanceof FormData ? body : JSON.stringify(body) }),
   put: (endpoint, body) =>
     apiRequest(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
+  patch: (endpoint, body) =>
+    apiRequest(endpoint, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: (endpoint) => apiRequest(endpoint, { method: 'DELETE' }),
 });
 

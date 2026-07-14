@@ -71,6 +71,7 @@
       "settings": "የስርዓት ቅንብሮች",
       "setting": "የስርዓት ቅንብሮች",
       "profile": "መገለጫ",
+      "about": "ስለ ኤንደራስ",
       "browseauctions": "ጨረታዎችን ይመልከቱ",
       "mybids": "የኔ ጨረታዎች",
       "mypayments": "የኔ ክፍያዎች",
@@ -187,7 +188,8 @@
         "cpoPercentage": "CPO መቶኛ (%)",
         "images": "የጨረታ ምስሎች",
         "documents": "የጨረታ ሰነዶች",
-        "linkedAsset": "የተገናኙ ንብረቶች"
+        "linkedAsset": "የተገናኙ ንብረቶች",
+        "organization": "ድርጅት"
       },
       "assetStep": {
         "search": "የተገመገሙ ንብረቶችን ይፈልጉ",
@@ -214,7 +216,13 @@
         "evaluationReport": "የግምገማ ሪፖርት"
       },
       "placeholders": {
-        "selectCategory": "ምድብ ይምረጡ"
+        "selectCategory": "ምድብ ይምረጡ",
+        "selectOrganization": "ድርጅት ይምረጡ (አማራጭ)"
+      },
+      "organizationStep": {
+        "loading": "ድርጅቶች እየጫኑ ነው...",
+        "loadFailed": "ድርጅቶችን ማግኘት አልተቻለም። ከኋላ ደግመው ይሞክሩ.",
+        "noOrganizations": "ማስተካከያ ለሆነ ድርጅት የለም።"
       },
       "sections": {
         "images": "የጨረታ ምስሎች",
@@ -234,6 +242,7 @@
         "documentCount": "{{count}} ሰነድ(ዎች) ተመርጠዋል",
         "noAsset": "ተለይቶ የተፈጠረ ጨረታ (የተገናኘ ንብረት የለም)",
         "multiAssetCount": "በዚህ ጨረታ ውስጥ {{count}} ንብረቶች",
+        "noOrganization": "ምንም ድርጅት አልተጣለም",
         "lotsTitle": "የጨረታ ሎቶች"
       },
       "actions": {
@@ -585,6 +594,9 @@
     "uploadFailed": "መስቀል አልተሳካም",
     "close": "ዝጋ",
     "empty": "—",
+    "save": "አስቀምጥ",
+    "saving": "በመቀጠል ላይ...",
+    "cancel": "ሰርዝ",
     "languages": {
       "english": "እንግሊዝኛ",
       "amharic": "አማርኛ"
@@ -2019,7 +2031,31 @@
       "role": "ሚና",
       "userType": "የተጠቃሚ አይነት",
       "kycStatus": "የKYC ሁኔታ",
-      "kycSubmitted": "KYC ቀርቧል"
+      "kycSubmitted": "KYC ቀርቧል",
+      "tabs": {
+        "info": "የሰው መረጃ",
+        "password": "የፓስወርድ መቀየር",
+        "kyc": "የKYC ሁኔታ"
+      },
+      "firstName": "የመጀመሪያ ስም",
+      "lastName": "የስር ስም",
+      "preferredLanguage": "የተመርጠ ቋንቋ",
+      "editProfile": "መገለጫ ያስተካክሉ",
+      "saveSuccess": "መገለጫ በተሳካ ሁኔታ ተዘምኗል።",
+      "saveFailed": "መገለጫ ማስተካከል አልተሳካም።",
+      "passwordDesc": "መለያዎን ይጠቅቁ እና ደህንነቱን ያስጠብቁ።",
+      "currentPassword": "የአሁን ፓስወርድ",
+      "newPassword": "አዲስ ፓስወርድ",
+      "confirmPassword": "ፓስወርድ ያረጋግጡ",
+      "changePassword": "ፓስወርድ ያስተካክሉ",
+      "passwordMismatch": "ፓስወርዶቹ አይመሳሰሉም።",
+      "passwordTooShort": "ፓስወርድ ቢያንስ 6 ቁምፊዎች መሆን አለበት።",
+      "passwordChangeSuccess": "ፓስወርድ በተሳካ ሁኔታ ተቀይጧል። እባክዎን እንደገና ይግቡ።",
+      "passwordChangeFailed": "ፓስወርድ መቀየር አልተሳካም።",
+      "noKyc": "የKYC ማረጋገጫ እስካሁን አልተገለጠም።",
+      "changeAvatar": "አቫታር ለመቀየር ይጫኑ",
+      "avatarUpdateSuccess": "አቫታር በተሳካ ሁኔታ ተቀይጧል።",
+      "avatarUpdateFailed": "አቫታር መቀየር አልተሳካም።"
     }
   },
   "staff": {
@@ -2266,16 +2302,21 @@
   },
   "settings": {
     "pageTitle": "የስርዓት ቅንብሮች",
-    "subtitle": "ቋንቋ፣ የጨረታ ነባሪዎች እና የመድረክ ገደቦች።",
+    "subtitle": "ቋንቋ ቅንብሮች፣ የጨረታ ነባሪዎች እና የመድረክ ገደቦችን ያ핏ቅሩ።",
     "loading": "ቅንብሮች በመጫን ላይ...",
     "loadFailed": "ቅንብሮችን ማስገባት አልተሳካም።",
-    "save": "ቅንብሮችን አስቀምጥ",
+    "save": "ለውጦችን አስቀምጥ",
     "saving": "በማስቀመጥ ላይ...",
     "saveSuccess": "ቅንብሮች በተሳካ ሁኔታ ተቀምጠዋል።",
     "saveFailed": "ቅንብሮችን ማስቀመጥ አልተሳካም።",
+    "tabs": {
+      "localization": "ቋንቋ",
+      "auction": "ጨረታ",
+      "system": "ስርዓት"
+    },
     "localization": {
-      "title": "ቋንቋ",
-      "description": "ነባሪ ቋንቋ እና የሚደገፉ ቋንቋዎች።",
+      "title": "ቋንቋ እና ክልል",
+      "description": "ነባሪ ቋንቋ ያስቀምጡ እና በመድረክ ውስጥ የሚ利用您的 ቋንቋዎችን ያቀርብ ይወስዱ።",
       "defaultLanguage": "ነባሪ ቋንቋ",
       "supportedLanguages": "የሚደገፉ ቋንቋዎች",
       "languages": {
@@ -2285,14 +2326,21 @@
     },
     "auction": {
       "title": "የጨረታ ነባሪዎች",
+      "description": "ነባሪ ምንዛሬ፣ ቅርብ ተግባር መቶኛ እና ዝቅተኛ የጨረታ ጭማሪ ያ핏ቅሩ።",
       "defaultCurrency": "ነባሪ ምንዛሬ",
-      "defaultCpoPercentage": "ነባሪ CPO መቶኛ",
-      "minBidIncrement": "ዝቅተኛ የጨረታ ጭማሪ"
+      "defaultCpoPercentage": "ቅርብ ተግባር መጠን",
+      "minBidIncrement": "ዝቅተኛ የጨረታ ጭማሪ",
+      "currencyHint": "ISO 4217 የምንዛሬ ኮድ",
+      "cpoHint": "በተሳካ ረቃቂ ላይ የሚከፈል መቶኛ",
+      "bidHint": "ከሁሉም ቁጥሮች በታች የሚሆን ጭማሪ"
     },
     "system": {
       "title": "የስርዓት ገደቦች",
-      "otpTtlSeconds": "OTP TTL (ሰከንዶች)",
-      "maxFileSize": "ከፍተኛ የፋይል መጠን (ባይት)"
+      "description": "ለOTP ማረጋገጫ እና የፋይል መጫኛ ስርዓት ገደቦችን ያ控制 ይወስዱ።",
+      "otpTtlSeconds": "OTP ጊዜ መጠን",
+      "maxFileSize": "ከፍተኛ የፋይል መጠን",
+      "otpHint": "OTP ኮዶች ምን ዕཚትት ይቆያሉ",
+      "fileHint": "ከፍተኛ የመጫኛ መጠን ባይት"
     }
   },
   "audit": {
@@ -2497,6 +2545,25 @@
         "refresh": "አድስ"
       }
     }
+  },
+  "about": {
+    "pageTitle": "ስለ ኤንደራስ",
+    "pageSubtitle": "የስርዓት መረጃ እና የመድረክ ዝርዝሮች።",
+    "title": "ስለ ኤንደራስ",
+    "subtitle": "የጨረታ አስተዳደር ስርዓት",
+    "systemInfo": "የስርዓት መረጃ",
+    "version": "ስርዓት መጠን",
+    "environment": "አከባቢያ",
+    "buildDate": "የምሽቱ ቀን",
+    "aboutEnderas": "ስለ ኤንደራስ",
+    "description": "ኤንደራስ ለኢትዮጵያ ውስጥ ያሉ ድርጅቶች እና ግለሰቦች የጨረታ ሂደትን ለማቀላቀል የተነሳ ሙሉ በሙሉ የጨረታ አስተዳደር ስርዓት ነው።",
+    "features": "ዋና ባህሪዎች",
+    "feature1": "ከፍጠር እስከ ተሸካሚ ምርጫ ሙሉ የጨረታ የህይወት ዘመን አስተዳደር",
+    "feature2": "የKYC ማረጋገጫ እና ተከታተል",
+    "feature3": "ከድረስ ድረስ የቢድ አስተዳደር",
+    "feature4": "ከCPO ጋር ደህንነቱ የተጠበቀ የክፍያ ማስኬድ",
+    "feature5": "ለጨረታ ግልጽነት የመደበኛ ተጓዦ ፖርታል",
+    "rights": "መብቱ በህግ የተጠበቀ ነው።"
   }
 }
 

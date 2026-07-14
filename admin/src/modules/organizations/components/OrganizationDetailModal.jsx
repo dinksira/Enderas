@@ -7,6 +7,7 @@ import { useAuthStore } from '@enderass/shared/auth';
 import { organizationService, shareLinkAdminService } from '@enderass/shared/services';
 import { formatDate, formatDisplayValue } from '@enderass/shared/utils';
 import { getOrgDisplayName, getOrgStatusVariant } from '../utils/organization-utils.js';
+import { VisibilityToggleModal } from './VisibilityToggleModal.jsx';
 
 function MetaRow({ label, value, highlight }) {
   return (
@@ -131,6 +132,9 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
   const [shareLinks, setShareLinks] = useState({});
   const [generatingFor, setGeneratingFor] = useState(null);
   const [copied, setCopied] = useState('');
+  const [visModalOpen, setVisModalOpen] = useState(false);
+  const [visModalAuctionId, setVisModalAuctionId] = useState(null);
+  const [visModalAuctionTitle, setVisModalAuctionTitle] = useState('');
 
   const fetchLinked = useCallback(async () => {
     if (!orgId) return;
@@ -188,11 +192,13 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
     }
   };
 
-  const handleGenerateShareLink = async (auctionId) => {
+  const handleGenerateShareLink = async (auctionId, visibilitySettings) => {
     setGeneratingFor(auctionId);
+    setVisModalOpen(false);
     try {
       const result = await shareLinkAdminService.create(auctionId, {
         organizationName: orgName || 'External Viewer',
+        visibilitySettings,
       });
       setShareLinks((prev) => ({
         ...prev,
@@ -203,9 +209,22 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
       // handled
     } finally {
       setGeneratingFor(null);
+      setVisModalAuctionId(null);
+      setVisModalAuctionTitle('');
     }
   };
 
+  const openVisModal = (auctionId, auctionTitle) => {
+    setVisModalAuctionId(auctionId);
+    setVisModalAuctionTitle(auctionTitle);
+    setVisModalOpen(true);
+  };
+
+  const closeVisModal = () => {
+    setVisModalOpen(false);
+    setVisModalAuctionId(null);
+    setVisModalAuctionTitle('');
+  };
   const handleCopy = (text) => {
     try {
       navigator.clipboard.writeText(text);
@@ -277,7 +296,7 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
                     <button
                       type="button"
                       className="btn btn--sm"
-                      onClick={() => handleGenerateShareLink(auction.id)}
+                      onClick={() => openVisModal(auction.id, auction.title)}
                       disabled={generatingFor === auction.id}
                     >
                       {generatingFor === auction.id ? '...' : 'Generate Link'}
@@ -325,6 +344,13 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
           </div>
         </div>
       )}
+
+      <VisibilityToggleModal
+        open={visModalOpen}
+        onClose={closeVisModal}
+        onConfirm={(settings) => handleGenerateShareLink(visModalAuctionId, settings)}
+        auctionTitle={visModalAuctionTitle}
+      />
     </div>
   );
 }

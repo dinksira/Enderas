@@ -121,7 +121,11 @@ flowchart TB
 cd backend
 cp .env.example .env    # configure DB_*, JWT_ACCESS_SECRET, REDIS_URL
 npm install
+<<<<<<< HEAD
+npm run db:setup:test   # migrate + seed full test data
+=======
 npm run db:test           # migrate + seed full local test data
+>>>>>>> magersoftware/main
 npm run dev
 ```
 
@@ -160,11 +164,20 @@ npx expo start
 All database operations are handled through the unified CLI. Migrations live in `backend/migrations/` and seeding is managed by `backend/scripts/db/cli.mjs`.
 
 ```bash
+<<<<<<< HEAD
+npm run db:setup:test        # migrate + seed full test data (recommended for new DBs)
+npm run db:setup:normal      # migrate + seed baseline only
+npm run db:seed:test         # seed test data on an already-migrated DB
+npm run db:reseed:test       # purge test data, then re-seed
+npm run db:reset:test        # undo all migrations, migrate, re-seed (destructive)
+npm run db:seed:auctions     # seed only the auction catalog
+=======
 npm run db:test            # migrate + seed full test data (recommended for new DBs)
 npm run db:setup           # migrate + seed baseline only
 npm run db:test:reseed     # purge test data, then re-seed
 npm run db:setup:reseed    # purge test data, then re-apply baseline
 npm run db -- <command>    # unified migrate/seed/reset CLI
+>>>>>>> magersoftware/main
 ```
 
 Generic form: `npm run db -- <command> [normal|test] [--only=users,staff,auctions]`
@@ -256,4 +269,8 @@ This project is proprietary software of **Enderas National PLC**. All rights res
 
 <p align="center">
   Built with precision for the Ethiopian auction ecosystem 🇪🇹
+<<<<<<< HEAD
 </p>
+=======
+</p>
+>>>>>>> magersoftware/main

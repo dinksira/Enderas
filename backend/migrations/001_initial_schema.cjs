@@ -12,7 +12,7 @@ const {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const { DATE, NOW, CHAR, STRING, TEXT, ENUM, DECIMAL, INTEGER, BOOLEAN, JSON } = Sequelize;
+    const { DATE, NOW, CHAR, STRING, TEXT, ENUM, DECIMAL, INTEGER, BOOLEAN, JSON: SequelizeJSON } = Sequelize;
 
     // ─────────────────────────────────────────────
     // 1. ROLES
@@ -202,9 +202,9 @@ module.exports = {
         allowNull: true,
       },
       ownership_document_url: { type: STRING(500), allowNull: true },
-      additional_document_urls: { type: JSON, allowNull: true },
+      additional_document_urls: { type: SequelizeJSON, allowNull: true },
       condition_notes: { type: TEXT, allowNull: true },
-      image_urls: { type: JSON, allowNull: true },
+      image_urls: { type: SequelizeJSON, allowNull: true },
       desired_reserve_price: { type: DECIMAL(15, 2), allowNull: true },
       auction_conditions: { type: TEXT, allowNull: true },
       status: {
@@ -247,7 +247,7 @@ module.exports = {
       valuation_amount: { type: DECIMAL(18, 2), allowNull: true },
       currency: { type: STRING(3), allowNull: false, defaultValue: 'ETB' },
       reserve_price_recommendation: { type: DECIMAL(18, 2), allowNull: true },
-      photo_urls: { type: JSON, allowNull: true },
+      photo_urls: { type: SequelizeJSON, allowNull: true },
       report_url: { type: STRING(500), allowNull: true },
       recommendation: { type: ENUM('approved', 'rejected'), allowNull: true },
       status: {
@@ -290,8 +290,8 @@ module.exports = {
       },
       description: { type: TEXT, allowNull: true },
       auction_conditions: { type: TEXT, allowNull: true },
-      image_urls: { type: JSON, allowNull: true },
-      document_files: { type: JSON, allowNull: true },
+      image_urls: { type: SequelizeJSON, allowNull: true },
+      document_files: { type: SequelizeJSON, allowNull: true },
       start_date: { type: DATE, allowNull: false },
       end_date: { type: DATE, allowNull: false },
       reserve_price: { type: DECIMAL(18, 2), allowNull: false },
@@ -352,7 +352,7 @@ module.exports = {
       reserve_price: { type: DECIMAL(18, 2), allowNull: false },
       sort_order: { type: INTEGER, allowNull: false, defaultValue: 0 },
       lot_label: { type: STRING(50), allowNull: true },
-      tags: { type: JSON, allowNull: true },
+      tags: { type: SequelizeJSON, allowNull: true },
       outcome_status: {
         type: ENUM('pending', 'sold', 'unsold', 'withdrawn'),
         allowNull: false,
@@ -466,11 +466,11 @@ module.exports = {
       user_id: { type: CHAR(36), allowNull: false },
       auction_id: { type: CHAR(36), allowNull: false },
       document_url: { type: STRING(500), allowNull: false },
-      selected_auction_asset_ids: { type: JSON, allowNull: true },
+      selected_auction_asset_ids: { type: SequelizeJSON, allowNull: true },
       required_cpo_amount: { type: DECIMAL(18, 2), allowNull: true },
       declared_cpo_amount: { type: DECIMAL(18, 2), allowNull: true },
       deposit_amount: { type: DECIMAL(18, 2), allowNull: true },
-      proposed_bids: { type: JSON, allowNull: true },
+      proposed_bids: { type: SequelizeJSON, allowNull: true },
       status: {
         type: ENUM('pending', 'approved', 'rejected'),
         allowNull: false,
@@ -554,7 +554,7 @@ module.exports = {
       verified_at: { type: DATE, allowNull: true },
       rejection_reason: { type: TEXT, allowNull: true },
       paid_at: { type: DATE, allowNull: true },
-      gateway_response: { type: JSON, allowNull: true },
+      gateway_response: { type: SequelizeJSON, allowNull: true },
       created_at: { type: DATE, allowNull: false, defaultValue: NOW },
       updated_at: { type: DATE, allowNull: false, defaultValue: NOW },
       deleted_at: { type: DATE, allowNull: true },
@@ -692,7 +692,7 @@ module.exports = {
         allowNull: false,
         defaultValue: 'pending',
       },
-      metadata: { type: JSON, allowNull: true },
+      metadata: { type: SequelizeJSON, allowNull: true },
       sent_at: { type: DATE, allowNull: true },
       read_at: { type: DATE, allowNull: true },
       created_at: { type: DATE, allowNull: false, defaultValue: NOW },
@@ -720,9 +720,9 @@ module.exports = {
       entity_id: { type: CHAR(36), allowNull: true },
       ip_address: { type: STRING(45), allowNull: true },
       user_agent: { type: STRING(500), allowNull: true },
-      old_values: { type: JSON, allowNull: true },
-      new_values: { type: JSON, allowNull: true },
-      metadata: { type: JSON, allowNull: true },
+      old_values: { type: SequelizeJSON, allowNull: true },
+      new_values: { type: SequelizeJSON, allowNull: true },
+      metadata: { type: SequelizeJSON, allowNull: true },
       created_at: { type: DATE, allowNull: false, defaultValue: NOW },
     });
 
@@ -761,7 +761,7 @@ module.exports = {
     await queryInterface.createTable('system_settings', {
       id: { type: CHAR(36), allowNull: false, primaryKey: true },
       setting_key: { type: STRING(100), allowNull: false, unique: true },
-      setting_value: { type: JSON, allowNull: false },
+      setting_value: { type: SequelizeJSON, allowNull: false },
       description: { type: STRING(255), allowNull: true },
       updated_by_staff_id: { type: CHAR(36), allowNull: true },
       created_at: { type: DATE, allowNull: false, defaultValue: NOW },
@@ -930,7 +930,6 @@ module.exports = {
         ADD CONSTRAINT cpo_payments_verified_by_staff_id_fk
           FOREIGN KEY (verified_by_staff_id) REFERENCES staff (id)
           ON DELETE SET NULL ON UPDATE CASCADE
-          ON DELETE SET NULL ON UPDATE CASCADE
     `);
 
     await queryInterface.sequelize.query(`
@@ -942,22 +941,6 @@ module.exports = {
           FOREIGN KEY (auction_id) REFERENCES auctions (id)
           ON UPDATE CASCADE,
         ADD CONSTRAINT fk_payments_verified_by_staff_id
-          FOREIGN KEY (verified_by_staff_id) REFERENCES staff (id)
-          ON DELETE SET NULL ON UPDATE CASCADE
-    `);
-
-    await queryInterface.sequelize.query(`
-      ALTER TABLE cpo_payments
-        ADD CONSTRAINT cpo_payments_cpo_id_fk
-          FOREIGN KEY (cpo_id) REFERENCES cpos (id)
-          ON DELETE CASCADE ON UPDATE CASCADE,
-        ADD CONSTRAINT cpo_payments_user_id_fk
-          FOREIGN KEY (user_id) REFERENCES users (id)
-          ON UPDATE CASCADE,
-        ADD CONSTRAINT cpo_payments_auction_id_fk
-          FOREIGN KEY (auction_id) REFERENCES auctions (id)
-          ON UPDATE CASCADE,
-        ADD CONSTRAINT cpo_payments_verified_by_staff_id_fk
           FOREIGN KEY (verified_by_staff_id) REFERENCES staff (id)
           ON DELETE SET NULL ON UPDATE CASCADE
     `);

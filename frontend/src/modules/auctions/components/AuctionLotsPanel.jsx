@@ -54,9 +54,9 @@ function AssetTagPill({ tag }) {
 function AssetCard({ asset, reserve, tags, draft, bidDraftAmount, index, cpoPercentage, selectable, isSelected, onToggle, onOpenDetails, draftBidAmount, onBidAmountChange }) {
   const { t } = useTranslation();
   const tagList = useMemo(() => {
-    const raw = asset.tags ?? tags ?? [];
+    const raw = asset.tags ?? asset.tagList ?? asset.tag_list ?? tags ?? [];
     if (typeof raw === 'string') {
-      try { return JSON.parse(raw); } catch { return []; }
+      try { return JSON.parse(raw); } catch { return raw.trim() ? [raw.trim()] : []; }
     }
     return Array.isArray(raw) ? raw : [];
   }, [asset, tags]);
@@ -247,7 +247,7 @@ function AssetDetailModal({ asset, onClose }) {
   };
   const assetImages = normalize(asset.assetImages);
   const assetDocuments = normalize(asset.assetDocuments);
-
+  const assetTags = normalize(asset.tags ?? asset.tagList ?? asset.tag_list ?? asset.tags);
   return (
     <div className="kyc-modal-overlay" style={{ zIndex: 3000 }} onClick={onClose}>
       <div
@@ -308,6 +308,34 @@ function AssetDetailModal({ asset, onClose }) {
               <h4 style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.8 }}>Description</h4>
               <div style={{ background: '#f8fafc', padding: 16, borderRadius: 10, fontSize: 14, color: '#334155', lineHeight: 1.7 }}>
                 {assetDescription}
+              </div>
+            </div>
+          )}
+
+          {assetTags.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <h4 style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.8 }}>Tags</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {assetTags.map((tag, index) => (
+                  <span
+                    key={`${tag}-${index}`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#eef2ff',
+                      color: '#2563eb',
+                      padding: '6px 10px',
+                      borderRadius: 9999,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.3px',
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
             </div>
           )}

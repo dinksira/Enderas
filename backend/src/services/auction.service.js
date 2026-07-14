@@ -1191,7 +1191,7 @@ export async function getAuctionParticipation(auctionId, userId) {
     participationStatus = 'bidding_waiting';
   }
 
-  const canPlaceBid = lotParticipation.some((lot) => lot.canPlaceBid)
+  let canPlaceBid = lotParticipation.some((lot) => lot.canPlaceBid)
     || Boolean(cpoApproved && !legacyBid && flatAssets.length === 0 && auctionOpen && inWindow);
 
   const editableDrafts = bidDraftRecords.filter((draft) => draft.status === 'draft');
@@ -2059,4 +2059,5 @@ export const auctionService = Object.freeze({
   isUserAssetOwnerOfAuction,
 });
 
+export { serializeLot };
 export default auctionService;

@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useState, useCallback } from 'react';
+import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../config/routes.js';
 import { resolvePageMeta } from '../config/navigation.config.js';
@@ -8,6 +8,7 @@ import { usePermission } from '@enderass/shared/auth';
 import { PageSearchProvider, usePageSearch } from '../contexts/PageSearchContext.jsx';
 import { notificationService } from '@enderass/shared/services';
 import iconSrc from '../assets/images/frontend_logo.svg';
+import { NotificationDropdown } from '../components/NotificationDropdown.jsx';
 import { KYCStatusBanner } from '../components/KYCStatusBanner.jsx';
 import { AdminUnreadNotificationsBanner } from '../components/AdminUnreadNotificationsBanner.jsx';
 
@@ -209,6 +210,14 @@ const ICON_MAP = {
       <path d="M19 3l2 2-4 4h-2l-2-2 4-4h2z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
     </svg>
   ),
+  about: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  ),
+    </svg>
+  ),
 };
 
 function resolveLanguage(language) {
@@ -248,15 +257,13 @@ function DashboardShellHeader({
   activeLanguage,
   unreadCount,
   onNotificationsClick,
+  darkMode,
+  onThemeToggle,
 }) {
   const { t } = useTranslation();
   const location = useLocation();
   const pageMeta = resolvePageMeta(location.pathname);
   const pageSearch = usePageSearch();
-
-  const showSearch = pageSearch.isRegistered
-    ? pageSearch.enabled
-    : pageMeta.searchEnabled;
 
   const searchPlaceholder = pageSearch.placeholder || t(pageMeta.searchPlaceholderKey);
   const searchValue = pageSearch.isRegistered ? pageSearch.value : '';
@@ -267,16 +274,26 @@ function DashboardShellHeader({
 
   return (
     <header className="dashboard-shell__header">
-      <div className="dashboard-shell__header-title-block">
-        <h1
-          className={`dashboard-shell__page-title${isAmharic ? ' dashboard-shell__page-title--am' : ''}`}
+      <div className="dashboard-shell__header-start">
+        <Link
+          to={ROUTES.APP_DASHBOARD}
+          className="dashboard-shell__header-brand"
+          aria-label={t('dashboard.brand.name')}
         >
-          {t(pageMeta.titleKey)}
-        </h1>
-        <p className="dashboard-shell__page-subtitle">{t(pageMeta.subtitleKey)}</p>
+          <img src={iconSrc} alt="" className="dashboard-shell__header-logo" />
+        </Link>
+
+        <div className="dashboard-shell__header-title-block">
+          <h1
+            className={`dashboard-shell__page-title${isAmharic ? ' dashboard-shell__page-title--am' : ''}`}
+          >
+            {t(pageMeta.titleKey)}
+          </h1>
+          <p className="dashboard-shell__page-subtitle">{t(pageMeta.subtitleKey)}</p>
+        </div>
       </div>
 
-      {showSearch && (
+      <div className="dashboard-shell__header-center">
         <div className="dashboard-shell__search-wrap">
           <input
             type="search"
@@ -293,9 +310,10 @@ function DashboardShellHeader({
             </svg>
           </span>
         </div>
-      )}
+      </div>
 
-      <div className="dashboard-shell__utilities">
+      <div className="dashboard-shell__header-end">
+        <div className="dashboard-shell__utilities">
         <div
           className="dashboard-shell__locale-toggle"
           role="group"
@@ -321,6 +339,23 @@ function DashboardShellHeader({
         </div>
         <button
           type="button"
+          className="dashboard-shell__theme-btn"
+          aria-label={darkMode ? t('dashboard.a11y.switch_to_light', 'Switch to light mode') : t('dashboard.a11y.switch_to_dark', 'Switch to dark mode')}
+          onClick={onThemeToggle}
+        >
+          {darkMode ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 0111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
+        <button
+          type="button"
           className="dashboard-shell__notify-btn"
           aria-label={t('dashboard.a11y.notifications')}
           onClick={onNotificationsClick}
@@ -339,6 +374,7 @@ function DashboardShellHeader({
             </span>
           )}
         </button>
+        </div>
       </div>
     </header>
   );
@@ -352,6 +388,22 @@ export function DashboardShell() {
   const { navigation, canRead, isAuthenticated } = usePermission();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      return localStorage.getItem('dashboardTheme') === 'dark';
+    } catch {
+      return false;
+    }
+  });
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const activeLanguage = resolveLanguage(i18n.language);
   const isAmharic = activeLanguage === 'am';
@@ -432,13 +484,37 @@ export function DashboardShell() {
     }
   }
 
+  function handleThemeToggle() {
+    setDarkMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('dashboardTheme', next ? 'dark' : 'light');
+      } catch {
+        // Ignore storage access errors.
+      }
+      return next;
+    });
+  }
+
   function handleLogout() {
     clearSession();
     navigate(ROUTES.HOME, { replace: true });
   }
 
   function handleNotificationsClick() {
-    navigate(ROUTES.APP_NOTIFICATIONS);
+    setNotifDropdownOpen((prev) => !prev);
+  }
+
+  function closeNotifDropdown() {
+    setNotifDropdownOpen(false);
+  }
+
+  function refreshUnreadCount() {
+    if (canRead('notifications')) {
+      notificationService.getUnreadCount().then((count) => {
+        setUnreadCount(Number(count) || 0);
+      }).catch(() => {});
+    }
   }
 
   function getNavLabelKey(item) {
@@ -512,6 +588,8 @@ export function DashboardShell() {
             activeLanguage={activeLanguage}
             unreadCount={unreadCount}
             onNotificationsClick={handleNotificationsClick}
+            darkMode={darkMode}
+            onThemeToggle={handleThemeToggle}
           />
 
           <div className="dashboard-shell__content">
@@ -520,6 +598,12 @@ export function DashboardShell() {
             <Outlet />
           </div>
         </PageSearchProvider>
+
+        <NotificationDropdown
+          open={notifDropdownOpen}
+          onClose={closeNotifDropdown}
+          onUnreadCountChange={refreshUnreadCount}
+        />
       </div>
     </div>
   );

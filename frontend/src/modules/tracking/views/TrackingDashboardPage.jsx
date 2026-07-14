@@ -17,6 +17,22 @@ function formatDate(dateStr) {
 
 function StatusBadge({ status }) {
   const config = {
+<<<<<<< HEAD
+    draft:           { cls: 'ts-badge--draft', label: 'Draft', icon: '\u270D' },
+    pending_approval:{ cls: 'ts-badge--pending', label: 'Pending', icon: '\u23F3' },
+    published:       { cls: 'ts-badge--active', label: 'Active', icon: '\u25CF' },
+    suspended:       { cls: 'ts-badge--suspended', label: 'Suspended', icon: '\u26A0' },
+    closed:          { cls: 'ts-badge--closed', label: 'Closed', icon: '\u2714' },
+    cancelled:       { cls: 'ts-badge--cancelled', label: 'Cancelled', icon: '\u2716' },
+  };
+  const c = config[status] || { cls: '', label: status, icon: '\u25CF' };
+  return (
+    <span className={`ts-badge ${c.cls}`}>
+      <span className="ts-badge__dot" />
+      {c.label}
+    </span>
+  );
+=======
     draft:           { cls: 'ts-badge--draft', label: 'Draft' },
     pending_approval:{ cls: 'ts-badge--pending', label: 'Pending Approval' },
     published:       { cls: 'ts-badge--active', label: 'Active' },
@@ -26,6 +42,7 @@ function StatusBadge({ status }) {
   };
   const c = config[status] || { cls: '', label: status };
   return <span className={`ts-badge ${c.cls}`}>{c.label}</span>;
+>>>>>>> magersoftware/main
 }
 
 function Countdown({ endDate }) {
@@ -33,23 +50,46 @@ function Countdown({ endDate }) {
   const now = Date.now();
   const end = new Date(endDate).getTime();
   const diff = end - now;
+<<<<<<< HEAD
+  if (diff <= 0) return <span className="ts-countdown ts-countdown--ended">Auction Ended</span>;
+=======
   if (diff <= 0) return <span className="ts-countdown ts-countdown--ended">Ended</span>;
+>>>>>>> magersoftware/main
   const d = Math.floor(diff / 86400000);
   const h = Math.floor((diff % 86400000) / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
   return (
+<<<<<<< HEAD
+    <div className="ts-countdown-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+      <span className="ts-countdown">
+        {d > 0 && <>{d}d </>}{h}h {m}m remaining
+      </span>
+    </div>
+=======
     <span className="ts-countdown">
       {d > 0 && <>{d}d </>}{h}h {m}m remaining
     </span>
+>>>>>>> magersoftware/main
   );
 }
 
 function Timeline({ auction }) {
   const steps = [
+<<<<<<< HEAD
+    { key: 'published', label: 'Published', date: auction.publishedAt || auction.startDate, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> },
+    { key: 'bidding', label: 'Bidding Open', date: auction.startDate, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
+    { key: 'closing', label: 'Closing', date: auction.endDate, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+    { key: 'winner', label: 'Winner Announced', date: auction.closedAt, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> },
+=======
     { key: 'published', label: 'Published', date: auction.publishedAt || auction.startDate },
     { key: 'bidding', label: 'Bidding Open', date: auction.startDate },
     { key: 'closing', label: 'Closing', date: auction.endDate },
     { key: 'winner', label: 'Winner Announced', date: auction.closedAt },
+>>>>>>> magersoftware/main
   ];
 
   const statusOrder = ['draft', 'pending_approval', 'published', 'suspended', 'closed', 'cancelled'];
@@ -65,7 +105,13 @@ function Timeline({ auction }) {
     <div className="ts-timeline">
       {steps.map((s, i) => (
         <div key={s.key} className={`ts-timeline__step ${isActive(i) ? 'ts-timeline__step--active' : ''} ${i < steps.length - 1 ? 'ts-timeline__step--conn' : ''}`}>
+<<<<<<< HEAD
+          <div className="ts-timeline__dot">
+            {isActive(i) && <span className="ts-timeline__dot-ping" />}
+          </div>
+=======
           <div className="ts-timeline__dot" />
+>>>>>>> magersoftware/main
           <div className="ts-timeline__content">
             <span className="ts-timeline__label">{s.label}</span>
             {s.date && <span className="ts-timeline__date">{formatDate(s.date)}</span>}
@@ -76,9 +122,16 @@ function Timeline({ auction }) {
   );
 }
 
+<<<<<<< HEAD
+function MetricCard({ label, value, highlight, monospace, icon }) {
+  return (
+    <div className={`ts-metric ${highlight ? 'ts-metric--hl' : ''}`}>
+      {icon && <span className="ts-metric__icon">{icon}</span>}
+=======
 function MetricCard({ label, value, highlight, monospace }) {
   return (
     <div className={`ts-metric ${highlight ? 'ts-metric--hl' : ''}`}>
+>>>>>>> magersoftware/main
       <span className="ts-metric__label">{label}</span>
       <span className={`ts-metric__value ${monospace ? 'ts-metric__value--mono' : ''}`}>{value ?? '\u2014'}</span>
     </div>
@@ -101,10 +154,30 @@ function TrackingDashboardPage() {
   if (error) {
     return (
       <div className="ts-error">
+<<<<<<< HEAD
+        <div className="ts-error__icon-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <h2>Unable to load tracking data</h2>
+        <p>{error}</p>
+        <button className="ts-error__btn" onClick={logout}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Return to login
+        </button>
+=======
         <div className="ts-error__icon">!</div>
         <h2>Unable to load tracking data</h2>
         <p>{error}</p>
         <button className="ts-error__btn" onClick={logout}>Return to login</button>
+>>>>>>> magersoftware/main
       </div>
     );
   }
@@ -113,6 +186,10 @@ function TrackingDashboardPage() {
 
   const { auction, asset, tracking } = data;
   const imageUrl = asset?.imageUrls?.[0] || auction?.imageUrls?.[0] || null;
+<<<<<<< HEAD
+  const hasBidding = tracking.totalBids != null || tracking.currentHighestBid != null;
+=======
+>>>>>>> magersoftware/main
 
   return (
     <div className="ts-dash">
@@ -123,11 +200,33 @@ function TrackingDashboardPage() {
           <StatusBadge status={auction.status} />
         </div>
         <div className="ts-dash__meta">
+<<<<<<< HEAD
+          <span className="ts-dash__meta-item ts-dash__meta-id">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            {(auction.id || '').slice(0, 8).toUpperCase()}
+          </span>
+          {auction.category && (
+            <>
+              <span className="ts-dash__meta-sep" />
+              <span className="ts-dash__meta-item">{auction.category.replace(/_/g, ' ')}</span>
+            </>
+          )}
+          {auction.mode && (
+            <>
+              <span className="ts-dash__meta-sep" />
+              <span className="ts-dash__meta-item">{auction.mode === 'multi' ? 'Multi-Lot' : 'Single'}</span>
+            </>
+          )}
+=======
           <span className="ts-dash__meta-item">ID: {(auction.id || '').slice(0, 8).toUpperCase()}</span>
           {auction.category && <span className="ts-dash__meta-sep">|</span>}
           {auction.category && <span className="ts-dash__meta-item">{auction.category.replace(/_/g, ' ')}</span>}
           {auction.mode && <span className="ts-dash__meta-sep">|</span>}
           {auction.mode && <span className="ts-dash__meta-item">{auction.mode === 'multi' ? 'Multi-Lot Auction' : 'Single Auction'}</span>}
+>>>>>>> magersoftware/main
         </div>
       </div>
 
@@ -137,7 +236,18 @@ function TrackingDashboardPage() {
           {auction.description && <p className="ts-desc">{auction.description}</p>}
           {auction.auctionConditions && (
             <div className="ts-conditions">
+<<<<<<< HEAD
+              <div className="ts-conditions__label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                Auction Conditions
+              </div>
+=======
               <span className="ts-conditions__label">Auction Conditions</span>
+>>>>>>> magersoftware/main
               <p className="ts-conditions__text">{auction.auctionConditions}</p>
             </div>
           )}
@@ -155,6 +265,10 @@ function TrackingDashboardPage() {
               {imageUrl && (
                 <div className="ts-asset__img-wrap">
                   <img src={imageUrl} alt={asset.title} className="ts-asset__img" />
+<<<<<<< HEAD
+                  <div className="ts-asset__img-overlay" />
+=======
+>>>>>>> magersoftware/main
                 </div>
               )}
               <div className="ts-asset__info">
@@ -166,6 +280,35 @@ function TrackingDashboardPage() {
           )}
 
           {/* Metrics */}
+<<<<<<< HEAD
+          {hasBidding && (
+            <div className="ts-metrics-grid">
+              {tracking.currentHighestBid != null && (
+                <MetricCard
+                  label="Current Highest Bid"
+                  value={formatCurrency(tracking.currentHighestBid, auction.currency)}
+                  highlight
+                  monospace
+                  icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>}
+                />
+              )}
+              {tracking.totalBids != null && (
+                <MetricCard label="Total Bids" value={tracking.totalBids} monospace icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>} />
+              )}
+              {tracking.participantCount != null && (
+                <MetricCard label="Participants" value={tracking.participantCount} monospace icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>} />
+              )}
+            </div>
+          )}
+
+          {/* Auction Details */}
+          <div className="ts-metrics-grid">
+            <MetricCard
+              label="Reserve Price"
+              value={formatCurrency(auction.reservePrice, auction.currency)}
+              monospace
+              icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
+=======
           <div className="ts-metrics-grid">
             <MetricCard
               label="Current Highest Bid"
@@ -179,12 +322,29 @@ function TrackingDashboardPage() {
               label="Reserve Price"
               value={formatCurrency(auction.reservePrice, auction.currency)}
               monospace
+>>>>>>> magersoftware/main
             />
             {auction.totalReservePrice != null && (
               <MetricCard
                 label="Total Reserve"
                 value={formatCurrency(auction.totalReservePrice, auction.currency)}
                 monospace
+<<<<<<< HEAD
+                icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>}
+              />
+            )}
+            <MetricCard
+              label="Document Fee"
+              value={formatCurrency(auction.documentPrice, auction.currency)}
+              monospace
+              icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>}
+            />
+            <MetricCard
+              label="CPO %"
+              value={auction.cpoPercentage != null ? `${auction.cpoPercentage}%` : '\u2014'}
+              icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M16 8l-4 4-4-4"/></svg>}
+            />
+=======
               />
             )}
             <MetricCard
@@ -193,11 +353,16 @@ function TrackingDashboardPage() {
               monospace
             />
             <MetricCard label="CPO %" value={auction.cpoPercentage != null ? `${auction.cpoPercentage}%` : '\u2014'} />
+>>>>>>> magersoftware/main
             {asset?.desiredReservePrice != null && (
               <MetricCard
                 label="Asset Reserve"
                 value={formatCurrency(asset.desiredReservePrice, auction.currency)}
                 monospace
+<<<<<<< HEAD
+                icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>}
+=======
+>>>>>>> magersoftware/main
               />
             )}
           </div>
@@ -206,7 +371,17 @@ function TrackingDashboardPage() {
         {/* Right column — Timeline */}
         <div className="ts-dash__col ts-dash__col--side">
           <div className="ts-card ts-card--timeline">
+<<<<<<< HEAD
+            <h3 className="ts-card__title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              Timeline
+            </h3>
+=======
             <h3 className="ts-card__title">Timeline</h3>
+>>>>>>> magersoftware/main
             <Countdown endDate={auction.endDate} />
             <Timeline auction={auction} />
           </div>
@@ -216,17 +391,91 @@ function TrackingDashboardPage() {
       {/* Winner card */}
       {tracking.winner && (
         <div className="ts-card ts-card--winner">
+<<<<<<< HEAD
+          <div className="ts-winner__ribbon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="8" r="7" />
+              <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+            </svg>
+          </div>
+          <h3 className="ts-card__title">Auction Winner</h3>
+          <div className="ts-winner">
+            <div className="ts-winner__main">
+              <div className="ts-winner__org">{tracking.winner.organizationName || 'N/A'}</div>
+              <div className="ts-winner__amount">{formatCurrency(tracking.winner.amount, auction.currency)}</div>
+            </div>
+            <div className="ts-winner__meta">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              Announced {formatDate(tracking.winner.announcedAt)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Documents */}
+      {auction.documents && auction.documents.length > 0 && (
+        <div className="ts-card ts-card--body">
+          <h3 className="ts-card__title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+            Auction Documents
+          </h3>
+          <div className="ts-docs">
+            {auction.documents.map((doc, i) => (
+              <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" className="ts-doc">
+                <div className="ts-doc__icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </div>
+                <span className="ts-doc__name">{doc.name}</span>
+                {doc.size > 0 && <span className="ts-doc__size">{(doc.size / 1024).toFixed(0)} KB</span>}
+                <svg className="ts-doc__arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </a>
+            ))}
+=======
           <h3 className="ts-card__title">Winner</h3>
           <div className="ts-winner">
             <div className="ts-winner__org">{tracking.winner.organizationName || 'N/A'}</div>
             <div className="ts-winner__amount">{formatCurrency(tracking.winner.amount, auction.currency)}</div>
             <div className="ts-winner__date">Announced {formatDate(tracking.winner.announcedAt)}</div>
+>>>>>>> magersoftware/main
           </div>
         </div>
       )}
 
       {/* Dates bar */}
       <div className="ts-dates">
+<<<<<<< HEAD
+        {auction.publishedAt && (
+          <div className="ts-date-item">
+            <span className="ts-date-item__label">Published</span>
+            <span className="ts-date-item__value">{formatDate(auction.publishedAt || auction.startDate)}</span>
+          </div>
+        )}
+        {auction.startDate && (
+          <div className="ts-date-item">
+            <span className="ts-date-item__label">Bidding Start</span>
+            <span className="ts-date-item__value">{formatDate(auction.startDate)}</span>
+          </div>
+        )}
+        {auction.endDate && (
+          <div className="ts-date-item">
+            <span className="ts-date-item__label">Bidding End</span>
+            <span className="ts-date-item__value">{formatDate(auction.endDate)}</span>
+          </div>
+        )}
+=======
         <div className="ts-date-item">
           <span className="ts-date-item__label">Published</span>
           <span className="ts-date-item__value">{formatDate(auction.publishedAt || auction.startDate)}</span>
@@ -239,6 +488,7 @@ function TrackingDashboardPage() {
           <span className="ts-date-item__label">Bidding End</span>
           <span className="ts-date-item__value">{formatDate(auction.endDate)}</span>
         </div>
+>>>>>>> magersoftware/main
         {auction.closedAt && (
           <div className="ts-date-item">
             <span className="ts-date-item__label">Closed</span>
@@ -248,9 +498,17 @@ function TrackingDashboardPage() {
       </div>
 
       <div className="ts-disclaimer">
+<<<<<<< HEAD
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
+        This is an automated tracking page for informational purposes only.
+        No bidding or purchasing actions can be performed through this page.
+=======
         This is an automated tracking page for informational purposes only.
         No bidding or purchasing actions can be performed through this page.
         For inquiries, please contact the auction house directly.
+>>>>>>> magersoftware/main
       </div>
     </div>
   );

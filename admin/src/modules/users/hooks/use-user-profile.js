@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getMyKYC, userService } from '@enderass/shared/services';
-import { formatDate } from '@enderass/shared/utils';
+import { userService } from '@enderass/shared/services';
 export function useUserProfile() {
   const { t } = useTranslation();
   const [profile, setProfile] = useState(null);
@@ -14,13 +13,15 @@ export function useUserProfile() {
     setError('');
 
     try {
-      const [me, kycResponse] = await Promise.all([
-        userService.getMe(),
-        getMyKYC().catch(() => null),
-      ]);
-
+      const me = await userService.getMe();
       setProfile(me);
-      setKyc(kycResponse?.kyc ?? kycResponse ?? null);
+
+      try {
+        const kycResponse = await userService.getMe().catch(() => null);
+        setKyc(kycResponse?.kyc ?? null);
+      } catch {
+        setKyc(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('users.profile.loadFailed'));
       setProfile(null);
@@ -34,7 +35,38 @@ export function useUserProfile() {
     fetchProfile();
   }, [fetchProfile]);
 
-  return { profile, kyc, loading, error, refetch: fetchProfile };
+  const updateProfile = useCallback(async (patch) => {
+    const result = await userService.updateMe(patch);
+    if (result?.user) {
+      setProfile((prev) => ({
+        ...prev,
+        identity: {
+          ...prev?.identity,
+          displayName: [result.user.firstName, result.user.lastName].filter(Boolean).join(' ') || prev?.identity?.displayName,
+          email: result.user.email ?? prev?.identity?.email,
+        },
+        avatarUrl: result.user.avatarUrl ?? prev?.avatarUrl,
+      }));
+    }
+    return result;
+  }, []);
+
+  const changePassword = useCallback(async (currentPassword, newPassword) => {
+    return userService.changePassword({ currentPassword, newPassword });
+  }, []);
+
+  const updateAvatar = useCallback(async (file) => {
+    const result = await userService.updateAvatar(file);
+    if (result?.avatarUrl) {
+      setProfile((prev) => ({
+        ...prev,
+        avatarUrl: result.avatarUrl,
+      }));
+    }
+    return result;
+  }, []);
+
+  return { profile, kyc, loading, error, refetch: fetchProfile, updateProfile, changePassword, updateAvatar };
 }
 
 export default useUserProfile;

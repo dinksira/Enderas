@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRegisterPageSearch } from '@enderass/shared/contexts';
-import { UserProfileCard } from '../components/user-profile-card.jsx';
+import { UserProfileDashboard } from '../components/user-profile-dashboard.jsx';
 
 export function UserProfileView() {
   const { t } = useTranslation();
@@ -15,7 +15,7 @@ export function UserProfileView() {
 
   return (
     <section className="users-view">
-      <UserProfileCard search={search} />
+      <UserProfileDashboard search={search} />
     </section>
   );
 }

@@ -56,6 +56,11 @@ export const AuctionShareLink = sequelize.define(
       type: DataTypes.CHAR(36),
       allowNull: true,
     },
+    visibility_settings: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: null,
+    },
   },
   {
     tableName: 'auction_share_links',

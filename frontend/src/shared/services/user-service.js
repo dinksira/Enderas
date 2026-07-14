@@ -68,6 +68,7 @@ export const userService = Object.freeze({
   updateUserStatus: (id, payload) => api.post(`${USERS_BASE}/${id}/status`, payload),
   deleteUser: (id) => api.delete(`${USERS_BASE}/${id}`),
   getMe: () => api.get(AUTH_ME),
+  updateMe: (payload) => api.patch(AUTH_ME, payload),
   listCreateRoles,
   getAll: (params = {}) => api.get(`${USERS_BASE}${buildQuery(params)}`),
   getById: (id) => {

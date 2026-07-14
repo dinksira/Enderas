@@ -28,11 +28,12 @@ import { bidDraftController } from '../controllers/bid-draft.controller.js';
 import { winnerController } from '../controllers/winner.controller.js';
 import { notificationController } from '../controllers/notification.controller.js';
 import { dashboardController } from '../controllers/dashboard.controller.js';
+import { shareLinkController } from '../controllers/share-link.controller.js';
 import { authController } from '../modules/auth/auth.controller.js';
 import { validateUpdateProfileBody } from '../modules/auth/auth.validation.js';
-import { shareLinkController } from '../controllers/share-link.controller.js';
 import { requireKYCVerified } from '../middleware/kyc.middleware.js';
 import { requireStaff } from '../middleware/staff.middleware.js';
+import { uploadSingleFile } from '../middlewares/upload.middleware.js';
 import fileUploadRoutes from './fileUpload.routes.js';
 
 const v1Router = Router();
@@ -993,6 +994,12 @@ v1Router.put(
 // Session introspection
 v1Router.get('/auth/me', authenticate, authController.getMe);
 v1Router.patch('/auth/me', authenticate, validateUpdateProfileBody, authController.updateMe);
+
+// Change password
+v1Router.post('/auth/change-password', authenticate, authController.changePassword);
+
+// Avatar upload
+v1Router.post('/auth/avatar', authenticate, uploadSingleFile('avatar'), authController.updateAvatar);
 
 // Navigation manifest for dynamic sidebar (permission-filtered on client too)
 v1Router.get('/auth/navigation', authenticate, async (req, res) => {

@@ -35,7 +35,24 @@ function verifyTrackToken(token) {
   return decoded;
 }
 
-async function createShareLink(staffId, auctionId, { organizationName, contactEmail, password, expiresInDays, maxViews }) {
+const DEFAULT_VISIBILITY = {
+  bidderCount: true,
+  assetImages: true,
+  auctionDetails: true,
+  lotDetails: true,
+  lotImages: true,
+  auctionDocuments: true,
+  winnerInfo: true,
+};
+
+function normalizeDocumentFiles(docs) {
+  if (!docs || !Array.isArray(docs)) return [];
+  return docs
+    .filter((d) => d && typeof d.url === 'string' && d.url.length > 0)
+    .map((d) => ({ name: d.name || d.fileName || 'document.pdf', url: d.url, size: Number(d.size) || 0 }));
+}
+
+async function createShareLink(staffId, auctionId, { organizationName, contactEmail, password, expiresInDays, maxViews, visibilitySettings }) {
   const auction = await Auction.findByPk(auctionId);
   if (!auction) throw new NotFoundError('Auction not found');
 
@@ -62,6 +79,7 @@ async function createShareLink(staffId, auctionId, { organizationName, contactEm
     view_count: 0,
     is_active: true,
     created_by_staff_id: staffId,
+    visibility_settings: visibilitySettings || DEFAULT_VISIBILITY,
   });
 
   const baseUrl = env.app?.frontendUrl || 'http://localhost:5173';
@@ -155,6 +173,8 @@ async function getAuctionTrackingData(linkId, auctionId) {
   const link = await AuctionShareLink.findByPk(linkId);
   if (!link || !link.is_active) throw new NotFoundError('Share link not found');
 
+  const vis = link.visibility_settings || DEFAULT_VISIBILITY;
+
   const auction = await Auction.findByPk(auctionId, {
     include: [
       {
@@ -193,8 +213,8 @@ async function getAuctionTrackingData(linkId, auctionId) {
     order: [['created_at', 'DESC']],
   });
 
-  return {
-    auction: {
+  const result = {
+    auction: vis.auctionDetails ? {
       id: auction.id,
       title: auction.title,
       description: auction.description,
@@ -206,32 +226,41 @@ async function getAuctionTrackingData(linkId, auctionId) {
       documentPrice: auction.document_price ? Number(auction.document_price) : null,
       cpoPercentage: auction.cpo_percentage ? Number(auction.cpo_percentage) : null,
       currency: auction.currency,
-      imageUrls: auction.image_urls,
+      imageUrls: vis.assetImages ? auction.image_urls : null,
       auctionConditions: auction.auction_conditions,
       startDate: auction.start_date,
       endDate: auction.end_date,
       publishedAt: auction.published_at,
       closedAt: auction.closed_at,
-    },
-    asset: auction.asset ? {
+      documents: vis.auctionDocuments ? normalizeDocumentFiles(auction.document_files) : null,
+    } : { id: auction.id, title: auction.title, status: auction.status },
+
+    asset: auction.asset && vis.auctionDetails && vis.lotDetails ? {
       id: auction.asset.id,
       title: auction.asset.title,
       description: auction.asset.description,
       assetType: auction.asset.asset_type,
-      imageUrls: auction.asset.image_urls,
+      imageUrls: vis.lotImages ? auction.asset.image_urls : null,
       desiredReservePrice: auction.asset.desired_reserve_price,
     } : null,
+
     tracking: {
-      currentHighestBid: highestBid ? Number(highestBid.amount) : null,
-      totalBids: bidCount,
-      participantCount,
-      winner: winner ? {
-        amount: winner.amount ? Number(winner.amount) : null,
-        organizationName: winner.user?.organization_name || null,
-        announcedAt: winner.createdAt,
-      } : null,
+      ...(vis.bidderCount ? {
+        currentHighestBid: highestBid ? Number(highestBid.amount) : null,
+        totalBids: bidCount,
+        participantCount,
+      } : {}),
+      ...(vis.winnerInfo && winner ? {
+        winner: {
+          amount: winner.amount ? Number(winner.amount) : null,
+          organizationName: winner.user?.organization_name || null,
+          announcedAt: winner.createdAt,
+        },
+      } : {}),
     },
   };
+
+  return result;
 }
 
 async function listShareLinks(auctionId) {
@@ -241,7 +270,7 @@ async function listShareLinks(auctionId) {
     attributes: [
       'id', 'organization_name', 'contact_email', 'token',
       'expires_at', 'max_views', 'view_count', 'is_active',
-      'last_accessed_at', 'created_at', 'password_hash',
+      'last_accessed_at', 'created_at', 'password_hash', 'visibility_settings',
     ],
   });
 
@@ -259,6 +288,7 @@ async function listShareLinks(auctionId) {
     isActive: link.is_active,
     lastAccessedAt: link.last_accessed_at,
     createdAt: link.created_at,
+    visibilitySettings: link.visibility_settings || DEFAULT_VISIBILITY,
   }));
 }
 

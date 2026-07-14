@@ -3,7 +3,6 @@ import { ROUTES } from '../config/routes.js';
 import { MODULES, ACTIONS } from '../config/navigation.config.js';
 import { AuthLayout } from '../layouts/AuthLayout.jsx';
 import { ProtectedRoute, RoleLayout, PermissionGate } from '../core/auth/index.js';
-import { useAuthStore } from '@enderass/shared/auth';
 import { LoginView } from '../modules/users/views/LoginView.jsx';
 import { KYCManagementView } from '../modules/kyc/views/KYCManagementView.jsx';
 import { ModulePageView } from '../modules/dashboard/views/ModulePageView.jsx';
@@ -12,6 +11,7 @@ import { UserProfileView } from '../modules/users/views/user-profile-view.jsx';
 import { StaffManagementView } from '../modules/staff/views/StaffManagementView.jsx';
 import { OrganizationManagementView } from '../modules/organizations/views/OrganizationManagementView.jsx';
 import { SettingsView } from '../modules/setting/views/SettingsView.jsx';
+import { AboutView } from '../modules/about/views/AboutView.jsx';
 import { AuditTrailView } from '../modules/audit/views/AuditTrailView.jsx';
 import { StaffRolesView } from '../modules/staff-roles/views/staff-roles-view.jsx';
 import { AccessDeniedView } from '../views/AccessDeniedView.jsx';
@@ -27,7 +27,6 @@ import { WinnerManagementView } from '../modules/winners/views/WinnerManagementV
 import { NotificationCenterView } from '../modules/notifications/views/NotificationCenterView.jsx';
 import { ReportsAnalyticsView } from '../modules/analytics-report/views/ReportsAnalyticsView.jsx';
 import { CreateAuctionView } from '../modules/auctions/views/CreateAuctionView.jsx';
-
 
 function AdminBrowseAuctionsRoute() {
   return <Navigate to="/login" replace />;
@@ -110,6 +109,7 @@ export function AppRoutes() {
         <Route path="reports" element={guard(MODULES.DASHBOARD, ACTIONS.EXPORT, <ReportsAnalyticsView />)} />
         <Route path="notifications" element={guard(MODULES.NOTIFICATIONS, ACTIONS.READ, <NotificationCenterView />)} />
         <Route path="profile" element={guard(MODULES.USERS, ACTIONS.READ, <UserProfileView />)} />
+        <Route path="about" element={guard(MODULES.USERS, ACTIONS.READ, <AboutView />)} />
       </Route>
 
       <Route path="/auctions" element={<Navigate to={ROUTES.APP_AUCTIONS} replace />} />

@@ -8,9 +8,12 @@ import {
   requestPasswordReset,
   resetPasswordWithOtp,
   verifyPasswordResetOtpCode,
+  updateMe as updateMeService,
+  changePassword as changePasswordService,
+  updateAvatar as updateAvatarService,
 } from './auth.service.js';
 import { sendSuccess } from '../../utils/response.util.js';
-import { InvalidCredentialsError, AppError } from '../../utils/error.util.js';
+import { InvalidCredentialsError, AppError, UnauthorizedError } from '../../utils/error.util.js';
 import { logLogin } from '../../services/audit.service.js';
 import { userService } from '../../services/user.service.js';
 import { authorizationPermissionService } from '../../core/authorization/permission.service.js';
@@ -233,6 +236,7 @@ function serializeAuthMe(principal) {
       lastName: principal.lastName ?? null,
       organizationName: principal.organizationName ?? null,
       profilePicture: principal.profilePicture ?? null,
+      avatarUrl: principal.avatarUrl ?? null,
       preferredLanguage: principal.preferredLanguage ?? null,
       isStaff: principal.isStaff,
     },
@@ -271,6 +275,39 @@ export async function updateMe(req, res, next) {
   }
 }
 
+export async function changePassword(req, res, next) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return next(new UnauthorizedError());
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const result = await changePasswordService(userId, currentPassword, newPassword);
+    return sendSuccess(res, { ...result, message: 'Password changed successfully. Please log in again.' });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function updateAvatar(req, res, next) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return next(new UnauthorizedError());
+    }
+
+    const result = await updateAvatarService(userId, req.file);
+    return sendSuccess(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const authController = Object.freeze({
   login,
   refreshSession,
@@ -282,6 +319,8 @@ export const authController = Object.freeze({
   verifyResetOtp,
   getMe,
   updateMe,
+  changePassword,
+  updateAvatar,
 });
 
 export default authController;
