@@ -303,10 +303,6 @@ export async function updateAvatar(req, res, next) {
     return next(error);
   }
 }
-  } catch (error) {
-    return next(error);
-  }
-}
 
 export const authController = Object.freeze({
   login,
