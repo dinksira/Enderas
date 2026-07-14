@@ -1229,7 +1229,6 @@ export async function purgeExpiredPendingRegistrations(ttlHours = 12) {
   });
 
   return { deleted };
->>>>>>> magersoftware/main
 }
 
 export const authService = Object.freeze({
