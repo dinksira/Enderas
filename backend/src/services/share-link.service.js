@@ -9,7 +9,7 @@ import { Auction } from '../models/auction.model.js';
 import { Asset } from '../models/asset.model.js';
 import { Bid } from '../models/bid.model.js';
 import { Winner } from '../models/winner.model.js';
-import { User } from '../models/index.js';
+import { User, Lot, AuctionAsset } from '../models/index.js';
 import { resolvePublicUploadUrl } from '../utils/media-url.util.js';
 import { sendShareLinkEmail } from '../integrations/email.integration.js';
 import { Op, fn, col, literal } from 'sequelize';
@@ -46,9 +46,32 @@ const DEFAULT_VISIBILITY = {
   winnerInfo: true,
 };
 
+function parseVisibilitySettings(settings) {
+  if (!settings) return DEFAULT_VISIBILITY;
+  try {
+    return typeof settings === 'string' ? JSON.parse(settings) : settings;
+  } catch {
+    return DEFAULT_VISIBILITY;
+  }
+}
+
+function parseJsonArray(arr) {
+  if (!arr) return null;
+  try {
+    const parsed = typeof arr === 'string' ? JSON.parse(arr) : arr;
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function normalizeDocumentFiles(docs) {
-  if (!docs || !Array.isArray(docs)) return [];
-  return docs
+  let parsedDocs = docs;
+  if (typeof docs === 'string') {
+    try { parsedDocs = JSON.parse(docs); } catch { parsedDocs = []; }
+  }
+  if (!parsedDocs || !Array.isArray(parsedDocs)) return [];
+  return parsedDocs
     .filter((d) => d && typeof d.url === 'string' && d.url.length > 0)
     .map((d) => ({ name: d.name || d.fileName || 'document.pdf', url: d.url, size: Number(d.size) || 0 }));
 }
@@ -174,7 +197,7 @@ async function getAuctionTrackingData(linkId, auctionId) {
   const link = await AuctionShareLink.findByPk(linkId);
   if (!link || !link.is_active) throw new NotFoundError('Share link not found');
 
-  const vis = link.visibility_settings || DEFAULT_VISIBILITY;
+  const vis = parseVisibilitySettings(link.visibility_settings);
 
   const auction = await Auction.findByPk(auctionId, {
     include: [
@@ -182,6 +205,23 @@ async function getAuctionTrackingData(linkId, auctionId) {
         model: Asset,
         as: 'asset',
         attributes: ['id', 'title', 'description', 'asset_type', 'image_urls', 'desired_reserve_price'],
+      },
+      {
+        model: Lot,
+        as: 'lots',
+        include: [
+          {
+            model: AuctionAsset,
+            as: 'auctionAssets',
+            include: [
+              {
+                model: Asset,
+                as: 'asset',
+                attributes: ['id', 'title', 'description', 'asset_type', 'image_urls'],
+              },
+            ],
+          },
+        ],
       },
     ],
   });
@@ -222,10 +262,10 @@ async function getAuctionTrackingData(linkId, auctionId) {
       status: auction.status,
       mode: auction.auction_mode,
       category: auction.category,
-      reservePrice: auction.reserve_price ? Number(auction.reserve_price) : null,
-      totalReservePrice: auction.total_reserve_price ? Number(auction.total_reserve_price) : null,
-      documentPrice: auction.document_price ? Number(auction.document_price) : null,
-      cpoPercentage: auction.cpo_percentage ? Number(auction.cpo_percentage) : null,
+      reservePrice: auction.reserve_price != null ? Number(auction.reserve_price) : null,
+      totalReservePrice: auction.total_reserve_price != null ? Number(auction.total_reserve_price) : null,
+      documentPrice: auction.document_price != null ? Number(auction.document_price) : null,
+      cpoPercentage: auction.cpo_percentage != null ? Number(auction.cpo_percentage) : null,
       currency: auction.currency,
       imageUrls: vis.assetImages
         ? (Array.isArray(auction.image_urls)
@@ -252,6 +292,21 @@ async function getAuctionTrackingData(linkId, auctionId) {
         : null,
       desiredReservePrice: auction.asset.desired_reserve_price,
     } : null,
+
+    lots: auction.lots && vis.auctionDetails && vis.lotDetails ? auction.lots.map(lot => ({
+      id: lot.id,
+      title: lot.title,
+      description: lot.description,
+      sortOrder: lot.sort_order,
+      assets: lot.auctionAssets ? lot.auctionAssets.map(aa => ({
+        id: aa.asset?.id,
+        title: aa.asset?.title,
+        description: aa.asset?.description,
+        assetType: aa.asset?.asset_type,
+        imageUrls: vis.lotImages ? parseJsonArray(aa.asset?.image_urls) : null,
+        reservePrice: aa.reserve_price != null ? Number(aa.reserve_price) : null,
+      })) : [],
+    })).sort((a, b) => a.sortOrder - b.sortOrder) : null,
 
     tracking: {
       ...(vis.bidderCount ? {
@@ -297,7 +352,7 @@ async function listShareLinks(auctionId) {
     isActive: link.is_active,
     lastAccessedAt: link.last_accessed_at,
     createdAt: link.created_at,
-    visibilitySettings: link.visibility_settings || DEFAULT_VISIBILITY,
+    visibilitySettings: parseVisibilitySettings(link.visibility_settings),
   }));
 }
 

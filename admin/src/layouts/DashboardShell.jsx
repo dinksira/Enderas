@@ -11,6 +11,7 @@ import iconSrc from '../assets/images/frontend_logo.svg';
 import { NotificationDropdown } from '../components/NotificationDropdown.jsx';
 import { KYCStatusBanner } from '../components/KYCStatusBanner.jsx';
 import { AdminUnreadNotificationsBanner } from '../components/AdminUnreadNotificationsBanner.jsx';
+import { Button, ModalCloseButton } from '@enderass/shared/ui';
 
 const PREFERRED_LANGUAGE_KEY = 'preferredLanguage';
 const NOTIFICATION_POLL_MS = 15_000;
@@ -378,6 +379,101 @@ function DashboardShellHeader({
   );
 }
 
+function LogoutConfirmModal({ open, onClose, onConfirm }) {
+  const { t } = useTranslation();
+
+  if (!open) return null;
+
+  return (
+    <div className="kyc-modal-overlay" role="presentation" onClick={onClose}>
+      <div
+        className="kyc-modal kyc-modal--borderless"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-logout-confirm-title"
+        onClick={(event) => event.stopPropagation()}
+        style={{
+          width: 'min(380px, 100%)',
+          padding: '32px 28px 24px',
+          textAlign: 'center',
+        }}
+      >
+        <ModalCloseButton onClick={onClose} />
+
+        <div
+          style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            background: '#fef2f2',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px',
+          }}
+        >
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M10 7V6a2 2 0 012-2h6v16h-6a2 2 0 01-2-2v-1" stroke="#dc2626" strokeWidth="1.8" strokeLinejoin="round" />
+            <path d="M14 12H4m0 0l3-3M4 12l3 3" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        <h2
+          id="admin-logout-confirm-title"
+          style={{
+            margin: '0 0 8px',
+            fontSize: '17px',
+            fontWeight: 700,
+            color: '#1e293b',
+            fontFamily: 'var(--semantic-font-ui)',
+          }}
+        >
+          {t('dashboard.logoutModal.title')}
+        </h2>
+
+        <p
+          style={{
+            margin: '0 0 24px',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            color: '#64748b',
+          }}
+        >
+          {t('dashboard.logoutModal.message')}
+        </p>
+
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            style={{ padding: '10px 20px', fontSize: '14px', fontWeight: 600, borderRadius: '10px' }}
+          >
+            {t('dashboard.logoutModal.cancel')}
+          </Button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            style={{
+              padding: '10px 24px',
+              fontSize: '14px',
+              fontWeight: 600,
+              borderRadius: '10px',
+              border: 'none',
+              background: '#dc2626',
+              color: '#fff',
+              cursor: 'pointer',
+              fontFamily: 'var(--semantic-font-ui)',
+            }}
+          >
+            {t('dashboard.logoutModal.confirm')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardShell() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -394,6 +490,7 @@ export function DashboardShell() {
     }
   });
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   useEffect(() => {
     if (darkMode) {
@@ -494,7 +591,16 @@ export function DashboardShell() {
     });
   }
 
-  function handleLogout() {
+  function handleLogoutRequest() {
+    setLogoutModalOpen(true);
+  }
+
+  function handleLogoutCancel() {
+    setLogoutModalOpen(false);
+  }
+
+  function handleLogoutConfirm() {
+    setLogoutModalOpen(false);
     clearSession();
     navigate(ROUTES.HOME, { replace: true });
   }
@@ -569,7 +675,7 @@ export function DashboardShell() {
               </div>
             </div>
           )}
-          <button type="button" className="dashboard-shell__logout" onClick={handleLogout}>
+          <button type="button" className="dashboard-shell__logout" onClick={handleLogoutRequest}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M9 6l-6 6 6 6M3 12h14" stroke="currentColor" strokeWidth="1.8" />
             </svg>
@@ -603,6 +709,12 @@ export function DashboardShell() {
           onUnreadCountChange={refreshUnreadCount}
         />
       </div>
+
+      <LogoutConfirmModal
+        open={logoutModalOpen}
+        onClose={handleLogoutCancel}
+        onConfirm={handleLogoutConfirm}
+      />
     </div>
   );
 }

@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input, Button, FileUpload } from '@enderass/shared/ui';
+import { Input, Button } from '@enderass/shared/ui';
 import { assetService, userService } from '@enderass/shared/services';
+import { fileUploadService } from '../../../shared/services/file-upload.service.js';
 
 const ASSET_TYPE_KEYS = [
   'vehicle',
@@ -19,6 +20,148 @@ function getUserLabel(user) {
 
 function getUserMobile(user) {
   return user.mobileNumber || user.mobile_number || '';
+}
+
+function MiniMultiUpload({ label, accept, folder, items, disabled, isImage, onItemsChange }) {
+  const { t } = useTranslation();
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleSelect = async (e) => {
+    const selected = Array.from(e.target.files || []);
+    if (!selected.length) return;
+    setUploading(true);
+    try {
+      const results = await Promise.all(
+        selected.map((file) => fileUploadService.uploadFile(file, folder)),
+      );
+      if (isImage) {
+        const urls = results
+          .map((r) => String(r?.fileUrl || r?.url || '').trim())
+          .filter(Boolean);
+        onItemsChange([...items, ...urls]);
+      } else {
+        const docs = results
+          .map((r) => ({
+            url: String(r?.fileUrl || r?.url || '').trim(),
+            name: r?.originalName || r?.fileName || 'Document',
+            size: r?.size || 0,
+          }))
+          .filter((d) => d.url);
+        onItemsChange([...items, ...docs]);
+      }
+    } catch (err) {
+      // upload error swallowed — individual files may still succeed
+    } finally {
+      setUploading(false);
+    }
+    e.target.value = '';
+  };
+
+  const handleRemove = (item) => {
+    const url = isImage ? item : item.url;
+    fileUploadService.deleteFile(url).catch(() => {});
+    if (isImage) {
+      onItemsChange(items.filter((u) => u !== item));
+    } else {
+      onItemsChange(items.filter((d) => d.url !== item.url));
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+        <label style={{ fontWeight: 500, fontSize: '13px', color: '#334155' }}>{label} *</label>
+      </div>
+      <input ref={inputRef} type="file" accept={accept} multiple hidden onChange={handleSelect} disabled={disabled || uploading} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={disabled || uploading}
+          style={{
+            padding: '6px 14px',
+            fontSize: '13px',
+            fontWeight: 500,
+            background: uploading ? '#f1f5f9' : '#f8fafc',
+            border: '1px dashed #94a3b8',
+            borderRadius: '6px',
+            color: uploading ? '#94a3b8' : '#475569',
+            cursor: uploading ? 'default' : 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
+          {uploading ? (
+            <>
+              <span style={{ display: 'inline-block', width: '12px', height: '12px', border: '2px solid #94a3b8', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+              Uploading...
+            </>
+          ) : (
+            <>+ {t('common.addFiles', 'Add')}</>
+          )}
+        </button>
+        {items.length > 0 && (isImage ? items : items).map((item, i) => {
+          const url = isImage ? item : item.url;
+          const name = isImage ? `Photo ${i + 1}` : item.name;
+          return (
+            <div
+              key={url}
+              style={{
+                position: 'relative',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 8px 4px 4px',
+                background: '#f1f5f9',
+                borderRadius: '6px',
+                fontSize: '12px',
+                lineHeight: 1,
+              }}
+            >
+              {isImage ? (
+                <img
+                  src={url}
+                  alt=""
+                  style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover' }}
+                />
+              ) : (
+                <span style={{ fontSize: '16px', lineHeight: '28px' }}>&#128196;</span>
+              )}
+              <span style={{
+                maxWidth: '100px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                color: '#334155',
+              }}>
+                {name}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleRemove(item)}
+                disabled={disabled}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: disabled ? 'default' : 'pointer',
+                  color: '#94a3b8',
+                  fontSize: '14px',
+                  padding: '0 2px',
+                  lineHeight: 1,
+                  fontWeight: 700,
+                }}
+                title={t('common.remove', 'Remove')}
+              >
+                ×
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export function QuickCreateAssetModal({ open, onClose, onSuccess }) {
@@ -43,8 +186,8 @@ export function QuickCreateAssetModal({ open, onClose, onSuccess }) {
   const [auctionConditions, setAuctionConditions] = useState('');
   
   // Files
-  const [ownershipDocumentUrl, setOwnershipDocumentUrl] = useState('');
-  const [photoUrl, setPhotoUrl] = useState('');
+  const [photoUrls, setPhotoUrls] = useState([]);
+  const [ownershipDocs, setOwnershipDocs] = useState([]);
 
   // Search users with debounce
   useEffect(() => {
@@ -76,11 +219,11 @@ export function QuickCreateAssetModal({ open, onClose, onSuccess }) {
       setError(t('common.fillRequired', 'Please fill in all required text fields.'));
       return;
     }
-    if (!ownershipDocumentUrl) {
+    if (!ownershipDocs.length) {
       setError(t('auction.create.docRequired', 'Ownership document is required.'));
       return;
     }
-    if (!photoUrl) {
+    if (!photoUrls.length) {
       setError(t('auction.create.photoRequired', 'At least one photo is required.'));
       return;
     }
@@ -97,8 +240,9 @@ export function QuickCreateAssetModal({ open, onClose, onSuccess }) {
       location: location.trim(),
       desiredReservePrice: Number(desiredReservePrice),
       auctionConditions: auctionConditions.trim(),
-      imageUrls: [photoUrl],
-      ownershipDocumentUrl,
+      imageUrls: photoUrls,
+      ownershipDocumentUrl: ownershipDocs[0].url,
+      additionalDocuments: ownershipDocs.slice(1).map(d => ({ name: d.name, url: d.url, size: d.size })),
     };
 
     try {
@@ -246,25 +390,29 @@ export function QuickCreateAssetModal({ open, onClose, onSuccess }) {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '24px', gridColumn: '1 / -1' }}>
-            <div style={{ flex: 1 }}>
-              <FileUpload
-                label={t('assets.form.fields.ownershipDocument', 'Ownership Document')}
-                folder="assets/ownership"
-                accept="application/pdf,image/*"
-                onUpload={(res) => setOwnershipDocumentUrl(res.fileUrl)}
-                disabled={loading}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <FileUpload
-                label={t('assets.form.fields.photos', 'Primary Photo')}
-                folder="assets/photos"
-                accept="image/*"
-                onUpload={(res) => setPhotoUrl(res.fileUrl)}
-                disabled={loading}
-              />
-            </div>
+          {/* Photos - compact multi-upload */}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <MiniMultiUpload
+              label={t('assets.form.fields.photos', 'Photos')}
+              accept="image/*"
+              folder="assets/photos"
+              items={photoUrls}
+              disabled={loading}
+              isImage
+              onItemsChange={setPhotoUrls}
+            />
+          </div>
+
+          {/* Ownership Document - compact multi-upload */}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <MiniMultiUpload
+              label={t('assets.form.fields.ownershipDocument', 'Ownership Document')}
+              accept="application/pdf,image/*"
+              folder="assets/ownership"
+              items={ownershipDocs}
+              disabled={loading}
+              onItemsChange={setOwnershipDocs}
+            />
           </div>
         </div>
 

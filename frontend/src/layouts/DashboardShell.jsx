@@ -104,31 +104,92 @@ function SidebarTooltip({ label }) {
 function LogoutConfirmModal({ open, onClose, onConfirm }) {
   const { t } = useTranslation();
 
-  if (!open) {
-    return null;
-  }
+  if (!open) return null;
 
   return (
     <div className="kyc-modal-overlay" role="presentation" onClick={onClose}>
       <div
-        className="kyc-modal dashboard-shell__logout-modal"
+        className="kyc-modal kyc-modal--borderless dashboard-shell__logout-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="logout-confirm-title"
         onClick={(event) => event.stopPropagation()}
+        style={{
+          width: 'min(380px, 100%)',
+          padding: '32px 28px 24px',
+          textAlign: 'center',
+        }}
       >
         <ModalCloseButton onClick={onClose} />
-        <h2 id="logout-confirm-title" className="kyc-modal__title">
+
+        <div
+          style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            background: '#fef2f2',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px',
+          }}
+        >
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M10 7V6a2 2 0 012-2h6v16h-6a2 2 0 01-2-2v-1" stroke="#dc2626" strokeWidth="1.8" strokeLinejoin="round" />
+            <path d="M14 12H4m0 0l3-3M4 12l3 3" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        <h2
+          id="logout-confirm-title"
+          style={{
+            margin: '0 0 8px',
+            fontSize: '17px',
+            fontWeight: 700,
+            color: '#1e293b',
+            fontFamily: 'var(--semantic-font-ui)',
+          }}
+        >
           {t('dashboard.logoutModal.title')}
         </h2>
-        <p className="kyc-modal__body">{t('dashboard.logoutModal.message')}</p>
-        <div className="kyc-modal__actions">
-          <Button type="button" variant="secondary" onClick={onClose}>
+
+        <p
+          style={{
+            margin: '0 0 24px',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            color: '#64748b',
+          }}
+        >
+          {t('dashboard.logoutModal.message')}
+        </p>
+
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            style={{ padding: '10px 20px', fontSize: '14px', fontWeight: 600, borderRadius: '10px' }}
+          >
             {t('dashboard.logoutModal.cancel')}
           </Button>
-          <Button type="button" variant="primary" onClick={onConfirm}>
+          <button
+            type="button"
+            onClick={onConfirm}
+            style={{
+              padding: '10px 24px',
+              fontSize: '14px',
+              fontWeight: 600,
+              borderRadius: '10px',
+              border: 'none',
+              background: '#dc2626',
+              color: '#fff',
+              cursor: 'pointer',
+              fontFamily: 'var(--semantic-font-ui)',
+            }}
+          >
             {t('dashboard.logoutModal.confirm')}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
@@ -450,7 +511,11 @@ export function DashboardShell() {
               className="dashboard-shell__float-btn dashboard-shell__float-btn--account"
               aria-label={displayName}
             >
-              <span className="dashboard-shell__float-avatar" aria-hidden="true">{initials}</span>
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt={displayName} className="dashboard-shell__float-avatar-img" />
+              ) : (
+                <span className="dashboard-shell__float-avatar" aria-hidden="true">{initials}</span>
+              )}
               <SidebarTooltip label={displayName} />
             </Link>
 

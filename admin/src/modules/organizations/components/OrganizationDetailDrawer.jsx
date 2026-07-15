@@ -8,6 +8,7 @@ import { organizationService, shareLinkAdminService } from '@enderass/shared/ser
 import { ENV } from '@enderass/shared/api/env';
 import { formatDate, formatDisplayValue } from '@enderass/shared/utils';
 import { getOrgDisplayName, getOrgStatusVariant } from '../utils/organization-utils.js';
+import { VisibilityToggleModal } from './VisibilityToggleModal.jsx';
 
 function MetaField({ label, value }) {
   const { t } = useTranslation();
@@ -66,6 +67,9 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
   const [genError, setGenError] = useState('');
   const [copied, setCopied] = useState('');
   const [shareLinkPasswords, setShareLinkPasswords] = useState({});
+  const [visModalOpen, setVisModalOpen] = useState(false);
+  const [visModalAuctionId, setVisModalAuctionId] = useState(null);
+  const [visModalAuctionTitle, setVisModalAuctionTitle] = useState('');
 
   const fetchLinked = useCallback(async () => {
     if (!orgId) return;
@@ -133,7 +137,9 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
     }
   };
 
-  const handleGenerateShareLink = async (auctionId) => {
+  const handleGenerateShareLink = async (visibilitySettings) => {
+    const auctionId = visModalAuctionId;
+    setVisModalOpen(false);
     setGeneratingFor(auctionId);
     setGenError('');
     const customPassword = shareLinkPasswords[auctionId] || undefined;
@@ -141,6 +147,7 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
       const result = await shareLinkAdminService.create(auctionId, {
         organizationName: orgName || 'External Viewer',
         password: customPassword,
+        visibilitySettings,
       });
       setShareLinks((prev) => ({
         ...prev,
@@ -151,7 +158,15 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
       setGenError(err.message);
     } finally {
       setGeneratingFor(null);
+      setVisModalAuctionId(null);
+      setVisModalAuctionTitle('');
     }
+  };
+
+  const openVisModal = (auctionId, auctionTitle) => {
+    setVisModalAuctionId(auctionId);
+    setVisModalAuctionTitle(auctionTitle);
+    setVisModalOpen(true);
   };
 
   function handleCopy(url) {
@@ -250,7 +265,7 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
                     <button
                       type="button"
                       className="btn btn--sm"
-                      onClick={() => handleGenerateShareLink(auction.id)}
+                      onClick={() => openVisModal(auction.id, auction.title)}
                       disabled={generatingFor === auction.id}
                     >
                       {generatingFor === auction.id ? 'Generating...' : 'Generate Link'}
@@ -299,6 +314,17 @@ function LinkedAuctionsSection({ orgId, orgName, onRefreshNeeded, canUpdate, loc
           </div>
         </div>
       )}
+
+      <VisibilityToggleModal
+        open={visModalOpen}
+        onClose={() => {
+          setVisModalOpen(false);
+          setVisModalAuctionId(null);
+          setVisModalAuctionTitle('');
+        }}
+        onConfirm={handleGenerateShareLink}
+        auctionTitle={visModalAuctionTitle}
+      />
     </div>
   );
 }
@@ -525,10 +551,8 @@ export function OrganizationDetailDrawer({
               <MetaField label={t('organizations.management.drawer.email')} value={org.email} />
               <MetaField label={t('organizations.management.drawer.firstName')} value={org.firstName} />
               <MetaField label={t('organizations.management.drawer.lastName')} value={org.lastName} />
-              <MetaField label={t('organizations.management.drawer.role')} value={org.roleCode || org.roleName} />
               <MetaField label={t('organizations.management.drawer.password')} value={formatDisplayValue(org.displayPassword, t('common.empty'))} />
               <MetaField label={t('organizations.management.drawer.createdAt')} value={formatDate(org.createdAt, locale, t('common.empty'))} />
-              <MetaField label={t('organizations.management.drawer.lastLogin')} value={formatDate(org.lastLoginAt, locale, t('common.empty'))} />
             </dl>
           ),
         },

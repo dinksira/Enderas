@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { assetService, auctionService, organizationService } from '@enderass/shared/services';
 import { formatEtbAmount } from '@enderass/shared/utils';
-import { Input, Button, FileUpload } from '@enderass/shared/ui';
+import { Input, Button, FileUpload, DocumentViewer } from '@enderass/shared/ui';
 import { QuickCreateAssetModal } from '../components/QuickCreateAssetModal.jsx';
 import '../styles/create-auction.css';
 
@@ -119,6 +119,7 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
   const [searchingAsset, setSearchingAsset] = useState(false);
   const [assetPickerTarget, setAssetPickerTarget] = useState(null);
   const [quickCreateTarget, setQuickCreateTarget] = useState(null);
+  const [viewingDocument, setViewingDocument] = useState(null);
 
   const [fieldErrors, setFieldErrors] = useState({});
 
@@ -202,6 +203,7 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
     if (startDate && endDate && new Date(startDate) >= new Date(endDate))
       errs.endDate = t('auction.create.endDateAfterStart', 'End date must be after start date');
     if (!cpoPercentage || Number(cpoPercentage) <= 0) errs.cpoPercentage = t('common.required', 'Required');
+    if (!documentFee || Number(documentFee) <= 0) errs.documentFee = t('common.required', 'Required');
     if (documents.length === 0) errs.documents = t('common.required', 'At least one document is required');
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
@@ -443,8 +445,9 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
                     label={t('auction.create.documentFee', 'Document Fee (ETB)')}
                     type="number"
                     value={documentFee}
-                    onChange={(e) => setDocumentFee(e.target.value)}
+                    onChange={(e) => { setDocumentFee(e.target.value); clearError('documentFee'); }}
                     placeholder="e.g., 500"
+                    error={fieldErrors.documentFee}
                   />
                 </div>
 
@@ -452,7 +455,7 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
                   <label className="input-field__label">{t('auction.create.description', 'Description')}</label>
                   <textarea
                     className="input-field__control"
-                    rows={4}
+                    rows={7}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Provide additional details about the auction rules or items..."
@@ -462,6 +465,7 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
 
                 <div className="ca-form-group--full">
                   <label className="input-field__label">{t('auction.create.documents', 'Auction Documents (e.g. Terms & Conditions)')}</label>
+                  
                   <FileUpload
                     folder="auctions/documents"
                     accept="application/pdf"
@@ -473,15 +477,124 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
                       }]);
                       clearError('documents');
                     }}
+                    renderTrigger={(onClick) => (
+                      <button
+                        type="button"
+                        onClick={onClick}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '10px 16px',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          color: '#06436a',
+                          background: '#fff',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#06436a'; e.currentTarget.style.background = '#f8fafc'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#fff'; }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        {t('auction.create.uploadDocument', 'Upload Document')}
+                      </button>
+                    )}
                   />
+
                   {documents.length > 0 && (
-                    <ul style={{ marginTop: '12px', paddingLeft: '20px' }}>
-                      {documents.map((d, i) => (
-                        <li key={i}>{d.name} <button type="button" onClick={() => setDocuments(prev => prev.filter((_, idx) => idx !== i))} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>x</button></li>
+                    <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {documents.map((doc, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '12px 16px',
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            transition: 'all 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#f1f5f9'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#f8fafc'; }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                              <polyline points="14 2 14 8 20 8" />
+                              <line x1="12" y1="18" x2="12" y2="12" />
+                              <line x1="9" y1="15" x2="15" y2="15" />
+                            </svg>
+                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#1e293b' }}>{doc.name}</span>
+                          </div>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setViewingDocument(doc)}
+                              title={t('common.view', 'View')}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '32px',
+                                height: '32px',
+                                background: 'transparent',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
+                                color: '#64748b',
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#e0e7ff'; e.currentTarget.style.color = '#3730a3'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => setDocuments(prev => prev.filter((_, i) => i !== idx))}
+                              title={t('common.remove', 'Remove')}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '32px',
+                                height: '32px',
+                                background: 'transparent',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
+                                color: '#64748b',
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#dc2626'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   )}
-                  {fieldErrors.documents && <span className="input-field__error">{fieldErrors.documents}</span>}
+                  
+                  {fieldErrors.documents && <span className="input-field__error" style={{ display: 'block', marginTop: '8px' }}>{fieldErrors.documents}</span>}
                 </div>
               </div>
             </div>
@@ -778,6 +891,15 @@ export function CreateAuctionView({ open = true, onClose, onSuccess, initialAsse
           setQuickCreateTarget(null);
         }}
       />
+
+      {/* Document Viewer Modal */}
+      {viewingDocument && (
+        <DocumentViewer
+          url={viewingDocument.url}
+          title={viewingDocument.name}
+          onClose={() => setViewingDocument(null)}
+        />
+      )}
     </div>
   );
 }

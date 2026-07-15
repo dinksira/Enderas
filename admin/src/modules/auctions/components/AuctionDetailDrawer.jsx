@@ -88,6 +88,7 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
   const [editForm, setEditForm] = useState(null);
   const [editErrors, setEditErrors] = useState({});
   const [viewerSrc, setViewerSrc] = useState(null);
+  const [selectedLot, setSelectedLot] = useState(null);
   const [newImagePreviews, setNewImagePreviews] = useState([]);
 
   const imageInputRef = useRef(null);
@@ -162,7 +163,9 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape' && !viewerSrc) {
-        if (editMode) {
+        if (selectedLot) {
+          setSelectedLot(null);
+        } else if (editMode) {
           setEditMode(false);
           setEditForm(null);
           setEditErrors({});
@@ -535,19 +538,38 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
                         : ''}
                     </h3>
                     <ul className="auction-create-modal__lot-list">
-                      {detail.lots.map((lot, index) => (
-                        <li key={lot.id || lot.assetId} className="auction-create-modal__lot-item">
-                          <p className="auction-create-modal__lot-title">
-                            {lot.lotLabel || t('auctions.create.assetStep.lotPosition', { index: index + 1 })}
-                            {' — '}
-                            {lot.assetTitle || lot.assetId}
-                          </p>
-                          <p className="auction-create-modal__lot-meta">
-                            {formatEtbAmount(lot.reservePrice)}
-                            {lot.assetLocation ? ` · ${lot.assetLocation}` : ''}
-                          </p>
-                        </li>
-                      ))}
+                      {detail.lots.map((lot, index) => {
+                        return (
+                          <li
+                            key={lot.id || lot.assetId}
+                            className="auction-create-modal__lot-item"
+                            style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                            onClick={() => setSelectedLot(lot)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedLot(lot); } }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <p className="auction-create-modal__lot-title" style={{ margin: 0, fontWeight: 500, color: 'var(--dashboard-text-primary)' }}>
+                                {lot.title || t('auctions.create.assetStep.lotPosition', { index: index + 1 })}
+                              </p>
+                              {(() => {
+                                const totalReserve = (lot.assets || []).reduce((sum, asset) => sum + (Number((asset.asset || asset).reservePrice) || 0), 0);
+                                return totalReserve > 0 ? (
+                                  <p className="auction-create-modal__lot-meta" style={{ margin: 0, textAlign: 'right', fontWeight: 600, color: 'var(--dashboard-text-primary)' }}>
+                                    {formatEtbAmount(totalReserve)}
+                                  </p>
+                                ) : null;
+                              })()}
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--primary-color)', margin: 0, marginTop: '4px' }}>
+                              View Lot Details &rarr;
+                            </p>
+                          </li>
+                        );
+                      })}
                     </ul>
                     {detail.auctionMode === 'multi' && detail.totalReservePrice != null && (
                       <p className="auction-create-modal__section-hint">
@@ -568,10 +590,10 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
                           key={`${url}-${index}`}
                           type="button"
                           className="auction-drawer__thumbnail"
-                          onClick={() => setViewerSrc(url)}
+                          onClick={() => setViewerSrc(resolveMediaUrl(url))}
                           aria-label={t('auctions.drawer.viewImage', { index: index + 1 })}
                         >
-                          <img src={url} alt="" />
+                          <img src={resolveMediaUrl(url)} alt="" />
                         </button>
                       ))}
                     </div>
@@ -983,6 +1005,111 @@ export function AuctionDetailDrawer({ auctionId, open, onClose, onRefresh, onToa
           )}
         </aside>
       </div>
+
+      {/* Lot Details Mini Modal */}
+      {selectedLot && (
+        <div
+          className="auction-drawer-overlay auction-drawer-overlay--visible"
+          role="presentation"
+          onClick={() => setSelectedLot(null)}
+          style={{ zIndex: 2100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
+        >
+          <div
+            className="auction-drawer"
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+            style={{ position: 'relative', width: '100%', maxWidth: '600px', maxHeight: '90vh', background: 'var(--dashboard-surface-bg, #ffffff)', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', transform: 'none', right: 'auto', top: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}
+          >
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--dashboard-border, #e5e7eb)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--dashboard-surface-bg, #f9fafb)' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--dashboard-text-primary, #111827)' }}>
+                  {selectedLot.title || t('auctions.create.assetStep.lotPosition', { index: 1 })}
+                </h3>
+                {(() => {
+                  const totalReserve = (selectedLot.assets || []).reduce((sum, asset) => sum + (Number((asset.asset || asset).reservePrice) || 0), 0);
+                  return totalReserve > 0 ? (
+                    <p style={{ margin: '4px 0 0 0', fontSize: '0.95rem', color: 'var(--dashboard-text-secondary, #4b5563)' }}>
+                      Reserve Price: <span style={{ fontWeight: 600, color: 'var(--dashboard-text-primary, #111827)' }}>{formatEtbAmount(totalReserve)}</span>
+                    </p>
+                  ) : null;
+                })()}
+              </div>
+              <button
+                type="button"
+                className="auction-drawer__close"
+                onClick={() => setSelectedLot(null)}
+                aria-label={t('common.close')}
+                style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--dashboard-hover-bg, #f3f4f6)', color: 'var(--dashboard-text-secondary, #6b7280)', border: 'none', cursor: 'pointer' }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            
+            <div style={{ padding: '24px', overflowY: 'auto', flex: 1, color: 'var(--dashboard-text-primary, #111827)' }}>
+              {selectedLot.description && (
+                <div style={{ marginBottom: '24px' }}>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--dashboard-text-secondary, #6b7280)' }}>Description</h4>
+                  <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: 1.5, color: 'var(--dashboard-text-secondary, #4b5563)' }}>{selectedLot.description}</p>
+                </div>
+              )}
+              
+              {(() => {
+                const lotImages = toArray(
+                  selectedLot.images || selectedLot.imageUrls || selectedLot.image_urls ||
+                  (selectedLot.asset && (selectedLot.asset.image_urls || selectedLot.asset.imageUrls || selectedLot.asset.images))
+                ).map(resolveMediaUrl).filter(Boolean);
+                if (lotImages.length === 0) return null;
+                return (
+                  <div style={{ marginBottom: '24px' }}>
+                    <h4 style={{ margin: '0 0 12px 0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--dashboard-text-secondary, #6b7280)' }}>Lot Images</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
+                      {lotImages.map((img, i) => (
+                        <div key={i} style={{ aspectRatio: '4/3', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', background: '#eee' }} onClick={() => setViewerSrc(img)}>
+                          <img src={img} alt={`Lot Image ${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {selectedLot.assets && selectedLot.assets.length > 0 && (
+                <div>
+                  <h4 style={{ margin: '0 0 16px 0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--dashboard-text-secondary, #6b7280)' }}>Included Assets ({selectedLot.assets.length})</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {selectedLot.assets.map((aa, aIdx) => {
+                      const assetImages = toArray(aa.assetImages || aa.imageUrls || aa.image_urls).map(resolveMediaUrl).filter(Boolean);
+                      return (
+                        <div key={aa.id || aIdx} style={{ background: 'var(--dashboard-surface-bg, #ffffff)', border: '1px solid var(--dashboard-border, #e5e7eb)', borderRadius: '8px', padding: '16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <h5 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 500, color: 'var(--dashboard-text-primary, #111827)' }}>{aa.assetTitle || aa.title}</h5>
+                            {aa.reservePrice != null && (
+                              <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--dashboard-text-secondary, #4b5563)', background: 'var(--dashboard-surface-bg, #f3f4f6)', padding: '2px 8px', borderRadius: '12px', border: '1px solid var(--dashboard-border, #e5e7eb)' }}>
+                                {formatEtbAmount(aa.reservePrice)}
+                              </span>
+                            )}
+                          </div>
+                          {(aa.assetDescription || aa.description) && (
+                            <p style={{ margin: '0 0 12px 0', fontSize: '0.9rem', color: 'var(--dashboard-text-secondary, #4b5563)' }}>{aa.assetDescription || aa.description}</p>
+                          )}
+                          {assetImages.length > 0 && (
+                            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+                              {assetImages.map((img, i) => (
+                                <img key={i} src={img} alt={`Asset Image ${i}`} style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '4px', cursor: 'pointer', border: '1px solid var(--dashboard-border, #e5e7eb)', flexShrink: 0 }} onClick={() => setViewerSrc(img)} />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {viewerSrc && <ImageViewer src={viewerSrc} onClose={() => setViewerSrc(null)} />}
     </>

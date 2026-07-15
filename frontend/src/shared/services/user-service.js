@@ -80,6 +80,8 @@ export const userService = Object.freeze({
   create: (payload) => api.post(USERS_BASE, payload),
   update: (id, payload) => api.put(`${USERS_BASE}/${id}`, payload),
   remove: (id) => api.delete(`${USERS_BASE}/${id}`),
+  changePassword: (payload) => api.post(`${ENV.apiV1Prefix}/auth/change-password`, payload),
+  updateAvatar: (formData) => api.post(`${ENV.apiV1Prefix}/auth/avatar`, formData),
 });
 
 export default userService;

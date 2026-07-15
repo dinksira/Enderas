@@ -694,13 +694,11 @@ export function OrganizationDetailModal({
                     <MetaRow label={t('organizations.management.drawer.email')} value={org.email} />
                     <MetaRow label={t('organizations.management.drawer.firstName')} value={org.firstName} />
                     <MetaRow label={t('organizations.management.drawer.lastName')} value={org.lastName} />
-                    <MetaRow label={t('organizations.management.drawer.role')} value={org.roleCode || org.roleName} />
                     <div className="org-modal__meta-row">
                       <span className="org-modal__meta-label">{t('organizations.management.drawer.password')}</span>
                       <PasswordDisplay password={org.displayPassword} />
                     </div>
                     <MetaRow label={t('organizations.management.drawer.createdAt')} value={formatDate(org.createdAt, locale, t('common.empty'))} />
-                    <MetaRow label={t('organizations.management.drawer.lastLogin')} value={formatDate(org.lastLoginAt, locale, t('common.empty'))} />
                   </div>
                 )}
               </SectionCard>

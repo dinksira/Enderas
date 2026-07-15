@@ -1360,6 +1360,119 @@ select {
   }
 }
 
+.user-profile-page__header-banner {
+  display: flex;
+  background: var(--dashboard-surface-bg);
+  padding: var(--core-space-6);
+  border-radius: var(--core-radius-xl);
+  border: 1px solid var(--dashboard-border-color);
+  margin-bottom: var(--core-space-2);
+}
+
+.user-profile-page__avatar-section {
+  display: flex;
+  align-items: center;
+  gap: var(--core-space-6);
+}
+
+.user-profile-page__avatar-wrapper {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid var(--dashboard-border-color);
+  background: var(--semantic-color-surface-sunken);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.user-profile-page__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-profile-page__avatar-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--semantic-color-text-secondary);
+}
+
+.user-profile-page__avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.user-profile-page__avatar-wrapper:hover .user-profile-page__avatar-overlay {
+  opacity: 1;
+}
+
+.user-profile-page__title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-profile-page__tabs {
+  display: flex;
+  gap: var(--core-space-4);
+  border-bottom: 1px solid var(--dashboard-border-color);
+  margin-bottom: var(--core-space-5);
+  padding-bottom: var(--core-space-2);
+}
+
+.user-profile-page__tab {
+  background: none;
+  border: none;
+  font-size: var(--core-font-size-body);
+  font-family: var(--semantic-font-ui);
+  color: var(--semantic-color-text-secondary);
+  padding: var(--core-space-2) var(--core-space-3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.user-profile-page__tab:hover {
+  color: var(--semantic-color-text-primary);
+}
+
+.user-profile-page__tab--active {
+  color: var(--semantic-color-text-primary);
+  border-bottom-color: var(--semantic-color-primary);
+  font-weight: 500;
+}
+
+.profile-form__header {
+  margin-bottom: var(--core-space-5);
+}
+
+.profile-form__header h3 {
+  margin: 0 0 var(--core-space-2);
+}
+
+.profile-form__header p {
+  margin: 0;
+  color: var(--semantic-color-text-secondary);
+}
+
+.profile-form__grid--single {
+  grid-template-columns: 1fr;
+  max-width: 480px;
+}
+
 /* ─── MODULE: SHARED PANEL CARD ────────────────────────────────────────────── */
 
 .auction-list,
