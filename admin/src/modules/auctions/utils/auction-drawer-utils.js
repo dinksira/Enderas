@@ -33,7 +33,7 @@ export function toDatetimeLocalValue(iso) {
 
 export function canEditAuction(status) {
   const key = normalizeAuctionStatus(status);
-  return key === 'PENDING' || key === 'SUSPENDED' || key === 'ACTIVE';
+  return key === 'PENDING' || key === 'SUSPENDED';
 }
 
 export function isImagesOnlyAuctionEdit(status) {

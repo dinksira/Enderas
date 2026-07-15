@@ -96,6 +96,8 @@ export function LoginView() {
 
       setSession({
         accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        refreshTokenExpiresAt: session.refreshTokenExpiresAt,
         identity: session.identity,
         authz: session.authz,
         user: session.user,

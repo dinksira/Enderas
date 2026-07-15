@@ -237,6 +237,8 @@ export function PublicAuthView() {
 
       setSession({
         accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        refreshTokenExpiresAt: session.refreshTokenExpiresAt,
         identity: session.identity,
         authz: session.authz,
         user: session.user,
@@ -350,6 +352,8 @@ export function PublicAuthView() {
 
       setSession({
         accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        refreshTokenExpiresAt: response.refreshTokenExpiresAt,
         identity: response.identity,
         authz: response.authz,
         user: response.user,

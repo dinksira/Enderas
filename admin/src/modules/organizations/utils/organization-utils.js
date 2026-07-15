@@ -9,7 +9,6 @@ export const ORG_TABLE_COLUMNS = Object.freeze([
   'email',
   'status',
   'created_at',
-  'actions',
 ]);
 
 export function formatDate(dateString, locale, emptyLabel) {

@@ -76,6 +76,8 @@ export function OTPVerificationView() {
 
       setSession({
         accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        refreshTokenExpiresAt: response.refreshTokenExpiresAt,
         identity: response.identity,
         authz: response.authz,
         user: response.user,

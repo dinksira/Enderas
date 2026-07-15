@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTracking } from '../hooks/use-tracking.js';
 import { LogoSpinner } from '@enderass/shared/ui';
@@ -102,6 +103,7 @@ function MetricCard({ label, value, highlight, monospace, icon }) {
 function TrackingDashboardPage() {
   const { token } = useParams();
   const { data, loading, error, logout } = useTracking(token);
+  const [selectedDoc, setSelectedDoc] = useState(null);
 
   if (loading && !data) {
     return (
@@ -138,8 +140,8 @@ function TrackingDashboardPage() {
 
   if (!data) return null;
 
-  const { auction, asset, tracking } = data;
-  const imageUrl = asset?.imageUrls?.[0] || auction?.imageUrls?.[0] || null;
+  const { auction, asset, tracking, lots } = data;
+  const imageUrls = asset?.imageUrls || auction?.imageUrls || [];
   const hasBidding = tracking.totalBids != null || tracking.currentHighestBid != null;
 
   return (
@@ -201,16 +203,58 @@ function TrackingDashboardPage() {
           {/* Asset card */}
           {asset && (
             <div className="ts-card ts-card--asset">
-              {imageUrl && (
-                <div className="ts-asset__img-wrap">
-                  <img src={imageUrl} alt={asset.title} className="ts-asset__img" />
-                  <div className="ts-asset__img-overlay" />
+              {imageUrls.length > 0 && (
+                <div className="ts-asset__gallery" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'thin' }}>
+                  {imageUrls.map((url, idx) => (
+                    <div key={idx} className="ts-asset__img-wrap" style={{ flex: '0 0 auto', width: '250px', height: '180px', position: 'relative' }}>
+                      <img src={url} alt={`${asset.title || auction.title} - ${idx + 1}`} className="ts-asset__img" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                      <div className="ts-asset__img-overlay" style={{ position: 'absolute', inset: 0, borderRadius: '8px', background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)' }} />
+                    </div>
+                  ))}
                 </div>
               )}
               <div className="ts-asset__info">
                 <h2 className="ts-asset__title">{asset.title}</h2>
                 <span className="ts-asset__type">{asset.assetType?.replace(/_/g, ' ') || 'Asset'}</span>
                 {asset.description && <p className="ts-asset__desc">{asset.description}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Lots */}
+          {lots && lots.length > 0 && (
+            <div className="ts-card ts-card--lots" style={{ marginTop: '24px' }}>
+              <h3 className="ts-card__title">Auction Lots</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {lots.map(lot => (
+                  <div key={lot.id} style={{ border: '1px solid var(--ts-border)', borderRadius: '8px', padding: '16px' }}>
+                    <h4 style={{ margin: '0 0 8px 0', fontSize: '1.05rem', fontWeight: '600' }}>{lot.title}</h4>
+                    {lot.description && <p style={{ fontSize: '0.9rem', color: 'var(--ts-muted)', marginBottom: '12px' }}>{lot.description}</p>}
+                    {lot.assets && lot.assets.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {lot.assets.map((lotAsset, index) => (
+                          <div key={lotAsset.id || index} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                            {lotAsset.imageUrls && lotAsset.imageUrls.length > 0 && (
+                              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', flex: '0 0 auto', maxWidth: '300px', scrollbarWidth: 'thin' }}>
+                                {lotAsset.imageUrls.map((url, i) => (
+                                  <img key={i} src={url} alt={`${lotAsset.title} - ${i + 1}`} style={{ width: '100px', height: '75px', objectFit: 'cover', borderRadius: '4px' }} />
+                                ))}
+                              </div>
+                            )}
+                            <div>
+                              <div style={{ fontWeight: '500' }}>{lotAsset.title}</div>
+                              {lotAsset.reservePrice != null && (
+                                <div style={{ fontSize: '0.85rem', color: 'var(--ts-muted)', marginTop: '4px' }}>
+                                  Reserve: {formatCurrency(lotAsset.reservePrice, auction.currency)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -329,7 +373,7 @@ function TrackingDashboardPage() {
           </h3>
           <div className="ts-docs">
             {auction.documents.map((doc, i) => (
-              <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" className="ts-doc">
+              <button key={i} onClick={() => setSelectedDoc(doc)} className="ts-doc" style={{ border: 'none', background: 'transparent', width: '100%', textAlign: 'left', cursor: 'pointer' }}>
                 <div className="ts-doc__icon">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -342,7 +386,7 @@ function TrackingDashboardPage() {
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
-              </a>
+              </button>
             ))}
           </div>
         </div>
@@ -383,6 +427,43 @@ function TrackingDashboardPage() {
         This is an automated tracking page for informational purposes only.
         No bidding or purchasing actions can be performed through this page.
       </div>
+
+      {/* Document Viewer Modal */}
+      {selectedDoc && (
+        <div className="ts-modal-overlay" onClick={() => setSelectedDoc(null)}>
+          <div className="ts-modal" onClick={e => e.stopPropagation()}>
+            <div className="ts-modal__header">
+              <h3 className="ts-modal__title">{selectedDoc.name}</h3>
+              <div className="ts-modal__actions">
+                <a
+                  href={selectedDoc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ts-modal__btn ts-modal__btn--download"
+                  title="Open in new tab"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </a>
+                <button
+                  onClick={() => setSelectedDoc(null)}
+                  className="ts-modal__btn ts-modal__btn--close"
+                  aria-label="Close modal"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+            <div className="ts-modal__body">
+              <iframe
+                src={selectedDoc.url}
+                title={selectedDoc.name}
+                className="ts-modal__iframe"
+                frameBorder="0"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
