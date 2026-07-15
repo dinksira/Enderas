@@ -5,6 +5,7 @@ import { AppError } from '../utils/error.util.js';
 import { generateUuid } from '../utils/crypto.util.js';
 import { LAUNCH_WORKFLOW_ROLES } from '../constants/staff-role.constants.js';
 import { assertStaffRole } from '../utils/staff-role.util.js';
+import { resolvePublicUploadUrl } from '../utils/media-url.util.js';
 import { mapAssetDisplayStatus } from './asset.service.js';
 import { auditService, AUDIT_ACTIONS } from './audit.service.js';
 import { notificationService } from './notification.service.js';
@@ -113,8 +114,10 @@ function serializeEvaluationDetail(evaluation) {
       address: plain.asset.address,
       description: plain.asset.description,
       conditionNotes: plain.asset.condition_notes,
-      ownershipDocumentUrl: plain.asset.ownership_document_url,
-      imageUrls: Array.isArray(plain.asset.image_urls) ? plain.asset.image_urls : [],
+      ownershipDocumentUrl: resolvePublicUploadUrl(plain.asset.ownership_document_url),
+      imageUrls: Array.isArray(plain.asset.image_urls)
+        ? plain.asset.image_urls.map((url) => resolvePublicUploadUrl(url)).filter(Boolean)
+        : [],
       desiredReservePrice: plain.asset.desired_reserve_price != null
         ? Number(plain.asset.desired_reserve_price)
         : null,

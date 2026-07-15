@@ -6,6 +6,7 @@ import type { AssetRecord } from '@/types/asset';
 interface UseAssetDetailResult {
   asset: AssetRecord | null;
   loading: boolean;
+  refreshing: boolean;
   error: string | null;
   refresh: () => Promise<void>;
 }
@@ -13,6 +14,7 @@ interface UseAssetDetailResult {
 export function useAssetDetail(id: string | undefined): UseAssetDetailResult {
   const [asset, setAsset] = useState<AssetRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -23,7 +25,6 @@ export function useAssetDetail(id: string | undefined): UseAssetDetailResult {
       return;
     }
 
-    setLoading(true);
     setError(null);
 
     try {
@@ -40,6 +41,19 @@ export function useAssetDetail(id: string | undefined): UseAssetDetailResult {
     }
   }, [id]);
 
+  // Pull-to-refresh entrypoint — flips `refreshing` instead of `loading`
+  // so the screen keeps showing the current asset while the spinner spins,
+  // rather than swapping back to the full-screen skeleton.
+  const pullRefresh = useCallback(async () => {
+    if (!id) return;
+    setRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [id, refresh]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       void refresh();
@@ -48,7 +62,7 @@ export function useAssetDetail(id: string | undefined): UseAssetDetailResult {
     return () => clearTimeout(timer);
   }, [refresh]);
 
-  return { asset, loading, error, refresh };
+  return { asset, loading, refreshing, error, refresh: pullRefresh };
 }
 
 export default useAssetDetail;

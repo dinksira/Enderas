@@ -78,6 +78,7 @@ function BrowseAuctionCardImpl({ auction, onPress, compact }: BrowseAuctionCardP
               style={StyleSheet.absoluteFill}
               contentFit="cover"
               cachePolicy="memory-disk"
+              recyclingKey={thumbnailUri}
               transition={0}
             />
           ) : (

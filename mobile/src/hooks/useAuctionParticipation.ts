@@ -24,7 +24,6 @@ interface UseAuctionParticipationResult {
   canBid: boolean;
   refresh: () => Promise<void>;
   upsertLotBid: (lotId: string, amount: number) => Promise<void>;
-  removeLotBid: (draftId: string) => Promise<void>;
   clearLotSelection: (lotId: string, draftId?: string) => Promise<void>;
 }
 
@@ -87,6 +86,13 @@ export function useAuctionParticipation(auctionId: string): UseAuctionParticipat
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const lastLoadedAtRef = useRef(0);
+  // Mirror `loading` into a ref so the focus-effect callback identity
+  // stays stable across the initial-load true→false flip. Without this,
+  // `useFocusEffect` re-runs the callback once on the load-completion
+  // frame — a wasted effect run that also propagates a new callback
+  // identity to anything consuming this hook's other memoized returns.
+  const loadingRef = useRef(true);
+  loadingRef.current = loading;
 
   const kycVerified = isKycVerified(user);
   const documentApproved = Boolean(participation?.gates?.documentAccess);
@@ -179,11 +185,11 @@ export function useAuctionParticipation(auctionId: string): UseAuctionParticipat
 
   useFocusEffect(
     useCallback(() => {
-      if (loading) return;
+      if (loadingRef.current) return;
       const elapsed = Date.now() - lastLoadedAtRef.current;
       if (elapsed < FOCUS_RELOAD_MS) return;
       void load();
-    }, [load, loading]),
+    }, [load]),
   );
 
   const upsertLotBid = useCallback(
@@ -206,24 +212,6 @@ export function useAuctionParticipation(auctionId: string): UseAuctionParticipat
       });
     },
     [auctionId],
-  );
-
-  const removeLotBid = useCallback(
-    async (draftId: string) => {
-      try {
-        await bidDraftApi.deleteBidDraft(draftId);
-      } catch (err) {
-        if (!(err instanceof ApiError && err.code === 'BID_DRAFT_NOT_FOUND')) throw err;
-      }
-      setParticipation((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          bidDrafts: (prev.bidDrafts ?? []).filter((d) => d.id !== draftId),
-        };
-      });
-    },
-    [],
   );
 
   const clearLotSelection = useCallback(
@@ -262,7 +250,6 @@ export function useAuctionParticipation(auctionId: string): UseAuctionParticipat
     canBid,
     refresh,
     upsertLotBid,
-    removeLotBid,
     clearLotSelection,
   };
 }

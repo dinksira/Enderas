@@ -3,16 +3,18 @@ import { seedBaseline } from './shared.mjs';
 import { seedTestUsers } from './test-users.mjs';
 import { seedOperationalStaff } from './operational-staff.mjs';
 import { seedAuctionCatalog } from './auctions.mjs';
+import { seedAuctionDocuments } from './auction-documents.mjs';
 
 const SEED_STEPS = Object.freeze({
   baseline: seedBaseline,
   users: seedTestUsers,
   staff: seedOperationalStaff,
   auctions: seedAuctionCatalog,
+  'auction-documents': seedAuctionDocuments,
 });
 
 const NORMAL_STEPS = ['baseline'];
-const TEST_STEPS = ['baseline', 'users', 'staff', 'auctions'];
+const TEST_STEPS = ['baseline', 'users', 'staff', 'auctions', 'auction-documents'];
 
 function resolveSteps(mode, only) {
   const baseSteps = mode === 'normal' ? NORMAL_STEPS : TEST_STEPS;

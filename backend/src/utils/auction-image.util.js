@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import { AuctionAsset } from '../models/auctionAsset.model.js';
 import { Asset } from '../models/asset.model.js';
 import { Evaluation } from '../models/evaluation.model.js';
+import { resolvePublicUploadUrl } from './media-url.util.js';
 
 /**
  * @param {unknown} raw
@@ -60,22 +61,21 @@ export function normalizePublicImageUrl(url) {
   }
 
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-    return trimmed;
+    return resolvePublicUploadUrl(trimmed);
   }
 
+  let normalized;
   if (trimmed.startsWith('/api/uploads/')) {
-    return trimmed;
+    normalized = trimmed;
+  } else if (trimmed.startsWith('/uploads/')) {
+    normalized = `/api${trimmed}`;
+  } else if (trimmed.startsWith('uploads/')) {
+    normalized = `/api/${trimmed}`;
+  } else {
+    normalized = `/api/uploads/${trimmed.replace(/^\/+/, '')}`;
   }
 
-  if (trimmed.startsWith('/uploads/')) {
-    return `/api${trimmed}`;
-  }
-
-  if (trimmed.startsWith('uploads/')) {
-    return `/api/${trimmed}`;
-  }
-
-  return `/api/uploads/${trimmed.replace(/^\/+/, '')}`;
+  return resolvePublicUploadUrl(normalized);
 }
 
 /**

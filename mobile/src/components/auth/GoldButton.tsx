@@ -1,6 +1,15 @@
-import { useEffect, useRef } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { useTheme } from '@/lib/appStore';
 import { useAuthStyles } from './authStyles';
@@ -17,6 +26,10 @@ type GoldButtonVariant = 'primary' | 'outline';
  *
  * The gradient stops are pulled from the active theme's gold scale so
  * the button matches the rest of the UI in both light and dark mode.
+ *
+ * Reanimated v3 implementation: the shimmer loop and press-feedback
+ * spring both run on the UI thread, so the JS thread stays free for
+ * form handling, navigation, etc.
  */
 export function GoldButton({
   label,
@@ -36,42 +49,33 @@ export function GoldButton({
 }) {
   const authStyles = useAuthStyles();
   const { colors } = useTheme();
-  const scale = useRef(new Animated.Value(1)).current;
-  const shimmer = useRef(new Animated.Value(0)).current;
+  const scale = useSharedValue(1);
+  const shimmer = useSharedValue(0);
 
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(shimmer, {
-        toValue: 1,
-        duration: 2400,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
+    shimmer.value = 0;
+    shimmer.value = withRepeat(
+      withTiming(1, { duration: 2400, easing: Easing.linear }),
+      -1,
     );
-    loop.start();
-    return () => loop.stop();
+    return () => cancelAnimation(shimmer);
   }, [shimmer]);
 
-  const shimmerTx = shimmer.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-120, 360],
-  });
+  const shimmerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: -120 + 480 * shimmer.value }, { skewX: '-20deg' }],
+  }));
 
-  const onPressIn = () =>
-    Animated.spring(scale, {
-      toValue: 0.96,
-      friction: 8,
-      tension: 100,
-      useNativeDriver: true,
-    }).start();
+  const scaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
-  const onPressOut = () =>
-    Animated.spring(scale, {
-      toValue: 1,
-      friction: 6,
-      tension: 120,
-      useNativeDriver: true,
-    }).start();
+  const onPressIn = () => {
+    scale.value = withSpring(0.96, { damping: 8, stiffness: 200 });
+  };
+
+  const onPressOut = () => {
+    scale.value = withSpring(1, { damping: 6, stiffness: 240 });
+  };
 
   const isFilled = variant === 'primary';
   const isDisabled = disabled || loading;
@@ -84,7 +88,7 @@ export function GoldButton({
       disabled={isDisabled}
       style={{ width: '100%', alignSelf: 'stretch', opacity: isDisabled ? 0.55 : 1 }}
     >
-      <Animated.View style={{ transform: [{ scale }], width: '100%' }}>
+      <Animated.View style={[{ width: '100%' }, scaleStyle]}>
         <View
           style={[
             authStyles.submitButton,
@@ -105,8 +109,9 @@ export function GoldButton({
                 style={[
                   authStyles.shimmerOverlay,
                   styles.gradientLayer,
-                  { transform: [{ translateX: shimmerTx }, { skewX: '-20deg' }] },
+                  shimmerStyle,
                 ]}
+                pointerEvents="none"
               />
             </>
           ) : null}

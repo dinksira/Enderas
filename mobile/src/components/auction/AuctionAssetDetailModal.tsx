@@ -39,10 +39,18 @@ export function AuctionAssetDetailModal({ visible, asset, onClose }: AuctionAsse
   const { colors } = useTheme();
   const [galleryWidth, setGalleryWidth] = useState(INITIAL_GALLERY_WIDTH);
 
-  if (!asset) return null;
+  // ⚠️ Do NOT early-return before the Sheet mounts. Returning `null` when
+  // `asset` is null would unmount the <Sheet> entirely, so the next time
+  // `asset` becomes non-null the Sheet pops in with NO entrance animation
+  // (and the prior dismiss was also yanked without an exit animation).
+  // Instead, keep the Sheet mounted with `visible={visible}` and gate the
+  // *body* on `asset` — that way the Sheet's enter/exit animations run
+  // normally and the body just renders nothing during the gap.
 
-  const theme = getCategoryTheme(asset.category);
-  const categoryLabel = t(`dashboard.categories.${asset.category}`, { defaultValue: asset.category });
+  const theme = asset ? getCategoryTheme(asset.category) : null;
+  const categoryLabel = asset
+    ? t(`dashboard.categories.${asset.category}`, { defaultValue: asset.category })
+    : '';
 
   const handleGalleryLayout = (event: LayoutChangeEvent) => {
     const measured = event.nativeEvent.layout.width;
@@ -58,73 +66,76 @@ export function AuctionAssetDetailModal({ visible, asset, onClose }: AuctionAsse
       onDismiss={onClose}
       contentPadding={Spacing.md}
     >
-      <View style={styles.header}>
-        <View style={styles.headerCopy}>
-          <Text style={[Typography.microCaps, { color: colors.goldChampagne }]}>
-            {asset.lotLabel}
-          </Text>
-          <Text style={[Typography.cardTitle, { color: colors.cream }]} numberOfLines={2}>
-            {asset.title}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.gallerySection} onLayout={handleGalleryLayout}>
-        <ImageGallery
-          imageUrls={asset.imageUrls}
-          width={galleryWidth}
-          height={GALLERY_HEIGHT}
-          category={asset.category}
-          mode="manual"
-          showThumbnails
-          borderRadius={16}
-          insideBottomSheet
-        />
-        {asset.imageUrls.length > 1 ? (
-          <View style={styles.swipeHintRow}>
-            <MaterialCommunityIcons name="gesture-swipe-horizontal" size={13} color={colors.textMuted} />
-            <Text style={[Typography.caption, { color: colors.textMuted }]}>
-              {t('auction.participation.swipePhotosHint')}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-
-      <View style={styles.metaGrid}>
-        <MetaCell
-          icon={theme.icon}
-          label={t('dashboard.browse.category')}
-          value={categoryLabel}
-          colors={colors}
-        />
-        <MetaCell
-          icon="cash"
-          label={t('auction.participation.reserve')}
-          value={formatEtbAmount(asset.reservePrice)}
-          colors={colors}
-        />
-        {asset.description ? (
-          <MetaCell
-            icon="map-marker-outline"
-            label={t('assets.detail.location')}
-            value={asset.description}
-            colors={colors}
-            fullWidth
-          />
-        ) : null}
-      </View>
-
-      {asset.tags?.length ? (
-        <View style={styles.tagsRow}>
-          {asset.tags.map((tag) => (
-            <View
-              key={tag}
-              style={[styles.tag, { backgroundColor: colors.glassFill, borderColor: colors.goldBorder }]}
-            >
-              <Text style={[Typography.caption, { color: colors.goldChampagne }]}>{tag}</Text>
+      {asset && theme ? (
+        <>
+          <View style={styles.header}>
+            <View style={styles.headerCopy}>
+              <Text style={[Typography.microCaps, { color: colors.goldChampagne }]}>
+                {asset.lotLabel}
+              </Text>
+              <Text style={[Typography.cardTitle, { color: colors.cream }]} numberOfLines={2}>
+                {asset.title}
+              </Text>
             </View>
-          ))}
-        </View>
+          </View>
+
+          <View style={styles.gallerySection} onLayout={handleGalleryLayout}>
+            <ImageGallery
+              imageUrls={asset.imageUrls}
+              width={galleryWidth}
+              height={GALLERY_HEIGHT}
+              category={asset.category}
+              mode="manual"
+              showThumbnails
+              borderRadius={16}
+            />
+            {asset.imageUrls.length > 1 ? (
+              <View style={styles.swipeHintRow}>
+                <MaterialCommunityIcons name="gesture-swipe-horizontal" size={13} color={colors.textMuted} />
+                <Text style={[Typography.caption, { color: colors.textMuted }]}>
+                  {t('auction.participation.swipePhotosHint')}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
+          <View style={styles.metaGrid}>
+            <MetaCell
+              icon={theme.icon}
+              label={t('dashboard.browse.category')}
+              value={categoryLabel}
+              colors={colors}
+            />
+            <MetaCell
+              icon="cash"
+              label={t('auction.participation.reserve')}
+              value={formatEtbAmount(asset.reservePrice)}
+              colors={colors}
+            />
+            {asset.description ? (
+              <MetaCell
+                icon="map-marker-outline"
+                label={t('assets.detail.location')}
+                value={asset.description}
+                colors={colors}
+                fullWidth
+              />
+            ) : null}
+          </View>
+
+          {asset.tags?.length ? (
+            <View style={styles.tagsRow}>
+              {asset.tags.map((tag) => (
+                <View
+                  key={tag}
+                  style={[styles.tag, { backgroundColor: colors.glassFill, borderColor: colors.goldBorder }]}
+                >
+                  <Text style={[Typography.caption, { color: colors.goldChampagne }]}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </>
       ) : null}
     </Sheet>
   );

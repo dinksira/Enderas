@@ -20,6 +20,7 @@ import { Lot } from './lot.model.js';
 import { Winner } from './winner.model.js';
 import { OrganizationAuction } from './organizationAuction.model.js';
 import { AuctionShareLink } from './auctionShareLink.model.js';
+import { AuctionDocument } from './auctionDocument.model.js';
 
 User.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
 Role.hasMany(User, { foreignKey: 'role_id', as: 'users' });
@@ -97,6 +98,8 @@ Cpo.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
 Auction.hasMany(Cpo, { foreignKey: 'auction_id', as: 'cpos' });
 Cpo.belongsTo(Staff, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedByStaff' });
 Staff.hasMany(Cpo, { foreignKey: 'reviewed_by_staff_id', as: 'reviewedCpos' });
+Cpo.belongsTo(Staff, { foreignKey: 'refund_processed_by_staff_id', as: 'refundProcessedByStaff' });
+Staff.hasMany(Cpo, { foreignKey: 'refund_processed_by_staff_id', as: 'refundProcessedCpos' });
 Cpo.hasMany(CpoPayment, { foreignKey: 'cpo_id', as: 'cpoPayments' });
 
 CpoPayment.belongsTo(Cpo, { foreignKey: 'cpo_id', as: 'cpo' });
@@ -147,6 +150,12 @@ Auction.hasMany(AuctionShareLink, { foreignKey: 'auction_id', as: 'shareLinks' }
 AuctionShareLink.belongsTo(Staff, { foreignKey: 'created_by_staff_id', as: 'creator' });
 Staff.hasMany(AuctionShareLink, { foreignKey: 'created_by_staff_id', as: 'createdShareLinks' });
 
+// Auction documents
+AuctionDocument.belongsTo(Auction, { foreignKey: 'auction_id', as: 'auction' });
+Auction.hasMany(AuctionDocument, { foreignKey: 'auction_id', as: 'documents' });
+AuctionDocument.belongsTo(Staff, { foreignKey: 'uploaded_by_staff_id', as: 'uploadedByStaff' });
+Staff.hasMany(AuctionDocument, { foreignKey: 'uploaded_by_staff_id', as: 'uploadedAuctionDocuments' });
+
 export {
   User,
   Role,
@@ -170,6 +179,7 @@ export {
   Winner,
   OrganizationAuction,
   AuctionShareLink,
+  AuctionDocument,
 };
 
 export default {
@@ -195,4 +205,5 @@ export default {
   Winner,
   OrganizationAuction,
   AuctionShareLink,
+  AuctionDocument,
 };

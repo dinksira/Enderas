@@ -37,7 +37,7 @@ export default function AuctionDetailScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const auctionId = id ?? '';
-  const { auction, participation, lots, auctionAssets, loading, error, documentApproved, kycVerified } =
+  const { auction, participation, lots, auctionAssets, loading, refreshing, error, documentApproved, kycVerified, refresh } =
     useAuctionParticipation(auctionId);
   const { isAuthenticated, gateReason } = useAuctionActionGate();
   const [kycModalVisible, setKycModalVisible] = useState(false);
@@ -216,6 +216,8 @@ export default function AuctionDetailScreen() {
       onBack={() => router.back()}
       bottomPadding={40}
       noFade
+      refreshing={refreshing}
+      onRefresh={refresh}
     >
       {renderParticipationBanner()}
 

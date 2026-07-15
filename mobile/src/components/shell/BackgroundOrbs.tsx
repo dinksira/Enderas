@@ -1,8 +1,25 @@
-import { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { useTheme } from '@/lib/appStore';
+
+type OrbConfig = {
+  size: number;
+  top: number;
+  left: number;
+  duration: number;
+  color: string;
+};
 
 /**
  * Soft pulsing background — three large golden radial orbs that drift and
@@ -10,66 +27,67 @@ import { useTheme } from '@/lib/appStore';
  *
  * Theme-aware: orb tints and vignette shift between dark and light modes
  * so the glassmorphism canvas stays cohesive in either palette.
+ *
+ * Reanimated v3 implementation: each orb is driven by a single
+ * SharedValue on the UI thread, animated via `withRepeat(withSequence(...))`
+ * so the loop never bridges to JS. This keeps the background breathing
+ * smoothly even when the JS thread is busy (e.g. parsing a long auction
+ * list, navigating between tabs, etc.).
  */
+function Orb({ config }: { config: OrbConfig }) {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = 0;
+    const half = withTiming(1, { duration: config.duration, easing: Easing.inOut(Easing.sin) });
+    const halfBack = withTiming(0, { duration: config.duration, easing: Easing.inOut(Easing.sin) });
+    progress.value = withRepeat(withSequence(half, halfBack), -1);
+    return () => cancelAnimation(progress);
+  }, [config.duration, progress]);
+
+  // Translate the orb vertically by up to 30px and pulse its opacity
+  // between 0.35 and 0.7, both driven by the same SharedValue so they
+  // stay perfectly in phase.
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: 0.35 + 0.35 * Math.sin(progress.value * Math.PI),
+    transform: [{ translateY: 30 * progress.value }],
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        styles.orb,
+        {
+          width: config.size,
+          height: config.size,
+          top: config.top,
+          left: config.left,
+          backgroundColor: config.color,
+        },
+        animStyle,
+      ]}
+    />
+  );
+}
+
 export function BackgroundOrbs() {
   const { colors } = useTheme();
   const { width, height } = useWindowDimensions();
-  const orbs = useRef([
-    { x: new Animated.Value(0), size: width * 0.9, top: -height * 0.2, left: -width * 0.3, dur: 5200 },
-    { x: new Animated.Value(0), size: width * 0.7, top: height * 0.4, left: width * 0.5, dur: 6800 },
-    { x: new Animated.Value(0), size: width * 0.5, top: height * 0.55, left: -width * 0.15, dur: 7600 },
-  ]).current;
 
-  useEffect(() => {
-    const loops = orbs.map((o) => {
-      o.x.setValue(0);
-      return Animated.loop(
-        Animated.sequence([
-          Animated.timing(o.x, {
-            toValue: 1,
-            duration: o.dur,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-          Animated.timing(o.x, {
-            toValue: 0,
-            duration: o.dur,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-        ]),
-      );
-    });
-    loops.forEach((l) => l.start());
-    return () => loops.forEach((l) => l.stop());
-  }, [orbs]);
+  const orbs = useMemo<OrbConfig[]>(
+    () => [
+      { size: width * 0.9, top: -height * 0.2, left: -width * 0.3, duration: 5200, color: colors.orbColors[0] },
+      { size: width * 0.7, top: height * 0.4, left: width * 0.5, duration: 6800, color: colors.orbColors[1] },
+      { size: width * 0.5, top: height * 0.55, left: -width * 0.15, duration: 7600, color: colors.orbColors[2] },
+    ],
+    [width, height, colors.orbColors],
+  );
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {orbs.map((o, i) => {
-        const ty = o.x.interpolate({ inputRange: [0, 1], outputRange: [0, 30] });
-        const op = o.x.interpolate({
-          inputRange: [0, 0.5, 1],
-          outputRange: [0.35, 0.7, 0.35],
-        });
-        return (
-          <Animated.View
-            key={i}
-            style={[
-              styles.orb,
-              {
-                width: o.size,
-                height: o.size,
-                top: o.top,
-                left: o.left,
-                opacity: op,
-                transform: [{ translateY: ty }],
-                backgroundColor: colors.orbColors[i],
-              },
-            ]}
-          />
-        );
-      })}
+      {orbs.map((orb, i) => (
+        <Orb key={i} config={orb} />
+      ))}
       {/* Vignette to anchor the canvas */}
       <LinearGradient
         colors={colors.vignette}

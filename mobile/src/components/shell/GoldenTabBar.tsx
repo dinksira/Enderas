@@ -1,7 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import {
-  Animated,
-  Easing,
   Pressable,
   StyleSheet,
   View,
@@ -9,6 +7,14 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { useTheme } from '@/lib/appStore';
 import { glassElevation } from '@/lib/glassStyles';
@@ -64,6 +70,10 @@ interface GoldenTabBarProps {
  * horizontal slide) inside a fixed-width slot so it feels like it
  * "lands" before the label without shifting the layout.
  *
+ * Reanimated v3 implementation: each tab is driven by three
+ * SharedValues on the UI thread (active, press, dot) so tab transitions
+ * stay smooth even when the JS thread is busy loading data.
+ *
  * Why not the default Tabs tab bar:
  *   - The default bar fills the bottom edge with a solid color, which
  *     breaks the floating-glass aesthetic. Custom drawing also lets us
@@ -75,55 +85,22 @@ export function GoldenTabBar({ state, navigation }: GoldenTabBarProps) {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
-  // Press feedback — one Animated.Value per tab.
-  const pressScales = useRef(TABS.map(() => new Animated.Value(1))).current;
-  // Active-state cross-fade — 0 (inactive) → 1 (active).
-  const activeValues = useRef(TABS.map(() => new Animated.Value(0))).current;
-  // Active dot — drop-in spring per tab.
-  const dotValues = useRef(TABS.map(() => new Animated.Value(0))).current;
-
-  // Drive the active pill + dot when state.index changes.
-  // `useNativeDriver: false` is required because we interpolate to
-  // colors (backgroundColor, borderColor) — native driver only supports
-  // transform & opacity. The handful of small Animated.Values is cheap.
-  useEffect(() => {
-    activeValues.forEach((v, i) => {
-      Animated.spring(v, {
-        toValue: i === state.index ? 1 : 0,
-        friction: 9,
-        tension: 100,
-        useNativeDriver: false,
-      }).start();
-    });
-    dotValues.forEach((v, i) => {
-      Animated.spring(v, {
-        toValue: i === state.index ? 1 : 0,
-        friction: 7,
-        tension: 120,
-        useNativeDriver: false,
-      }).start();
-    });
-  }, [state.index, activeValues, dotValues]);
-
-  const handlePress = (i: number, name: string) => {
-    // Tactile feedback: quick scale-down then back.
-    Animated.sequence([
-      Animated.timing(pressScales[i], { toValue: 0.88, duration: Duration.instant, easing: Easing.out(Easing.cubic), useNativeDriver: false }),
-      Animated.spring(pressScales[i], { toValue: 1, friction: 6, tension: 200, useNativeDriver: false }),
-    ]).start();
-
-    const event = navigation.emit({
-      type: 'tabPress',
-      target: state.routes[i].key,
-      canPreventDefault: true,
-    });
-    if (!event.defaultPrevented) {
-      navigation.navigate(name);
-    }
-  };
-
   // Bar background — single translucent fill per theme.
   const barBg = isDark ? 'rgba(18, 18, 26, 0.78)' : 'rgba(255, 252, 245, 0.92)';
+
+  const handlePress = useCallback(
+    (i: number, name: string) => {
+      const event = navigation.emit({
+        type: 'tabPress',
+        target: state.routes[i].key,
+        canPreventDefault: true,
+      });
+      if (!event.defaultPrevented) {
+        navigation.navigate(name);
+      }
+    },
+    [navigation, state.routes],
+  );
 
   return (
     <View
@@ -141,90 +118,181 @@ export function GoldenTabBar({ state, navigation }: GoldenTabBarProps) {
           ]}
         >
           <View style={styles.row}>
-            {TABS.map((tab, i) => {
-              const isActive = state.index === i;
-              const label = t(tab.labelKey);
-              const activeBg = activeValues[i].interpolate({
-                inputRange: [0, 1],
-                outputRange: ['transparent', colors.glassFillActive],
-              });
-              const activeBorder = activeValues[i].interpolate({
-                inputRange: [0, 1],
-                outputRange: ['transparent', colors.goldBorderActive],
-              });
-              // Icon color is static (MaterialCommunityIcons doesn't
-              // accept an animated color). The pill background + label
-              // color cross-fade, which is enough active-state signal.
-              const iconColor = isActive ? colors.goldBright : colors.textMuted;
-              const labelOpacity = activeValues[i].interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.65, 1],
-              });
-              const labelColor = activeValues[i].interpolate({
-                inputRange: [0, 1],
-                outputRange: [colors.textMuted, colors.goldBright],
-              });
-              // Dot fades and scales in inside a fixed-width slot.
-              const dotScale = dotValues[i].interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
-              const dotX = dotValues[i].interpolate({ inputRange: [0, 1], outputRange: [-4, 0] });
-              const dotOpacity = dotValues[i];
-
-              return (
-                <Pressable
-                  key={tab.name}
-                  onPress={() => handlePress(i, tab.name)}
-                  style={styles.tab}
-                  hitSlop={{ top: 6, bottom: 6, left: 2, right: 2 }}
-                >
-                  <Animated.View
-                    style={[
-                      styles.tabInner,
-                      {
-                        backgroundColor: activeBg,
-                        borderColor: activeBorder,
-                        transform: [{ scale: pressScales[i] }],
-                      },
-                    ]}
-                  >
-                    <MaterialCommunityIcons
-                      name={isActive ? tab.iconActive : tab.icon}
-                      size={20}
-                      color={iconColor}
-                    />
-                    <View style={styles.labelRow}>
-                      <View style={styles.labelAnchor}>
-                        <Animated.View
-                          style={[
-                            styles.dot,
-                            {
-                              backgroundColor: colors.goldBright,
-                              opacity: dotOpacity,
-                              transform: [{ translateX: dotX }, { scale: dotScale }],
-                              position: 'absolute',
-                              right: '100%',
-                              marginRight: 3,
-                            },
-                          ]}
-                        />
-                        <Animated.Text
-                        style={[
-                          styles.label,
-                          { color: labelColor, opacity: labelOpacity },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {label}
-                      </Animated.Text>
-                      </View>
-                    </View>
-                  </Animated.View>
-                </Pressable>
-              );
-            })}
+            {TABS.map((tab, i) => (
+              <TabCell
+                key={tab.name}
+                label={t(tab.labelKey)}
+                icon={state.index === i ? tab.iconActive : tab.icon}
+                iconColor={state.index === i ? colors.goldBright : colors.textMuted}
+                isActive={state.index === i}
+                colors={colors}
+                onPress={() => handlePress(i, tab.name)}
+              />
+            ))}
           </View>
         </View>
       </View>
     </View>
+  );
+}
+
+/**
+ * Single tab cell. Lifted into its own component so the animated styles
+ * can call `useAnimatedStyle` at the top level (not inside a map), per
+ * the rules of hooks for Reanimated v3.
+ */
+function TabCell({
+  label,
+  icon,
+  iconColor,
+  isActive,
+  colors,
+  onPress,
+}: {
+  label: string;
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+  iconColor: string;
+  isActive: boolean;
+  colors: ReturnType<typeof useTheme>['colors'];
+  onPress: () => void;
+}) {
+  // 0 (inactive) → 1 (active) — drives the active pill background, border,
+  // and label opacity + color cross-fade.
+  const active = useSharedValue(isActive ? 1 : 0);
+  // 0 (rest) → 0.88 → back to 1 — quick scale-down press feedback.
+  const press = useSharedValue(1);
+  // 0 (hidden) → 1 (visible) — drives the active dot's scale + opacity.
+  const dot = useSharedValue(isActive ? 1 : 0);
+
+  // Drive the active pill + dot when isActive changes. Springs run on
+  // the UI thread so transitions stay smooth even when JS is busy.
+  useEffect(() => {
+    const target = isActive ? 1 : 0;
+    active.value = withSpring(target, { damping: 18, stiffness: 220 });
+    dot.value = withSpring(target, { damping: 14, stiffness: 260 });
+  }, [isActive, active, dot]);
+
+  const handlePressInternal = () => {
+    // Tactile feedback: quick scale-down then back, fully on the UI thread.
+    press.value = withSequence(
+      withTiming(0.88, { duration: Duration.instant, easing: Easing.out(Easing.cubic) }),
+      withSpring(1, { damping: 12, stiffness: 320 }),
+    );
+    onPress();
+  };
+
+  // Inner pill scale (press feedback).
+  const innerStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: press.value }],
+  }));
+
+  // Active tint overlay — fades in when the tab becomes active.
+  const activeOverlayStyle = useAnimatedStyle(() => ({
+    opacity: active.value,
+  }));
+
+  // Active border overlay — fades in alongside the tint.
+  const activeBorderStyle = useAnimatedStyle(() => ({
+    opacity: active.value,
+  }));
+
+  // Label cross-fade. MaterialCommunityIcons color can't be animated, so
+  // we cross-fade two stacked <Text> elements instead.
+  const labelInactiveStyle = useAnimatedStyle(() => ({
+    opacity: 1 - active.value * 0.35,
+  }));
+  const labelActiveStyle = useAnimatedStyle(() => ({
+    opacity: active.value,
+  }));
+
+  // Active dot: scales in and slides 4px → 0.
+  const dotStyle = useAnimatedStyle(() => ({
+    opacity: dot.value,
+    transform: [
+      { translateX: -4 * (1 - dot.value) },
+      { scale: dot.value },
+    ],
+  }));
+
+  return (
+    <Pressable
+      onPress={handlePressInternal}
+      style={styles.tab}
+      hitSlop={{ top: 6, bottom: 6, left: 2, right: 2 }}
+    >
+      <Animated.View style={[styles.tabInner, innerStyle]}>
+        {/* Inactive base layer (transparent border + transparent bg) */}
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: 'transparent',
+              backgroundColor: 'transparent',
+            },
+          ]}
+        />
+        {/* Active tint overlay */}
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              borderRadius: 18,
+              backgroundColor: colors.glassFillActive,
+            },
+            activeOverlayStyle,
+          ]}
+          pointerEvents="none"
+        />
+        {/* Active border overlay */}
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: colors.goldBorderActive,
+            },
+            activeBorderStyle,
+          ]}
+          pointerEvents="none"
+        />
+
+        <MaterialCommunityIcons name={icon} size={20} color={iconColor} />
+        <View style={styles.labelRow}>
+          <View style={styles.labelAnchor}>
+            <Animated.View
+              style={[
+                styles.dot,
+                { backgroundColor: colors.goldBright },
+                dotStyle,
+                { position: 'absolute', right: '100%', marginRight: 3 },
+              ]}
+              pointerEvents="none"
+            />
+            {/* Inactive label (muted color, slightly faded) */}
+            <Animated.Text
+              style={[
+                styles.label,
+                { color: colors.textMuted, position: 'absolute' },
+                labelInactiveStyle,
+              ]}
+              numberOfLines={1}
+            >
+              {label}
+            </Animated.Text>
+            {/* Active label (goldBright color, faded in) */}
+            <Animated.Text
+              style={[styles.label, { color: colors.goldBright }, labelActiveStyle]}
+              numberOfLines={1}
+            >
+              {label}
+            </Animated.Text>
+          </View>
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -275,7 +343,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 4,
     borderRadius: 18,
-    borderWidth: 1,
     gap: 3,
     minHeight: 46,
   },
