@@ -107,7 +107,7 @@ export function UserDetailDrawer({
   };
 
   const headerActions =
-    user && user.id && canUpdate && !user.isStaff && !loading && !error ? (
+    user && user.id && canUpdate && !loading && !error ? (
       <button
         type="button"
         className="admin-drawer__edit-btn"
@@ -127,7 +127,7 @@ export function UserDetailDrawer({
   const footer =
     !loading && !error && user ? (
       <>
-        {canUpdate && !user.isStaff && status === 'active' && (
+        {canUpdate && status === 'active' && (
           <>
             <Button variant="secondary" disabled={actionLoading} onClick={() => onSuspend(user)}>
               {t('users.management.drawer.suspend')}
@@ -138,13 +138,12 @@ export function UserDetailDrawer({
           </>
         )}
         {canUpdate &&
-          !user.isStaff &&
           (status === 'suspended' || status === 'deactivated') && (
             <Button variant="primary" disabled={actionLoading} onClick={() => onActivate(user)}>
               {t('users.management.drawer.activate')}
             </Button>
           )}
-        {canDelete && !user.isStaff && (
+        {canDelete && (
           <Button variant="secondary" disabled={actionLoading} onClick={() => onDelete(user)}>
             {t('users.management.drawer.delete')}
           </Button>
