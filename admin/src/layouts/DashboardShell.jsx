@@ -167,9 +167,10 @@ const ICON_MAP = {
   ),
   reports: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 19V5h16v14H4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-      <path d="M8 14l3-3 2 2 3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="17" cy="7" r="1" fill="currentColor"/>
+      <rect x="4" y="14" width="4" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.6"/>
+      <rect x="10" y="9" width="4" height="11" rx="0.5" stroke="currentColor" strokeWidth="1.6"/>
+      <rect x="16" y="4" width="4" height="16" rx="0.5" stroke="currentColor" strokeWidth="1.6"/>
+      <path d="M16 2l3 3-3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   ),
   organizations: (
